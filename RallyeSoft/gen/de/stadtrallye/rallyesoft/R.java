@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package de.fs_ist.rallyesoft;
+package de.stadtrallye.rallyesoft;
 
 public final class R {
     public static final class attr {
