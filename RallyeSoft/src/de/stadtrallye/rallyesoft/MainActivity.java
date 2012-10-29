@@ -1,9 +1,10 @@
 package de.stadtrallye.rallyesoft;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -21,14 +22,15 @@ public class MainActivity extends SlidingFragmentActivity {
 	
 	PushService push;
 
-    @Override
+    @SuppressLint("NewApi")
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         setTitle(R.string.title_main);
 		setContentView(R.layout.main);
 		setBehindContentView(R.layout.dashboard_main);
-		getActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		
 		
 		SlidingMenu sm = getSlidingMenu();
@@ -46,19 +48,12 @@ public class MainActivity extends SlidingFragmentActivity {
         ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-			public void onItemClick(AdapterView<?> parent, View view, int pos,
-					long id) {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 				switch (pos)
 				{
 				case 0: 
 					setContentView(R.layout.overview);
-//					Handler h = new Handler();
-//					h.postDelayed(new Runnable() {
-//						public void run() {
-//							getSlidingMenu().showAbove();
-//						}
-//					}, 333);
 					getSlidingMenu().showAbove();
 					break;
 				default:
@@ -74,8 +69,7 @@ public class MainActivity extends SlidingFragmentActivity {
 //        push = new PushService(this);
     }
     
-    @Override
-	public boolean onOptionsItemSelected(MenuItem item) {
+	public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			toggle();
