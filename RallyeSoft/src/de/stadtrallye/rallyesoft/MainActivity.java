@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -50,7 +51,15 @@ public class MainActivity extends SlidingFragmentActivity {
 					long id) {
 				switch (pos)
 				{
-				case 0: startActivity(new Intent(getApplicationContext(), OverviewActivity.class));
+				case 0: 
+					setContentView(R.layout.overview);
+//					Handler h = new Handler();
+//					h.postDelayed(new Runnable() {
+//						public void run() {
+//							getSlidingMenu().showAbove();
+//						}
+//					}, 333);
+					getSlidingMenu().showAbove();
 					break;
 				default:
 					Toast.makeText(getApplicationContext(), getResources().getStringArray(R.array.dashboard_entries)[pos], Toast.LENGTH_SHORT).show();
