@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft;
 
 import android.content.Context;
 import android.content.Intent;
+import android.widget.Toast;
 
 import com.google.android.gcm.GCMBaseIntentService;
 
@@ -14,8 +15,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 	
 	@Override
 	protected void onMessage(Context context, Intent intent) {
-		// TODO Auto-generated method stub
-
+		Toast.makeText(getApplicationContext(), "Received Push Notification!", Toast.LENGTH_SHORT).show();
 	}
 
 	@Override
@@ -26,14 +26,13 @@ public class GCMIntentService extends GCMBaseIntentService {
 
 	@Override
 	protected void onRegistered(Context context, String registrationId) {
-		// TODO Auto-generated method stub
-
+		Toast.makeText(getApplicationContext(), "GCM Push Registered!", Toast.LENGTH_SHORT).show();
+		
 	}
 
 	@Override
 	protected void onUnregistered(Context context, String registrationId) {
-		// TODO Auto-generated method stub
-
+		Toast.makeText(getApplicationContext(), "GCM Push Unregistered!", Toast.LENGTH_SHORT).show();
 	}
 
 }
