@@ -20,6 +20,7 @@ public class MainActivity extends SherlockActivity {
 		
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(false);
-		ab.addTab(tab
+		ActionBar.Tab tab = getSupportActionBar().newTab();
+		
 	}
 }
