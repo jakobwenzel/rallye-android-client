@@ -7,4 +7,10 @@
         <item >Chat</item>
     </string-array>
     
+    <string-array name="tabs">
+        <item>Karte</item>
+        <item>Nächster Zug</item>
+        <item>Chat</item>
+    </string-array>
+    
 </resources>
