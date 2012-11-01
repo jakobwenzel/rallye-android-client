@@ -9,11 +9,12 @@ import android.widget.Toast;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 
-public class MainActivity extends SherlockActivity implements  ActionBar.OnNavigationListener {
+public class MainActivity extends SherlockFragmentActivity implements  ActionBar.OnNavigationListener {
 	
 	public PushService push;
 	
@@ -44,12 +45,10 @@ public class MainActivity extends SherlockActivity implements  ActionBar.OnNavig
 		switch (itemPosition) {
 		case 0: 
 			OverviewFragment newFragment = new OverviewFragment();
-		    FragmentTransaction ft = null;
-		    // Replace whatever is in the fragment container with this fragment
-		    //  and give the fragment a tag name equal to the string at the position selected
-		    ft.replace(R.id.fragment_container, newFragment, strings[position]);
+			
+//		    ft.replace(R.id.content_frame, newFragment, null);
 		    // Apply changes
-		    ft.commit();
+//		    ft.commit();
 		break;
 		default:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
