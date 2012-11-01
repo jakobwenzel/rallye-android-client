@@ -53,7 +53,7 @@ public class SlideMenuActivity extends SlidingFragmentActivity {
 				switch (pos)
 				{
 				case 0: 
-					setContentView(R.layout.overview);
+					setContentView(R.layout.overview_fragment);
 					getSlidingMenu().showAbove();
 					break;
 				default:
