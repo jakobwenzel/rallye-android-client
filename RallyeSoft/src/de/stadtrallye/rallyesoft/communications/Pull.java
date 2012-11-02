@@ -10,7 +10,12 @@ import java.net.URL;
 
 import org.json.JSONTokener;
 
-public class Pull {
+import android.os.AsyncTask;
+import android.util.Log;
+
+public class Pull extends AsyncTask<String, Integer, String> {
+	
+	public String result;
 	
 	public Pull() {
 		
@@ -24,10 +29,11 @@ public class Pull {
 		String answer = null;
 		
 		try {
-			url = new URL("http://hajoschja.de:10101/rallye/nodes/get-all");
+			url = new URL("http://hajoschja.de:10101/StadtRallye/map/getAllNodes");
 			connection = (HttpURLConnection) url.openConnection();
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			answer = in.readLine();
+			Log.w("pull", answer);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -43,5 +49,19 @@ public class Pull {
 		
 		
 		return answer;
+	}
+
+	@Override
+	protected String doInBackground(String... params) {
+		
+		result = testConnection();
+		Log.w("pull3", result);
+		return result;
+	}
+	
+	@Override
+	protected void onPostExecute(String res) {
+		Log.w("pull4", res);
+		result = res;
 	}
 }
