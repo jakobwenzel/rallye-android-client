@@ -1,3 +1,5 @@
-#ignore bin dirs
+#ignore
 bin
+
 gen
+.settings

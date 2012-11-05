@@ -1,5 +1,5 @@
 package de.stadtrallye.rallyesoft;
-
+/*
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
@@ -78,3 +78,4 @@ public class SlideMenuActivity extends SlidingFragmentActivity {
 		return super.onOptionsItemSelected(item);
 	}
 }
+*/

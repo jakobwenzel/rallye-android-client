@@ -3,65 +3,80 @@ package de.stadtrallye.rallyesoft.communications;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONTokener;
+
+import de.stadtrallye.rallyesoft.error.RestNotAvailableException;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class Pull extends AsyncTask<String, Integer, String> {
+public class Pull {
 	
-	public String result;
+	private String base;
+	private boolean gzip;
 	
-	public Pull() {
-		
+	public Pull(String baseURL, boolean gzip) {
+		base = baseURL;
+		this.gzip = gzip;
 	}
 	
-	public String testConnection() {
-		
-		
-		URL url = null;
-		HttpURLConnection connection = null;
-		String answer = null;
+	private InputStream getInputFromRest(String rest) throws RestNotAvailableException {
+		try {
+			URL url = new URL(base + rest);
+			return url.openConnection().getInputStream();
+			
+		} catch (Exception e) {
+			throw new RestNotAvailableException(rest, e);
+		}
+	}
+	
+	public String readLineFromRest(String rest) throws RestNotAvailableException {
 		
 		try {
-			url = new URL("http://hajoschja.de:10101/StadtRallye/map/getAllNodes");
-			connection = (HttpURLConnection) url.openConnection();
-			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			answer = in.readLine();
-			Log.w("pull", answer);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return new BufferedReader(new InputStreamReader(getInputFromRest(rest))).readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RestNotAvailableException(rest, e);
 		}
-		
-		if (connection != null) {
-			
-		}
-		
-		
-		
-		return answer;
-	}
-
-	@Override
-	protected String doInBackground(String... params) {
-		
-		result = testConnection();
-		Log.w("pull3", result);
-		return result;
 	}
 	
-	@Override
-	protected void onPostExecute(String res) {
-		Log.w("pull4", res);
-		result = res;
+	public JSONArray getJSONArrayFromRest(String rest) {
+		try {
+			return new JSONArray(readLineFromRest(rest));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RestNotAvailableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public JSONObject getJSONObjectFromRest(String rest) {
+		try {
+			return new JSONObject(readLineFromRest(rest));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RestNotAvailableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public JSONArray pullAllNodes() {
+		
+		return getJSONArrayFromRest("/map/getAllNodes");
+		
 	}
 }
