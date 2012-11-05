@@ -9,6 +9,7 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.communications.Pull;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
+import android.view.View;
 import android.widget.TextView;
 
 public class PullTest extends AsyncTask<Void, Void, String> {
@@ -35,8 +36,14 @@ public class PullTest extends AsyncTask<Void, Void, String> {
 	
 	@Override
 	protected void onPostExecute(String res) {
-		TextView tv = (TextView) ui.getView().findViewById(R.id.placeholder);
-		tv.setText(res);
+		try {
+			View view = ui.getView();
+			
+			TextView tv = (TextView) view.findViewById(R.id.placeholder);
+			tv.setText(res);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
