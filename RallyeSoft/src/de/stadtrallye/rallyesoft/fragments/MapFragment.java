@@ -7,8 +7,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.async.PullTest;
 import de.stadtrallye.rallyesoft.communications.Pull;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -20,11 +23,13 @@ import android.widget.Toast;
 
 public class MapFragment extends Fragment {
 	
-
+	PullTest t;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		t = new PullTest(this, new Pull(Config.server, false));
+		t.execute();
 	}
 	
 	@Override
