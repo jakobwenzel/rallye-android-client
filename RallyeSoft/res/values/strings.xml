@@ -7,5 +7,6 @@
     <string name="title_overview">Übersicht</string>
     <string name="unsupported_link">Eine nicht unterstützte Funktion wurde ausgewählt</string>
     <string name="send">Senden</string>
+    <string name="picture_taken">Bild gemacht!</string>
     
 </resources>

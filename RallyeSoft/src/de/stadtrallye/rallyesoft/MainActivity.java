@@ -1,7 +1,10 @@
 package de.stadtrallye.rallyesoft;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
@@ -14,6 +17,8 @@ import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
@@ -106,12 +111,46 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	}
 	
 	@Override
-	public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item) {
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        menu.add("Save")
+            .setIcon(R.drawable.ic_compose)
+            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+//        menu.add("Search")
+//            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+//
+//        menu.add("Refresh")
+//            .setIcon(R.drawable.ic_refresh_inverse)
+//            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+
+        return true;
+    }
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getTitle().equals("Save")) {
+			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
+			
+		    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+//		    Uri fileUri =
+//		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+
+		    // start the image capture Intent
+		    startActivityForResult(intent, 100);
+		}
+		
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			toggle();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
 	}
 }
