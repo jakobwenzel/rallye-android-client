@@ -39,8 +39,8 @@ public class PullTest extends AsyncTask<Void, Void, String> {
 		try {
 			View view = ui.getView();
 			
-			TextView tv = (TextView) view.findViewById(R.id.placeholder);
-			tv.setText(res);
+//			TextView tv = (TextView) view.findViewById(R.id.placeholder);
+//			tv.setText(res);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -6,5 +6,6 @@
     <string name="dash_menu">Menü</string>
     <string name="title_overview">Übersicht</string>
     <string name="unsupported_link">Eine nicht unterstützte Funktion wurde ausgewählt</string>
+    <string name="send">Senden</string>
     
 </resources>

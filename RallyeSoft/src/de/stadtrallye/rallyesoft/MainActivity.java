@@ -18,6 +18,7 @@ import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
+import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.MapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 
@@ -88,6 +89,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 1:
 			newFragment = new MapFragment();
 		break;
+		case 3:
+			newFragment = new ChatFragment();
+			break;
 		default:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
 		return false;

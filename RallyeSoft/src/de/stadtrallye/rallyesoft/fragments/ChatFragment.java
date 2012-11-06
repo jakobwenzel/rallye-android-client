@@ -7,27 +7,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.async.PullTest;
+import de.stadtrallye.rallyesoft.async.PullChats;
 import de.stadtrallye.rallyesoft.communications.Pull;
 
-public class MapFragment extends Fragment {
-	
-	PullTest t;
-	
+public class ChatFragment extends Fragment {
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-//		t = new PullTest(this, new Pull(Config.server, false));
-//		t.execute();
+		PullChats c = new PullChats(this, new Pull(Config.server, false));
+		c.execute();
 	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.map_fragment, container, false);
-	}
-	
-	@Override
-	public void onStart() {
-		super.onStart();
+		return inflater.inflate(R.layout.chat_list, container, false);
 	}
 }
