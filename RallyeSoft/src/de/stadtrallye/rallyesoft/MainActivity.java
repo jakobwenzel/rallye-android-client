@@ -130,14 +130,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getTitle().equals("Save")) {
-			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
 			
 		    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
 //		    Uri fileUri =
 //		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
 
-		    // start the image capture Intent
 		    startActivityForResult(intent, 100);
 		}
 		
