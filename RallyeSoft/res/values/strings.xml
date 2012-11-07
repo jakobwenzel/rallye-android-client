@@ -8,5 +8,6 @@
     <string name="unsupported_link">Eine nicht unterstützte Funktion wurde ausgewählt</string>
     <string name="send">Senden</string>
     <string name="picture_taken">Bild gemacht!</string>
+    <string name="title_maps">Karte</string>
     
 </resources>

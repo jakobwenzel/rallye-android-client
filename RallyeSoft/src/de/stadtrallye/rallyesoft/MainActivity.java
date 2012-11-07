@@ -2,7 +2,6 @@ package de.stadtrallye.rallyesoft;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -14,9 +13,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.ActionBar.Tab;
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.slidingmenu.lib.SlidingMenu;
@@ -24,7 +20,6 @@ import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
-import de.stadtrallye.rallyesoft.fragments.MapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener {
@@ -92,7 +87,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			newFragment = new OverviewFragment();
 		break;
 		case 1:
-			newFragment = new MapFragment();
+//			newFragment = new MapFragment();
+			Intent i = new Intent(this, GameMapActivity.class);
+			startActivityFromFragment(currentFragment, i, -1);
 		break;
 		case 3:
 			newFragment = new ChatFragment();

@@ -23,7 +23,7 @@ public class MapFragment extends Fragment {
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.map_fragment, container, false);
+		return inflater.inflate(R.layout.map, container, false);
 	}
 	
 	@Override
