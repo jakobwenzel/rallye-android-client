@@ -11,6 +11,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
+import com.google.android.maps.MapActivity;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingMapActivity;
 
@@ -18,7 +19,7 @@ import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.MapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 
-public class GameMapActivity extends SlidingMapActivity {
+public class GameMapActivity extends MapActivity {
 	
 	
 	@Override
@@ -27,18 +28,18 @@ public class GameMapActivity extends SlidingMapActivity {
 		
 		setTitle(R.string.title_maps);
 		setContentView(R.layout.map);
-		setBehindContentView(R.layout.dashboard_main);
+//		setBehindContentView(R.layout.dashboard_main);
 		
-		ActionBar ab = getSupportActionBar();
-		ab.setDisplayHomeAsUpEnabled(true);
+//		ActionBar ab = getSupportActionBar();
+//		ab.setDisplayHomeAsUpEnabled(true);
 
 //		ActionBar.Tab tab = getSupportActionBar().newTab();
 		
-		SlidingMenu sm = getSlidingMenu();
-		sm.setEnabled(false);
-		sm.setShadowWidthRes(R.dimen.shadow_width);
-		sm.setShadowDrawable(R.drawable.shadow);
-		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
+//		SlidingMenu sm = getSlidingMenu();
+//		sm.setEnabled(false);
+//		sm.setShadowWidthRes(R.dimen.shadow_width);
+//		sm.setShadowDrawable(R.drawable.shadow);
+//		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
 //		sm.setBehindCanvasTransformer(new CanvasTransformer() {
 //			public void transformCanvas(Canvas canvas, float percentOpen) {
 //				float scale = (float) (percentOpen*0.25 + 0.75);
@@ -46,9 +47,9 @@ public class GameMapActivity extends SlidingMapActivity {
 //			}
 //		});
         
-        ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
-        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
-        dashboard.setAdapter(dashAdapter);
+//        ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
+//        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
+//        dashboard.setAdapter(dashAdapter);
 //        dashboard.setOnItemClickListener(this);
 		
 //		Context context = ab.getThemedContext();

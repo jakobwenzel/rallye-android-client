@@ -90,7 +90,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //			newFragment = new MapFragment();
 			Intent i = new Intent(this, GameMapActivity.class);
 			startActivityFromFragment(currentFragment, i, -1);
-		break;
+		return true;
 		case 3:
 			newFragment = new ChatFragment();
 			break;
