@@ -81,6 +81,8 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 //        ab.setListNavigationCallbacks(list, this);
 //		ab.setSelectedNavigationItem(0);
 		
+		((MapView) findViewById(R.id.mapview)).setBuiltInZoomControls(true);
+		
 		PullMap map = new PullMap(new Pull(Config.server, false), this);
 		map.execute();
 	}
@@ -159,9 +161,10 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 			for (MapNode node: nodes) {
 				this.nodes.add(new OverlayItem(new GeoPoint(node.lat, node.lon), node.name, "Description"));
 				Log.i("map", node.toString());
-				populate();
 			}
 			
+			
+			populate();
 			Toast.makeText(getApplicationContext(), nodes.size()+" Nodes loaded!", Toast.LENGTH_SHORT).show();
 			
 		}
@@ -191,7 +194,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 
 	@Override
 	public void onTaskFinished(List<MapNode> result) {
-		ItemizedOverlay overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.androidmarker), this, result);
+		ItemizedOverlay overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, result);
 		((MapView) this.findViewById(R.id.mapview)).getOverlays().add(overlay);
 		
 	}
