@@ -1,9 +1,17 @@
 package de.stadtrallye.rallyesoft;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
@@ -11,27 +19,39 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockMapActivity;
+import com.actionbarsherlock.view.MenuItem;
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapActivity;
+import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
+import com.google.android.maps.MapView;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingMapActivity;
 
+import de.stadtrallye.rallyesoft.async.IOnTaskFinished;
+import de.stadtrallye.rallyesoft.async.PullMap;
+import de.stadtrallye.rallyesoft.communications.Pull;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.MapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
+import de.stadtrallye.rallyesoft.model.MapNode;
 
-public class GameMapActivity extends MapActivity {
+public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinished<List<MapNode>> {
 	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		
 		setTitle(R.string.title_maps);
 		setContentView(R.layout.map);
 //		setBehindContentView(R.layout.dashboard_main);
 		
-//		ActionBar ab = getSupportActionBar();
-//		ab.setDisplayHomeAsUpEnabled(true);
+		ActionBar ab = getSupportActionBar();
+		ab.setDisplayHomeAsUpEnabled(true);
 
 //		ActionBar.Tab tab = getSupportActionBar().newTab();
 		
@@ -60,6 +80,9 @@ public class GameMapActivity extends MapActivity {
 //		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 //        ab.setListNavigationCallbacks(list, this);
 //		ab.setSelectedNavigationItem(0);
+		
+		PullMap map = new PullMap(new Pull(Config.server, false), this);
+		map.execute();
 	}
 	
 //	@Override
@@ -100,11 +123,77 @@ public class GameMapActivity extends MapActivity {
 //		
 //		return true;
 //	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			finish();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
 	@Override
 	protected boolean isRouteDisplayed() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	public void displayOverlay(List<MapNode> nodes) {
+		
+	}
+	
+	
+	private class RallyeOverlay extends ItemizedOverlay<OverlayItem> {
+
+		private Context context;
+		private List<OverlayItem> nodes;
+		
+		public RallyeOverlay(Drawable defaultMarker, Context context, List<MapNode> nodes) {
+			super(boundCenterBottom(defaultMarker));
+			this.context = context;
+			
+			this.nodes = new ArrayList<OverlayItem>();
+			
+			for (MapNode node: nodes) {
+				this.nodes.add(new OverlayItem(new GeoPoint(node.lat, node.lon), node.name, "Description"));
+				Log.i("map", node.toString());
+				populate();
+			}
+			
+			Toast.makeText(getApplicationContext(), nodes.size()+" Nodes loaded!", Toast.LENGTH_SHORT).show();
+			
+		}
+
+		@Override
+		protected OverlayItem createItem(int i) {
+			return nodes.get(i);
+		}
+
+		@Override
+		public int size() {
+			return nodes.size();
+		}
+		
+		@Override
+		protected boolean onTap(int index) {
+		  OverlayItem item = nodes.get(index);
+		  AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+		  dialog.setTitle(item.getTitle());
+		  dialog.setMessage(item.getSnippet());
+		  dialog.show();
+		  return true;
+		}
+		
+	}
+
+
+	@Override
+	public void onTaskFinished(List<MapNode> result) {
+		ItemizedOverlay overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.androidmarker), this, result);
+		((MapView) this.findViewById(R.id.mapview)).getOverlays().add(overlay);
+		
 	}
 
 }
