@@ -1,82 +1,107 @@
 package de.stadtrallye.rallyesoft.communications;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import de.stadtrallye.rallyesoft.error.RestNotAvailableException;
 
-import android.os.AsyncTask;
-import android.util.Log;
-
-public class Pull {
+public class Pull implements Serializable {
+	
+	private static final long serialVersionUID = 0L;
 	
 	private String base;
-	private boolean gzip;
+	protected String gcm;
 	
-	public Pull(String baseURL, boolean gzip) {
+	protected final static String GCM = "gcm";
+	protected final static String TIMESTAMP = "timestamp";
+	protected final static String CHATROOM = "chatroom";
+	
+	public Pull(String baseURL, String gcmID) {
 		base = baseURL;
-		this.gzip = gzip;
+		gcm = gcmID;
 	}
 	
-	private InputStream getInputFromRest(String rest) throws RestNotAvailableException {
-		try {
-			URL url = new URL(base + rest);
-			return url.openConnection().getInputStream();
+	public Request makeRequest(String rest) throws RestNotAvailableException {
+		return new Request(rest);
+	}
+	
+	public class Request {
+		
+		private HttpURLConnection conn;
+		private BufferedReader reader;
+		
+		public Request(String rest) throws RestNotAvailableException {
+			try {
+				URL url = new URL(base + rest);
+				
+				conn =  (HttpURLConnection) url.openConnection();
+				reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				
+			} catch (Exception e) {
+				throw new RestNotAvailableException(rest, e);
+			}
+		}
+		
+		public boolean putPost(String post) {
+			byte[] bytes = post.getBytes();
 			
-		} catch (Exception e) {
-			throw new RestNotAvailableException(rest, e);
+			conn.setDoOutput(true);
+			conn.setFixedLengthStreamingMode(bytes.length);
+			
+			try {
+				conn.getOutputStream().write(bytes);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return true;
 		}
-	}
-	
-	public String readLineFromRest(String rest) throws RestNotAvailableException {
 		
-		try {
-			return new BufferedReader(new InputStreamReader(getInputFromRest(rest))).readLine();
-		} catch (IOException e) {
-			throw new RestNotAvailableException(rest, e);
+		public String readLine() {
+			try {
+				return reader.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
 		}
-	}
-	
-	public JSONArray getJSONArrayFromRest(String rest) {
-		try {
-			return new JSONArray(readLineFromRest(rest));
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RestNotAvailableException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public JSONObject getJSONObjectFromRest(String rest) {
-		try {
-			return new JSONObject(readLineFromRest(rest));
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RestNotAvailableException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public JSONArray pullAllNodes() {
 		
-		return getJSONArrayFromRest("/map/getAllNodes");
+		public JSONArray getJSONArray() {
+			try {
+				return new JSONArray(readLine());
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
 		
+		public JSONObject getJSONObject() {
+			try {
+				return new JSONObject(readLine());
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
+		public void close() {
+			try {
+				reader.close();
+				conn.disconnect();
+			} catch (Exception e) {
+			}
+		}
 	}
 }

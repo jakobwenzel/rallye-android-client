@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.communications.Pull;
+import de.stadtrallye.rallyesoft.communications.RallyePull;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.view.View;
@@ -18,16 +19,16 @@ import android.widget.TextView;
 public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	
 	private Fragment ui;
-	private Pull pull;
+	private RallyePull pull;
 	
-	public PullChats(Fragment ui, Pull pull) {
+	public PullChats(Fragment ui, RallyePull pull) {
 		this.ui = ui;
 		this.pull = pull;
 	}
 
 	@Override
 	protected ArrayList<String> doInBackground(Void... params) {
-		JSONArray js = pull.getJSONArrayFromRest("/chat/getChatEntries/wertWERTwertWERT");
+		JSONArray js = pull.pullChats(1, 0);
 		ArrayList<String> messages = new ArrayList<String>();
 		try {
 			JSONObject next;

@@ -33,12 +33,15 @@ import com.slidingmenu.lib.app.SlidingMapActivity;
 import de.stadtrallye.rallyesoft.async.IOnTaskFinished;
 import de.stadtrallye.rallyesoft.async.PullMap;
 import de.stadtrallye.rallyesoft.communications.Pull;
+import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.MapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.MapNode;
 
 public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinished<List<MapNode>> {
+	
+	public RallyePull pull;
 	
 	
 	@Override
@@ -83,7 +86,10 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 		
 		((MapView) findViewById(R.id.mapview)).setBuiltInZoomControls(true);
 		
-		PullMap map = new PullMap(new Pull(Config.server, false), this);
+		pull = RallyePull.getPull(getIntent().getExtras());
+		
+		
+		PullMap map = new PullMap(pull, this);
 		map.execute();
 	}
 	

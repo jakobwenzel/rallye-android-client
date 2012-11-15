@@ -19,12 +19,14 @@ import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
+import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener {
 	
 	public PushService push;
+	public RallyePull pull;
 	private Fragment currentFragment;
 	
 	@Override
@@ -64,6 +66,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         ab.setListNavigationCallbacks(list, this);
 		ab.setSelectedNavigationItem(0);
+		
+		// Ray's INIT
+		pull = RallyePull.getPull(getIntent().getExtras());
 	}
 	
 	@Override
@@ -89,10 +94,11 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 1:
 //			newFragment = new MapFragment();
 			Intent i = new Intent(this, GameMapActivity.class);
+			i.putExtra("pull", pull);
 			startActivityFromFragment(currentFragment, i, -1);
 		return true;
 		case 3:
-			newFragment = new ChatFragment();
+			newFragment = new ChatFragment(pull);
 			break;
 		default:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();

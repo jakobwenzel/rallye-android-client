@@ -7,6 +7,7 @@ import org.json.JSONException;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.communications.Pull;
+import de.stadtrallye.rallyesoft.error.RestNotAvailableException;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.view.View;
@@ -24,7 +25,13 @@ public class PullTest extends AsyncTask<Void, Void, String> {
 
 	@Override
 	protected String doInBackground(Void... params) {
-		JSONArray js = pull.getJSONArrayFromRest("/map/getAllNodes");
+		JSONArray js = null;
+		try {
+			js = pull.makeRequest("/map/getAllNodes").getJSONArray();
+		} catch (RestNotAvailableException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		try {
 			return js.getJSONObject(0).toString();
 		} catch (JSONException e) {

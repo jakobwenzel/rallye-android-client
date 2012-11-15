@@ -8,23 +8,24 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.stadtrallye.rallyesoft.communications.Pull;
+import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.model.MapNode;
 
 import android.os.AsyncTask;
 
 public class PullMap extends AsyncTask<Void, Void, List<MapNode>> {
 	
-	private Pull pull;
+	private RallyePull pull;
 	IOnTaskFinished<List<MapNode>> target;
 	
-	public PullMap(Pull pull, IOnTaskFinished<List<MapNode>> target) {
+	public PullMap(RallyePull pull, IOnTaskFinished<List<MapNode>> target) {
 		this.pull = pull;
 		this.target = target;
 	}
 
 	@Override
 	protected List<MapNode> doInBackground(Void... params) {
-		JSONArray js = pull.getJSONArrayFromRest("/map/get/nodes");
+		JSONArray js = pull.pullAllNodes();
 		ArrayList<MapNode> nodes = new ArrayList<MapNode>();
 		try {
 			JSONObject next;
