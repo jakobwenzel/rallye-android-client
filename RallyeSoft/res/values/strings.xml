@@ -10,4 +10,7 @@
     <string name="picture_taken">Bild gemacht!</string>
     <string name="title_maps">Karte</string>
     
+    
+    <string name="menu_logon">Anmelden</string>
+    
 </resources>

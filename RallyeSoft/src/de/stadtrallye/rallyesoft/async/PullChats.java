@@ -28,7 +28,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 
 	@Override
 	protected ArrayList<String> doInBackground(Void... params) {
-		JSONArray js = pull.pullChats(1, 0);
+		JSONArray js = pull.pullChats(2, 0);
 		ArrayList<String> messages = new ArrayList<String>();
 		try {
 			JSONObject next;
@@ -38,7 +38,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 				++i;
 				messages.add(next.getString("message"));
 			}
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

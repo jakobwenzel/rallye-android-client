@@ -20,9 +20,18 @@ public class Pull implements Serializable {
 	private String base;
 	protected String gcm;
 	
+	public enum Mime {JSON{
+		@Override
+		public String toString() {
+			return "application/JSON";
+		}
+		}};
+	
 	protected final static String GCM = "gcm";
 	protected final static String TIMESTAMP = "timestamp";
 	protected final static String CHATROOM = "chatroom";
+	protected final static String PASSWORD = "password";
+	protected final static String GROUP = "groupID";
 	
 	public Pull(String baseURL, String gcmID) {
 		base = baseURL;
@@ -43,17 +52,17 @@ public class Pull implements Serializable {
 				URL url = new URL(base + rest);
 				
 				conn =  (HttpURLConnection) url.openConnection();
-				reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 				
-			} catch (Exception e) {
+			} catch (IOException e) {
 				throw new RestNotAvailableException(rest, e);
 			}
 		}
 		
-		public boolean putPost(String post) {
+		public boolean putPost(String post, Mime type) {
 			byte[] bytes = post.getBytes();
 			
 			conn.setDoOutput(true);
+			conn.addRequestProperty("Content-Type", type.toString());
 			conn.setFixedLengthStreamingMode(bytes.length);
 			
 			try {
@@ -66,8 +75,11 @@ public class Pull implements Serializable {
 			return true;
 		}
 		
+		
 		public String readLine() {
 			try {
+				if (reader == null)
+					reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 				return reader.readLine();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -82,8 +94,8 @@ public class Pull implements Serializable {
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return null;
 			}
-			return null;
 		}
 		
 		public JSONObject getJSONObject() {
@@ -92,8 +104,8 @@ public class Pull implements Serializable {
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return null;
 			}
-			return null;
 		}
 		
 		public void close() {

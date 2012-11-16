@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft;
 
+import java.lang.reflect.Field;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +9,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -14,10 +17,12 @@ import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
+import de.stadtrallye.rallyesoft.async.PushLogin;
 import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
@@ -28,11 +33,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public PushService push;
 	public RallyePull pull;
 	private Fragment currentFragment;
+	private int lastTab = 0;
+	private boolean fakeTab = false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		// Titel und Inhalt + SideBar
 		setTitle(R.string.title_main);
 		setContentView(R.layout.main);
 		setBehindContentView(R.layout.dashboard_main);
@@ -42,6 +50,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 
 //		ActionBar.Tab tab = getSupportActionBar().newTab();
 		
+		// Settings for SideBar
 		SlidingMenu sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
 		sm.setShadowDrawable(R.drawable.shadow);
@@ -52,12 +61,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //				canvas.scale(scale, scale, canvas.getWidth()/2, canvas.getHeight()/2);
 //			}
 //		});
-        
+		
+        // Populate SideBar
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
         ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(this);
 		
+        // Populate tabs
 		Context context = ab.getThemedContext();
 		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
         list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
@@ -65,28 +76,52 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         ab.setListNavigationCallbacks(list, this);
-		ab.setSelectedNavigationItem(0);
+		
+		getOverflowMenu();
 		
 		// Ray's INIT
 		pull = RallyePull.getPull(getIntent().getExtras());
+		PushService.ensureRegistration(this);
+		PushLogin login = new PushLogin(pull, this.getApplicationContext(), PushService.getID(this));
+		login.execute();
+	}
+	
+	@Override
+	public void onStart() {
+		super.onStart();
+		
+		getSupportActionBar().setSelectedNavigationItem(lastTab);
+	}
+	
+	private void getOverflowMenu() {
+	     try {
+	        ViewConfiguration config = ViewConfiguration.get(this);
+	        Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
+	        if(menuKeyField != null) {
+	            menuKeyField.setAccessible(true);
+	            menuKeyField.setBoolean(config, false);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
 	
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-		onSwitchTab(pos, id, TabEventSource.SlidingMenu);
+		onSwitchTab(pos, id);
 		getSlidingMenu().showAbove();
 		getSupportActionBar().setSelectedNavigationItem(pos);
 	}
 
 	@Override
 	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-		return onSwitchTab(itemPosition, itemId, TabEventSource.NavList);
+		return onSwitchTab(itemPosition, itemId);
 	}
 	
-	private enum TabEventSource { SlidingMenu, NavList };
-	
-	private boolean onSwitchTab(int pos, long id, TabEventSource source) {
+	private boolean onSwitchTab(int pos, long id) {
+		
 		Fragment newFragment = null;
+		
 		switch (pos) {
 		case 0: 
 			newFragment = new OverviewFragment();
@@ -110,15 +145,19 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ft.commit();
 		currentFragment = newFragment;
 		
+		lastTab = pos;
 		return true;
 	}
 	
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
-        menu.add("Save")
-            .setIcon(R.drawable.ic_compose)
-            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+		MenuInflater inflater = getSupportMenuInflater();
+	    inflater.inflate(R.menu.activity_main, menu);
+	    
+//        menu.add("Save")
+//            .setIcon(R.drawable.ic_compose)
+//            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+		
 
 //        menu.add("Search")
 //            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
@@ -132,13 +171,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getTitle().equals("Save")) {
-			
+		if (item.getTitle().equals("Photo")) {
 		    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
 //		    Uri fileUri =
 //		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
-
 		    startActivityForResult(intent, 100);
 		}
 		
