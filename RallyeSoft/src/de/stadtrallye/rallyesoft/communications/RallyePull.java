@@ -1,18 +1,14 @@
 package de.stadtrallye.rallyesoft.communications;
 
-import java.util.HashMap;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
-
 import de.stadtrallye.rallyesoft.Config;
-import de.stadtrallye.rallyesoft.communications.Pull.Request;
-import de.stadtrallye.rallyesoft.error.RestNotAvailableException;
+import de.stadtrallye.rallyesoft.exception.HttpResponseException;
+import de.stadtrallye.rallyesoft.exception.RestException;
 
 public class RallyePull extends Pull {
 	
@@ -33,7 +29,7 @@ public class RallyePull extends Pull {
 	
 	
 	
-	public JSONArray pushLogin(String regId, int groupId, String pw) {
+	public JSONArray pushLogin(String regId, int groupId, String pw) throws HttpResponseException, RestException {
 		try {
 			Request r = makeRequest("/user/register");
 			r.putPost(new JSONObject()
@@ -44,7 +40,7 @@ public class RallyePull extends Pull {
 			
 			JSONArray res = r.getJSONArray();
 			return res;
-		} catch(RestNotAvailableException e) {
+		} catch(RestException e) {
 			Log.e("RPull", e.toString());
 			return null;
 		} catch (JSONException e) {
@@ -54,12 +50,12 @@ public class RallyePull extends Pull {
 		}
 	}
 
-	public JSONArray pullAllNodes() {
+	public JSONArray pullAllNodes() throws HttpResponseException, RestException {
 		Log.i("RPull", "pulling all nodes...");
 		Request r;
 		try {
 			r = new Request("/map/get/nodes");
-		} catch (RestNotAvailableException e) {
+		} catch (RestException e) {
 			Log.e("RPull", e.toString());
 			return null;
 		}
@@ -68,7 +64,7 @@ public class RallyePull extends Pull {
 		return res;
 	}
 	
-	public JSONArray pullChats(int chatroom, int timestamp) {
+	public JSONArray pullChats(int chatroom, int timestamp) throws HttpResponseException, RestException {
 		Request r;
 		try {
 			Log.i("RPull", "pulling all chats...");
@@ -83,7 +79,7 @@ public class RallyePull extends Pull {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} catch (RestNotAvailableException e) {
+		} catch (RestException e) {
 			Log.w("RPull", e.toString());
 			Log.w("RPull", e.getCause().toString());
 			return null;

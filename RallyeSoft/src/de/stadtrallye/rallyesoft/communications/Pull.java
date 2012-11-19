@@ -11,7 +11,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.stadtrallye.rallyesoft.error.RestNotAvailableException;
+import de.stadtrallye.rallyesoft.exception.HttpResponseException;
+import de.stadtrallye.rallyesoft.exception.RestException;
 
 public class Pull implements Serializable {
 	
@@ -38,7 +39,7 @@ public class Pull implements Serializable {
 		gcm = gcmID;
 	}
 	
-	public Request makeRequest(String rest) throws RestNotAvailableException {
+	public Request makeRequest(String rest) throws RestException {
 		return new Request(rest);
 	}
 	
@@ -47,14 +48,13 @@ public class Pull implements Serializable {
 		private HttpURLConnection conn;
 		private BufferedReader reader;
 		
-		public Request(String rest) throws RestNotAvailableException {
+		public Request(String rest) throws RestException {
 			try {
 				URL url = new URL(base + rest);
-				
 				conn =  (HttpURLConnection) url.openConnection();
 				
 			} catch (IOException e) {
-				throw new RestNotAvailableException(rest, e);
+				throw new RestException(rest, e);
 			}
 		}
 		
@@ -76,19 +76,24 @@ public class Pull implements Serializable {
 		}
 		
 		
-		public String readLine() {
+		public String readLine() throws HttpResponseException, RestException {
+			
 			try {
-				if (reader == null)
-					reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				int code = conn.getResponseCode();
+				if (code >= 200 && code < 300) {
+					if (reader == null)
+						reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				} else {
+					throw new HttpResponseException(code, conn.getResponseMessage(), conn.getURL().toString());
+				}
+				
 				return reader.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
+				throw new RestException(conn.getURL().toString(), e);
 			}
 		}
 		
-		public JSONArray getJSONArray() {
+		public JSONArray getJSONArray() throws HttpResponseException, RestException {
 			try {
 				return new JSONArray(readLine());
 			} catch (JSONException e) {
@@ -98,7 +103,7 @@ public class Pull implements Serializable {
 			}
 		}
 		
-		public JSONObject getJSONObject() {
+		public JSONObject getJSONObject() throws HttpResponseException, RestException {
 			try {
 				return new JSONObject(readLine());
 			} catch (JSONException e) {

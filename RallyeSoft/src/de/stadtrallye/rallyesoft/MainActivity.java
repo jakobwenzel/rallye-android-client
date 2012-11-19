@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -39,6 +40,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Avoid Handler Exception
+		new AsyncTask<Void, Void, Void>() {
+		      @Override
+		      protected Void doInBackground(Void... params) {
+		        return null;
+		      }
+		    }.execute();
 		
 		// Titel und Inhalt + SideBar
 		setTitle(R.string.title_main);
