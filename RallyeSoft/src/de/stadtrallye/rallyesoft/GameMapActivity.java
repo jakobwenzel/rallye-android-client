@@ -5,17 +5,9 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -23,20 +15,12 @@ import com.actionbarsherlock.app.SherlockMapActivity;
 import com.actionbarsherlock.view.MenuItem;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
-import com.google.android.maps.MapActivity;
-import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
 import com.google.android.maps.MapView;
-import com.slidingmenu.lib.SlidingMenu;
-import com.slidingmenu.lib.app.SlidingMapActivity;
+import com.google.android.maps.OverlayItem;
 
 import de.stadtrallye.rallyesoft.async.IOnTaskFinished;
 import de.stadtrallye.rallyesoft.async.PullMap;
-import de.stadtrallye.rallyesoft.communications.Pull;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
-import de.stadtrallye.rallyesoft.fragments.ChatFragment;
-import de.stadtrallye.rallyesoft.fragments.MapFragment;
-import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.MapNode;
 
 public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinished<List<MapNode>> {

@@ -11,8 +11,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.stadtrallye.rallyesoft.exception.HttpResponseException;
-import de.stadtrallye.rallyesoft.exception.RestException;
+import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
+import de.stadtrallye.rallyesoft.exceptions.RestException;
 
 public class Pull implements Serializable {
 	
@@ -58,7 +58,7 @@ public class Pull implements Serializable {
 			}
 		}
 		
-		public boolean putPost(String post, Mime type) {
+		public boolean putPost(String post, Mime type) throws RestException {
 			byte[] bytes = post.getBytes();
 			
 			conn.setDoOutput(true);
@@ -68,8 +68,7 @@ public class Pull implements Serializable {
 			try {
 				conn.getOutputStream().write(bytes);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new RestException("POST", e);
 			}
 			
 			return true;
@@ -93,24 +92,12 @@ public class Pull implements Serializable {
 			}
 		}
 		
-		public JSONArray getJSONArray() throws HttpResponseException, RestException {
-			try {
-				return new JSONArray(readLine());
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
+		public JSONArray getJSONArray() throws HttpResponseException, RestException, JSONException {
+			return new JSONArray(readLine());
 		}
 		
-		public JSONObject getJSONObject() throws HttpResponseException, RestException {
-			try {
-				return new JSONObject(readLine());
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return null;
-			}
+		public JSONObject getJSONObject() throws HttpResponseException, RestException, JSONException {
+			return new JSONObject(readLine());
 		}
 		
 		public void close() {

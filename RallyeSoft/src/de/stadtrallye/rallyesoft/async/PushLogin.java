@@ -10,6 +10,7 @@ import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.model.MapNode;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.Toast;
 
 public class PushLogin extends AsyncTask<Void, Void, int[]> {
@@ -17,6 +18,8 @@ public class PushLogin extends AsyncTask<Void, Void, int[]> {
 	private RallyePull pull;
 	private Context context;
 	private String id;
+	
+	final private static String err = "Failed to load Nodes:: ";
 	
 	public PushLogin(RallyePull pull, Context context, String id) {
 		this.pull = pull;
@@ -26,11 +29,11 @@ public class PushLogin extends AsyncTask<Void, Void, int[]> {
 
 	@Override
 	protected int[] doInBackground(Void... params) {
-		JSONArray js = pull.pushLogin(id, 2, "test");
-		if (js == null)
-			return null;
-		int l = js.length();
 		try {
+			JSONArray js = pull.pushLogin(id, 2, "test");
+			if (js == null)
+				return null;
+			int l = js.length();
 			int[] res = new int[l];
 			JSONObject next;
 			for (int i=0; i<l; ++i) {
@@ -39,9 +42,8 @@ public class PushLogin extends AsyncTask<Void, Void, int[]> {
 			}
 			
 			return res;
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			Log.e("RallyeLogin", err +e.toString());
 		}
 		return null;
 	}

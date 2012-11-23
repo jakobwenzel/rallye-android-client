@@ -7,8 +7,8 @@ import org.json.JSONObject;
 import android.os.Bundle;
 import android.util.Log;
 import de.stadtrallye.rallyesoft.Config;
-import de.stadtrallye.rallyesoft.exception.HttpResponseException;
-import de.stadtrallye.rallyesoft.exception.RestException;
+import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
+import de.stadtrallye.rallyesoft.exceptions.RestException;
 
 public class RallyePull extends Pull {
 	
@@ -50,7 +50,7 @@ public class RallyePull extends Pull {
 		}
 	}
 
-	public JSONArray pullAllNodes() throws HttpResponseException, RestException {
+	public JSONArray pullAllNodes() throws HttpResponseException, RestException, JSONException {
 		Log.i("RPull", "pulling all nodes...");
 		Request r;
 		try {
@@ -64,7 +64,7 @@ public class RallyePull extends Pull {
 		return res;
 	}
 	
-	public JSONArray pullChats(int chatroom, int timestamp) throws HttpResponseException, RestException {
+	public JSONArray pullChats(int chatroom, int timestamp) throws HttpResponseException, RestException, JSONException {
 		Request r;
 		try {
 			Log.i("RPull", "pulling all chats...");

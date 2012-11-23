@@ -89,10 +89,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		getOverflowMenu();
 		
 		// Ray's INIT
+		new LoginDialogFragment().show(getSupportFragmentManager(), "loginDialog");
+		
 		pull = RallyePull.getPull(getIntent().getExtras());
 		PushService.ensureRegistration(this);
-		PushLogin login = new PushLogin(pull, this.getApplicationContext(), PushService.getID(this));
-		login.execute();
+		//PushLogin login = new PushLogin(pull, this.getApplicationContext(), PushService.getID(this));
+		//login.execute();
 	}
 	
 	@Override

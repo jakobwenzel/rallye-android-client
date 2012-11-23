@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.exception;
+package de.stadtrallye.rallyesoft.exceptions;
 
 import android.util.Log;
 

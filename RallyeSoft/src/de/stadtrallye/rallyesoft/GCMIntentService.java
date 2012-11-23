@@ -6,6 +6,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gcm.GCMBaseIntentService;
+import com.google.android.gcm.GCMRegistrar;
+
+import de.stadtrallye.rallyesoft.communications.RallyePull;
 
 public class GCMIntentService extends GCMBaseIntentService {
 
@@ -30,6 +33,10 @@ public class GCMIntentService extends GCMBaseIntentService {
 	protected void onRegistered(Context context, String registrationId) {
 		Toast.makeText(getApplicationContext(), "GCM Push Registered!", Toast.LENGTH_SHORT).show();
 		Log.i("RPushService", "Registered GCM!");
+		
+		RallyePull pull = RallyePull.getPull();
+		
+		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
 	}
 
 	@Override

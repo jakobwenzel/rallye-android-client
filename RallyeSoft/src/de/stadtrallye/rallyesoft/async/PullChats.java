@@ -9,8 +9,11 @@ import org.json.JSONObject;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.communications.Pull;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
+import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
+import de.stadtrallye.rallyesoft.exceptions.RestException;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -21,6 +24,8 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	private Fragment ui;
 	private RallyePull pull;
 	
+	final private static String err = "Failed to load Messages:: ";
+	
 	public PullChats(Fragment ui, RallyePull pull) {
 		this.ui = ui;
 		this.pull = pull;
@@ -28,9 +33,10 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 
 	@Override
 	protected ArrayList<String> doInBackground(Void... params) {
-		JSONArray js = pull.pullChats(2, 0);
-		ArrayList<String> messages = new ArrayList<String>();
+		ArrayList<String> messages = null;
 		try {
+			JSONArray js = pull.pullChats(2, 0);
+			messages = new ArrayList<String>();
 			JSONObject next;
 			int i = 0;
 			while ((next = (JSONObject) js.opt(i)) != null)
@@ -39,14 +45,15 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 				messages.add(next.getString("message"));
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.e("RallyeChat", err +e.toString());
 		}
 		return messages;
 	}
 	
 	@Override
 	protected void onPostExecute(ArrayList<String> lines) {
+		if (lines == null)
+			return;
 		try {
 			View view = ui.getView();
 			ListView chats = (ListView) view.findViewById(R.id.chat_list);
@@ -54,6 +61,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	        chats.setAdapter(chatAdapter);
 			
 		} catch (Exception e) {
+			Log.e("RallyeChat", "Unkown Error:: " +e.toString());
 			e.printStackTrace();
 		}
 	}
