@@ -9,10 +9,17 @@ public class HttpResponseException extends org.apache.http.client.HttpResponseEx
 	 * 
 	 */
 	private static final long serialVersionUID = 7720873277325268997L;
+	private String url;
 
-	public HttpResponseException(int statusCode, String s, String t) {
-		super(statusCode, s);
-		Log.e("HttpRequest", t +":: "+ statusCode +": "+ s, this);
+	public HttpResponseException(int statusCode, String msg, String url) {
+		super(statusCode, msg);
+		this.url = url;
+		Log.e("HttpRequest", toString(), this);
+	}
+	
+	@Override
+	public String toString() {
+		return url +":: "+ getStatusCode() +": "+ getMessage();
 	}
 
 }

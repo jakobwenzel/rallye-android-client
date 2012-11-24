@@ -2,7 +2,6 @@ package de.stadtrallye.rallyesoft.communications;
 
 import android.app.Activity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gcm.GCMRegistrar;
 

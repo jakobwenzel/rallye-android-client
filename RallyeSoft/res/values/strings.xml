@@ -13,5 +13,6 @@
     
     <string name="menu_logon">Anmelden</string>
     <string name="ok">OK</string>
+    <string name="configuration">Configuration</string>
     
 </resources>

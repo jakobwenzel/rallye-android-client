@@ -3,21 +3,16 @@ package de.stadtrallye.rallyesoft.async;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.communications.Pull;
-import de.stadtrallye.rallyesoft.communications.RallyePull;
-import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
-import de.stadtrallye.rallyesoft.exceptions.RestException;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
+import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.communications.RallyePull;
 
 public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	

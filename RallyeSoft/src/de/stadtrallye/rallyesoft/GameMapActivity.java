@@ -17,6 +17,7 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
+import com.slidingmenu.lib.app.SlidingMapActivity;
 
 import de.stadtrallye.rallyesoft.async.IOnTaskFinished;
 import de.stadtrallye.rallyesoft.async.PullMap;
@@ -70,7 +71,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 		
 		((MapView) findViewById(R.id.mapview)).setBuiltInZoomControls(true);
 		
-		pull = RallyePull.getPull(getIntent().getExtras());
+		pull = RallyePull.getPull(getApplicationContext());
 		
 		
 		PullMap map = new PullMap(pull, this);
@@ -89,7 +90,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 //		return onSwitchTab(itemPosition, itemId, TabEventSource.NavList);
 //	}
 	
-	private enum TabEventSource { SlidingMenu, NavList };
+//	private enum TabEventSource { SlidingMenu, NavList };
 	
 //	private boolean onSwitchTab(int pos, long id, TabEventSource source) {
 //		Fragment newFragment = null;
@@ -150,7 +151,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 			
 			for (MapNode node: nodes) {
 				this.nodes.add(new OverlayItem(new GeoPoint(node.lat, node.lon), node.name, "Description"));
-				Log.i("map", node.toString());
+				Log.d("map", node.toString());
 			}
 			
 			
@@ -184,8 +185,10 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 
 	@Override
 	public void onTaskFinished(List<MapNode> result) {
-		ItemizedOverlay overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, result);
-		((MapView) this.findViewById(R.id.mapview)).getOverlays().add(overlay);
+		MapView m = ((MapView) this.findViewById(R.id.mapview));
+		ItemizedOverlay<OverlayItem> overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, result);
+		m.getOverlays().add(overlay);
+		m.invalidate();
 		
 	}
 

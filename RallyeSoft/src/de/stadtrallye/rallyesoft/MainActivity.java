@@ -23,10 +23,10 @@ import com.actionbarsherlock.view.MenuItem;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
-import de.stadtrallye.rallyesoft.async.PushLogin;
 import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
+import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener {
@@ -35,7 +35,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public RallyePull pull;
 	private Fragment currentFragment;
 	private int lastTab = 0;
-	private boolean fakeTab = false;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -91,10 +90,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		// Ray's INIT
 		new LoginDialogFragment().show(getSupportFragmentManager(), "loginDialog");
 		
-		pull = RallyePull.getPull(getIntent().getExtras());
+		pull = RallyePull.getPull(this.getApplicationContext());
 		PushService.ensureRegistration(this);
-		//PushLogin login = new PushLogin(pull, this.getApplicationContext(), PushService.getID(this));
-		//login.execute();
 	}
 	
 	@Override
@@ -140,7 +137,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 1:
 //			newFragment = new MapFragment();
 			Intent i = new Intent(this, GameMapActivity.class);
-			i.putExtra("pull", pull);
+//			i.putExtra("pull", pull);
 			startActivityFromFragment(currentFragment, i, -1);
 		return true;
 		case 3:

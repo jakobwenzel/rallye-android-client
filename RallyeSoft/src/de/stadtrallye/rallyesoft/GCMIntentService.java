@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft;
 
+import org.json.JSONException;
+
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -9,6 +11,8 @@ import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
 import de.stadtrallye.rallyesoft.communications.RallyePull;
+import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
+import de.stadtrallye.rallyesoft.exceptions.RestException;
 
 public class GCMIntentService extends GCMBaseIntentService {
 
@@ -34,15 +38,28 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Toast.makeText(getApplicationContext(), "GCM Push Registered!", Toast.LENGTH_SHORT).show();
 		Log.i("RPushService", "Registered GCM!");
 		
-		RallyePull pull = RallyePull.getPull();
+		RallyePull pull = RallyePull.getPull(getApplicationContext());
+		pull.setGcmId(registrationId);
 		
-		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
+		try {
+			pull.pushLogin(registrationId, Config.group, Config.password);
+			
+			GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
+		} catch (HttpResponseException e) {
+			Log.e("RallyeGCM", "Unknown Http Exception:: " +e.toString());
+		} catch (RestException e) {
+			Log.e("RallyeGCM", "Unknown Rest Exception:: " +e.toString());
+		} catch (JSONException e) {
+			Log.e("RallyeGCM", "Unknown JSON Exception:: " +e.toString());
+		}
 	}
 
 	@Override
 	protected void onUnregistered(Context context, String registrationId) {
 		Toast.makeText(getApplicationContext(), "GCM Push Unregistered!", Toast.LENGTH_SHORT).show();
 		Log.i("RPushService", "Unregistered GCM!");
+		
+		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 	}
 
 }

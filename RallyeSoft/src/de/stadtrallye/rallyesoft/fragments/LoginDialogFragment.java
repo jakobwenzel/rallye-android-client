@@ -1,5 +1,8 @@
-package de.stadtrallye.rallyesoft;
+package de.stadtrallye.rallyesoft.fragments;
 
+import de.stadtrallye.rallyesoft.Config;
+import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.R.string;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -17,11 +20,11 @@ public class LoginDialogFragment extends DialogFragment {
         		.append("Server: ").append(Config.server).append("\n")
         		.append("Group: ").append(Config.group).append("\n")
         		.append("PW: ").append(Config.password))
-               .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                       // FIRE ZE MISSILES!
-                   }
-               });
+        		.setTitle(R.string.configuration)
+        		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+        			public void onClick(DialogInterface dialog, int id) {
+        			}
+        		});
 //               .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 //                   public void onClick(DialogInterface dialog, int id) {
 //                       // User cancelled the dialog

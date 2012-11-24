@@ -3,7 +3,6 @@ package de.stadtrallye.rallyesoft.communications;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -14,12 +13,9 @@ import org.json.JSONObject;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
-public class Pull implements Serializable {
-	
-	private static final long serialVersionUID = 0L;
+public class Pull {
 	
 	private String base;
-	protected String gcm;
 	
 	public enum Mime {JSON{
 		@Override
@@ -28,15 +24,8 @@ public class Pull implements Serializable {
 		}
 		}};
 	
-	protected final static String GCM = "gcm";
-	protected final static String TIMESTAMP = "timestamp";
-	protected final static String CHATROOM = "chatroom";
-	protected final static String PASSWORD = "password";
-	protected final static String GROUP = "groupID";
-	
-	public Pull(String baseURL, String gcmID) {
+	public Pull(String baseURL) {
 		base = baseURL;
-		gcm = gcmID;
 	}
 	
 	public Request makeRequest(String rest) throws RestException {
