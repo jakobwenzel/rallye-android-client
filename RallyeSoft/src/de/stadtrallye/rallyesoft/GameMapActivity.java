@@ -151,7 +151,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 			
 			for (MapNode node: nodes) {
 				this.nodes.add(new OverlayItem(new GeoPoint(node.lat, node.lon), node.name, "Description"));
-				Log.d("map", node.toString());
+				Log.d("GameMapActivity", node.toString());
 			}
 			
 			

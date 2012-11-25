@@ -32,6 +32,7 @@ public class RallyePull extends Pull {
 		
 		this.config = config;
 		this.context = context;
+		setGcmId();
 	}
 	
 	
@@ -45,26 +46,41 @@ public class RallyePull extends Pull {
 		return r.readLine();
 	}
 	
-	
-	public JSONArray pushLogin() throws HttpResponseException, RestException, JSONException {
-		Request r = makeRequest("/user/register");
+	private static JSONArray doLogin(Request r, String gcm, int group, String password) throws RestException, HttpResponseException, JSONException {
 		try {
 			String post = new JSONObject()
 			.put(GCM, gcm)
-			.put(GROUP, config.getInt("group", 0))
-			.put(PASSWORD, config.getString("password", ""))
+			.put(GROUP, group)
+			.put(PASSWORD, password)
 			.toString();
-			Log.d("RLogin", post);
 			r.putPost(post, Mime.JSON);
 		} catch (JSONException e) {
-			Log.e("PullChat", "Unkown JSON error during POST");
+			Log.e("RallyePull", "Login: Unkown JSON error during POST");
 		}
 		JSONArray res = r.getJSONArray();
 		return res;
 	}
+	
+	public JSONArray pushLogin() throws HttpResponseException, RestException, JSONException {
+		return doLogin(makeRequest("/user/register"), gcm, config.getInt("group", 0), config.getString("password", ""));
+	}
+	
+	public static JSONArray pushLogin(Context context, String server, int group, String password) throws HttpResponseException, RestException, JSONException {
+		return doLogin(new Pull(server).new Request("/user/register"), GCMRegistrar.getRegistrationId(context), group, password);
+	}
+	
+	public String pushLogout() throws RestException, HttpResponseException {
+		Request r = new Request("/user/unregister");
+		try {
+			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
+		} catch (JSONException e) {
+			Log.e("RallyePull", "Logout: Unkown JSON error during POST");
+		}
+		return r.readLine();
+	}
 
 	public JSONArray pullAllNodes() throws HttpResponseException, RestException, JSONException {
-		Log.i("RPull", "pulling all nodes...");
+		Log.i("RallyePull", "pulling all nodes...");
 		Request r;
 		r = new Request("/map/get/nodes");
 		JSONArray res = r.getJSONArray();
@@ -74,7 +90,7 @@ public class RallyePull extends Pull {
 	
 	public JSONArray pullChats(int chatroom, int timestamp) throws HttpResponseException, RestException, JSONException {
 		Request r;
-		Log.i("RPull", "pulling all chats...");
+		Log.i("RallyePull", "pulling all chats...");
 		r = new Request("/chat/get");
 		try {
 			r.putPost(new JSONObject()
@@ -83,7 +99,7 @@ public class RallyePull extends Pull {
 					.put(TIMESTAMP, (timestamp == 0)? JSONObject.NULL : timestamp)
 					.toString(), Pull.Mime.JSON);
 		} catch (JSONException e) {
-			Log.e("PullChat", "Unkown JSON error during POST");
+			Log.e("RallyePull", "PullChats: Unkown JSON error during POST");
 		}
 		JSONArray res = r.getJSONArray();
 		r.close();

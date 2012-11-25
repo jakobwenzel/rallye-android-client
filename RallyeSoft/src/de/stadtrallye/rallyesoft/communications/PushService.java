@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.communications;
 
-import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
@@ -9,13 +9,13 @@ import de.stadtrallye.rallyesoft.Config;
 
 public class PushService {
 
-	public static void ensureRegistration(Activity activity) {
+	public static void ensureRegistration(Context context) {
 		// Register with GCM
-        GCMRegistrar.checkDevice(activity);
-        GCMRegistrar.checkManifest(activity);
-        final String regId = GCMRegistrar.getRegistrationId(activity);
+        GCMRegistrar.checkDevice(context);
+        GCMRegistrar.checkManifest(context);
+        final String regId = GCMRegistrar.getRegistrationId(context);
         if (regId.equals("")) {
-        	GCMRegistrar.register(activity, Config.gcm);
+        	GCMRegistrar.register(context, Config.gcm);
         	Log.v("gcm", "Now registered");
         } else {
         	Log.v("gcm", "Already registered: "+regId);
@@ -23,8 +23,8 @@ public class PushService {
         
 	}
 	
-	public static String getID(Activity activity) {
-		return GCMRegistrar.getRegistrationId(activity);
+	public static String getID(Context context) {
+		return GCMRegistrar.getRegistrationId(context);
 	}
 
 }

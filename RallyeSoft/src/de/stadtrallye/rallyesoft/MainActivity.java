@@ -64,8 +64,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		SlidingMenu sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
 		sm.setShadowDrawable(R.drawable.defaultshadow);
-		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
-		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
+//		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
+		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
+		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+		
 //		sm.setBehindCanvasTransformer(new CanvasTransformer() {
 //			public void transformCanvas(Canvas canvas, float percentOpen) {
 //				float scale = (float) (percentOpen*0.25 + 0.75);
@@ -91,18 +93,19 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		getOverflowMenu();
 		
 		// Ray's INIT
+		PushService.ensureRegistration(this);
+		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+		pull = new RallyePull(config, this.getApplicationContext());
 	}
 	
 	@Override
 	public void onStart() {
 		super.onStart();
 		
-		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		if (config.getBoolean("firstLaunch", true)) {
-			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
-		}
+//		if (config.getBoolean("firstLaunch", true)) {
+//			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
+//		}
 		
-		pull = new RallyePull(config, this.getApplicationContext());
 		
 		getSupportActionBar().setSelectedNavigationItem(lastTab);
 	}
@@ -124,7 +127,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 		if (lastTab != pos)
 		{
-			onSwitchTab(pos, id);
+//			onSwitchTab(pos, id);
 			getSupportActionBar().setSelectedNavigationItem(pos);
 		}
 		getSlidingMenu().showAbove();

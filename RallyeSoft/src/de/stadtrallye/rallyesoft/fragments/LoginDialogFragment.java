@@ -3,6 +3,7 @@ package de.stadtrallye.rallyesoft.fragments;
 import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.R.string;
+import de.stadtrallye.rallyesoft.async.PushLogin;
 import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
@@ -10,6 +11,7 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -37,6 +39,10 @@ public class LoginDialogFragment extends DialogFragment {
 	private EditText group;
 	private EditText pw;
 	
+	public LoginDialogFragment() {
+		this.pref = getActivity().getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+	}
+	
 	public LoginDialogFragment(SharedPreferences pref) {
 		this.pref = pref;
 	}
@@ -50,27 +56,11 @@ public class LoginDialogFragment extends DialogFragment {
         		.setView(getActivity().getLayoutInflater().inflate(R.layout.dialog_login, null))
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
-        				String newServer = server.getText().toString();
+     
         				
-//        				try {
-//							RallyePull.testConnection(newServer);
-//						} catch (HttpResponseException e) {
-//							Log.w("ServerTest", "Server not compatible: " +e.toString());
-//							Toast.makeText(getActivity().getApplicationContext(), "Server not compatible", Toast.LENGTH_SHORT).show();
-//						} catch (RestException e) {
-//							Log.w("ServerTest", "Server not available: " +e.toString());
-//							Toast.makeText(getActivity().getApplicationContext(), "Server not available", Toast.LENGTH_SHORT).show();
-//						}
-        				
-        				//TODO: Check if login works
-        				SharedPreferences.Editor edit = pref.edit();
-                        edit.putString("server", newServer);
-                        edit.putInt("group", Integer.parseInt(group.getText().toString()));
-                        edit.putString("password", pw.getText().toString());
-                        edit.putBoolean("firstLaunch", false);
-                        edit.commit();
-                        
-                        PushService.ensureRegistration(getActivity());
+        				RallyePull pull = new RallyePull(pref, getActivity());
+        				PushLogin login = new PushLogin(pull, getActivity(), pref, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
+        				login.execute();
         			}
         		})
                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {

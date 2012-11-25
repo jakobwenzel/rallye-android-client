@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
@@ -48,6 +50,7 @@ public class Pull {
 		}
 		
 		public boolean putPost(String post, Mime type) throws RestException {
+			Log.d("Pull", "Posting: " +post);
 			byte[] bytes = post.getBytes();
 			
 			conn.setDoOutput(true);

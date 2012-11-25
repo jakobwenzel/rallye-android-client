@@ -26,7 +26,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 	@Override
 	protected void onMessage(Context context, Intent intent) {
 		Toast.makeText(getApplicationContext(), "Received Push Notification!", Toast.LENGTH_SHORT).show();
-		Log.i("RPushService", "Received Push Notification! ");
+		Log.i("GCMIntentService", "Received Push Notification! ");
 	}
 
 	@Override
@@ -37,37 +37,39 @@ public class GCMIntentService extends GCMBaseIntentService {
 
 	@Override
 	protected void onRegistered(Context context, String registrationId) {
-		Log.i("RPushService", "Registered GCM!");
+		Log.i("GCMIntentService", "Registered GCM!");
 		
 		SharedPreferences pref = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 		if (pref.getString("server", null) == null) {
-			Log.i("RPushService", "Cannot Register on Server, no server configured");
+			Log.i("GCMIntentService", "Cannot Register on Server, no server configured");
 			return;
 		}
 		
-		RallyePull pull = RallyePull.getPull(getApplicationContext());
-		pull.setGcmId(registrationId);
+		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
-		try {
-			JSONArray res = pull.pushLogin();
-			
-			GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
-			Log.i("RPushService", "Registered on Server");
-		} catch (HttpResponseException e) {
-			Log.e("RallyeGCM", "Unknown Http Exception:: " +e.toString());
-		} catch (RestException e) {
-			Log.e("RallyeGCM", "Unknown Rest Exception:: " +e.toString());
-		} catch (JSONException e) {
-			Log.e("RallyeGCM", "Unknown JSON Exception:: " +e.toString());
-		}
+//		RallyePull pull = RallyePull.getPull(getApplicationContext());
+//		pull.setGcmId(registrationId);
+//		
+//		try {
+//			JSONArray res = pull.pushLogin();
+//			
+//			GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
+//			Log.i("RPushService", "Registered on Server");
+//		} catch (HttpResponseException e) {
+//			Log.e("RallyeGCM", "Unknown Http Exception:: " +e.toString());
+//		} catch (RestException e) {
+//			Log.e("RallyeGCM", "Unknown Rest Exception:: " +e.toString());
+//		} catch (JSONException e) {
+//			Log.e("RallyeGCM", "Unknown JSON Exception:: " +e.toString());
+//		}
 	}
 
 	@Override
 	protected void onUnregistered(Context context, String registrationId) {
 		Toast.makeText(getApplicationContext(), "GCM Push Unregistered!", Toast.LENGTH_SHORT).show();
-		Log.i("RPushService", "Unregistered GCM!");
+		Log.i("GCMIntentService", "Unregistered GCM!");
 		
-		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
+//		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 	}
 
 }

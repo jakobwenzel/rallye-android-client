@@ -40,7 +40,7 @@ public class PullMap extends AsyncTask<Void, Void, List<MapNode>> {
 				nodes.add(new MapNode(next.getInt("nodeID"), next.getString("name"), next.getDouble("lat"), next.getDouble("lon")));
 			}
 		} catch (Exception e) {
-			Log.e("RallyeMap", err +e.toString());
+			Log.e("PullMap", err +e.toString());
 		}
 		return nodes;
 	}

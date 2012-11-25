@@ -23,8 +23,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	
 	public PullChats(Fragment ui) {
 		this.ui = ui;
-		pull = RallyePull.getPull(ui.getActivity().getApplicationContext());
-		pull.setGcmId();
+		pull = RallyePull.getPull(ui.getActivity());
 	}
 
 	@Override
@@ -41,7 +40,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 				messages.add(next.getString("message"));
 			}
 		} catch (Exception e) {
-			Log.e("RallyeChat", err +e.toString());
+			Log.e("PullChat", err +e.toString());
 		}
 		return messages;
 	}
@@ -57,7 +56,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	        chats.setAdapter(chatAdapter);
 			
 		} catch (Exception e) {
-			Log.e("RallyeChat", "Unkown Error:: " +e.toString());
+			Log.e("PullChat", "Unkown Error:: " +e.toString());
 			e.printStackTrace();
 		}
 	}

@@ -12,6 +12,6 @@ public class RestException extends Exception {
 	public RestException(String rest, Exception e) {
 		super("The REST Command at "+ rest +" was not available", e);
 		
-		Log.e("Rest", "The REST Command at "+ rest +" was not available: "+ e.toString(), e);
+		Log.e("RestException", "The REST Command at "+ rest +" was not available: "+ e.toString(), e);
 	}
 }
