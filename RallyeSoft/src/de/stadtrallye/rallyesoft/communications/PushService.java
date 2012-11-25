@@ -18,7 +18,7 @@ public class PushService {
         	GCMRegistrar.register(activity, Config.gcm);
         	Log.v("gcm", "Now registered");
         } else {
-        	Log.v("gcm", "Already registered");
+        	Log.v("gcm", "Already registered: "+regId);
         }
         
 	}

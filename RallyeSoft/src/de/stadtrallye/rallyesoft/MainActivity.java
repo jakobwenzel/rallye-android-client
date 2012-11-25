@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -35,6 +36,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public RallyePull pull;
 	private Fragment currentFragment;
 	private int lastTab = 0;
+	private SharedPreferences config;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -61,8 +63,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		// Settings for SideBar
 		SlidingMenu sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
-		sm.setShadowDrawable(R.drawable.shadow);
+		sm.setShadowDrawable(R.drawable.defaultshadow);
 		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
+		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 //		sm.setBehindCanvasTransformer(new CanvasTransformer() {
 //			public void transformCanvas(Canvas canvas, float percentOpen) {
 //				float scale = (float) (percentOpen*0.25 + 0.75);
@@ -88,15 +91,18 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		getOverflowMenu();
 		
 		// Ray's INIT
-		new LoginDialogFragment().show(getSupportFragmentManager(), "loginDialog");
-		
-		pull = RallyePull.getPull(this.getApplicationContext());
-		PushService.ensureRegistration(this);
 	}
 	
 	@Override
 	public void onStart() {
 		super.onStart();
+		
+		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+		if (config.getBoolean("firstLaunch", true)) {
+			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
+		}
+		
+		pull = new RallyePull(config, this.getApplicationContext());
 		
 		getSupportActionBar().setSelectedNavigationItem(lastTab);
 	}
@@ -116,9 +122,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-		onSwitchTab(pos, id);
+		if (lastTab != pos)
+		{
+			onSwitchTab(pos, id);
+			getSupportActionBar().setSelectedNavigationItem(pos);
+		}
 		getSlidingMenu().showAbove();
-		getSupportActionBar().setSelectedNavigationItem(pos);
 	}
 
 	@Override
@@ -141,7 +150,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			startActivityFromFragment(currentFragment, i, -1);
 		return true;
 		case 3:
-			newFragment = new ChatFragment(pull);
+			newFragment = new ChatFragment();
 			break;
 		default:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
@@ -179,17 +188,19 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getTitle().equals("Photo")) {
-		    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//		    Uri fileUri =
-//		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
-		    startActivityForResult(intent, 100);
-		}
-		
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			toggle();
-			return true;
+			break;
+		case R.id.menu_foto:
+			Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//		    Uri fileUri =
+//		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+		    startActivityForResult(intent, 100);
+		    break;
+		case R.id.menu_logon:
+			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
+			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}

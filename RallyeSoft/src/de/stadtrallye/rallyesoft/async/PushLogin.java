@@ -30,7 +30,7 @@ public class PushLogin extends AsyncTask<Void, Void, int[]> {
 	@Override
 	protected int[] doInBackground(Void... params) {
 		try {
-			JSONArray js = pull.pushLogin(id, 2, "test");
+			JSONArray js = pull.pushLogin();
 			if (js == null)
 				return null;
 			int l = js.length();

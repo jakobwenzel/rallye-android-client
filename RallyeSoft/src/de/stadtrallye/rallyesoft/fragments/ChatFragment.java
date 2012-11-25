@@ -14,16 +14,13 @@ import de.stadtrallye.rallyesoft.communications.RallyePull;
 
 public class ChatFragment extends Fragment {
 	
-	private RallyePull pull;
-	
-	public ChatFragment(RallyePull pull) {
-		this.pull = pull;
+	public ChatFragment() {
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		PullChats c = new PullChats(this, pull);
+		PullChats c = new PullChats(this);
 		c.execute();
 	}
 	

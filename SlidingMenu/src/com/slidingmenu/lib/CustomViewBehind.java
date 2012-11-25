@@ -3,17 +3,21 @@ package com.slidingmenu.lib;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.slidingmenu.lib.SlidingMenu.CanvasTransformer;
 
-public class CustomViewBehind extends CustomViewAbove {
+public class CustomViewBehind extends ViewGroup {
 
-	//private static final String TAG = "CustomViewBehind";
+	private static final String TAG = "CustomViewBehind";
 
 	private CustomViewAbove mViewAbove;
+
+	private View mContent;
+	private int mWidthOffset;
 	private CanvasTransformer mTransformer;
 	private boolean mChildrenEnabled;
 
@@ -22,57 +26,41 @@ public class CustomViewBehind extends CustomViewAbove {
 	}
 
 	public CustomViewBehind(Context context, AttributeSet attrs) {
-		super(context, attrs, false);
+		super(context, attrs);
 	}
 
 	public void setCustomViewAbove(CustomViewAbove customViewAbove) {
 		mViewAbove = customViewAbove;
-		mViewAbove.setTouchModeBehind(mTouchMode);
-	}
-
-	public void setTouchMode(int i) {
-		mTouchMode = i;
-		if (mViewAbove != null)
-			mViewAbove.setTouchModeBehind(i);
 	}
 
 	public void setCanvasTransformer(CanvasTransformer t) {
 		mTransformer = t;
 	}
-
-	public int getChildLeft(int i) {
-		return 0;
+	
+	public void setWidthOffset(int i) {
+		mWidthOffset = i;
+		requestLayout();
 	}
-
-	@Override
-	public int getCustomWidth() {
-		int i = isMenuOpen()? 0 : 1;
-		return getChildWidth(i);
-	}
-
-	@Override
-	public int getChildWidth(int i) {
-		if (i <= 0) {
-			return getBehindWidth();
-		} else {
-			return getChildAt(i).getMeasuredWidth();
-		}
-	}
-
+	
 	public int getBehindWidth() {
-		ViewGroup.LayoutParams params = getLayoutParams();
-		return params.width;
+		return super.getWidth() - mWidthOffset;
 	}
 
-	@Override
 	public void setContent(View v) {
-		super.setMenu(v);
+		if (mContent != null)
+			removeView(mContent);
+		mContent = v;
+		addView(mContent);
+	}
+	
+	public View getContent() {
+		return mContent;
 	}
 
 	public void setChildrenEnabled(boolean enabled) {
 		mChildrenEnabled = enabled;
 	}
-	
+
 	@Override
 	public void scrollTo(int x, int y) {
 		super.scrollTo(x, y);
@@ -82,12 +70,12 @@ public class CustomViewBehind extends CustomViewAbove {
 
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent e) {
-		return !mChildrenEnabled;
+		return false;
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent e) {
-		return false;
+		return mChildrenEnabled;
 	}
 
 	@Override
@@ -99,6 +87,23 @@ public class CustomViewBehind extends CustomViewAbove {
 			canvas.restore();
 		} else
 			super.dispatchDraw(canvas);
+	}
+
+	@Override
+	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		final int width = r - l;
+		final int height = b - t;
+		mContent.layout(0, 0, width, height);
+	}
+
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		int width = getDefaultSize(0, widthMeasureSpec);
+		int height = getDefaultSize(0, heightMeasureSpec);
+		setMeasuredDimension(width, height);
+		final int contentWidth = getChildMeasureSpec(widthMeasureSpec, 0, width-mWidthOffset);
+		final int contentHeight = getChildMeasureSpec(heightMeasureSpec, 0, height);
+		mContent.measure(contentWidth, contentHeight);
 	}
 
 }

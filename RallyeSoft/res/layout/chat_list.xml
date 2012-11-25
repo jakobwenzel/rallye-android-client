@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
 	    android:layout_height="50dp"
 	    android:orientation="horizontal"
-	    android:background="#BBBBBB">
+	    android:background="@drawable/abs__ab_solid_light_holo">
 	    
         <EditText
 	        android:id="@+id/new_message"

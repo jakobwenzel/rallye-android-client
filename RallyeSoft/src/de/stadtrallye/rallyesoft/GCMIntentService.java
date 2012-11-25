@@ -1,9 +1,11 @@
 package de.stadtrallye.rallyesoft;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -35,16 +37,22 @@ public class GCMIntentService extends GCMBaseIntentService {
 
 	@Override
 	protected void onRegistered(Context context, String registrationId) {
-		Toast.makeText(getApplicationContext(), "GCM Push Registered!", Toast.LENGTH_SHORT).show();
 		Log.i("RPushService", "Registered GCM!");
+		
+		SharedPreferences pref = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+		if (pref.getString("server", null) == null) {
+			Log.i("RPushService", "Cannot Register on Server, no server configured");
+			return;
+		}
 		
 		RallyePull pull = RallyePull.getPull(getApplicationContext());
 		pull.setGcmId(registrationId);
 		
 		try {
-			pull.pushLogin(registrationId, Config.group, Config.password);
+			JSONArray res = pull.pushLogin();
 			
 			GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
+			Log.i("RPushService", "Registered on Server");
 		} catch (HttpResponseException e) {
 			Log.e("RallyeGCM", "Unknown Http Exception:: " +e.toString());
 		} catch (RestException e) {

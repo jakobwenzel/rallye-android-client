@@ -21,9 +21,10 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	
 	final private static String err = "Failed to load Messages:: ";
 	
-	public PullChats(Fragment ui, RallyePull pull) {
+	public PullChats(Fragment ui) {
 		this.ui = ui;
-		this.pull = pull;
+		pull = RallyePull.getPull(ui.getActivity().getApplicationContext());
+		pull.setGcmId();
 	}
 
 	@Override

@@ -1,4 +1,6 @@
 <resources>
+    
+
 
     <string name="app_name">RallyeSoft</string>
     <string name="menu_settings">Settings</string>
@@ -11,8 +13,15 @@
     <string name="title_maps">Karte</string>
     
     
-    <string name="menu_logon">Anmelden</string>
+    <string name="MainPrefHandler">de.stadtrallye.rallyesoft.server</string>
+    
+    
+    <string name="login">Login</string>
     <string name="ok">OK</string>
+    <string name="cancel">Abbruch</string>
     <string name="configuration">Configuration</string>
+    <string name="server">Server</string>
+    <string name="group">Gruppennummer</string>
+    <string name="password">Passwort</string>
     
 </resources>

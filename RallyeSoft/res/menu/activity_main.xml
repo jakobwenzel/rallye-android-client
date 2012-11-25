@@ -6,6 +6,6 @@
         android:showAsAction="always" />
     
     <item android:id="@+id/menu_logon"
-        android:title="@string/menu_logon"
+        android:title="@string/login"
         android:showAsAction="collapseActionView" />
 </menu>
