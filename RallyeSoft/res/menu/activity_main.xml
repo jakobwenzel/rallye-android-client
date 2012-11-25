@@ -3,7 +3,7 @@
     <item android:id="@+id/menu_foto"
         android:title="Photo"
         android:icon="@drawable/ic_compose"
-        android:showAsAction="always" />
+        android:showAsAction="ifRoom" />
     
     <item android:id="@+id/menu_logon"
         android:title="@string/login"
