@@ -52,6 +52,7 @@ public class PushLogin extends AsyncTask<Void, Void, int[]> {
 		if (pref.getBoolean("loggedIn", false)) {
 			try {
 				pull.pushLogout();
+				GCMRegistrar.setRegisteredOnServer(context, false);
 			} catch (Exception e) {
 				Log.e("PushLogin", err +e.toString());
 			}
@@ -69,6 +70,7 @@ public class PushLogin extends AsyncTask<Void, Void, int[]> {
 				res[i] = next.getInt("chatroom");
 			}
 			
+			GCMRegistrar.setRegisteredOnServer(context, true);
 			return res;
 		} catch (Exception e) {
 			Log.e("PushLogin", err +e.toString());

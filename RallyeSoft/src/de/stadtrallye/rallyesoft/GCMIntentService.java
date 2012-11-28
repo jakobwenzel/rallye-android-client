@@ -25,8 +25,8 @@ public class GCMIntentService extends GCMBaseIntentService {
 	
 	@Override
 	protected void onMessage(Context context, Intent intent) {
-		Toast.makeText(getApplicationContext(), "Received Push Notification!", Toast.LENGTH_SHORT).show();
-		Log.i("GCMIntentService", "Received Push Notification! ");
+		Toast.makeText(getApplicationContext(), "Received Push Notification!", Toast.LENGTH_LONG).show();
+		Log.w("GCMIntentService", "Received Push Notification:\n " +intent.toString());
 	}
 
 	@Override
