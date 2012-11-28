@@ -17,6 +17,7 @@
     
     
     <string name="login">Login</string>
+    <string name="logout">Logout</string>
     <string name="ok">OK</string>
     <string name="cancel">Abbruch</string>
     <string name="configuration">Configuration</string>

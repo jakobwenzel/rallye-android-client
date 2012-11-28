@@ -46,7 +46,7 @@ public class RallyePull extends Pull {
 		return r.readLine();
 	}
 	
-	private static JSONArray doLogin(Request r, String gcm, int group, String password) throws RestException, HttpResponseException, JSONException {
+	private static Request doLogin(Request r, String gcm, int group, String password) throws RestException, HttpResponseException, JSONException {
 		try {
 			String post = new JSONObject()
 			.put(GCM, gcm)
@@ -57,26 +57,34 @@ public class RallyePull extends Pull {
 		} catch (JSONException e) {
 			Log.e("RallyePull", "Login: Unkown JSON error during POST");
 		}
-		JSONArray res = r.getJSONArray();
-		return res;
+//		JSONArray res = r.getJSONArray();
+		return r;
 	}
 	
 	public JSONArray pushLogin() throws HttpResponseException, RestException, JSONException {
-		return doLogin(makeRequest("/user/register"), gcm, config.getInt("group", 0), config.getString("password", ""));
+		return doLogin(makeRequest("/user/register"), gcm, config.getInt("group", 0), config.getString("password", "")).getJSONArray();
 	}
 	
 	public static JSONArray pushLogin(Context context, String server, int group, String password) throws HttpResponseException, RestException, JSONException {
-		return doLogin(new Pull(server).new Request("/user/register"), GCMRegistrar.getRegistrationId(context), group, password);
+		return doLogin(new Pull(server).new Request("/user/register"), GCMRegistrar.getRegistrationId(context), group, password).getJSONArray();
+	}
+	
+	public static PendingRequest pendingLogin(Context context, String server, int group, String password) throws HttpResponseException, RestException, JSONException {
+		return (PendingRequest) doLogin(new Pull(server).new PendingRequest("/user/register"), GCMRegistrar.getRegistrationId(context), group, password);
 	}
 	
 	public String pushLogout() throws RestException, HttpResponseException {
-		Request r = new Request("/user/unregister");
+		return pendingLogout().readLine();
+	}
+	
+	public PendingRequest pendingLogout() throws RestException {
+		PendingRequest r = new PendingRequest("/user/unregister");
 		try {
 			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
 		} catch (JSONException e) {
 			Log.e("RallyePull", "Logout: Unkown JSON error during POST");
 		}
-		return r.readLine();
+		return r;
 	}
 
 	public JSONArray pullAllNodes() throws HttpResponseException, RestException, JSONException {

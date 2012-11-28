@@ -5,7 +5,11 @@
         android:icon="@drawable/ic_compose_inverse"
         android:showAsAction="ifRoom" />
     
-    <item android:id="@+id/menu_logon"
+    <item android:id="@+id/menu_login"
         android:title="@string/login"
+        android:showAsAction="collapseActionView" />
+    
+    <item android:id="@+id/menu_logout"
+        android:title="@string/logout"
         android:showAsAction="collapseActionView" />
 </menu>

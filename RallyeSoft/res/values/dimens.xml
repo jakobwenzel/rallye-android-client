@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <dimen name="slidingmenu_offset">80dp</dimen>
     <dimen name="slidingmenu_width">150dp</dimen>
     <dimen name="list_padding">15dp</dimen>
     <dimen name="shadow_width">30dp</dimen>
