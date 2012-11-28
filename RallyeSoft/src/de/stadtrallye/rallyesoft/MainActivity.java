@@ -130,7 +130,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //			onSwitchTab(pos, id);
 			getSupportActionBar().setSelectedNavigationItem(pos);
 		}
-		getSlidingMenu().showAbove();
+		getSlidingMenu().showMenu();
 	}
 
 	@Override
