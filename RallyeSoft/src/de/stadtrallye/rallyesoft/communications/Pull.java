@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.json.JSONArray;
@@ -34,9 +35,46 @@ public class Pull {
 		return new Request(rest);
 	}
 	
+	public class PendingRequest extends Request {
+
+		private URL url;
+		private String post;
+		private Mime type;
+		
+		public PendingRequest(String rest) throws RestException {
+			try {
+				url = new URL(base + rest);
+			} catch (MalformedURLException e) {
+				throw new RestException(rest, e);
+			}
+		}
+		
+		@Override
+		public boolean putPost(String post, Mime type) {
+			this.post = post;
+			this.type = type;
+			
+			return true;
+		}
+		
+		@Override
+		public String readLine() throws HttpResponseException, RestException {
+			try {
+				conn = (HttpURLConnection) url.openConnection();
+			} catch (IOException e) {
+				throw new RestException(url.toString(), e);
+			}
+			if (post != null) {
+				super.putPost(post, type);
+			}
+			return super.readLine();
+		}
+		
+	}
+	
 	public class Request {
 		
-		private HttpURLConnection conn;
+		protected HttpURLConnection conn;
 		private BufferedReader reader;
 		
 		public Request(String rest) throws RestException {
@@ -47,6 +85,10 @@ public class Pull {
 			} catch (IOException e) {
 				throw new RestException(rest, e);
 			}
+		}
+		
+		protected Request() {
+			// Only for PendingRequest
 		}
 		
 		public boolean putPost(String post, Mime type) throws RestException {

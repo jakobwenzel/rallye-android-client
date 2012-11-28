@@ -201,8 +201,11 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
 		    startActivityForResult(intent, 100);
 		    break;
-		case R.id.menu_logon:
+		case R.id.menu_login:
 			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
+			break;
+		case R.id.menu_logout:
+			
 			break;
 		}
 		return super.onOptionsItemSelected(item);
