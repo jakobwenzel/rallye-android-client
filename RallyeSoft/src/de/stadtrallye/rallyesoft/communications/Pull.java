@@ -16,39 +16,53 @@ import android.util.Log;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
+/**
+ * Pull represents one specific Server
+ * @author Ray
+ *
+ */
 public class Pull {
 	
 	private String base;
 	
-	public enum Mime {JSON{
-		@Override
-		public String toString() {
-			return "application/JSON";
+	public enum Mime { JSON
+		{
+			@Override
+			public String toString() {
+				return "application/JSON";
+			}
 		}
-		}};
+	};
+	
+	public enum RequestResponse { jsArray, jsObject, String	};
 	
 	public Pull(String baseURL) {
 		base = baseURL;
 	}
 	
-	public Request makeRequest(String rest) throws RestException {
-		return new Request(rest);
-	}
-	
+	/**
+	 * A Request that only actually connects to the Server if read from using readLine() [getJSONArray(), getJSONObject() implicit]
+	 * @author Ray
+	 *
+	 */
 	public class PendingRequest extends Request {
 
-		private URL url;
 		private String post;
 		private Mime type;
+		private RequestResponse responseType;
 		
 		public PendingRequest(String rest) throws RestException {
-			try {
-				url = new URL(base + rest);
-			} catch (MalformedURLException e) {
-				throw new RestException(rest, e);
-			}
+			saveURL(rest);
 		}
 		
+		public RequestResponse getResponseType() {
+			return responseType;
+		}
+
+		public void setResponseType(RequestResponse responseType) {
+			this.responseType = responseType;
+		}
+
 		@Override
 		public boolean putPost(String post, Mime type) {
 			this.post = post;
@@ -59,11 +73,7 @@ public class Pull {
 		
 		@Override
 		public String readLine() throws HttpResponseException, RestException {
-			try {
-				conn = (HttpURLConnection) url.openConnection();
-			} catch (IOException e) {
-				throw new RestException(url.toString(), e);
-			}
+			openConnection();
 			if (post != null) {
 				super.putPost(post, type);
 			}
@@ -72,23 +82,42 @@ public class Pull {
 		
 	}
 	
+	/**
+	 * Simple Rest Request to the server of Pull-instance
+	 * can post information using putPost(...)
+	 * @author Ray
+	 *
+	 */
 	public class Request {
 		
+		protected URL url;
 		protected HttpURLConnection conn;
 		private BufferedReader reader;
 		
 		public Request(String rest) throws RestException {
-			try {
-				URL url = new URL(base + rest);
-				conn =  (HttpURLConnection) url.openConnection();
-				
-			} catch (IOException e) {
-				throw new RestException(rest, e);
-			}
+			saveURL(rest);
+			openConnection();
 		}
 		
 		protected Request() {
 			// Only for PendingRequest
+		}
+		
+		protected void saveURL(String rest) throws RestException {
+			try {
+				this.url = new URL(base + rest);
+			} catch (MalformedURLException e) {
+				throw new RestException(rest, e);
+			}
+		}
+		
+		protected void openConnection() throws RestException {
+			try {
+				conn =  (HttpURLConnection) url.openConnection();
+				
+			} catch (IOException e) {
+				throw new RestException(url.toString(), e);
+			}
 		}
 		
 		public boolean putPost(String post, Mime type) throws RestException {

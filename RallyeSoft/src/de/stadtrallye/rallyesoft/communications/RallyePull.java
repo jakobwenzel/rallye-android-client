@@ -15,6 +15,12 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
+/**
+ * REST Adapter
+ * Creates PendingRequests for every type of communication with the server
+ * @author Ray
+ *
+ */
 public class RallyePull extends Pull {
 	
 	private String gcm = "";
@@ -29,6 +35,10 @@ public class RallyePull extends Pull {
 	
 	public RallyePull(SharedPreferences config, Context context) {
 		super(config.getString("server", null));
+		if (config.getString("server", null) == null) {
+			Log.e("RallyePull", "No Configuration Found");
+		}
+		
 		
 		this.config = config;
 		this.context = context;
@@ -41,12 +51,12 @@ public class RallyePull extends Pull {
 		return res;
 	}
 	
-	public static String testConnection(String server) throws RestException, HttpResponseException {
-		Request r = new Pull(server).new Request("/getStatus");
-		return r.readLine();
-	}
+//	public static String testConnection(String server) throws RestException, HttpResponseException {
+//		Request r = new Pull(server).new Request("/getStatus");
+//		return r.readLine();
+//	}
 	
-	private static Request doLogin(Request r, String gcm, int group, String password) throws RestException, HttpResponseException, JSONException {
+	private static Request doLogin(Request r, String gcm, int group, String password) throws RestException {
 		try {
 			String post = new JSONObject()
 			.put(GCM, gcm)
@@ -57,19 +67,18 @@ public class RallyePull extends Pull {
 		} catch (JSONException e) {
 			Log.e("RallyePull", "Login: Unkown JSON error during POST");
 		}
-//		JSONArray res = r.getJSONArray();
 		return r;
 	}
 	
 	public JSONArray pushLogin() throws HttpResponseException, RestException, JSONException {
-		return doLogin(makeRequest("/user/register"), gcm, config.getInt("group", 0), config.getString("password", "")).getJSONArray();
+		return doLogin(new Request("/user/register"), gcm, config.getInt("group", 0), config.getString("password", "")).getJSONArray();
 	}
 	
 	public static JSONArray pushLogin(Context context, String server, int group, String password) throws HttpResponseException, RestException, JSONException {
 		return doLogin(new Pull(server).new Request("/user/register"), GCMRegistrar.getRegistrationId(context), group, password).getJSONArray();
 	}
 	
-	public static PendingRequest pendingLogin(Context context, String server, int group, String password) throws HttpResponseException, RestException, JSONException {
+	public static PendingRequest pendingLogin(Context context, String server, int group, String password) throws RestException {
 		return (PendingRequest) doLogin(new Pull(server).new PendingRequest("/user/register"), GCMRegistrar.getRegistrationId(context), group, password);
 	}
 	

@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+@Deprecated
 public class PushLogin extends AsyncTask<Void, Void, int[]> {
 	
 	private RallyePull pull;

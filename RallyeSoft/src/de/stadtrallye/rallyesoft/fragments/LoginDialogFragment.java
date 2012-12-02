@@ -1,26 +1,24 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import de.stadtrallye.rallyesoft.Config;
-import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.R.string;
-import de.stadtrallye.rallyesoft.async.PushLogin;
-import de.stadtrallye.rallyesoft.communications.PushService;
-import de.stadtrallye.rallyesoft.communications.RallyePull;
-import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
-import de.stadtrallye.rallyesoft.exceptions.RestException;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class LoginDialogFragment extends DialogFragment {
+import com.actionbarsherlock.app.SherlockDialogFragment;
+
+import de.stadtrallye.rallyesoft.Config;
+import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.async.PushLogin;
+import de.stadtrallye.rallyesoft.communications.RallyePull;
+import de.stadtrallye.rallyesoft.model.Model;
+
+public class LoginDialogFragment extends SherlockDialogFragment {
 	
 //	public interface DialogListener {
 //		public void onFinish(String url, int group, String password);
@@ -34,21 +32,32 @@ public class LoginDialogFragment extends DialogFragment {
 //		listener = (DialogListener) activity;
 //	}
 	
-	private SharedPreferences pref;
+	private Model model;
 	private EditText server;
 	private EditText group;
 	private EditText pw;
+	private IModelFinished ui;
+	private int tag;
 	
-	public LoginDialogFragment() {
-		this.pref = getActivity().getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+//	public LoginDialogFragment() {
+//		this.pref = getActivity().getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+//	}
+	
+	public LoginDialogFragment(Model model, IModelFinished ui, int tag) {
+		this.model = model;
+		this.ui = ui;
+		this.tag = tag;
 	}
 	
-	public LoginDialogFragment(SharedPreferences pref) {
-		this.pref = pref;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
 	}
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
+		
 		
 		// Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -57,17 +66,19 @@ public class LoginDialogFragment extends DialogFragment {
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
      
+        				model.login(ui, tag, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
         				
-        				RallyePull pull = new RallyePull(pref, getActivity());
-        				PushLogin login = new PushLogin(pull, getActivity(), pref, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
-        				login.execute();
+//        				RallyePull pull = new RallyePull(pref, getActivity());
+//        				PushLogin login = new PushLogin(pull, getActivity(), pref, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
+//        				login.execute();
         			}
         		})
-               .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                	   Toast.makeText(getActivity().getApplicationContext(), "Cancelled", Toast.LENGTH_SHORT).show();
-                   }
-               });
+        		.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						
+					}
+        		});
         AlertDialog dialog = builder.create();
         
         return dialog;
@@ -83,8 +94,8 @@ public class LoginDialogFragment extends DialogFragment {
         group = (EditText) dialog.findViewById(R.id.group);
         pw = (EditText) dialog.findViewById(R.id.password);
         
-		server.setText(pref.getString("server", Config.server));
-		group.setText(Integer.toString(pref.getInt("group", Config.group)));
-		pw.setText(pref.getString("password", Config.password));
+		server.setText(model.getServer());
+		group.setText(Integer.toString(model.getGroup()));
+		pw.setText(model.getPassword());
 	}
 }

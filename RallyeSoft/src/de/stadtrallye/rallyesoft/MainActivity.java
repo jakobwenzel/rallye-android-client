@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.AdapterView;
@@ -21,19 +22,25 @@ import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.Window;
+import com.google.android.gcm.GCMRegistrar;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
-import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
+import de.stadtrallye.rallyesoft.fragments.IModelFinished;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
+import de.stadtrallye.rallyesoft.model.Model;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelFinished {
+	
+	final private int TASK_LOGOUT = 1;
+	final private int TASK_LOGIN = 2;
 	
 	public PushService push;
-	public RallyePull pull;
+	private Model model;
 	private Fragment currentFragment;
 	private int lastTab = 0;
 	private SharedPreferences config;
@@ -51,6 +58,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		    }.execute();
 		
 		// Titel und Inhalt + SideBar
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		    
 		setTitle(R.string.title_main);
 		setContentView(R.layout.main);
 		setBehindContentView(R.layout.dashboard_main);
@@ -95,7 +104,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		// Ray's INIT
 		PushService.ensureRegistration(this);
 		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		pull = new RallyePull(config, this.getApplicationContext());
+		model = new Model(this, config);
 	}
 	
 	@Override
@@ -105,7 +114,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		if (config.getBoolean("firstLaunch", true)) {
 //			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
 //		}
-		
+		setSupportProgressBarIndeterminateVisibility(false);
 		
 		getSupportActionBar().setSelectedNavigationItem(lastTab);
 	}
@@ -130,7 +139,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //			onSwitchTab(pos, id);
 			getSupportActionBar().setSelectedNavigationItem(pos);
 		}
-		getSlidingMenu().showMenu();
+		getSlidingMenu().showContent();
 	}
 
 	@Override
@@ -174,20 +183,20 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		MenuInflater inflater = getSupportMenuInflater();
 	    inflater.inflate(R.menu.activity_main, menu);
 	    
-//        menu.add("Save")
-//            .setIcon(R.drawable.ic_compose)
-//            .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-		
-
-//        menu.add("Search")
-//            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-//
-//        menu.add("Refresh")
-//            .setIcon(R.drawable.ic_refresh_inverse)
-//            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-
         return true;
     }
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		
+		boolean act = model.isLoggedIn();
+		menu.findItem(R.id.menu_login).setEnabled(!act);
+		menu.findItem(R.id.menu_logout).setEnabled(act);
+		Log.d("MainActivity", "isLoggedIn(): " +act);
+		
+		return true;
+	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -202,17 +211,50 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		    startActivityForResult(intent, 100);
 		    break;
 		case R.id.menu_login:
-			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
+			setProgressBarIndeterminateVisibility(true);
+			new LoginDialogFragment(model, this, TASK_LOGIN).show(getSupportFragmentManager(), "loginDialog");
 			break;
 		case R.id.menu_logout:
-			
+			setProgressBarIndeterminateVisibility(true);
+			model.logout(this, TASK_LOGOUT);
 			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 	
 	@Override
+	protected void onDestroy() {
+		
+		model.onDestroy();
+		
+		GCMRegistrar.onDestroy(this);
+		
+		super.onDestroy();
+	}
+	
+	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onModelFinished(int tag, boolean result) {
+		switch (tag) {
+		case TASK_LOGOUT:
+			setProgressBarIndeterminateVisibility(false);
+			Log.i("MainActivity", "Logged out!");
+			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
+			break;
+		case TASK_LOGIN:
+			setProgressBarIndeterminateVisibility(false);
+			if (result) {
+				Log.i("MainActivity", "Logged in!");
+				Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
+			} else {
+				Log.i("MainActivity", "Login failed!");
+				Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
+			}
+		}
+		
 	}
 }

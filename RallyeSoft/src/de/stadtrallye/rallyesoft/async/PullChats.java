@@ -41,6 +41,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 			}
 		} catch (Exception e) {
 			Log.e("PullChat", err +e.toString());
+			e.printStackTrace();
 		}
 		return messages;
 	}
