@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
-import de.stadtrallye.rallyesoft.fragments.IAsyncFinished;
 
 /**
  * Executes a PendingRequest (->REST), holds Result as String
@@ -14,24 +13,22 @@ import de.stadtrallye.rallyesoft.fragments.IAsyncFinished;
  * @author Ray
  *
  */
-public class UniPush extends AsyncTask<Void, Void, String> {
+public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	
-	private PendingRequest r;
 	private Exception e;
 	private IAsyncFinished ui;
 	private int tag;
 	
 	
-	public UniPush(PendingRequest request, IAsyncFinished progressUi, int tag) {
-		r = request;
+	public UniPush(IAsyncFinished progressUi, int tag) {
 		ui = progressUi;
 		this.tag = tag;
 	}
 
 	@Override
-	protected String doInBackground(Void... params) {
+	protected String doInBackground(PendingRequest... r) {
 		try {
-			return r.readLine();
+			return r[0].readLine();
 			
 		} catch (HttpResponseException e) {
 			this.e = e;

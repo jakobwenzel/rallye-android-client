@@ -45,12 +45,6 @@ public class RallyePull extends Pull {
 		setGcmId();
 	}
 	
-	
-	public static RallyePull getPull(Context context) {
-		RallyePull res = new RallyePull(context.getSharedPreferences(context.getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE), context);
-		return res;
-	}
-	
 //	public static String testConnection(String server) throws RestException, HttpResponseException {
 //		Request r = new Pull(server).new Request("/getStatus");
 //		return r.readLine();
@@ -121,6 +115,21 @@ public class RallyePull extends Pull {
 		JSONArray res = r.getJSONArray();
 		r.close();
 		return res;
+	}
+	
+	public PendingRequest pendingChatRefresh(int chatroom, int timestamp) throws RestException {
+		PendingRequest r = new PendingRequest("/chat/get");
+		try {
+			r.putPost(new JSONObject()
+			.put(GCM, gcm)
+			.put(CHATROOM, chatroom)
+			.put(TIMESTAMP, (timestamp == 0)? JSONObject.NULL : timestamp)
+			.toString(), Pull.Mime.JSON);
+		} catch (JSONException e) {
+			Log.e("RallyePull", "PullChats: Unkown JSON error during POST");
+			throw new RestException("/chat/get", e);
+		}
+		return r;
 	}
 
 

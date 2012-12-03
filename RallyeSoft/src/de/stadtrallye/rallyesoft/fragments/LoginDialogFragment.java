@@ -1,58 +1,56 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockDialogFragment;
 
-import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.async.PushLogin;
-import de.stadtrallye.rallyesoft.communications.RallyePull;
-import de.stadtrallye.rallyesoft.model.Model;
 
 public class LoginDialogFragment extends SherlockDialogFragment {
 	
-//	public interface DialogListener {
-//		public void onFinish(String url, int group, String password);
-//	}
-//	
-//	private DialogListener listener;
-//	
-//	@Override
-//	public void onAttach(Activity activity) {
-//		super.onAttach(activity);
-//		listener = (DialogListener) activity;
-//	}
 	
-	private Model model;
+	public interface IDialogCallback {
+		public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw);
+	    public void onDialogNegativeClick(LoginDialogFragment dialog);
+	}
+	
+	
 	private EditText server;
 	private EditText group;
 	private EditText pw;
-	private IModelFinished ui;
-	private int tag;
+	private IDialogCallback ui;
 	
-//	public LoginDialogFragment() {
-//		this.pref = getActivity().getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-//	}
-	
-	public LoginDialogFragment(Model model, IModelFinished ui, int tag) {
-		this.model = model;
-		this.ui = ui;
-		this.tag = tag;
-	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		
+	}
+	
+//	@Override
+//	public void onSaveInstanceState(Bundle state) {
+//		super.onSaveInstanceState(state);
+//		
+//		state.
+//	}
+	
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		
+		try {
+            // Instantiate the IDialogCallback so we can send events to the host
+            ui = (IDialogCallback) activity;
+        } catch (ClassCastException e) {
+            // The activity doesn't implement the interface, throw exception
+            throw new ClassCastException(activity.toString() + " must implement IDialogCallback");
+        }
 	}
 
 	@Override
@@ -65,18 +63,13 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         		.setView(getActivity().getLayoutInflater().inflate(R.layout.dialog_login, null))
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
-     
-        				model.login(ui, tag, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
-        				
-//        				RallyePull pull = new RallyePull(pref, getActivity());
-//        				PushLogin login = new PushLogin(pull, getActivity(), pref, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
-//        				login.execute();
+        				ui.onDialogPositiveClick(LoginDialogFragment.this, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
+//        				model.login(ui, tag, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
         			}
         		})
         		.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						
+						ui.onDialogNegativeClick(LoginDialogFragment.this);
 					}
         		});
         AlertDialog dialog = builder.create();
@@ -94,8 +87,10 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         group = (EditText) dialog.findViewById(R.id.group);
         pw = (EditText) dialog.findViewById(R.id.password);
         
-		server.setText(model.getServer());
-		group.setText(Integer.toString(model.getGroup()));
-		pw.setText(model.getPassword());
+        Bundle b = getArguments();
+        
+		server.setText(b.getString("server"));
+		group.setText(Integer.toString(b.getInt("group")));
+		pw.setText(b.getString("password"));
 	}
 }

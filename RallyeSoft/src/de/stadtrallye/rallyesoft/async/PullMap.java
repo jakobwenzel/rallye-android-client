@@ -14,6 +14,7 @@ import de.stadtrallye.rallyesoft.model.MapNode;
 import android.os.AsyncTask;
 import android.util.Log;
 
+@Deprecated
 public class PullMap extends AsyncTask<Void, Void, List<MapNode>> {
 	
 	private RallyePull pull;

@@ -71,11 +71,11 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 		
 		((MapView) findViewById(R.id.mapview)).setBuiltInZoomControls(true);
 		
-		pull = RallyePull.getPull(getApplicationContext());
+//		pull = RallyePull.getPull(getApplicationContext());
 		
 		
 		PullMap map = new PullMap(pull, this);
-		map.execute();
+//		map.execute();
 	}
 	
 //	@Override

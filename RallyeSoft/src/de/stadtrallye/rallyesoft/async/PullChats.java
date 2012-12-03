@@ -23,7 +23,7 @@ public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	
 	public PullChats(Fragment ui) {
 		this.ui = ui;
-		pull = RallyePull.getPull(ui.getActivity());
+//		pull = RallyePull.getPull(ui.getActivity());
 	}
 
 	@Override

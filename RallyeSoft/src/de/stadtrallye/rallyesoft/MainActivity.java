@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -29,15 +30,16 @@ import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
-import de.stadtrallye.rallyesoft.fragments.IModelFinished;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
+import de.stadtrallye.rallyesoft.model.IModelFinished;
+import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelFinished {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity {
 	
-	final private int TASK_LOGOUT = 1;
-	final private int TASK_LOGIN = 2;
+	final static private int TASK_LOGOUT = 1;
+	final static private int TASK_LOGIN = 2;
 	
 	public PushService push;
 	private Model model;
@@ -163,6 +165,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		return true;
 		case 3:
 			newFragment = new ChatFragment();
+//			newFragment.
 			break;
 		default:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
@@ -211,8 +214,13 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		    startActivityForResult(intent, 100);
 		    break;
 		case R.id.menu_login:
-			setProgressBarIndeterminateVisibility(true);
-			new LoginDialogFragment(model, this, TASK_LOGIN).show(getSupportFragmentManager(), "loginDialog");
+			DialogFragment d = new LoginDialogFragment();
+			Bundle b = new Bundle();
+			b.putString("server", model.getServer());
+			b.putInt("group", model.getGroup());
+			b.putString("password", model.getPassword());
+			d.setArguments(b);
+			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
 		case R.id.menu_logout:
 			setProgressBarIndeterminateVisibility(true);
@@ -238,7 +246,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	}
 
 	@Override
-	public void onModelFinished(int tag, boolean result) {
+	public void onModelFinished(int tag, Boolean result) {
 		switch (tag) {
 		case TASK_LOGOUT:
 			setProgressBarIndeterminateVisibility(false);
@@ -256,5 +264,21 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			}
 		}
 		
+	}
+
+	@Override
+	public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw) {
+		setProgressBarIndeterminateVisibility(true);
+		model.login(this, TASK_LOGIN, server, group, pw);
+	}
+
+	@Override
+	public void onDialogNegativeClick(LoginDialogFragment dialog) {
+		
+	}
+	
+	@Override
+	public Model getModel() {
+		return model;
 	}
 }
