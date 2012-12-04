@@ -1,6 +1,7 @@
 package de.stadtrallye.rallyesoft.async;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
@@ -27,6 +28,7 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 
 	@Override
 	protected String doInBackground(PendingRequest... r) {
+		Log.d("UniPush", "AsyncTask ("+tag+") started!");
 		try {
 			return r[0].readLine();
 			
@@ -43,6 +45,8 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	@Override
 	protected void onPostExecute(String result) {
 		super.onPostExecute(result);
+		
+		Log.d("UniPush", "AsyncTask ("+tag+") finished!");
 		
 //		ui.setSupportProgressBarIndeterminateVisibility(false);
 		ui.onAsyncFinished(tag, this);

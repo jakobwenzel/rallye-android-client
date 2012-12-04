@@ -247,6 +247,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	protected void onDestroy() {
+		Log.d("MainActivity", "Destroying...");
 		
 		model.onDestroy();
 		
