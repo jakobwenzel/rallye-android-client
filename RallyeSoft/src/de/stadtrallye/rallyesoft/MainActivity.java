@@ -116,10 +116,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public void onStart() {
 		super.onStart();
-		
-//		if (config.getBoolean("firstLaunch", true)) {
-//			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
-//		}
+
 		setSupportProgressBarIndeterminateVisibility(false);
 	}
 	
@@ -127,7 +124,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	protected void onRestoreInstanceState(Bundle savedInstanceState) {
 		super.onRestoreInstanceState(savedInstanceState);
 		
-		getSupportActionBar().setSelectedNavigationItem(savedInstanceState.getInt("tabIndex"));
+//		getSupportActionBar().setSelectedNavigationItem(savedInstanceState.getInt("tabIndex"));
 	}
 	
 	private void getOverflowMenu() {

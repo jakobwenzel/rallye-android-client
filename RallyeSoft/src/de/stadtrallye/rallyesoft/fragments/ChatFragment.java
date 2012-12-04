@@ -58,6 +58,8 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
 	}
 	
+	
+	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		return inflater.inflate(R.layout.chat_list, container, false);
