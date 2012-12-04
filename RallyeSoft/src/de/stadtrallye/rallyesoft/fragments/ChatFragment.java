@@ -34,6 +34,13 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		
+	}
+	
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
 		} catch (ClassCastException e) {
@@ -45,7 +52,8 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 	public void onStart() {
 		super.onStart();
 		
-		model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
+//		if (model != null)
+			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
 	}
 	
 	@Override

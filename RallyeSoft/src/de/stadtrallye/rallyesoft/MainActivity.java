@@ -58,6 +58,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		        return null;
 		      }
 		    }.execute();
+		    
+		
 		
 		// Titel und Inhalt + SideBar
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -86,6 +88,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //			}
 //		});
 		
+		// Ray's INIT
+		PushService.ensureRegistration(this);
+		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+		model = new Model(this, config);
+		
+		
         // Populate SideBar
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
         ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
@@ -97,16 +105,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
         list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
 		
+//        getSupportFragmentManager().
 		
 		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         ab.setListNavigationCallbacks(list, this);
 		
 		getOverflowMenu();
-		
-		// Ray's INIT
-		PushService.ensureRegistration(this);
-		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		model = new Model(this, config);
 	}
 	
 	@Override
@@ -117,8 +121,13 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //			new LoginDialogFragment(config).show(getSupportFragmentManager(), "loginDialog");
 //		}
 		setSupportProgressBarIndeterminateVisibility(false);
+	}
+	
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
 		
-		getSupportActionBar().setSelectedNavigationItem(lastTab);
+		getSupportActionBar().setSelectedNavigationItem(savedInstanceState.getInt("tabIndex"));
 	}
 	
 	private void getOverflowMenu() {
@@ -179,6 +188,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		lastTab = pos;
 		return true;
+	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
 	}
 	
 	@Override
