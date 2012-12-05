@@ -14,6 +14,7 @@ import android.widget.ListView;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 
+@Deprecated
 public class PullChats extends AsyncTask<Void, Void, ArrayList<String>> {
 	
 	private Fragment ui;

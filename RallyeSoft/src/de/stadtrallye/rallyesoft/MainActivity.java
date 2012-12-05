@@ -1,13 +1,13 @@
 package de.stadtrallye.rallyesoft;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -32,7 +32,6 @@ import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
-import de.stadtrallye.rallyesoft.model.IModelFinished;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
@@ -43,9 +42,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	public PushService push;
 	private Model model;
-	private Fragment currentFragment;
+//	private Fragment currentFragment;
 	private int lastTab = 0;
 	private SharedPreferences config;
+	private ArrayList<FragmentHandler<?>> tabs;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		    }.execute();
 		    
 		
-		
 		// Titel und Inhalt + SideBar
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		    
@@ -70,8 +69,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
-
-//		ActionBar.Tab tab = getSupportActionBar().newTab();
+		ab.setDisplayShowTitleEnabled(false);
 		
 		// Settings for SideBar
 		SlidingMenu sm = getSlidingMenu();
@@ -80,13 +78,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
-		
-//		sm.setBehindCanvasTransformer(new CanvasTransformer() {
-//			public void transformCanvas(Canvas canvas, float percentOpen) {
-//				float scale = (float) (percentOpen*0.25 + 0.75);
-//				canvas.scale(scale, scale, canvas.getWidth()/2, canvas.getHeight()/2);
-//			}
-//		});
 		
 		// Ray's INIT
 		PushService.ensureRegistration(this);
@@ -105,27 +96,69 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
         list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
 		
-//        getSupportFragmentManager().
-		
 		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         ab.setListNavigationCallbacks(list, this);
 		
 		getOverflowMenu();
+		
+		
+		tabs = new ArrayList<FragmentHandler<?>>();
+		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
+		tabs.add(null);
+		tabs.add(null);
+		tabs.add(new FragmentHandler<ChatFragment>("chat", ChatFragment.class));
+		
+		int tabIndex = 0;
+		if (savedInstanceState != null) {
+			tabIndex = savedInstanceState.getInt("tabIndex");
+		}
+		
+//		if (savedInstanceState != null)
+//			currentFragment = getSupportFragmentManager().getFragment(savedInstanceState, "currentFragment");
+//		if (currentFragment == null)
+//			currentFragment = tabs.get(0).getFragment();
+		
+		getSupportActionBar().setSelectedNavigationItem(tabIndex);
+		
+	}
+	
+	private class FragmentHandler<T extends Fragment> {
+		private String tag;
+		private Class<T> clz;
+		private Fragment fragment;
+		
+		public FragmentHandler(String tag, Class<T> clz) {
+			this.tag = tag;
+			this.clz = clz;
+			
+			fragment = getSupportFragmentManager().findFragmentByTag(tag);
+		}
+		
+		public Fragment getFragment() {
+			if (fragment == null) {
+				fragment = Fragment.instantiate(MainActivity.this, clz.getName());
+			}
+			return fragment;
+		}
+		
+		public String getTag() {
+			return tag;
+		}
 	}
 	
 	@Override
 	public void onStart() {
 		super.onStart();
-
+		
 		setSupportProgressBarIndeterminateVisibility(false);
 	}
 	
-	@Override
-	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
-		
-//		getSupportActionBar().setSelectedNavigationItem(savedInstanceState.getInt("tabIndex"));
-	}
+//	@Override
+//	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//		super.onRestoreInstanceState(savedInstanceState);
+//		
+////		getSupportActionBar().setSelectedNavigationItem(savedInstanceState.getInt("tabIndex"));
+//	}
 	
 	private void getOverflowMenu() {
 	     try {
@@ -144,7 +177,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 		if (lastTab != pos)
 		{
-//			onSwitchTab(pos, id);
 			getSupportActionBar().setSelectedNavigationItem(pos);
 		}
 		getSlidingMenu().showContent();
@@ -157,31 +189,22 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	private boolean onSwitchTab(int pos, long id) {
 		
-		Fragment newFragment = null;
-		
 		switch (pos) {
-		case 0: 
-			newFragment = new OverviewFragment();
-		break;
 		case 1:
 //			newFragment = new MapFragment();
 			Intent i = new Intent(this, GameMapActivity.class);
 //			i.putExtra("pull", pull);
-			startActivityFromFragment(currentFragment, i, -1);
+			startActivity(i);
 		return true;
-		case 3:
-			newFragment = new ChatFragment();
-//			newFragment.
-			break;
-		default:
+		case 2:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
 		return false;
 		}
 		
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-		ft.replace(R.id.content_frame, newFragment);
+		FragmentHandler<?> tab = tabs.get(pos);
+		ft.replace(R.id.content_frame, tab.getFragment(), tab.getTag());
 		ft.commit();
-		currentFragment = newFragment;
 		
 		lastTab = pos;
 		return true;
@@ -191,6 +214,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
+//		getSupportFragmentManager().putFragment(outState, "currentFragment", currentFragment);
 	}
 	
 	@Override
@@ -219,12 +243,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case android.R.id.home:
 			toggle();
 			break;
-		case R.id.menu_foto:
-			Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//		    Uri fileUri =
-//		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
-		    startActivityForResult(intent, 100);
-		    break;
+//		case R.id.menu_foto:
+//			Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+////		    Uri fileUri =
+////		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+//		    startActivityForResult(intent, 100);
+//		    break;
 		case R.id.menu_login:
 			DialogFragment d = new LoginDialogFragment();
 			Bundle b = new Bundle();

@@ -1,10 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <item android:id="@+id/menu_foto"
-        android:title="Photo"
-        android:icon="@drawable/ic_compose_inverse"
-        android:showAsAction="ifRoom" />
-    
     <item android:id="@+id/menu_login"
         android:title="@string/login"
         android:showAsAction="collapseActionView" />
@@ -12,4 +7,10 @@
     <item android:id="@+id/menu_logout"
         android:title="@string/logout"
         android:showAsAction="collapseActionView" />
+    
+    <!-- <item android:id="@+id/menu_foto"
+        android:title="@string/photo"
+        android:icon="@drawable/ic_compose_inverse"
+        android:showAsAction="collapseActionView" /> -->
+    
 </menu>

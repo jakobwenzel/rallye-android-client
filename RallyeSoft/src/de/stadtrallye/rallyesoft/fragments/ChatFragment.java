@@ -17,7 +17,6 @@ import com.actionbarsherlock.app.SherlockFragment;
 
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.async.PullChats;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
@@ -26,13 +25,12 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 	final static private int TASK_SIMPLE_CHAT = 101;
 	
 	private Model model;
-	
-	public ChatFragment() {
-	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		setRetainInstance(true);
 		
 		Log.v("ChatFragment", "ChatFragment created");
 	}
@@ -54,8 +52,8 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		
 		Log.v("ChatFragment", "ChatFragment started");
 		
-//		if (model != null)
-			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
+		model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
+		getActivity().setProgressBarIndeterminateVisibility(true);
 	}
 	
 	
@@ -67,6 +65,8 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 
 	@Override
 	public void onModelFinished(int tag, JSONArray result) {
+		getActivity().setProgressBarIndeterminateVisibility(false);
+		
 		ArrayList<String> messages = new ArrayList<String>();
 		try {
 			JSONObject next;
