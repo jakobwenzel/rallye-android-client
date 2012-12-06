@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.async;
 
 import android.os.AsyncTask;
 
+@Deprecated
 public class PullStatus extends AsyncTask<Void, Void, Void> {
 
 	@Override
