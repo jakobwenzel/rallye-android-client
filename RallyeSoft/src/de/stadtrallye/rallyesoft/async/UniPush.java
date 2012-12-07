@@ -19,6 +19,7 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	private Exception e;
 	private IAsyncFinished ui;
 	private int tag;
+	private int responseCode;
 	
 	
 	public UniPush(IAsyncFinished progressUi, int tag) {
@@ -30,15 +31,15 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	protected String doInBackground(PendingRequest... r) {
 		Log.d("UniPush", "AsyncTask ("+tag+") started!");
 		try {
-			return r[0].readLine();
-			
+			String res = r[0].readLine();
+			responseCode = r[0].getResponseCode();
+			return res;
 		} catch (HttpResponseException e) {
 			this.e = e;
 		} catch (RestException e) {
 			this.e = e;
 		}
 		
-		//Never Reached, Eclipse is stupid
 		return e.toString();
 	}
 	
@@ -50,6 +51,10 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 		
 //		ui.setSupportProgressBarIndeterminateVisibility(false);
 		ui.onAsyncFinished(tag, this);
+	}
+	
+	public int getResponseCode() {
+		return responseCode;
 	}
 
 }

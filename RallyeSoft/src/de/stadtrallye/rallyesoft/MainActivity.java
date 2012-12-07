@@ -52,12 +52,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		super.onCreate(savedInstanceState);
 		
 		// Avoid Handler Exception
-		new AsyncTask<Void, Void, Void>() {
-		      @Override
-		      protected Void doInBackground(Void... params) {
-		        return null;
-		      }
-		    }.execute();
+//		new AsyncTask<Void, Void, Void>() {
+//		      @Override
+//		      protected Void doInBackground(Void... params) {
+//		        return null;
+//		      }
+//		    }.execute();
 		    
 		
 		// Titel und Inhalt + SideBar
@@ -83,6 +83,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		PushService.ensureRegistration(this);
 		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 		model = new Model(this, config);
+		model.checkServerStatus(null, 0);
 		
 		
         // Populate SideBar
@@ -214,7 +215,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
-//		getSupportFragmentManager().putFragment(outState, "currentFragment", currentFragment);
 	}
 	
 	@Override

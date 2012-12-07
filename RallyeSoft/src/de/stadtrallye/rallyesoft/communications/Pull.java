@@ -93,6 +93,7 @@ public class Pull {
 		protected URL url;
 		protected HttpURLConnection conn;
 		private BufferedReader reader;
+		private int code = 0;
 		
 		public Request(String rest) throws RestException {
 			saveURL(rest);
@@ -141,7 +142,7 @@ public class Pull {
 		public String readLine() throws HttpResponseException, RestException {
 			
 			try {
-				int code = conn.getResponseCode();
+				code = conn.getResponseCode();
 				if (code >= 200 && code < 300) {
 					if (reader == null)
 						reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -153,6 +154,10 @@ public class Pull {
 			} catch (IOException e) {
 				throw new RestException(conn.getURL().toString(), e);
 			}
+		}
+		
+		public int getResponseCode() {
+			return code;
 		}
 		
 		public JSONArray getJSONArray() throws HttpResponseException, RestException, JSONException {

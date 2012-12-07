@@ -10,8 +10,7 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
-import de.stadtrallye.rallyesoft.Config;
-import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.exceptions.Err;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
@@ -45,12 +44,9 @@ public class RallyePull extends Pull {
 		setGcmId();
 	}
 	
-//	public static String testConnection(String server) throws RestException, HttpResponseException {
-//		Request r = new Pull(server).new Request("/getStatus");
-//		return r.readLine();
-//	}
-	
-	private static Request doLogin(Request r, String gcm, int group, String password) throws RestException {
+	public PendingRequest pendingLogin(Context context, String server, int group, String password) throws RestException {
+		final String rest = "/user/register";
+		PendingRequest r = new Pull(server).new PendingRequest(rest);
 		try {
 			String post = new JSONObject()
 			.put(GCM, gcm)
@@ -59,33 +55,29 @@ public class RallyePull extends Pull {
 			.toString();
 			r.putPost(post, Mime.JSON);
 		} catch (JSONException e) {
-			Log.e("RallyePull", "Login: Unkown JSON error during POST");
+			throw Err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}
 	
-	public JSONArray pushLogin() throws HttpResponseException, RestException, JSONException {
-		return doLogin(new Request("/user/register"), gcm, config.getInt("group", 0), config.getString("password", "")).getJSONArray();
-	}
-	
-	public static JSONArray pushLogin(Context context, String server, int group, String password) throws HttpResponseException, RestException, JSONException {
-		return doLogin(new Pull(server).new Request("/user/register"), GCMRegistrar.getRegistrationId(context), group, password).getJSONArray();
-	}
-	
-	public static PendingRequest pendingLogin(Context context, String server, int group, String password) throws RestException {
-		return (PendingRequest) doLogin(new Pull(server).new PendingRequest("/user/register"), GCMRegistrar.getRegistrationId(context), group, password);
-	}
-	
-	public String pushLogout() throws RestException, HttpResponseException {
-		return pendingLogout().readLine();
-	}
-	
 	public PendingRequest pendingLogout() throws RestException {
-		PendingRequest r = new PendingRequest("/user/unregister");
+		final String rest = "/user/unregister";
+		PendingRequest r = new PendingRequest(rest);
 		try {
 			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
 		} catch (JSONException e) {
-			Log.e("RallyePull", "Logout: Unkown JSON error during POST");
+			throw Err.JSONDuringPostError(e, rest);
+		}
+		return r;
+	}
+	
+	public PendingRequest pendingServerStatus() throws RestException {
+		final String rest = "/system/status";
+		PendingRequest r = new PendingRequest(rest);
+		try {
+			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
+		} catch (JSONException e) {
+			throw Err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}
@@ -93,7 +85,7 @@ public class RallyePull extends Pull {
 	public JSONArray pullAllNodes() throws HttpResponseException, RestException, JSONException {
 		Log.i("RallyePull", "pulling all nodes...");
 		Request r;
-		r = new Request("/map/get/nodes");
+		r = new Request("/map/nodes");
 		JSONArray res = r.getJSONArray();
 		r.close();
 		return res;
@@ -118,7 +110,8 @@ public class RallyePull extends Pull {
 	}
 	
 	public PendingRequest pendingChatRefresh(int chatroom, int timestamp) throws RestException {
-		PendingRequest r = new PendingRequest("/chat/get");
+		final String rest = "/chat/get";
+		PendingRequest r = new PendingRequest(rest);
 		try {
 			r.putPost(new JSONObject()
 			.put(GCM, gcm)
@@ -126,8 +119,7 @@ public class RallyePull extends Pull {
 			.put(TIMESTAMP, (timestamp == 0)? JSONObject.NULL : timestamp)
 			.toString(), Pull.Mime.JSON);
 		} catch (JSONException e) {
-			Log.e("RallyePull", "PullChats: Unkown JSON error during POST");
-			throw new RestException("/chat/get", e);
+			throw Err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}

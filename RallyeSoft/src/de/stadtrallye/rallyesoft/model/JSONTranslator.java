@@ -18,7 +18,11 @@ public class JSONTranslator {
 			while ((next = (JSONObject) js.opt(i)) != null)
 			{
 				++i;
-				messages.add(new ChatEntry(next.getString("message"), next.getInt("timestamp"), next.getInt("groupID"), 0));
+				messages.add(
+					new ChatEntry(next.getString("message"),
+						next.getInt("timestamp"),
+						next.getInt("groupID"),
+						(next.isNull("picture"))? 0 : next.getInt("picture")));
 			}
 		} catch (Exception e) {
 			Log.e("PullChat", e.toString());

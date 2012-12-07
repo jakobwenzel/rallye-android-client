@@ -1,22 +1,24 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
@@ -57,8 +59,11 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		
 		Log.v("ChatFragment", "ChatFragment started");
 		
-		model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
-		getActivity().setProgressBarIndeterminateVisibility(true);
+		if (model.isLoggedIn())
+		{
+			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
+			getActivity().setProgressBarIndeterminateVisibility(true);
+		}
 	}
 	
 	
@@ -95,28 +100,44 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 	private class ChatAdapter extends ArrayAdapter<ChatEntry> {
 
 		private List<ChatEntry> entries;
+		private ImageLoader loader;
 
 		public ChatAdapter(Context context, int textViewResourceId, List<ChatEntry> entries) {
 			super(context, textViewResourceId, entries);
 			this.entries = entries;
+			
+			loader = ImageLoader.getInstance();
+			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getContext())
+				.enableLogging()
+				.build();
+            loader.init(config);
 		}
 		
 		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
+			ChatEntry o = entries.get(position);
+			int me = model.getGroup();
+			
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate(R.layout.chat_item, null);
+                v = vi.inflate((me == o.senderID)? R.layout.chat_item_right : R.layout.chat_item, null);
             }
-            ChatEntry o = entries.get(position);
+            
             if (o != null) {
+            	ImageView img = (ImageView) v.findViewById(R.id.sender_img);
                 TextView sender = (TextView) v.findViewById(R.id.msg_sender);
                 TextView msg = (TextView) v.findViewById(R.id.msg);
                 TextView time = (TextView) v.findViewById(R.id.time_sent);
                 sender.setText("Sender: "+ o.senderID);
                 msg.setText(o.message);
                 time.setText("Sent: "+ o.timestamp);
+                
+                // ImageLoader jar
+                if (o.pictureID > 0) {
+                	loader.displayImage(model.getImageUrl(o.pictureID, 't'), img);
+                }
             }
             return v;
 		}
