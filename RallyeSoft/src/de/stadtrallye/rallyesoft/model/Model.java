@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import org.json.JSONArray;
@@ -14,7 +14,6 @@ import android.util.SparseArray;
 import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.async.IAsyncFinished;
 import de.stadtrallye.rallyesoft.async.UniPush;
-import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
@@ -44,12 +43,14 @@ public class Model implements IAsyncFinished {
 	private int group;
 	private String password;
 	private boolean loggedIn = false;
+	private ArrayList<IModelListener> listeners;
 	
 	public Model(Context context, SharedPreferences pref) {
 		this.pref = pref;
 		this.context = context;
 		pull = new RallyePull(pref, context);
 		callbacks = new SparseArray<Task<? extends Object>>();
+		listeners = new ArrayList<IModelListener>();
 	}
 	
 	public void logout(IModelResult<Boolean> ui, int tag) {
@@ -59,7 +60,7 @@ public class Model implements IAsyncFinished {
 		} catch (RestException e) {
 			Log.e("Model", e.toString());
 		}
-		loggedIn = false;
+		connectionStatusChange();
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
@@ -145,6 +146,8 @@ public class Model implements IAsyncFinished {
 				saveLoginDetails(server, group, password);
 			
 			((Task<Boolean>) callbacks.get(tag)).callback(success);
+			
+			connectionStatusChange();
 			break;
 		case TASK_CHAT_REFRESH:
 			try {
@@ -164,6 +167,8 @@ public class Model implements IAsyncFinished {
 				loggedIn = (task.getResponseCode() >= 200 && task.getResponseCode() < 300);
 				if (loggedIn && callbacks.get(tag).tag != 0)
 					((Task<Boolean>) callbacks.get(tag)).callback(loggedIn);
+				
+				connectionStatusChange();
 			} catch (InterruptedException e) {
 				Log.e("Model", "Unkown Exception in UniPush", e);
 			} catch (ExecutionException e) {
@@ -190,6 +195,12 @@ public class Model implements IAsyncFinished {
 		}
 	}
 	
+	/**
+	 * Envelops one UniPush instance for callbacks
+	 * @author Ramon
+	 *
+	 * @param <T>
+	 */
 	private class Task<T> {
 		public IModelResult<T> ui;
 		public int tag;
@@ -226,6 +237,14 @@ public class Model implements IAsyncFinished {
 //		Log.v("model", res);
 		return res;
 	}
+	
+	public void addListener(IModelListener l) {
+		listeners.add(l);
+	}
 
-
+	private void connectionStatusChange() {
+		for(IModelListener l: listeners) {
+			l.connectionStatusChange(loggedIn);
+		}
+	}
 }

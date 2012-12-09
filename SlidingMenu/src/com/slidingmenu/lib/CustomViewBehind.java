@@ -196,7 +196,7 @@ public class CustomViewBehind extends ViewGroup {
 
 	public void scrollBehindTo(View content, int x, int y) {
 		int vis = View.VISIBLE;
-		Log.v(TAG, "scrollBehindTo " + x);
+//		Log.v(TAG, "scrollBehindTo " + x); //TODO:uncomment
 		if (mMode == SlidingMenu.LEFT) {
 			if (x >= content.getLeft()) vis = View.GONE;
 			scrollTo((int)((x + getBehindWidth())*mScrollScale), y);

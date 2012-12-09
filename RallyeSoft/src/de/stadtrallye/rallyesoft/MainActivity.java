@@ -32,16 +32,19 @@ import de.stadtrallye.rallyesoft.communications.PushService;
 import de.stadtrallye.rallyesoft.fragments.ChatFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
+import de.stadtrallye.rallyesoft.model.IModelListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IModelListener {
 	
 	final static private int TASK_LOGOUT = 1;
 	final static private int TASK_LOGIN = 2;
+	final static public int TASK_CHECK = 3;
 	
 	public PushService push;
 	private Model model;
+	private boolean progressCircle = false;
 //	private Fragment currentFragment;
 	private int lastTab = 0;
 	private SharedPreferences config;
@@ -50,15 +53,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		// Avoid Handler Exception
-//		new AsyncTask<Void, Void, Void>() {
-//		      @Override
-//		      protected Void doInBackground(Void... params) {
-//		        return null;
-//		      }
-//		    }.execute();
-		    
 		
 		// Titel und Inhalt + SideBar
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -69,7 +63,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
-		ab.setDisplayShowTitleEnabled(false);
+		ab.setDisplayShowTitleEnabled(true);
 		
 		// Settings for SideBar
 		SlidingMenu sm = getSlidingMenu();
@@ -83,7 +77,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		PushService.ensureRegistration(this);
 		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 		model = new Model(this, config);
-		model.checkServerStatus(null, 0);
+		model.addListener(this);
+		model.checkServerStatus(this, TASK_CHECK);
 		
 		
         // Populate SideBar
@@ -100,29 +95,35 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         ab.setListNavigationCallbacks(list, this);
 		
+        //Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
 		getOverflowMenu();
 		
 		
+		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
 		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
 		tabs.add(null);
 		tabs.add(null);
 		tabs.add(new FragmentHandler<ChatFragment>("chat", ChatFragment.class));
 		
+		
+		
+		// Set last tab if any
 		int tabIndex = 0;
 		if (savedInstanceState != null) {
 			tabIndex = savedInstanceState.getInt("tabIndex");
 		}
 		
-//		if (savedInstanceState != null)
-//			currentFragment = getSupportFragmentManager().getFragment(savedInstanceState, "currentFragment");
-//		if (currentFragment == null)
-//			currentFragment = tabs.get(0).getFragment();
-		
 		getSupportActionBar().setSelectedNavigationItem(tabIndex);
 		
 	}
 	
+	/**
+	 * Envelops a Fragment, reuses a already existing Fragment otherwise instantiates a new one
+	 * @author Ramon
+	 *
+	 * @param <T> Fragment Type to envelop
+	 */
 	private class FragmentHandler<T extends Fragment> {
 		private String tag;
 		private Class<T> clz;
@@ -154,13 +155,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		setSupportProgressBarIndeterminateVisibility(false);
 	}
 	
-//	@Override
-//	protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//		super.onRestoreInstanceState(savedInstanceState);
-//		
-////		getSupportActionBar().setSelectedNavigationItem(savedInstanceState.getInt("tabIndex"));
-//	}
-	
 	private void getOverflowMenu() {
 	     try {
 	        ViewConfiguration config = ViewConfiguration.get(this);
@@ -174,6 +168,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	    }
 	}
 	
+	/**
+	 * Listener for SlidingMenu
+	 */
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 		if (lastTab != pos)
@@ -182,7 +179,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		}
 		getSlidingMenu().showContent();
 	}
-
+	
+	/**
+	 * Listener for ActionBar List
+	 */
 	@Override
 	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
 		return onSwitchTab(itemPosition, itemId);
@@ -259,7 +259,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
 		case R.id.menu_logout:
-			setProgressBarIndeterminateVisibility(true);
+			activateProgressAnimation();
 			model.logout(this, TASK_LOGOUT);
 			break;
 		}
@@ -284,14 +284,15 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 
 	@Override
 	public void onModelFinished(int tag, Boolean result) {
+		deactivateProgressAnimation();
 		switch (tag) {
 		case TASK_LOGOUT:
-			setProgressBarIndeterminateVisibility(false);
+//			setProgressBarIndeterminateVisibility(false);
 			Log.i("MainActivity", "Logged out!");
 			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
 			break;
 		case TASK_LOGIN:
-			setProgressBarIndeterminateVisibility(false);
+//			setProgressBarIndeterminateVisibility(false);
 			if (result) {
 				Log.i("MainActivity", "Logged in!");
 				Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
@@ -299,13 +300,17 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 				Log.i("MainActivity", "Login failed!");
 				Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
 			}
+			break;
+		case TASK_CHECK:
+			
+			break;
 		}
 		
 	}
 
 	@Override
 	public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw) {
-		setProgressBarIndeterminateVisibility(true);
+		activateProgressAnimation();
 		model.login(this, TASK_LOGIN, server, group, pw);
 	}
 
@@ -317,5 +322,27 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public Model getModel() {
 		return model;
+	}
+	
+	public void activateProgressAnimation() {
+		progressCircle = true;
+		setProgressBarIndeterminateVisibility(true);
+	}
+	
+	public void deactivateProgressAnimation() {
+		if (progressCircle) {
+			progressCircle = false;
+			setProgressBarIndeterminateVisibility(false);
+		}
+	}
+
+	@Override
+	public void connectionStatusChange(boolean newStatus) {
+		ActionBar ab = getSupportActionBar();
+		if (newStatus) {
+			ab.setSubtitle(R.string.connected);
+		} else {
+			ab.setSubtitle(R.string.notConnected);
+		}
 	}
 }

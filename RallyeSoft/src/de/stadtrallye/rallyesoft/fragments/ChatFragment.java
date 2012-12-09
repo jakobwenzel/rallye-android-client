@@ -5,7 +5,6 @@ import java.util.List;
 import org.json.JSONArray;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
@@ -107,10 +107,23 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 			this.entries = entries;
 			
 			loader = ImageLoader.getInstance();
+			DisplayImageOptions disp = new DisplayImageOptions.Builder()
+				.cacheOnDisc()
+				.cacheInMemory()
+				.showStubImage(R.drawable.stub_image)
+				.build();
 			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getContext())
 				.enableLogging()
+				.defaultDisplayImageOptions(disp)
 				.build();
             loader.init(config);
+		}
+		
+		public class ViewMem {
+			public ImageView img;
+			public TextView msg;
+			public TextView sender;
+			public TextView time;
 		}
 		
 		
@@ -120,23 +133,33 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 			ChatEntry o = entries.get(position);
 			int me = model.getGroup();
 			
+			ViewMem mem;
+			
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 v = vi.inflate((me == o.senderID)? R.layout.chat_item_right : R.layout.chat_item, null);
+                
+                mem = new ViewMem();
+                
+                mem.img = (ImageView) v.findViewById(R.id.sender_img);
+                mem.sender = (TextView) v.findViewById(R.id.msg_sender);
+                mem.msg = (TextView) v.findViewById(R.id.msg);
+                mem.time = (TextView) v.findViewById(R.id.time_sent);
+                
+                v.setTag(mem);
+                
+            } else {
+            	mem = (ViewMem) v.getTag();
             }
             
             if (o != null) {
-            	ImageView img = (ImageView) v.findViewById(R.id.sender_img);
-                TextView sender = (TextView) v.findViewById(R.id.msg_sender);
-                TextView msg = (TextView) v.findViewById(R.id.msg);
-                TextView time = (TextView) v.findViewById(R.id.time_sent);
-                sender.setText("Sender: "+ o.senderID);
-                msg.setText(o.message);
-                time.setText("Sent: "+ o.timestamp);
+                mem.sender.setText("Sender: "+ o.senderID);
+                mem.msg.setText(o.message);
+                mem.time.setText("Sent: "+ o.timestamp);
                 
                 // ImageLoader jar
                 if (o.pictureID > 0) {
-                	loader.displayImage(model.getImageUrl(o.pictureID, 't'), img);
+                	loader.displayImage(model.getImageUrl(o.pictureID, 't'), mem.img);
                 }
             }
             return v;
