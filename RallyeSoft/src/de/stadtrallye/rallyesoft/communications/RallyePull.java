@@ -22,9 +22,8 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  */
 public class RallyePull extends Pull {
 	
-	private String gcm = "";
+	private String gcm;
 	private Context context;
-	private SharedPreferences config;
 	
 	private final static String GCM = "gcm";
 	private final static String TIMESTAMP = "timestamp";
@@ -32,16 +31,11 @@ public class RallyePull extends Pull {
 	private final static String PASSWORD = "password";
 	private final static String GROUP = "groupID";
 	
-	public RallyePull(SharedPreferences config, Context context) {
-		super(config.getString("server", null));
-		if (config.getString("server", null) == null) {
-			Log.e("RallyePull", "No Configuration Found");
-		}
+	public RallyePull(String server, String gcm, Context context) {
+		super(server);
 		
-		
-		this.config = config;
 		this.context = context;
-		setGcmId();
+		this.gcm = gcm;
 	}
 	
 	public PendingRequest pendingLogin(Context context, String server, int group, String password) throws RestException {

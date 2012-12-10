@@ -36,7 +36,7 @@ import de.stadtrallye.rallyesoft.model.IModelListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IModelListener {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IModelListener, IProgressUI {
 	
 	final static private int TASK_LOGOUT = 1;
 	final static private int TASK_LOGIN = 2;
@@ -73,12 +73,21 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
 		
+		// Set last tab if any
+		int tabIndex = 0;
+		boolean loggedIn = false;
+		if (savedInstanceState != null) {
+			tabIndex = savedInstanceState.getInt("tabIndex");
+			loggedIn = savedInstanceState.getBoolean("loggedIn");
+		}
+		
 		// Ray's INIT
 		PushService.ensureRegistration(this);
 		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		model = new Model(this, config);
+		model = new Model(this, config, loggedIn);
 		model.addListener(this);
-		model.checkServerStatus(this, TASK_CHECK);
+		if (!loggedIn)
+			model.checkServerStatus(this, TASK_CHECK);
 		
 		
         // Populate SideBar
@@ -105,14 +114,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		tabs.add(null);
 		tabs.add(null);
 		tabs.add(new FragmentHandler<ChatFragment>("chat", ChatFragment.class));
-		
-		
-		
-		// Set last tab if any
-		int tabIndex = 0;
-		if (savedInstanceState != null) {
-			tabIndex = savedInstanceState.getInt("tabIndex");
-		}
 		
 		getSupportActionBar().setSelectedNavigationItem(tabIndex);
 		
@@ -169,7 +170,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	}
 	
 	/**
-	 * Listener for SlidingMenu
+	 * AdapterView.OnItemClickListener
 	 */
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
@@ -181,7 +182,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	}
 	
 	/**
-	 * Listener for ActionBar List
+	 * ActionBar.OnNavigationListener
 	 */
 	@Override
 	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
@@ -215,6 +216,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
+		outState.putBoolean("loggedIn", model.isLoggedIn());
 	}
 	
 	@Override
@@ -282,6 +284,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
 	}
 
+	/**
+	 * IModelResult<boolean>
+	 */
 	@Override
 	public void onModelFinished(int tag, Boolean result) {
 		deactivateProgressAnimation();
@@ -308,6 +313,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 	}
 
+	// LoginDialogFragment.IDialogCallback
 	@Override
 	public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw) {
 		activateProgressAnimation();
@@ -319,23 +325,37 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 	}
 	
+	/**
+	 * IModelActivity
+	 */
 	@Override
 	public Model getModel() {
 		return model;
 	}
 	
+	/**
+	 * IProgressUI
+	 */
+	@Override
 	public void activateProgressAnimation() {
 		progressCircle = true;
-		setProgressBarIndeterminateVisibility(true);
+		setSupportProgressBarIndeterminateVisibility(true);
 	}
 	
+	/**
+	 * IProgressUI
+	 */
+	@Override
 	public void deactivateProgressAnimation() {
 		if (progressCircle) {
 			progressCircle = false;
-			setProgressBarIndeterminateVisibility(false);
+			setSupportProgressBarIndeterminateVisibility(false);
 		}
 	}
 
+	/**
+	 * IModelListener
+	 */
 	@Override
 	public void connectionStatusChange(boolean newStatus) {
 		ActionBar ab = getSupportActionBar();

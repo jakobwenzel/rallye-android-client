@@ -13,7 +13,9 @@
     <string name="title_maps">Karte</string>
     <string name="overview_welcome">Willkommen zu RallyeSoft</string>
     
-    
+    <string name="default_server">http://hajoschja.de:10101/Stadtrallye</string>
+    <string name="default_group">2</string>
+    <string name="default_password">test</string>
     <string name="MainPrefHandler">de.stadtrallye.rallyesoft.server</string>
     
     

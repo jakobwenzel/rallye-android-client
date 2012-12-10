@@ -21,6 +21,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import de.stadtrallye.rallyesoft.IModelActivity;
+import de.stadtrallye.rallyesoft.IProgressUI;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IModelResult;
@@ -48,6 +49,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
+			Log.v("ChatFragment", "New Model");
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
@@ -69,13 +71,21 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 	
 	
 	@Override
+	public void onResume() {
+		super.onResume();
+		
+		Log.v("ChatFragment", "ChatFragment resumed");
+		
+	}
+	
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		return inflater.inflate(R.layout.chat_list, container, false);
 	}
 
 	@Override
 	public void onModelFinished(int tag, JSONArray result) {
-		getActivity().setProgressBarIndeterminateVisibility(false);
+		((IProgressUI)getActivity()).activateProgressAnimation();
 		
 //		ArrayList<String> messages = new ArrayList<String>();
 //		try {
@@ -95,6 +105,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		ListView chats = (ListView) view.findViewById(R.id.chat_list);
         ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, JSONTranslator.translateJSONChatEntrys(result)); //, android.R.id.text
         chats.setAdapter(chatAdapter);
+        ((IProgressUI)getActivity()).deactivateProgressAnimation();
 	}
 	
 	private class ChatAdapter extends ArrayAdapter<ChatEntry> {
@@ -137,7 +148,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 			
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate((me == o.senderID)? R.layout.chat_item_right : R.layout.chat_item, null);
+                v = vi.inflate((o.self)? R.layout.chat_item_right : R.layout.chat_item, null);
                 
                 mem = new ViewMem();
                 

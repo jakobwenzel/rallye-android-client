@@ -22,6 +22,7 @@ public class JSONTranslator {
 					new ChatEntry(next.getString("message"),
 						next.getInt("timestamp"),
 						next.getInt("groupID"),
+						next.getBoolean("self"),
 						(next.isNull("picture"))? 0 : next.getInt("picture")));
 			}
 		} catch (Exception e) {

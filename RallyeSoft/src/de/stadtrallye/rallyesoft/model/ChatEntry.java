@@ -6,11 +6,13 @@ public class ChatEntry {
 	public int timestamp;
 	public int senderID;
 	public int pictureID;
+	public boolean self;
 
-	public ChatEntry(String message, int timestamp, int senderID, int pictureID) {
+	public ChatEntry(String message, int timestamp, int senderID, boolean self, int pictureID) {
 		this.message = message;
 		this.timestamp = timestamp;
 		this.senderID = senderID;
+		this.self = self;
 		this.pictureID = pictureID;
 	}
 }

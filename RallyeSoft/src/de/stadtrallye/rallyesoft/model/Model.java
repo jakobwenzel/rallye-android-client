@@ -7,11 +7,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.android.gcm.GCMRegistrar;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.SparseArray;
-import de.stadtrallye.rallyesoft.Config;
+import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.async.IAsyncFinished;
 import de.stadtrallye.rallyesoft.async.UniPush;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
@@ -42,13 +44,18 @@ public class Model implements IAsyncFinished {
 	private String server;
 	private int group;
 	private String password;
-	private boolean loggedIn = false;
+	private boolean loggedIn;
 	private ArrayList<IModelListener> listeners;
 	
 	public Model(Context context, SharedPreferences pref) {
+		this(context, pref, false);
+	}
+	
+	public Model(Context context, SharedPreferences pref, boolean loggedIn) {
 		this.pref = pref;
 		this.context = context;
-		pull = new RallyePull(pref, context);
+		this.loggedIn = loggedIn;
+		pull = new RallyePull(pref.getString(SERVER, context.getString(R.string.default_server)), GCMRegistrar.getRegistrationId(context), context);
 		callbacks = new SparseArray<Task<? extends Object>>();
 		listeners = new ArrayList<IModelListener>();
 	}
@@ -56,11 +63,11 @@ public class Model implements IAsyncFinished {
 	public void logout(IModelResult<Boolean> ui, int tag) {
 		try {
 			new UniPush(new Redirect<Boolean>(ui, true), tag).execute(pull.pendingLogout());
-			pref.edit().putBoolean(LOGGED_IN, false).commit();
+			loggedIn = false;
+			connectionStatusChange();
 		} catch (RestException e) {
 			Log.e("Model", e.toString());
 		}
-		connectionStatusChange();
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
@@ -83,7 +90,7 @@ public class Model implements IAsyncFinished {
 			 //TODO: select chatroom
 			UniPush p = new UniPush(this, TASK_CHAT_REFRESH);
 			callbacks.put(TASK_CHAT_REFRESH, new Task<JSONArray>(ui, tag, p));
-			p.execute(pull.pendingChatRefresh(2, 0));
+			p.execute(pull.pendingChatRefresh(4, 0));
 		} catch (RestException e) {
 			Log.e("Model", "invalid Rest URL", e);
 		}
@@ -105,15 +112,15 @@ public class Model implements IAsyncFinished {
 	}
 	
 	public String getServer() {
-		return pref.getString(SERVER, Config.server);
+		return pref.getString(SERVER, context.getString(R.string.default_server));
 	}
 	
 	public int getGroup() {
-		return pref.getInt(GROUP, Config.group);
+		return pref.getInt(GROUP, context.getResources().getInteger(R.integer.default_group));
 	}
 	
 	public String getPassword() {
-		return pref.getString(PASSWORD, Config.password);
+		return pref.getString(PASSWORD, context.getString(R.string.default_password));
 	}
 
 	@SuppressWarnings("unchecked")
