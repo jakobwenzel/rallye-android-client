@@ -13,6 +13,7 @@ import android.widget.Toast;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockMapActivity;
 import com.actionbarsherlock.view.MenuItem;
+import com.google.android.gcm.GCMRegistrar;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
@@ -71,11 +72,11 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 		
 		((MapView) findViewById(R.id.mapview)).setBuiltInZoomControls(true);
 		
-//		pull = RallyePull.getPull(getApplicationContext());
+		pull = new RallyePull(Config.server, GCMRegistrar.getRegistrationId(this), this);
 		
 		
 		PullMap map = new PullMap(pull, this);
-//		map.execute();
+		map.execute();
 	}
 	
 //	@Override
@@ -150,7 +151,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 			this.nodes = new ArrayList<OverlayItem>();
 			
 			for (MapNode node: nodes) {
-				this.nodes.add(new OverlayItem(new GeoPoint(node.lat, node.lon), node.name, "Description"));
+				this.nodes.add(new OverlayItem(new GeoPoint(node.lat, node.lon), node.name, node.description));
 				Log.d("GameMapActivity", node.toString());
 			}
 			
@@ -186,6 +187,7 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 	@Override
 	public void onTaskFinished(List<MapNode> result) {
 		MapView m = ((MapView) this.findViewById(R.id.mapview));
+//		m.set
 		ItemizedOverlay<OverlayItem> overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, result);
 		m.getOverlays().add(overlay);
 		m.invalidate();

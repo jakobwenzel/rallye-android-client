@@ -65,9 +65,9 @@ public class RallyePull extends Pull {
 		return r;
 	}
 	
-	public PendingRequest pendingServerStatus() throws RestException {
+	public PendingRequest pendingServerStatus(String server) throws RestException {
 		final String rest = "/system/status";
-		PendingRequest r = new PendingRequest(rest);
+		PendingRequest r = new Pull(server).new PendingRequest(rest);
 		try {
 			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
 		} catch (JSONException e) {
@@ -116,14 +116,5 @@ public class RallyePull extends Pull {
 			throw Err.JSONDuringPostError(e, rest);
 		}
 		return r;
-	}
-
-
-	public void setGcmId(String registrationId) {
-		gcm = registrationId;
-	}
-	
-	public void setGcmId() {
-		setGcmId(GCMRegistrar.getRegistrationId(context));
 	}
 }

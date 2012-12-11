@@ -34,7 +34,7 @@ public class Model implements IAsyncFinished {
 	
 	final private static int TASK_LOGIN = 100001;
 	final private static int TASK_CHAT_REFRESH = 100002;
-	private static final int TASK_CHECK_SERVER = 100003;
+	final private static int TASK_CHECK_SERVER = 100003;
 
 	private SharedPreferences pref;
 	private RallyePull pull;
@@ -63,9 +63,9 @@ public class Model implements IAsyncFinished {
 		} else {
 			group = pref.getInt(GROUP, 0);
 			password = pref.getString(PASSWORD, null);
-			pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
 		}
 		
+		pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
 		
 		callbacks = new SparseArray<Task<? extends Object>>();
 		listeners = new ArrayList<IModelListener>();

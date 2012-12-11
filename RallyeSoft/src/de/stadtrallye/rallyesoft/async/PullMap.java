@@ -38,7 +38,7 @@ public class PullMap extends AsyncTask<Void, Void, List<MapNode>> {
 			while ((next = (JSONObject) js.opt(i)) != null)
 			{
 				++i;
-				nodes.add(new MapNode(next.getInt("nodeID"), next.getString("name"), next.getDouble("lat"), next.getDouble("lon")));
+				nodes.add(new MapNode(next.getInt("nodeID"), next.getString("name"), next.getDouble("lat"), next.getDouble("lon"), next.getString("description")));
 			}
 		} catch (Exception e) {
 			Log.e("PullMap", err +e.toString());
