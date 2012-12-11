@@ -38,7 +38,7 @@ public class RallyePull extends Pull {
 		this.gcm = gcm;
 	}
 	
-	public PendingRequest pendingLogin(Context context, String server, int group, String password) throws RestException {
+	public static PendingRequest pendingLogin(Context context, String server, int group, String password, String gcm) throws RestException {
 		final String rest = "/user/register";
 		PendingRequest r = new Pull(server).new PendingRequest(rest);
 		try {

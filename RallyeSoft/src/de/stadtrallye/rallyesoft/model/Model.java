@@ -28,7 +28,6 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  */
 public class Model implements IAsyncFinished {
 	
-	final private String LOGGED_IN = "loggedIn";
 	final private String SERVER = "server";
 	final private String GROUP = "group";
 	final private String PASSWORD = "password";
@@ -44,6 +43,7 @@ public class Model implements IAsyncFinished {
 	private String server;
 	private int group;
 	private String password;
+	private String gcm;
 	private boolean loggedIn;
 	private ArrayList<IModelListener> listeners;
 	
@@ -52,10 +52,21 @@ public class Model implements IAsyncFinished {
 	}
 	
 	public Model(Context context, SharedPreferences pref, boolean loggedIn) {
+		this.gcm = GCMRegistrar.getRegistrationId(context);
 		this.pref = pref;
 		this.context = context;
 		this.loggedIn = loggedIn;
-		pull = new RallyePull(pref.getString(SERVER, context.getString(R.string.default_server)), GCMRegistrar.getRegistrationId(context), context);
+		
+		server = pref.getString(SERVER, null);
+		if (server == null) {
+			this.loggedIn = false;
+		} else {
+			group = pref.getInt(GROUP, 0);
+			password = pref.getString(PASSWORD, null);
+			pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
+		}
+		
+		
 		callbacks = new SparseArray<Task<? extends Object>>();
 		listeners = new ArrayList<IModelListener>();
 	}
@@ -71,26 +82,29 @@ public class Model implements IAsyncFinished {
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
-		
-		this.server = server;
-		this.group = group;
-		this.password = password;
-		
 			try {
 				UniPush p = new UniPush(this, TASK_LOGIN);
 				callbacks.put(TASK_LOGIN, new Task<Boolean>(ui, tag, p));
-				p.execute(pull.pendingLogin(context, server, group, password));
+				p.execute(RallyePull.pendingLogin(context, server, group, password, gcm));
+				
+				
+				this.server = server;
+				this.group = group;
+				this.password = password;
 			} catch (RestException e) {
 				Log.e("Model", "invalid Rest URL", e);
 			}
 	}
 	
-	public void refreshSimpleChat(IModelResult<JSONArray> ui, int tag) {
+	public void refreshSimpleChat(IModelResult<JSONArray> ui, int tag, int chatroom) {
+		if (!loggedIn) {
+			Log.e("Model", "Aborting RefreshSimpleChat for not logged in!");
+			return;
+		}
 		try {
-			 //TODO: select chatroom
 			UniPush p = new UniPush(this, TASK_CHAT_REFRESH);
 			callbacks.put(TASK_CHAT_REFRESH, new Task<JSONArray>(ui, tag, p));
-			p.execute(pull.pendingChatRefresh(4, 0));
+			p.execute(pull.pendingChatRefresh(chatroom, 0));
 		} catch (RestException e) {
 			Log.e("Model", "invalid Rest URL", e);
 		}
@@ -100,7 +114,7 @@ public class Model implements IAsyncFinished {
 		try {
 			UniPush p = new UniPush(this, TASK_CHECK_SERVER);
 			callbacks.put(TASK_CHECK_SERVER, new Task<Boolean>(ui, tag, p));
-			p.execute(pull.pendingServerStatus());
+			p.execute(pull.pendingServerStatus(server));
 		} catch (RestException e) {
 			Log.e("Model", "invalid Rest URL", e);
 		}
@@ -148,13 +162,10 @@ public class Model implements IAsyncFinished {
 				Log.e("Model", "Unkown Exception in UniPush", e);
 			}
 			
-			loggedIn = success;
 			if (success)
-				saveLoginDetails(server, group, password);
+				logInSuccessfull();
 			
 			((Task<Boolean>) callbacks.get(tag)).callback(success);
-			
-			connectionStatusChange();
 			break;
 		case TASK_CHAT_REFRESH:
 			try {
@@ -187,6 +198,13 @@ public class Model implements IAsyncFinished {
 		callbacks.remove(tag);
 	}
 	
+	private void logInSuccessfull() {
+		loggedIn = true;
+		saveLoginDetails(server, group, password);
+		
+		connectionStatusChange();
+	}
+
 	private void saveLoginDetails(String server, int group, String password) {
 		SharedPreferences.Editor edit = pref.edit();
 //		edit.putBoolean(LOGGED_IN, success);

@@ -63,7 +63,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		
 		if (model.isLoggedIn())
 		{
-			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT);
+			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT, 4);
 			getActivity().setProgressBarIndeterminateVisibility(true);
 		}
 	}
