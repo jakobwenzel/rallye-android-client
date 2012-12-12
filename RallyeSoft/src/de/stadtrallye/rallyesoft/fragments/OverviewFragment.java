@@ -44,7 +44,7 @@ public class OverviewFragment extends Fragment implements IModelResult<Boolean>,
 		super.onStart();
 
 		connectionStatus = (TextView) getView().findViewById(R.id.server_status);
-		connectionStatusChange(model.isLoggedIn());
+		onConnectionStatusChange(model.isLoggedIn());
 		
 	}
 
@@ -61,7 +61,7 @@ public class OverviewFragment extends Fragment implements IModelResult<Boolean>,
 	}
 
 	@Override
-	public void connectionStatusChange(boolean newStatus) {
+	public void onConnectionStatusChange(boolean newStatus) {
 		Log.v("OverviewFragment", "connectionStatusChange("+ newStatus +")");
 		connectionStatus.setText((newStatus)? R.string.connected : R.string.notConnected);
 	}

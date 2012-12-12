@@ -29,7 +29,7 @@ import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.communications.PushService;
-import de.stadtrallye.rallyesoft.fragments.ChatFragment;
+import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.IModelListener;
@@ -113,7 +113,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
 		tabs.add(null);
 		tabs.add(null);
-		tabs.add(new FragmentHandler<ChatFragment>("chat", ChatFragment.class));
+		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class));
 		
 		getSupportActionBar().setSelectedNavigationItem(tabIndex);
 		
@@ -357,7 +357,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 * IModelListener
 	 */
 	@Override
-	public void connectionStatusChange(boolean newStatus) {
+	public void onConnectionStatusChange(boolean newStatus) {
 		ActionBar ab = getSupportActionBar();
 		if (newStatus) {
 			ab.setSubtitle(R.string.connected);

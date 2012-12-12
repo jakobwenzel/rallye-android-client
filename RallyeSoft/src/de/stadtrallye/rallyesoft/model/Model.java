@@ -1,6 +1,7 @@
 package de.stadtrallye.rallyesoft.model;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.json.JSONArray;
@@ -46,6 +47,7 @@ public class Model implements IAsyncFinished {
 	private String gcm;
 	private boolean loggedIn;
 	private ArrayList<IModelListener> listeners;
+	private int[] chatrooms;
 	
 	public Model(Context context, SharedPreferences pref) {
 		this(context, pref, false);
@@ -56,6 +58,7 @@ public class Model implements IAsyncFinished {
 		this.pref = pref;
 		this.context = context;
 		this.loggedIn = loggedIn;
+		
 		
 		server = pref.getString(SERVER, null);
 		if (server == null) {
@@ -96,14 +99,14 @@ public class Model implements IAsyncFinished {
 			}
 	}
 	
-	public void refreshSimpleChat(IModelResult<JSONArray> ui, int tag, int chatroom) {
+	public void refreshSimpleChat(IModelResult<List<ChatEntry>> ui, int tag, int chatroom) {
 		if (!loggedIn) {
 			Log.e("Model", "Aborting RefreshSimpleChat for not logged in!");
 			return;
 		}
 		try {
 			UniPush p = new UniPush(this, TASK_CHAT_REFRESH);
-			callbacks.put(TASK_CHAT_REFRESH, new Task<JSONArray>(ui, tag, p));
+			callbacks.put(TASK_CHAT_REFRESH, new Task<List<ChatEntry>>(ui, tag, p));
 			p.execute(pull.pendingChatRefresh(chatroom, 0));
 		} catch (RestException e) {
 			Log.e("Model", "invalid Rest URL", e);
@@ -136,6 +139,10 @@ public class Model implements IAsyncFinished {
 	public String getPassword() {
 		return pref.getString(PASSWORD, context.getString(R.string.default_password));
 	}
+	
+	public int[] getChatRooms() {
+		return chatrooms;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -152,7 +159,9 @@ public class Model implements IAsyncFinished {
 					next = js.getJSONObject(i);
 					res[i] = next.getInt("chatroom");
 				}
-				//TODO: use available chatrooms
+				
+				chatrooms = res;
+				
 				success = true;
 			} catch (InterruptedException e) {
 				Log.e("Model", "Unkown Exception in UniPush", e);
@@ -170,7 +179,7 @@ public class Model implements IAsyncFinished {
 		case TASK_CHAT_REFRESH:
 			try {
 				JSONArray js = new JSONArray(task.get());
-				((Task<JSONArray>) callbacks.get(tag)).callback(js);
+				((Task<List<ChatEntry>>) callbacks.get(tag)).callback(ChatEntry.translateJSON(js));
 			} catch (InterruptedException e) {
 				Log.e("Model", "Unkown Exception in UniPush", e);
 			} catch (JSONException e) {
@@ -242,6 +251,12 @@ public class Model implements IAsyncFinished {
 		}
 	}
 	
+	/**
+	 * Redirects a finished Task to ui, with predetermined result
+	 * @author Ramon
+	 *
+	 * @param <T>
+	 */
 	private class Redirect<T> implements IAsyncFinished {
 		private IModelResult<T> ui;
 		private T result;
@@ -269,7 +284,7 @@ public class Model implements IAsyncFinished {
 
 	private void connectionStatusChange() {
 		for(IModelListener l: listeners) {
-			l.connectionStatusChange(loggedIn);
+			l.onConnectionStatusChange(loggedIn);
 		}
 	}
 }

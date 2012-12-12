@@ -25,22 +25,27 @@ import de.stadtrallye.rallyesoft.IProgressUI;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IModelResult;
-import de.stadtrallye.rallyesoft.model.JSONTranslator;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class ChatFragment extends SherlockFragment implements IModelResult<JSONArray> {
+public class ChatFragment extends SherlockFragment implements IModelResult<List<ChatEntry>> {
 	
-	final static private int TASK_SIMPLE_CHAT = 101;
-	
+	final static private int TASK_CHAT = 101;
+
 	private Model model;
 
+	private IProgressUI ui;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		setRetainInstance(true);
-		
-		Log.v("ChatFragment", "ChatFragment created");
+	}
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.chat_list, container, false);	
+		return v;
 	}
 	
 	@Override
@@ -49,7 +54,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
-			Log.v("ChatFragment", "New Model");
+			ui = (IProgressUI) getActivity();
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
@@ -59,53 +64,23 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 	public void onStart() {
 		super.onStart();
 		
-		Log.v("ChatFragment", "ChatFragment started");
-		
-		if (model.isLoggedIn())
-		{
-			model.refreshSimpleChat(this, TASK_SIMPLE_CHAT, 4);
-			getActivity().setProgressBarIndeterminateVisibility(true);
+		if (model.isLoggedIn()) {
+			ui.activateProgressAnimation();
+			model.refreshSimpleChat(this, TASK_CHAT, getArguments().getInt("chatroom"));
 		}
 	}
 	
 	
 	
 	@Override
-	public void onResume() {
-		super.onResume();
-		
-		Log.v("ChatFragment", "ChatFragment resumed");
-		
-	}
-	
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.chat_list, container, false);
-	}
-
-	@Override
-	public void onModelFinished(int tag, JSONArray result) {
-		((IProgressUI)getActivity()).activateProgressAnimation();
-		
-//		ArrayList<String> messages = new ArrayList<String>();
-//		try {
-//			JSONObject next;
-//			int i = 0;
-//			while ((next = (JSONObject) result.opt(i)) != null)
-//			{
-//				++i;
-//				messages.add(next.getString("message"));
-//			}
-//		} catch (Exception e) {
-//			Log.e("PullChat", e.toString());
-//			e.printStackTrace();
-//		}
+	public void onModelFinished(int tag, List<ChatEntry> result) {
 		
 		View view = getView();
 		ListView chats = (ListView) view.findViewById(R.id.chat_list);
-        ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, JSONTranslator.translateJSONChatEntrys(result)); //, android.R.id.text
+        ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, result); //, android.R.id.text
         chats.setAdapter(chatAdapter);
-        ((IProgressUI)getActivity()).deactivateProgressAnimation();
+        
+        ui.deactivateProgressAnimation();
 	}
 	
 	private class ChatAdapter extends ArrayAdapter<ChatEntry> {
@@ -142,7 +117,6 @@ public class ChatFragment extends SherlockFragment implements IModelResult<JSONA
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
 			ChatEntry o = entries.get(position);
-			int me = model.getGroup();
 			
 			ViewMem mem;
 			
