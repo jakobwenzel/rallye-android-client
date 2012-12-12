@@ -2,13 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res/de.stadtrallye.rallyesoft">
     
     <com.viewpagerindicator.TitlePageIndicator
         android:id="@+id/indicator"
         android:padding="10dip"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
+		android:textColor="@color/abs__bright_foreground_disabled_holo_light"
+		app:selectedColor="@color/abs__primary_text_holo_light"
         />
     
     <android.support.v4.view.ViewPager

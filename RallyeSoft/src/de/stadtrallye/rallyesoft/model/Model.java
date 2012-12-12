@@ -32,10 +32,16 @@ public class Model implements IAsyncFinished {
 	final private String SERVER = "server";
 	final private String GROUP = "group";
 	final private String PASSWORD = "password";
+	private static final String CHATROOMS = "chatrooms";
 	
 	final private static int TASK_LOGIN = 100001;
 	final private static int TASK_CHAT_REFRESH = 100002;
 	final private static int TASK_CHECK_SERVER = 100003;
+	
+	
+	public enum Tasks { LOGIN, CHAT_REFRESH, CHECK_SERVER };
+	
+	private int taskID = 0;
 
 	private SharedPreferences pref;
 	private RallyePull pull;
@@ -66,6 +72,7 @@ public class Model implements IAsyncFinished {
 		} else {
 			group = pref.getInt(GROUP, 0);
 			password = pref.getString(PASSWORD, null);
+			chatrooms = extractChatRooms(pref.getString(CHATROOMS, ""));
 		}
 		
 		pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
@@ -74,6 +81,22 @@ public class Model implements IAsyncFinished {
 		listeners = new ArrayList<IModelListener>();
 	}
 	
+	private int[] extractChatRooms(String string) {
+		String rooms = pref.getString(CHATROOMS, "");
+		String[] spl = rooms.split(";");
+		ArrayList<Integer> out = new ArrayList<Integer>();
+		for (int i=0; i<spl.length; i++) {
+			try {
+				out.add(Integer.parseInt(spl[i]));
+			} catch (Exception e) {}
+		}
+		int[] arr = new int[out.size()];
+		for (int i=0; i<out.size(); i++) {
+			arr[i] = out.get(i);
+		}
+		return arr;
+	}
+
 	public void logout(IModelResult<Boolean> ui, int tag) {
 		try {
 			new UniPush(new Redirect<Boolean>(ui, true), tag).execute(pull.pendingLogout());
@@ -86,8 +109,8 @@ public class Model implements IAsyncFinished {
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
 			try {
-				UniPush p = new UniPush(this, TASK_LOGIN);
-				callbacks.put(TASK_LOGIN, new Task<Boolean>(ui, tag, p));
+				UniPush p = new UniPush(this, --taskID);
+				callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.LOGIN, p));
 				p.execute(RallyePull.pendingLogin(context, server, group, password, gcm));
 				
 				
@@ -105,8 +128,8 @@ public class Model implements IAsyncFinished {
 			return;
 		}
 		try {
-			UniPush p = new UniPush(this, TASK_CHAT_REFRESH);
-			callbacks.put(TASK_CHAT_REFRESH, new Task<List<ChatEntry>>(ui, tag, p));
+			UniPush p = new UniPush(this, --taskID);
+			callbacks.put(taskID, new Task<List<ChatEntry>>(ui, tag, Tasks.CHAT_REFRESH, p));
 			p.execute(pull.pendingChatRefresh(chatroom, 0));
 		} catch (RestException e) {
 			Log.e("Model", "invalid Rest URL", e);
@@ -115,8 +138,8 @@ public class Model implements IAsyncFinished {
 	
 	public void checkServerStatus(IModelResult<Boolean> ui,	int tag) {
 		try {
-			UniPush p = new UniPush(this, TASK_CHECK_SERVER);
-			callbacks.put(TASK_CHECK_SERVER, new Task<Boolean>(ui, tag, p));
+			UniPush p = new UniPush(this, --taskID);
+			callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.CHECK_SERVER, p));
 			p.execute(pull.pendingServerStatus(server));
 		} catch (RestException e) {
 			Log.e("Model", "invalid Rest URL", e);
@@ -147,8 +170,9 @@ public class Model implements IAsyncFinished {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void onAsyncFinished(int tag, UniPush task) {
-		switch (tag) {
-		case TASK_LOGIN:
+		Tasks type = callbacks.get(tag).type;
+		switch (type) {
+		case LOGIN:
 			boolean success = false;
 			try {
 				JSONArray js = new JSONArray(task.get());
@@ -176,7 +200,7 @@ public class Model implements IAsyncFinished {
 			
 			((Task<Boolean>) callbacks.get(tag)).callback(success);
 			break;
-		case TASK_CHAT_REFRESH:
+		case CHAT_REFRESH:
 			try {
 				JSONArray js = new JSONArray(task.get());
 				((Task<List<ChatEntry>>) callbacks.get(tag)).callback(ChatEntry.translateJSON(js));
@@ -188,11 +212,11 @@ public class Model implements IAsyncFinished {
 				Log.e("Model", "Unkown Exception in UniPush", e);
 			}
 			break;
-		case TASK_CHECK_SERVER:
+		case CHECK_SERVER:
 			try {
 				String res = task.get();
 				loggedIn = (task.getResponseCode() >= 200 && task.getResponseCode() < 300);
-				if (loggedIn && callbacks.get(tag).tag != 0)
+				if (loggedIn && callbacks.get(tag).externalTag != 0)
 					((Task<Boolean>) callbacks.get(tag)).callback(loggedIn);
 				
 				connectionStatusChange();
@@ -209,17 +233,22 @@ public class Model implements IAsyncFinished {
 	
 	private void logInSuccessfull() {
 		loggedIn = true;
-		saveLoginDetails(server, group, password);
+		saveLoginDetails(server, group, password, chatrooms);
 		
 		connectionStatusChange();
 	}
 
-	private void saveLoginDetails(String server, int group, String password) {
+	private void saveLoginDetails(String server, int group, String password, int[] chatrooms) {
 		SharedPreferences.Editor edit = pref.edit();
 //		edit.putBoolean(LOGGED_IN, success);
 		edit.putString(SERVER, server);
 		edit.putInt(GROUP, group);
 		edit.putString(PASSWORD, password);
+		StringBuilder rooms = new StringBuilder();
+		for (int i: chatrooms) {
+			rooms.append(Integer.toString(i)).append(';');
+		}
+		edit.putString(CHATROOMS, rooms.toString());
 		edit.commit();
 	}
 
@@ -237,17 +266,19 @@ public class Model implements IAsyncFinished {
 	 */
 	private class Task<T> {
 		public IModelResult<T> ui;
-		public int tag;
+		public int externalTag;
 		public UniPush task;
+		public Tasks type;
 		
-		public Task(IModelResult<T> ui, int tag, UniPush task) {
+		public Task(IModelResult<T> ui, int externalTag, Tasks type, UniPush task) {
 			this.ui = ui;
-			this.tag = tag;
+			this.externalTag = externalTag;
 			this.task = task;
+			this.type = type;
 		}
 		
 		public void callback(T result) {
-			ui.onModelFinished(tag, result);
+			ui.onModelFinished(externalTag, result);
 		}
 	}
 	

@@ -39,7 +39,6 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		setRetainInstance(true);
 	}
 	
 	@Override
@@ -77,7 +76,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 		
 		View view = getView();
 		ListView chats = (ListView) view.findViewById(R.id.chat_list);
-        ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, result); //, android.R.id.text
+        ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, result);
         chats.setAdapter(chatAdapter);
         
         ui.deactivateProgressAnimation();

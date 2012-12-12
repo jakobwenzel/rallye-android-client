@@ -23,7 +23,7 @@ public class ChatFragmentAdapter extends FragmentPagerAdapter{
 		
 		Fragment f = new ChatFragment();
 		Bundle b = new Bundle();
-		b.putInt("chatroom", pos);
+		b.putInt("chatroom", chatrooms[pos]);
 		f.setArguments(b);
 		
 		return f;
@@ -36,7 +36,7 @@ public class ChatFragmentAdapter extends FragmentPagerAdapter{
 	
 	@Override
 	public CharSequence getPageTitle(int pos) {
-		return FRAGMENT_TITLE +pos;
+		return FRAGMENT_TITLE +chatrooms[pos];
 	}
 
 }

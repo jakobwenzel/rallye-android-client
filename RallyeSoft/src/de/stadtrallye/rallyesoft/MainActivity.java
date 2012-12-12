@@ -71,7 +71,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		sm.setShadowDrawable(R.drawable.defaultshadow);
 //		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
-		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
 		// Set last tab if any
 		int tabIndex = 0;
