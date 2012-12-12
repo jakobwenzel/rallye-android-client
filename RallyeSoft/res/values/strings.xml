@@ -29,6 +29,7 @@
     <string name="group">Gruppennummer</string>
     <string name="password">Passwort</string>
     <string name="status">Status</string>
+    <string name="unavailable">Nicht verfügbar</string>
     <string name="connected">Verbunden</string>
     <string name="notConnected">Getrennt</string>
     

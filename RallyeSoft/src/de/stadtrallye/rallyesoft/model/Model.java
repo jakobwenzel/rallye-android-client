@@ -312,10 +312,16 @@ public class Model implements IAsyncFinished {
 	public void addListener(IModelListener l) {
 		listeners.add(l);
 	}
-
+	
+	public void removeListener(IModelListener l) {
+		listeners.remove(l);
+	}
+	
 	private void connectionStatusChange() {
 		for(IModelListener l: listeners) {
 			l.onConnectionStatusChange(loggedIn);
 		}
 	}
+
+	
 }

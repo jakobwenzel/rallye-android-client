@@ -35,8 +35,6 @@ public class OverviewFragment extends Fragment implements IModelResult<Boolean>,
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
-		
-		model.addListener(this);
 	}
 	
 	@Override
@@ -45,7 +43,14 @@ public class OverviewFragment extends Fragment implements IModelResult<Boolean>,
 
 		connectionStatus = (TextView) getView().findViewById(R.id.server_status);
 		onConnectionStatusChange(model.isLoggedIn());
+		model.addListener(this);
 		
+	}
+	
+	@Override
+	public void onStop() {
+		super.onStop();
+		model.removeListener(this);
 	}
 
 	@Override

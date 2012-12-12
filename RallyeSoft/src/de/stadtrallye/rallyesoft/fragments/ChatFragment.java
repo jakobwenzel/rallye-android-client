@@ -144,7 +144,11 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
                 // ImageLoader jar
                 if (o.pictureID > 0) {
                 	loader.displayImage(model.getImageUrl(o.pictureID, 't'), mem.img);
+                } else {
+                	loader.displayImage(null, mem.img);
                 }
+                
+                Log.v("ChatAdapter", "["+o.timestamp+"] '"+ o.message +"' (pic:"+ o.pictureID +")");
             }
             return v;
 		}

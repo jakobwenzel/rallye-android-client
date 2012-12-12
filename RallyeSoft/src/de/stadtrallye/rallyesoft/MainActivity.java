@@ -110,10 +110,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
-		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
+		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class, null));
 		tabs.add(null);
 		tabs.add(null);
-		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class));
+		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class, null));
 		
 		getSupportActionBar().setSelectedNavigationItem(tabIndex);
 		
@@ -129,10 +129,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		private String tag;
 		private Class<T> clz;
 		private Fragment fragment;
+		private Bundle arg;
 		
-		public FragmentHandler(String tag, Class<T> clz) {
+		public FragmentHandler(String tag, Class<T> clz, Bundle arg) {
 			this.tag = tag;
 			this.clz = clz;
+			this.arg = arg;
 			
 			fragment = getSupportFragmentManager().findFragmentByTag(tag);
 		}
@@ -140,12 +142,19 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		public Fragment getFragment() {
 			if (fragment == null) {
 				fragment = Fragment.instantiate(MainActivity.this, clz.getName());
+				
+				if (arg != null)
+					fragment.setArguments(arg);
 			}
 			return fragment;
 		}
 		
 		public String getTag() {
 			return tag;
+		}
+		
+		public Bundle getArguments() {
+			return arg;
 		}
 	}
 	
