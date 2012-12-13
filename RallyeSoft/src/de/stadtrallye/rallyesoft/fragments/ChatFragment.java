@@ -2,8 +2,6 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import java.util.List;
 
-import org.json.JSONArray;
-
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
