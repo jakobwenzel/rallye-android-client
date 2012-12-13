@@ -2,8 +2,6 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import java.util.List;
 
-import org.json.JSONArray;
-
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +27,7 @@ import de.stadtrallye.rallyesoft.model.Model;
 
 public class ChatFragment extends SherlockFragment implements IModelResult<List<ChatEntry>> {
 	
+	private static final String THIS = "ChatFragment";
 	private static final String LAST_POS = "lastPosition"; 
 	
 	final static private int TASK_CHAT = 101;
@@ -82,6 +81,12 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 		outState.putInt(LAST_POS, list.getFirstVisiblePosition());
 	}
 	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		
+		Log.d(THIS, "is destroying");
+	}
 	
 	
 	@Override

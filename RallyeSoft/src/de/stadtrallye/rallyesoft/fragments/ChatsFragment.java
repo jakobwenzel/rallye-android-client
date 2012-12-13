@@ -1,11 +1,11 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import java.util.Arrays;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +26,8 @@ import de.stadtrallye.rallyesoft.model.Model;
  *
  */
 public class ChatsFragment extends SherlockFragment implements IModelListener {
+	
+	private static final String THIS = "ChatsFragment";
 	
 	private Model model;
 	private ViewPager pager;
@@ -50,7 +52,7 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		setRetainInstance(true);
+		setRetainInstance(false);
 		
 	}
 	
@@ -69,7 +71,7 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	public void onStart() {
 		super.onStart();
 		
-		Log.v("ChatsFragment", "ChatFragment started");
+		Log.v(THIS, "ChatFragment started");
 		
 		onConnectionStatusChange(model.isLoggedIn());
 		
@@ -84,7 +86,7 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	}
 	
 	private void populateChats() {
-		if (!model.getChatRooms().equals(currentRooms)) {
+		if (!Arrays.equals(model.getChatRooms(), currentRooms)) {
 			currentRooms = model.getChatRooms();
 			fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
 			pager.setAdapter(fragmentAdapter);
@@ -94,13 +96,21 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	}
 	
 	private void chatsUnavailable() {
-		if (!(fragmentAdapter instanceof DummyAdapter)) {
+		if (/*!(fragmentAdapter instanceof DummyAdapter)*/true) {
 			currentRooms = null;
-			fragmentAdapter = new DummyAdapter(getChildFragmentManager());
+			FragmentManager childManager = getChildFragmentManager();
+			childManager.enableDebugLogging(true);
+			fragmentAdapter = new DummyAdapter(childManager);
 			pager.setAdapter(fragmentAdapter);
 			indicator.setViewPager(pager);
 			indicator.invalidate();
 		}
+	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		Log.d(THIS, "is destroying");
 	}
 
 	@Override
