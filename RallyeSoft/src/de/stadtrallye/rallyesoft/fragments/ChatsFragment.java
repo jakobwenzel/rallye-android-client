@@ -52,7 +52,7 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		setRetainInstance(false);
+		setRetainInstance(true);
 		
 	}
 	
@@ -86,17 +86,17 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	}
 	
 	private void populateChats() {
-		if (!Arrays.equals(model.getChatRooms(), currentRooms)) {
+//		if (!Arrays.equals(model.getChatRooms(), currentRooms)) {
 			currentRooms = model.getChatRooms();
 			fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
 			pager.setAdapter(fragmentAdapter);
 			indicator.setViewPager(pager);
 			indicator.invalidate();
-		}
+//		}
 	}
 	
 	private void chatsUnavailable() {
-		if (/*!(fragmentAdapter instanceof DummyAdapter)*/true) {
+//		if (/*!(fragmentAdapter instanceof DummyAdapter)*/true) {
 			currentRooms = null;
 			FragmentManager childManager = getChildFragmentManager();
 			childManager.enableDebugLogging(true);
@@ -104,7 +104,7 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 			pager.setAdapter(fragmentAdapter);
 			indicator.setViewPager(pager);
 			indicator.invalidate();
-		}
+//		}
 	}
 	
 	@Override
