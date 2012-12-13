@@ -29,21 +29,26 @@ import de.stadtrallye.rallyesoft.model.Model;
 
 public class ChatFragment extends SherlockFragment implements IModelResult<List<ChatEntry>> {
 	
+	private static final String LAST_POS = "lastPosition"; 
+	
 	final static private int TASK_CHAT = 101;
 
 	private Model model;
-
 	private IProgressUI ui;
+	private ListView list;
+	private Bundle restore;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		restore = savedInstanceState;
 	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.chat_list, container, false);	
+		View v = inflater.inflate(R.layout.chat_list, container, false);
+		list = (ListView)v.findViewById(R.id.chat_list);
 		return v;
 	}
 	
@@ -69,6 +74,14 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 		}
 	}
 	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		
+		Log.d("ChatFragment", "ScrollState: "+ list.getFirstVisiblePosition());
+		outState.putInt(LAST_POS, list.getFirstVisiblePosition());
+	}
+	
 	
 	
 	@Override
@@ -78,6 +91,10 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 		ListView chats = (ListView) view.findViewById(R.id.chat_list);
         ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, result);
         chats.setAdapter(chatAdapter);
+        if (restore != null) {
+        	chats.setSelectionFromTop(restore.getInt(LAST_POS, 0), 0);
+        	Log.d("ChatFragment", "ScrollState restored: "+ restore.getInt(LAST_POS, 0));
+        }
         
         ui.deactivateProgressAnimation();
 	}

@@ -10,7 +10,9 @@ import com.actionbarsherlock.app.SherlockFragment;
 
 public class DummyFragment extends SherlockFragment {
 
+	public static final String LAYOUT = "layout";
+
 	public View onCreateView(LayoutInflater inflater,ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(getArguments().getInt("layout"), container, false);
+		return inflater.inflate(getArguments().getInt(LAYOUT), container, false);
 	}
 }

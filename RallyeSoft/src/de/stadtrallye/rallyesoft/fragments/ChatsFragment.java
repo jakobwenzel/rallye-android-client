@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,7 +30,8 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 	private Model model;
 	private ViewPager pager;
 	private TitlePageIndicator indicator;
-	private ChatFragmentAdapter fragmentAdapter;
+	private FragmentPagerAdapter fragmentAdapter;
+	private int[] currentRooms;
 	
 	
 	@Override
@@ -69,13 +71,7 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 		
 		Log.v("ChatsFragment", "ChatFragment started");
 		
-		if (fragmentAdapter != null) {
-			fragmentAdapter.clean(pager);
-		}
-		
-		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), (model.isLoggedIn())? model.getChatRooms() : null, getString(R.string.unavailable));
-		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
+		onConnectionStatusChange(model.isLoggedIn());
 		
 		model.addListener(this);
 	}
@@ -86,80 +82,52 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 		
 		model.removeListener(this);
 	}
+	
+	private void populateChats() {
+		if (!model.getChatRooms().equals(currentRooms)) {
+			currentRooms = model.getChatRooms();
+			fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
+			pager.setAdapter(fragmentAdapter);
+			indicator.setViewPager(pager);
+			indicator.invalidate();
+		}
+	}
+	
+	private void chatsUnavailable() {
+		if (!(fragmentAdapter instanceof DummyAdapter)) {
+			currentRooms = null;
+			fragmentAdapter = new DummyAdapter(getChildFragmentManager());
+			pager.setAdapter(fragmentAdapter);
+			indicator.setViewPager(pager);
+			indicator.invalidate();
+		}
+	}
 
 	@Override
 	public void onConnectionStatusChange(boolean newStatus) {
 		if (newStatus) {
-//			fragmentAdapter.populate(model.getChatRooms(), pager);
-//			if (fragmentAdapter != null) {
-//				fragmentAdapter.populate(model.getChatRooms(), pager);
-//			} else
-//				fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), model.getChatRooms(), getString(R.string.unavailable));
-//			pager.setAdapter(fragmentAdapter);
-//			pager.invalidate();
+			populateChats();
 		} else {
-//			fragmentAdapter.clean(pager);
-//			main.setVisibility(View.GONE);
-//			unavailable.setVisibility(View.VISIBLE);
+			chatsUnavailable();
 		}
 		
 	}
 	
-	private class ChatFragmentAdapter extends FragmentPagerAdapter{
+	private class ChatFragmentAdapter extends FragmentPagerAdapter {
 		
 		final private static String FRAGMENT_TITLE = "Chatroom ";
 
 		private int[] chatrooms;
-		private FragmentManager manager;
-		private String emptyTitle;
 		
-		public ChatFragmentAdapter(FragmentManager fm, int[] chatrooms, String emptyTitle) {
+		public ChatFragmentAdapter(FragmentManager fm, int[] chatrooms) {
 			super(fm);
 			
-			manager = fm;
-			
 			this.chatrooms = chatrooms;
-			this.emptyTitle = emptyTitle;
 		}
 		
-		public void populate(int[] chatrooms, ViewGroup container) {
-			if (this.chatrooms != null) {
-				if (!this.chatrooms.equals(chatrooms)) {
-					clean(container);
-				} else {
-					return;
-				}
-			}
-				
-			
-			startUpdate(container);
-			destroyItem(container, 0, instantiateItem(container, 0));
-			
-			this.chatrooms = chatrooms;
-			
-			
-			finishUpdate(container);
-			container.invalidate();
-		}
-		
-		public void clean(ViewGroup container) {
-			if (chatrooms == null)
-				return;
-			
-			startUpdate(container);
-			Fragment f;
-			FragmentTransaction t = manager.beginTransaction();
-			for (int i=0; i<chatrooms.length; ++i) {
-				f = (Fragment) instantiateItem(container, i);
-				destroyItem(container, i, f);
-				t.remove(f);
-			}
-			t.commit();
-			chatrooms = null;
-			container.invalidate();
-			
-			finishUpdate(container);
-			container.invalidate();
+		@Override
+		public long getItemId(int position) {
+			return chatrooms[position];
 		}
 
 		@Override
@@ -167,13 +135,8 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 			Fragment f;
 			Bundle b = new Bundle();
 			
-//			if (chatrooms != null) {
-				f = new ChatFragment();
-				b.putInt("chatroom", chatrooms[pos]);
-//			} else {
-//				f = new DummyFragment();
-//				b.putInt("layout", R.layout.chat_fragment_unavailable);
-//			}
+			f = new ChatFragment();
+			b.putInt("chatroom", chatrooms[pos]);
 			
 			f.setArguments(b);
 			return f;
@@ -181,16 +144,41 @@ public class ChatsFragment extends SherlockFragment implements IModelListener {
 
 		@Override
 		public int getCount() {
-//			return (chatrooms != null)? chatrooms.length : 1;
 			return chatrooms.length;
 		}
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-//			return (chatrooms != null)? FRAGMENT_TITLE +chatrooms[pos] : emptyTitle;
 			return FRAGMENT_TITLE +chatrooms[pos];
 		}
 
+	}
+	
+	private class DummyAdapter extends FragmentPagerAdapter {
+
+		public DummyAdapter(FragmentManager fm) {
+			super(fm);
+		}
+
+		@Override
+		public Fragment getItem(int arg0) {
+			Fragment f = new DummyFragment();
+			Bundle b = new Bundle();
+			b.putInt(DummyFragment.LAYOUT, R.layout.chat_fragment_unavailable);
+			f.setArguments(b);
+			return f;
+		}
+		
+		@Override
+		public long getItemId(int position) {
+			return -1;
+		}
+
+		@Override
+		public int getCount() {
+			return 1;
+		}
+		
 	}
 	
 }
