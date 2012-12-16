@@ -15,6 +15,8 @@ import de.stadtrallye.rallyesoft.model.Model;
 
 public class OverviewFragment extends Fragment implements IModelResult<Boolean>, IModelListener {
 	
+	private static final String THIS = OverviewFragment.class.getSimpleName();
+	
 	private static final int TASK_CHECK_STATUS = 201;
 	private Model model;
 	private TextView connectionStatus;
@@ -67,7 +69,7 @@ public class OverviewFragment extends Fragment implements IModelResult<Boolean>,
 
 	@Override
 	public void onConnectionStatusChange(boolean newStatus) {
-		Log.v("OverviewFragment", "connectionStatusChange("+ newStatus +")");
+		Log.v(THIS, "connectionStatusChange("+ newStatus +")");
 		connectionStatus.setText((newStatus)? R.string.connected : R.string.notConnected);
 	}
 }

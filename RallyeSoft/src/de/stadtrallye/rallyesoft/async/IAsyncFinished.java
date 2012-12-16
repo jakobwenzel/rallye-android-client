@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft.async;
 
+import de.stadtrallye.rallyesoft.communications.UniPush;
+
 
 public interface IAsyncFinished {
 

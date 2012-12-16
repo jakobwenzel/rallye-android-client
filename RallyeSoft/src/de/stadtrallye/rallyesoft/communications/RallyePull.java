@@ -5,11 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
-
-import com.google.android.gcm.GCMRegistrar;
-
 import de.stadtrallye.rallyesoft.exceptions.Err;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
@@ -21,6 +17,8 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  *
  */
 public class RallyePull extends Pull {
+	
+	private static final String THIS = RallyePull.class.getSimpleName();
 	
 	private String gcm;
 	private Context context;
@@ -77,7 +75,8 @@ public class RallyePull extends Pull {
 	}
 
 	public JSONArray pullAllNodes() throws HttpResponseException, RestException, JSONException {
-		Log.i("RallyePull", "pulling all nodes...");
+		if (DEBUG)
+			Log.i(THIS, "pulling all nodes...");
 		Request r;
 		r = new Request("/map/nodes");
 		JSONArray res = r.getJSONArray();
@@ -87,7 +86,8 @@ public class RallyePull extends Pull {
 	
 	public JSONArray pullChats(int chatroom, int timestamp) throws HttpResponseException, RestException, JSONException {
 		Request r;
-		Log.i("RallyePull", "pulling all chats...");
+		if (DEBUG)
+			Log.i(THIS, "pulling all chats...");
 		r = new Request("/chat/get");
 		try {
 			r.putPost(new JSONObject()
@@ -96,7 +96,7 @@ public class RallyePull extends Pull {
 					.put(TIMESTAMP, (timestamp == 0)? JSONObject.NULL : timestamp)
 					.toString(), Pull.Mime.JSON);
 		} catch (JSONException e) {
-			Log.e("RallyePull", "PullChats: Unkown JSON error during POST");
+			Log.e(THIS, "PullChats: Unkown JSON error during POST");
 		}
 		JSONArray res = r.getJSONArray();
 		r.close();

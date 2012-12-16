@@ -1,8 +1,9 @@
-package de.stadtrallye.rallyesoft.async;
+package de.stadtrallye.rallyesoft.communications;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
+import de.stadtrallye.rallyesoft.async.IAsyncFinished;
 import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
@@ -16,6 +17,8 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  */
 public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	
+	private static boolean DEBUG = false;
+	
 	private Exception e;
 	private IAsyncFinished ui;
 	private int tag;
@@ -26,10 +29,17 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 		ui = progressUi;
 		this.tag = tag;
 	}
+	
+	public static void enableDebugLogging() {
+		DEBUG = true;
+	}
 
 	@Override
 	protected String doInBackground(PendingRequest... r) {
-		Log.d("UniPush", "AsyncTask ("+tag+") started!");
+		if (DEBUG)
+			Log.d("UniPush", "AsyncTask ("+tag+") started!");
+		
+		
 		try {
 			String res = r[0].readLine();
 			responseCode = r[0].getResponseCode();
@@ -47,7 +57,8 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	protected void onPostExecute(String result) {
 		super.onPostExecute(result);
 		
-		Log.d("UniPush", "AsyncTask ("+tag+") finished!");
+		if (DEBUG)
+			Log.d("UniPush", "AsyncTask ("+tag+") finished!");
 		
 //		ui.setSupportProgressBarIndeterminateVisibility(false);
 		ui.onAsyncFinished(tag, this);

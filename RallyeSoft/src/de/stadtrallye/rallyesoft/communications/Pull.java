@@ -23,6 +23,10 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  */
 public class Pull {
 	
+	private static final String THIS = Pull.class.getSimpleName();
+	
+	protected static boolean DEBUG = false;
+	
 	private String base;
 	
 	public enum Mime { JSON
@@ -38,6 +42,10 @@ public class Pull {
 	
 	public Pull(String baseURL) {
 		base = baseURL;
+	}
+	
+	public static void enableDebugLogging() {
+		DEBUG = true;
 	}
 	
 	/**
@@ -122,7 +130,8 @@ public class Pull {
 		}
 		
 		public boolean putPost(String post, Mime type) throws RestException {
-			Log.d("Pull", "Posting: " +post);
+			if (DEBUG)
+				Log.d(THIS, "Posting: " +post);
 			byte[] bytes = post.getBytes();
 			
 			conn.setDoOutput(true);

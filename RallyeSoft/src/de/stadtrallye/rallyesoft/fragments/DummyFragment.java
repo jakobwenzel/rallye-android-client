@@ -6,22 +6,26 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.actionbarsherlock.app.SherlockFragment;
-
-public class DummyFragment extends SherlockFragment {
-	
-	private static final String THIS = "DummyFragment";
+public class DummyFragment extends BaseFragment {
 
 	public static final String LAYOUT = "layout";
-
-	public View onCreateView(LayoutInflater inflater,ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(getArguments().getInt(LAYOUT), container, false);
+	
+	public DummyFragment() {
+		
+		THIS = DummyFragment.class.getSimpleName();
+		
+		if (DEBUG)
+			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
 	@Override
-	public void onDestroy() {
-		super.onDestroy();
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 		
-		Log.v(THIS, "is destroying...");
+		setRetainInstance(false);
+	}
+
+	public View onCreateView(LayoutInflater inflater,ViewGroup container, Bundle savedInstanceState) {
+		return inflater.inflate(getArguments().getInt(LAYOUT), container, false);
 	}
 }

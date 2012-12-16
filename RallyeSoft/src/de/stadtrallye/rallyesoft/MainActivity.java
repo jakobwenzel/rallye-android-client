@@ -113,10 +113,13 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class, null));
 		tabs.add(null);
 		tabs.add(null);
-		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class, null, FragmentHandler.NEW));
+		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class, null));
 		
 		getSupportActionBar().setSelectedNavigationItem(tabIndex);
 		
+		
+		//DEBUG
+		ChatsFragment.enableDebugLogging();
 	}
 	
 	/**
@@ -127,36 +130,32 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 */
 	private class FragmentHandler<T extends Fragment> {
 		
-		public static final boolean RE_USE = true;
-		public static final boolean NEW = false;
+//		public static final boolean RE_USE = true;
+//		public static final boolean NEW = false;
 		
 		private String tag;
 		private Class<T> clz;
-		private Fragment fragment;
+//		private Fragment fragment;
 		private Bundle arg;
-		private boolean reUse;
-		
-		public FragmentHandler(String tag, Class<T> clz, Bundle arg) {
-			this(tag, clz, arg, FragmentHandler.RE_USE);
-		}
+//		private boolean reUse;
 
-		public FragmentHandler(String tag, Class<T> clz, Bundle arg, boolean reUse) {
+		public FragmentHandler(String tag, Class<T> clz, Bundle arg) {
 			this.tag = tag;
 			this.clz = clz;
 			this.arg = arg;
-			this.reUse = reUse;
-			
-			fragment = getSupportFragmentManager().findFragmentByTag(tag);
+//			this.reUse = reUse;
 		}
 		
 		public Fragment getFragment() {
-			if (fragment == null || !reUse) {
-				fragment = Fragment.instantiate(MainActivity.this, clz.getName());
+			Fragment f = getSupportFragmentManager().findFragmentByTag(tag);
+			
+			if (f == null) {
+				f = Fragment.instantiate(MainActivity.this, clz.getName());
 				
 				if (arg != null)
-					fragment.setArguments(arg);
+					f.setArguments(arg);
 			}
-			return fragment;
+			return f;
 		}
 		
 		public String getTag() {

@@ -16,8 +16,8 @@ import android.util.Log;
 import android.util.SparseArray;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.async.IAsyncFinished;
-import de.stadtrallye.rallyesoft.async.UniPush;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
+import de.stadtrallye.rallyesoft.communications.UniPush;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
 /**
@@ -29,10 +29,14 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  */
 public class Model implements IAsyncFinished {
 	
+	private static final String THIS = Model.class.getSimpleName();
+	
 	final private String SERVER = "server";
 	final private String GROUP = "group";
 	final private String PASSWORD = "password";
 	private static final String CHATROOMS = "chatrooms";
+	
+	private static boolean DEBUG = false;
 	
 	final private static int TASK_LOGIN = 100001;
 	final private static int TASK_CHAT_REFRESH = 100002;
@@ -103,28 +107,28 @@ public class Model implements IAsyncFinished {
 			loggedIn = false;
 			connectionStatusChange();
 		} catch (RestException e) {
-			Log.e("Model", e.toString());
+			Log.e(THIS, e.toString());
 		}
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
-			try {
-				UniPush p = new UniPush(this, --taskID);
-				callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.LOGIN, p));
-				p.execute(RallyePull.pendingLogin(context, server, group, password, gcm));
-				
-				
-				this.server = server;
-				this.group = group;
-				this.password = password;
-			} catch (RestException e) {
-				Log.e("Model", "invalid Rest URL", e);
-			}
+		try {
+			UniPush p = new UniPush(this, --taskID);
+			callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.LOGIN, p));
+			p.execute(RallyePull.pendingLogin(context, server, group, password, gcm));
+			
+			
+			this.server = server;
+			this.group = group;
+			this.password = password;
+		} catch (RestException e) {
+			Log.e(THIS, "invalid Rest URL", e);
+		}
 	}
 	
 	public void refreshSimpleChat(IModelResult<List<ChatEntry>> ui, int tag, int chatroom) {
 		if (!loggedIn) {
-			Log.e("Model", "Aborting RefreshSimpleChat for not logged in!");
+			Log.e(THIS, "Aborting RefreshSimpleChat for not logged in!");
 			return;
 		}
 		try {
@@ -132,7 +136,7 @@ public class Model implements IAsyncFinished {
 			callbacks.put(taskID, new Task<List<ChatEntry>>(ui, tag, Tasks.CHAT_REFRESH, p));
 			p.execute(pull.pendingChatRefresh(chatroom, 0));
 		} catch (RestException e) {
-			Log.e("Model", "invalid Rest URL", e);
+			Log.e(THIS, "invalid Rest URL", e);
 		}
 	}
 	
@@ -142,7 +146,7 @@ public class Model implements IAsyncFinished {
 			callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.CHECK_SERVER, p));
 			p.execute(pull.pendingServerStatus(server));
 		} catch (RestException e) {
-			Log.e("Model", "invalid Rest URL", e);
+			Log.e(THIS, "invalid Rest URL", e);
 		}
 		
 	}
@@ -188,11 +192,11 @@ public class Model implements IAsyncFinished {
 				
 				success = true;
 			} catch (InterruptedException e) {
-				Log.e("Model", "Unkown Exception in UniPush", e);
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			} catch (JSONException e) {
-				Log.e("Model", "Unkown JSONException in UniPush", e);
+				Log.e(THIS, "Unkown JSONException in UniPush", e);
 			} catch (ExecutionException e) {
-				Log.e("Model", "Unkown Exception in UniPush", e);
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			}
 			
 			if (success)
@@ -205,11 +209,11 @@ public class Model implements IAsyncFinished {
 				JSONArray js = new JSONArray(task.get());
 				((Task<List<ChatEntry>>) callbacks.get(tag)).callback(ChatEntry.translateJSON(js));
 			} catch (InterruptedException e) {
-				Log.e("Model", "Unkown Exception in UniPush", e);
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			} catch (JSONException e) {
-				Log.e("Model", "Unkown JSONException in UniPush", e);
+				Log.e(THIS, "Unkown JSONException in UniPush", e);
 			} catch (ExecutionException e) {
-				Log.e("Model", "Unkown Exception in UniPush", e);
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			}
 			break;
 		case CHECK_SERVER:
@@ -221,11 +225,11 @@ public class Model implements IAsyncFinished {
 				
 				connectionStatusChange();
 			} catch (InterruptedException e) {
-				Log.e("Model", "Unkown Exception in UniPush", e);
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			} catch (ExecutionException e) {
-				Log.e("Model", "Unkown Exception in UniPush", e);
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			} catch (Exception e) {
-				Log.w("Model", "BTW: Unknwon Exception during CHECK_SERVER (to be expected if not logged in) FYI: "+ e);
+				Log.e(THIS, "BTW: Unknwon Exception during CHECK_SERVER (to be expected if not logged in) FYI: "+ e);
 			}
 		}
 		callbacks.remove(tag);
@@ -305,7 +309,7 @@ public class Model implements IAsyncFinished {
 
 	public String getImageUrl(int pictureID, char size) {
 		String res = getServer() +"/pic/get/"+ pictureID +"/"+ size;
-//		Log.v("model", res);
+//		Log.v(THIS, res);
 		return res;
 	}
 	
@@ -321,6 +325,11 @@ public class Model implements IAsyncFinished {
 		for(IModelListener l: listeners) {
 			l.onConnectionStatusChange(loggedIn);
 		}
+	}
+	
+	public static void enableDebugLogging() {
+		DEBUG = true;
+		UniPush.enableDebugLogging();
 	}
 
 	

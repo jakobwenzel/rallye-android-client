@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragment;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -25,9 +24,8 @@ import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class ChatFragment extends SherlockFragment implements IModelResult<List<ChatEntry>> {
+public class ChatFragment extends BaseFragment implements IModelResult<List<ChatEntry>> {
 	
-	private static final String THIS = "ChatFragment";
 	private static final String LAST_POS = "lastPosition"; 
 	
 	final static private int TASK_CHAT = 101;
@@ -36,6 +34,14 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 	private IProgressUI ui;
 	private ListView list;
 	private Bundle restore;
+	
+	public ChatFragment() {
+		
+		THIS = ChatFragment.class.getSimpleName();
+		
+		if (DEBUG)
+			Log.v(THIS, "Instantiated "+ this.toString());
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -69,6 +75,8 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 		
 		if (model.isLoggedIn()) {
 			ui.activateProgressAnimation();
+			if (DEBUG)
+				Log.v(THIS, "Model call from "+ this.toString() +" , Activity: "+ getActivity());
 			model.refreshSimpleChat(this, TASK_CHAT, getArguments().getInt("chatroom"));
 		}
 	}
@@ -77,28 +85,32 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		
-		Log.d("ChatFragment", "ScrollState: "+ list.getFirstVisiblePosition());
-		outState.putInt(LAST_POS, list.getFirstVisiblePosition());
-	}
-	
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
+		if (DEBUG)
+			Log.v("ChatFragment", "ScrollState: "+ list.getFirstVisiblePosition());
 		
-		Log.d(THIS, "is destroying");
+		outState.putInt(LAST_POS, list.getFirstVisiblePosition());
 	}
 	
 	
 	@Override
 	public void onModelFinished(int tag, List<ChatEntry> result) {
 		
-		View view = getView();
-		ListView chats = (ListView) view.findViewById(R.id.chat_list);
-        ChatAdapter chatAdapter = new ChatAdapter(view.getContext(), R.layout.chat_item, result);
-        chats.setAdapter(chatAdapter);
+		if (getActivity() != null)
+		{
+			if (DEBUG)
+				Log.v(THIS, "Model callback to "+ this.toString() +" , Activity: "+ getActivity());
+		} else {
+			if (DEBUG)
+				Log.e(THIS, "Model callback to "+ this.toString() +" , Activity: null");
+			return;
+		}
+		
+        ChatAdapter chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item, result);
+        list.setAdapter(chatAdapter);
         if (restore != null) {
-        	chats.setSelectionFromTop(restore.getInt(LAST_POS, 0), 0);
-        	Log.d("ChatFragment", "ScrollState restored: "+ restore.getInt(LAST_POS, 0));
+        	list.setSelectionFromTop(restore.getInt(LAST_POS, 0), 0);
+        	if (DEBUG)
+    			Log.v("ChatFragment", "ScrollState restored: "+ restore.getInt(LAST_POS, 0));
         }
         
         ui.deactivateProgressAnimation();
@@ -120,7 +132,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
 				.showStubImage(R.drawable.stub_image)
 				.build();
 			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getContext())
-				.enableLogging()
+//				.enableLogging()
 				.defaultDisplayImageOptions(disp)
 				.build();
             loader.init(config);
@@ -170,7 +182,7 @@ public class ChatFragment extends SherlockFragment implements IModelResult<List<
                 	loader.displayImage(null, mem.img);
                 }
                 
-                Log.v("ChatAdapter", "["+o.timestamp+"] '"+ o.message +"' (pic:"+ o.pictureID +")");
+//                Log.v("ChatAdapter", "["+o.timestamp+"] '"+ o.message +"' (pic:"+ o.pictureID +")");
             }
             return v;
 		}
