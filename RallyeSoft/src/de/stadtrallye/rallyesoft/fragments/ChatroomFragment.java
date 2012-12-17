@@ -27,7 +27,12 @@ import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class ChatFragment extends BaseFragment implements IModelResult<List<ChatEntry>> {
+/**
+ * One Chatroom, with input methods
+ * @author Ramon
+ *
+ */
+public class ChatroomFragment extends BaseFragment implements IModelResult<List<ChatEntry>> {
 	
 	private static final String LAST_POS = "lastPosition"; 
 	
@@ -38,14 +43,20 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 	private ListView list;
 	private Bundle restore;
 	
-	public ChatFragment() {
+	/**
+	 * Only for DEBUG purposes
+	 */
+	public ChatroomFragment() {
 		
-		THIS = ChatFragment.class.getSimpleName();
+		THIS = ChatroomFragment.class.getSimpleName();
 		
 		if (DEBUG)
 			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
+	/**
+	 * retain saavedInstanceState for when creating the list (ScrollState)
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -60,6 +71,10 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 		return v;
 	}
 	
+	/**
+	 * get Model and method to show Progress from Activity
+	 * needs Activity to implement {@link IProgressUI} and {@link IModelActivity}
+	 */
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
@@ -72,6 +87,9 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 		}
 	}
 	
+	/**
+	 * if we are logged in show progress and start asynchronous chat refresh
+	 */
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -84,6 +102,9 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 		}
 	}
 	
+	/**
+	 * Save the current scroll position (not yet pixel accurate)
+	 */
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -95,9 +116,18 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 	}
 	
 	
+	/**
+	 * Callback from Model, expecting:
+	 * - tag:TASK_CHAT
+	 */
 	@Override
 	public void onModelFinished(int tag, List<ChatEntry> result) {
 		
+		if (tag != TASK_CHAT)
+			return;
+		
+		// Only DEBUG, activity should never be null.
+		// turns out i tried to forcefully re use an already destroyed fragment, because my FragmentHandler remembered it
 		if (getActivity() != null)
 		{
 			if (DEBUG)
@@ -119,6 +149,12 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
         ui.deactivateProgressAnimation();
 	}
 	
+	/**
+	 * Wraps around ChatEntry List
+	 * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $Chatentry.self
+	 * @author Ramon
+	 *
+	 */
 	private class ChatAdapter extends ArrayAdapter<ChatEntry> {
 
 		private List<ChatEntry> entries;
@@ -132,7 +168,7 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 			loader = ImageLoader.getInstance();
 			DisplayImageOptions disp = new DisplayImageOptions.Builder()
 				.cacheOnDisc()
-				.cacheInMemory()
+				.cacheInMemory() // Still unlimited Chache on Disk
 				.showStubImage(R.drawable.stub_image)
 				.build();
 			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getContext())
@@ -182,6 +218,9 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
                 mem.time.setText(converter.format(new Date(o.timestamp)));
                 
                 // ImageLoader jar
+                // ImageLoader must apparently be called for _EVERY_ entry
+                // When called with null or "" as URL, will display empty pciture / default resource
+                // Otherwise ImageLoader will not be stable and start swapping images
                 if (o.pictureID > 0) {
                 	loader.displayImage(model.getImageUrl(o.pictureID, 't'), mem.img);
                 } else {

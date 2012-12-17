@@ -19,6 +19,7 @@ import de.stadtrallye.rallyesoft.model.Model;
 
 /**
  * Tab that contains the chat functions (several chatrooms)
+ * If not logged in will use {@link DummyAdapter} instead of {@link ChatAdapter} to display special tab
  * @author Ramon
  *
  */
@@ -130,6 +131,10 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 			this.chatrooms = chatrooms;
 		}
 		
+		/**
+		 * Needed so the FragmentManager can distinguish tabs of different chatrooms (, if re logging in as different user)
+		 * Default behavior, will name Fragments after there position
+		 */
 		@Override
 		public long getItemId(int position) {
 			return chatrooms[position];
@@ -140,7 +145,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 			Fragment f;
 			Bundle b = new Bundle();
 			
-			f = new ChatFragment();
+			f = new ChatroomFragment();
 			b.putInt("chatroom", chatrooms[pos]);
 			
 			f.setArguments(b);
@@ -174,6 +179,10 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 			return f;
 		}
 		
+		/**
+		 * So as not be confused with actual chatrooms in FragmentManager
+		 * @see ChatFragmentAdapter
+		 */
 		@Override
 		public long getItemId(int position) {
 			return -1;
