@@ -14,7 +14,7 @@ public class HttpResponseException extends org.apache.http.client.HttpResponseEx
 	public HttpResponseException(int statusCode, String msg, String url) {
 		super(statusCode, msg);
 		this.url = url;
-		Log.e("HttpResponseException", toString(), this);
+		Log.e("HttpResponseException", toString());
 	}
 	
 	@Override

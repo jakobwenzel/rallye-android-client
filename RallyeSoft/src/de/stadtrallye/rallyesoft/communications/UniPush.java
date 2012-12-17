@@ -43,6 +43,7 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 		try {
 			String res = r[0].readLine();
 			responseCode = r[0].getResponseCode();
+			r[0].close();
 			return res;
 		} catch (HttpResponseException e) {
 			this.e = e;

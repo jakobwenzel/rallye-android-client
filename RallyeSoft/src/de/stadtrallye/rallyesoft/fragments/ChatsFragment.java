@@ -169,7 +169,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 		public Fragment getItem(int arg0) {
 			Fragment f = new DummyFragment();
 			Bundle b = new Bundle();
-			b.putInt(DummyFragment.LAYOUT, R.layout.chat_fragment_unavailable);
+			b.putInt(DummyFragment.LAYOUT, R.layout.chat_unavailable);
 			f.setArguments(b);
 			return f;
 		}

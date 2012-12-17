@@ -1,5 +1,8 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
@@ -120,6 +123,7 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 
 		private List<ChatEntry> entries;
 		private ImageLoader loader;
+		private DateFormat converter;
 
 		public ChatAdapter(Context context, int textViewResourceId, List<ChatEntry> entries) {
 			super(context, textViewResourceId, entries);
@@ -136,6 +140,8 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
 				.defaultDisplayImageOptions(disp)
 				.build();
             loader.init(config);
+            
+            converter = SimpleDateFormat.getDateTimeInstance();
 		}
 		
 		public class ViewMem {
@@ -173,7 +179,7 @@ public class ChatFragment extends BaseFragment implements IModelResult<List<Chat
             if (o != null) {
                 mem.sender.setText("Sender: "+ o.senderID);
                 mem.msg.setText(o.message);
-                mem.time.setText("Sent: "+ o.timestamp);
+                mem.time.setText(converter.format(new Date(o.timestamp)));
                 
                 // ImageLoader jar
                 if (o.pictureID > 0) {
