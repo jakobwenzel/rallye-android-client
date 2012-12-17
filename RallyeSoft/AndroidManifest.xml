@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.stadtrallye.rallyesoft"
     android:versionCode="1"
@@ -6,50 +7,65 @@
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="16" />
-    
-    
-    
-    <permission android:name="de.stadtrallye.rallyesoft.permission.C2D_MESSAGE" android:protectionLevel="signature" />
-	<uses-permission android:name="de.stadtrallye.rallyesoft.permission.C2D_MESSAGE" />
-	<!-- App receives GCM messages. -->
-	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-	<!-- GCM connects to Google Services. -->
-	<uses-permission android:name="android.permission.INTERNET" /> 
-	<!-- GCM requires a Google account. -->
-	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
-	<!-- Keeps the processor from sleeping when a message is received. -->
-	<uses-permission android:name="android.permission.WAKE_LOCK" />
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	
-	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <permission
+        android:name="de.stadtrallye.rallyesoft.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="de.stadtrallye.rallyesoft.permission.C2D_MESSAGE" />
+    <!-- App receives GCM messages. -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <!-- GCM connects to Google Services. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- GCM requires a Google account. -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <!-- Keeps the processor from sleeping when a message is received. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/RallyeTheme" >
-        
-        <uses-library android:name="com.google.android.maps" android:required="false" />
-        
-        <activity android:name=".MainActivity">
+        <uses-library
+            android:name="com.google.android.maps"
+            android:required="false" />
+
+        <activity android:name="de.stadtrallye.rallyesoft.MainActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
-        <activity android:name=".GameMapActivity"></activity>
-        
-        <receiver android:name="com.google.android.gcm.GCMBroadcastReceiver" android:permission="com.google.android.c2dm.permission.SEND">
+        <activity android:name="de.stadtrallye.rallyesoft.GameMapActivity" >
+        </activity>
+
+        <receiver
+            android:name="com.google.android.gcm.GCMBroadcastReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
-			  <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-			  <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-			  <category android:name="de.stadtrallye.rallyesoft" />
-			</intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
+                <category android:name="de.stadtrallye.rallyesoft" />
+            </intent-filter>
         </receiver>
-        
-        <service android:name=".GCMIntentService"></service>
+
+        <service android:name="de.stadtrallye.rallyesoft.GCMIntentService" >
+        </service>
+
+        <activity
+            android:name="de.stadtrallye.rallyesoft.ImageViewActivity"
+            android:label="@string/title_activity_image_view"
+            android:parentActivityName="de.stadtrallye.rallyesoft.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="de.stadtrallye.rallyesoft.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

@@ -6,10 +6,12 @@ import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -20,8 +22,10 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
+import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.IProgressUI;
+import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IModelResult;
@@ -41,7 +45,9 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	private Model model;
 	private IProgressUI ui;
 	private ListView list;
+	private ImageView img;
 	private Bundle restore;
+	private int chatroom;
 	
 	/**
 	 * Only for DEBUG purposes
@@ -62,12 +68,15 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		super.onCreate(savedInstanceState);
 		
 		restore = savedInstanceState;
+		chatroom = getArguments().getInt("chatroom");
 	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.chat_list, container, false);
 		list = (ListView)v.findViewById(R.id.chat_list);
+		img = (ImageView)v.findViewById(R.id.chat_backside);
+//		img.setRotationY(-90f);
 		return v;
 	}
 	
@@ -98,7 +107,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			ui.activateProgressAnimation();
 			if (DEBUG)
 				Log.v(THIS, "Model call from "+ this.toString() +" , Activity: "+ getActivity());
-			model.refreshSimpleChat(this, TASK_CHAT, getArguments().getInt("chatroom"));
+			model.refreshSimpleChat(this, TASK_CHAT, chatroom);
 		}
 	}
 	
@@ -149,6 +158,34 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
         ui.deactivateProgressAnimation();
 	}
 	
+//	private void flipit() {
+//        final ListView visibleList;
+//        final ListView invisibleList;
+//        if (mEnglishList.getVisibility() == View.GONE) {
+//            visibleList = mFrenchList;
+//            invisibleList = mEnglishList;
+//        } else {
+//            invisibleList = mFrenchList;
+//            visibleList = mEnglishList;
+//        }
+//        ObjectAnimator visToInvis = ObjectAnimator.ofFloat(visibleList, "rotationY", 0f, 90f);
+//        visToInvis.setDuration(500);
+//        visToInvis.setInterpolator(accelerator);
+//        final ObjectAnimator invisToVis = ObjectAnimator.ofFloat(invisibleList, "rotationY",
+//                -90f, 0f);
+//        invisToVis.setDuration(500);
+//        invisToVis.setInterpolator(decelerator);
+//        visToInvis.addListener(new AnimatorListenerAdapter() {
+//            @Override
+//            public void onAnimationEnd(Animator anim) {
+//                visibleList.setVisibility(View.GONE);
+//                invisToVis.start();
+//                invisibleList.setVisibility(View.VISIBLE);
+//            }
+//        });
+//        visToInvis.start();
+//    }
+	
 	/**
 	 * Wraps around ChatEntry List
 	 * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $Chatentry.self
@@ -191,7 +228,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
-			ChatEntry o = entries.get(position);
+			final ChatEntry o = entries.get(position);
 			
 			ViewMem mem;
 			
@@ -227,8 +264,20 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
                 	loader.displayImage(null, mem.img);
                 }
                 
+                v.setOnClickListener(new OnClickListener() {
+    				
+    				@Override
+    				public void onClick(View v) {
+    					Intent intent = new Intent(getContext(), ImageViewActivity.class);
+    					intent.putExtra(Config.CHATROOM, chatroom);
+    					intent.putExtra(Config.IMAGE, o.pictureID);
+    					startActivity(intent);
+    				}
+    			});
+                
 //                Log.v("ChatAdapter", "["+o.timestamp+"] '"+ o.message +"' (pic:"+ o.pictureID +")");
             }
+            
             return v;
 		}
 	}

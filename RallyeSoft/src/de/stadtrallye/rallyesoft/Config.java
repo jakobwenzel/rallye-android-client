@@ -8,4 +8,6 @@ public class Config {
 	final public static int group = 2;
 	final public static String password = "test";
 
+	public static final String IMAGE = "img";
+	public static final String CHATROOM = "chatroom";
 }
