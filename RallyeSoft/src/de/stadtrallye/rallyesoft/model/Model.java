@@ -38,11 +38,6 @@ public class Model implements IAsyncFinished {
 	
 	private static boolean DEBUG = false;
 	
-	final private static int TASK_LOGIN = 100001;
-	final private static int TASK_CHAT_REFRESH = 100002;
-	final private static int TASK_CHECK_SERVER = 100003;
-	
-	
 	public enum Tasks { LOGIN, CHAT_REFRESH, CHECK_SERVER };
 	
 	private int taskID = 0;

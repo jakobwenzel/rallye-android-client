@@ -30,5 +30,6 @@
     <string name="notConnected">Getrennt</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_image_view">Image Viewer</string>
+    <string name="gcm_notification">de.stadtrallye.rallyesoft.gcm_notification</string>
 
 </resources>

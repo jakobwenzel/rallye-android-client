@@ -61,7 +61,8 @@
         <activity
             android:name="de.stadtrallye.rallyesoft.ImageViewActivity"
             android:label="@string/title_activity_image_view"
-            android:parentActivityName="de.stadtrallye.rallyesoft.MainActivity" >
+            android:parentActivityName="de.stadtrallye.rallyesoft.MainActivity"
+            android:theme="@style/Theme.Sherlock" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="de.stadtrallye.rallyesoft.MainActivity" />
