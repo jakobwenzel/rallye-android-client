@@ -14,6 +14,7 @@ import com.viewpagerindicator.TitlePageIndicator;
 
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.model.IModelListener;
 import de.stadtrallye.rallyesoft.model.Model;
 
@@ -30,6 +31,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 	private TitlePageIndicator indicator;
 	private FragmentPagerAdapter fragmentAdapter;
 	private int[] currentRooms;
+	private int initialTab = 0;
 	
 	
 	public ChatsFragment() {
@@ -81,10 +83,31 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 	}
 	
 	@Override
+	public void onResume() {
+		super.onResume();
+		
+		pager.setCurrentItem(initialTab);
+	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		
+		initialTab = pager.getCurrentItem();
+	}
+	
+	@Override
 	public void onStop() {
 		super.onStop();
 		
 		model.removeListener(this);
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		
+		outState.putInt(Std.TAB, pager.getCurrentItem());
 	}
 	
 	private void populateChats() {
@@ -92,6 +115,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 			currentRooms = model.getChatRooms();
 			fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
 			pager.setAdapter(fragmentAdapter);
+			pager.setCurrentItem(initialTab);
 			indicator.setViewPager(pager);
 			indicator.invalidate();
 //		}

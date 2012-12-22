@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -11,8 +12,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -22,11 +24,11 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
-import de.stadtrallye.rallyesoft.Config;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.IProgressUI;
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
@@ -38,15 +40,13 @@ import de.stadtrallye.rallyesoft.model.Model;
  */
 public class ChatroomFragment extends BaseFragment implements IModelResult<List<ChatEntry>> {
 	
-	private static final String LAST_POS = "lastPosition"; 
-	
 	final static private int TASK_CHAT = 101;
 
 	private Model model;
 	private IProgressUI ui;
 	private ListView list;
-	private ImageView img;
-	private Bundle restore;
+//	private ImageView img;
+	private int[] lastPos = null;
 	private int chatroom;
 	
 	/**
@@ -67,7 +67,9 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		restore = savedInstanceState;
+		if (savedInstanceState != null)
+			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
+		
 		chatroom = getArguments().getInt("chatroom");
 	}
 	
@@ -75,7 +77,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.chat_list, container, false);
 		list = (ListView)v.findViewById(R.id.chat_list);
-		img = (ImageView)v.findViewById(R.id.chat_backside);
+//		img = (ImageView)v.findViewById(R.id.chat_backside);
 //		img.setRotationY(-90f);
 		return v;
 	}
@@ -111,6 +113,25 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		}
 	}
 	
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		restoreScrollState();
+	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		
+		if (lastPos == null)
+			lastPos = new int[2];
+		lastPos[0] = list.getFirstVisiblePosition(); 
+		
+		View v = list.getChildAt(0);
+		lastPos[1] = v.getTop(); 
+	}
+	
 	/**
 	 * Save the current scroll position (not yet pixel accurate)
 	 */
@@ -119,9 +140,9 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		super.onSaveInstanceState(outState);
 		
 		if (DEBUG)
-			Log.v("ChatFragment", "ScrollState: "+ list.getFirstVisiblePosition());
+			Log.v("ChatFragment", "ScrollState: "+ lastPos);
 		
-		outState.putInt(LAST_POS, list.getFirstVisiblePosition());
+		outState.putIntArray(Std.LAST_POS, lastPos);
 	}
 	
 	
@@ -147,13 +168,25 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			return;
 		}
 		
-        ChatAdapter chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item, result);
+        final ChatAdapter chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item, result);
         list.setAdapter(chatAdapter);
-        if (restore != null) {
-        	list.setSelectionFromTop(restore.getInt(LAST_POS, 0), 0);
-        	if (DEBUG)
-    			Log.v("ChatFragment", "ScrollState restored: "+ restore.getInt(LAST_POS, 0));
-        }
+        
+        restoreScrollState();
+        
+        list.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				if (!chatAdapter.hasPicture(pos))
+					return;
+				
+				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
+				intent.putExtra(Std.CHATROOM, chatroom);
+				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
+				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
+				startActivity(intent);
+			}
+		});
         
         ui.deactivateProgressAnimation();
 	}
@@ -186,6 +219,15 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 //        visToInvis.start();
 //    }
 	
+	private void restoreScrollState() {
+		if (lastPos != null) {
+	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
+	    	if (DEBUG)
+				Log.v("ChatFragment", "ScrollState restored: "+ lastPos);
+        } else
+        	list.setSelection(list.getCount()-1);
+	}
+	
 	/**
 	 * Wraps around ChatEntry List
 	 * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $Chatentry.self
@@ -197,6 +239,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		private List<ChatEntry> entries;
 		private ImageLoader loader;
 		private DateFormat converter;
+		private int[] pictures;
 
 		public ChatAdapter(Context context, int textViewResourceId, List<ChatEntry> entries) {
 			super(context, textViewResourceId, entries);
@@ -217,6 +260,8 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
             converter = SimpleDateFormat.getDateTimeInstance();
 		}
 		
+		
+
 		public class ViewMem {
 			public ImageView img;
 			public TextView msg;
@@ -264,21 +309,42 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
                 	loader.displayImage(null, mem.img);
                 }
                 
-                v.setOnClickListener(new OnClickListener() {
-    				
-    				@Override
-    				public void onClick(View v) {
-    					Intent intent = new Intent(getContext(), ImageViewActivity.class);
-    					intent.putExtra(Config.CHATROOM, chatroom);
-    					intent.putExtra(Config.IMAGE, o.pictureID);
-    					startActivity(intent);
-    				}
-    			});
-                
 //                Log.v("ChatAdapter", "["+o.timestamp+"] '"+ o.message +"' (pic:"+ o.pictureID +")");
             }
             
             return v;
+		}
+		
+		public boolean hasPicture(int pos) {
+			return entries.get(pos).pictureID != 0;
+		}
+		
+		public int[] getPictures() {
+			if (pictures != null)
+				return pictures;
+			
+			ArrayList<Integer> l = new ArrayList<Integer>();
+			
+			for (ChatEntry c: entries) {
+				if (c.pictureID > 0)
+					l.add(c.pictureID);
+			}
+			
+			pictures = new int[l.size()];
+			for (int i=l.size()-1;i>=0;--i)
+				pictures[i] = l.get(i);
+			
+			return pictures;
+		}
+		
+		public int getPicturePos(int pos) {
+			final int pictureID = entries.get(pos).pictureID;
+			
+			for (int i=pictures.length-1; i>=0; --i) {
+				if (pictures[i] == pictureID)
+					return i;
+			}
+			return -1;
 		}
 	}
 }

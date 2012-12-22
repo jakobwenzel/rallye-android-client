@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Log;
+import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.Err;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
@@ -115,6 +116,14 @@ public class RallyePull extends Pull {
 		} catch (JSONException e) {
 			throw Err.JSONDuringPostError(e, rest);
 		}
+		return r;
+	}
+
+	public PendingRequest pendingMapNodes() throws RestException {
+		if (DEBUG)
+			Log.i(THIS, "pulling all nodes...");
+		final PendingRequest r;
+		r = new PendingRequest("/map/nodes");
 		return r;
 	}
 }

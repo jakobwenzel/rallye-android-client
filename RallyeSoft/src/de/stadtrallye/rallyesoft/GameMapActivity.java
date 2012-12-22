@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,21 +14,23 @@ import android.widget.Toast;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockMapActivity;
 import com.actionbarsherlock.view.MenuItem;
-import com.google.android.gcm.GCMRegistrar;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
-import com.slidingmenu.lib.app.SlidingMapActivity;
 
-import de.stadtrallye.rallyesoft.async.IOnTaskFinished;
-import de.stadtrallye.rallyesoft.async.PullMap;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
+import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.MapNode;
+import de.stadtrallye.rallyesoft.model.Model;
 
-public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinished<List<MapNode>> {
+public class GameMapActivity extends SherlockMapActivity implements IModelResult<List<MapNode>> {
 	
+	private static final int TASK_NODES = 501;
 	public RallyePull pull;
+	private MapView map;
+	private SharedPreferences config;
+	private Model model;
 	
 	
 	@Override
@@ -70,13 +73,12 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 //        ab.setListNavigationCallbacks(list, this);
 //		ab.setSelectedNavigationItem(0);
 		
-		((MapView) findViewById(R.id.mapview)).setBuiltInZoomControls(true);
+		map = (MapView) findViewById(R.id.mapview);
 		
-		pull = new RallyePull(Config.server, GCMRegistrar.getRegistrationId(this), this);
+		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 		
-		
-		PullMap map = new PullMap(pull, this);
-		map.execute();
+		model = Model.getInstance(getApplicationContext(), config, true);
+		model.getMapNodes(this, TASK_NODES);
 	}
 	
 //	@Override
@@ -183,14 +185,11 @@ public class GameMapActivity extends SherlockMapActivity implements IOnTaskFinis
 		
 	}
 
-
 	@Override
-	public void onTaskFinished(List<MapNode> result) {
-		MapView m = ((MapView) this.findViewById(R.id.mapview));
-//		m.set
+	public void onModelFinished(int tag, List<MapNode> result) {
 		ItemizedOverlay<OverlayItem> overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, result);
-		m.getOverlays().add(overlay);
-		m.invalidate();
+		map.getOverlays().add(overlay);
+		map.invalidate();
 		
 	}
 

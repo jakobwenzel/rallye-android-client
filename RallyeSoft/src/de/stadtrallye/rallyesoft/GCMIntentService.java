@@ -11,6 +11,7 @@ import android.util.Log;
 import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
+import de.stadtrallye.rallyesoft.communications.PushInit;
 import de.stadtrallye.rallyesoft.model.Model;
 
 public class GCMIntentService extends GCMBaseIntentService {
@@ -20,7 +21,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 
 	public GCMIntentService()
 	{
-		super(Config.gcm);
+		super(PushInit.gcm);
 	}
 	
 	@Override
@@ -88,7 +89,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w("GCMIntentService", "Unregistered GCM!");
 //		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
-		new Model(getApplicationContext(), pref).logout(null, 0);
+		Model.getInstance(getApplicationContext(), pref, false).logout(null, 0);
 	}
 
 }

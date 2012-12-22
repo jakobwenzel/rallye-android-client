@@ -31,6 +31,8 @@ public class Model implements IAsyncFinished {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	
+	private static Model model;
+	
 	final private String SERVER = "server";
 	final private String GROUP = "group";
 	final private String PASSWORD = "password";
@@ -38,7 +40,7 @@ public class Model implements IAsyncFinished {
 	
 	private static boolean DEBUG = false;
 	
-	public enum Tasks { LOGIN, CHAT_REFRESH, CHECK_SERVER };
+	public enum Tasks { LOGIN, CHAT_REFRESH, CHECK_SERVER, MAP_NODES };
 	
 	private int taskID = 0;
 
@@ -54,11 +56,18 @@ public class Model implements IAsyncFinished {
 	private ArrayList<IModelListener> listeners;
 	private int[] chatrooms;
 	
-	public Model(Context context, SharedPreferences pref) {
+	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
+		if (model != null)
+			return model;
+		else
+			return model = new Model(context, pref, loggedIn);
+	}
+	
+	private Model(Context context, SharedPreferences pref) {
 		this(context, pref, false);
 	}
 	
-	public Model(Context context, SharedPreferences pref, boolean loggedIn) {
+	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
 		this.gcm = GCMRegistrar.getRegistrationId(context);
 		this.pref = pref;
 		this.context = context;
@@ -146,6 +155,20 @@ public class Model implements IAsyncFinished {
 		
 	}
 	
+	public void getMapNodes(IModelResult<List<MapNode>> ui, int tag) {
+		if (!loggedIn) {
+			Log.e(THIS, "Aborting RefreshSimpleChat for not logged in!");
+			return;
+		}
+		try {
+			UniPush p = new UniPush(this, --taskID);
+			callbacks.put(taskID, new Task<List<MapNode>>(ui, tag, Tasks.MAP_NODES, p));
+			p.execute(pull.pendingMapNodes());
+		} catch (RestException e) {
+			Log.e(THIS, "invalid Rest URL", e);
+		}
+	}
+	
 	public boolean isLoggedIn() {
 		return loggedIn;
 	}
@@ -225,6 +248,18 @@ public class Model implements IAsyncFinished {
 				Log.e(THIS, "Unkown Exception in UniPush", e);
 			} catch (Exception e) {
 				Log.e(THIS, "BTW: Unknwon Exception during CHECK_SERVER (to be expected if not logged in) FYI: "+ e);
+			}
+			break;
+		case MAP_NODES:
+			try {
+				JSONArray js = new JSONArray(task.get());
+				((Task<List<MapNode>>) callbacks.get(tag)).callback(MapNode.translateJSON(js));
+			} catch (InterruptedException e) {
+				Log.e(THIS, "Unkown Exception in UniPush", e);
+			} catch (JSONException e) {
+				Log.e(THIS, "Unkown JSONException in UniPush", e);
+			} catch (ExecutionException e) {
+				Log.e(THIS, "Unkown Exception in UniPush", e);
 			}
 		}
 		callbacks.remove(tag);

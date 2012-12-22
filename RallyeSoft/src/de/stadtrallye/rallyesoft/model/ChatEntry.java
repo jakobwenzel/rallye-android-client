@@ -26,23 +26,24 @@ public class ChatEntry {
 	public static ArrayList<ChatEntry> translateJSON(JSONArray js) {
 		ArrayList<ChatEntry> messages = new ArrayList<ChatEntry>();
 				
-		try {
 			JSONObject next;
 			int i = 0;
 			while ((next = (JSONObject) js.opt(i)) != null)
 			{
-				++i;
-				messages.add(
-					new ChatEntry(next.getString("message"),
-						next.getInt("timestamp"),
-						next.getInt("groupID"),
-						next.getBoolean("self"),
-						(next.isNull("picture"))? 0 : next.getInt("picture")));
+				try {
+					++i;
+					messages.add(
+						new ChatEntry(next.getString("message"),
+							next.getInt("timestamp"),
+							next.getInt("groupID"),
+							next.getBoolean("self"),
+							(next.isNull("picture"))? 0 : next.getInt("picture")));
+				} catch (Exception e) {
+					Log.e("PullChat", e.toString());
+					e.printStackTrace();
+				}
 			}
-		} catch (Exception e) {
-			Log.e("PullChat", e.toString());
-			e.printStackTrace();
-		}
+		
 		return messages;
 	}
 }

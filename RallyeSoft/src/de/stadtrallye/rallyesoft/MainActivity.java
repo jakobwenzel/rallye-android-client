@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -28,7 +27,7 @@ import com.google.android.gcm.GCMRegistrar;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
-import de.stadtrallye.rallyesoft.communications.PushService;
+import de.stadtrallye.rallyesoft.communications.PushInit;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
@@ -42,7 +41,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	final static private int TASK_LOGIN = 2;
 	final static public int TASK_CHECK = 3;
 	
-	public PushService push;
+	public PushInit push;
 	private Model model;
 	private boolean progressCircle = false;
 //	private Fragment currentFragment;
@@ -82,9 +81,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		}
 		
 		// Ray's INIT
-		PushService.ensureRegistration(this);
+		PushInit.ensureRegistration(this);
 		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		model = new Model(this, config, loggedIn);
+		model = Model.getInstance(this, config, loggedIn);
 		model.addListener(this);
 		if (!loggedIn)
 			model.checkServerStatus(this, TASK_CHECK);
