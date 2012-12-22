@@ -297,7 +297,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
             if (o != null) {
                 mem.sender.setText("Sender: "+ o.senderID);
                 mem.msg.setText(o.message);
-                mem.time.setText(converter.format(new Date(o.timestamp)));
+                mem.time.setText(converter.format(new Date(o.timestamp * 1000L)));
                 
                 // ImageLoader jar
                 // ImageLoader must apparently be called for _EVERY_ entry

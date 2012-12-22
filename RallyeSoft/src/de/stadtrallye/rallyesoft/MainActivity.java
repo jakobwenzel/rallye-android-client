@@ -222,11 +222,23 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		FragmentHandler<?> tab = tabs.get(pos);
-		ft.replace(R.id.content_frame, tab.getFragment(), tab.getTag());
+		ft
+			.replace(R.id.content_frame, tab.getFragment(), tab.getTag())
+//			.addToBackStack(null)
+			;
 		ft.commit();
 		
 		lastTab = pos;
 		return true;
+	}
+	
+	@Override
+	public void onBackPressed() {
+		
+//		if (getSlidingMenu().isMenuShowing())
+			super.onBackPressed(); //TODO: Either put Fragments on Backstack or close when in SlidingMenu and Back is pressed
+//		else
+//			getSlidingMenu().showMenu();
 	}
 	
 	@Override

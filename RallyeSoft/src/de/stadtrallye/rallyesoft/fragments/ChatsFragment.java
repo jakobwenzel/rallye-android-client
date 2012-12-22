@@ -49,6 +49,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 		v = inflater.inflate(R.layout.chat_fragment, container, false);
 
         pager = (ViewPager)v.findViewById(R.id.pager);
+        pager.setPageMargin(5);
 
         indicator = (TitlePageIndicator)v.findViewById(R.id.indicator);
 		
