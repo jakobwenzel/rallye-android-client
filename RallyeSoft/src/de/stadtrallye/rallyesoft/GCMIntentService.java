@@ -1,9 +1,5 @@
 package de.stadtrallye.rallyesoft;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -11,24 +7,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
-import de.stadtrallye.rallyesoft.communications.RallyePull;
-import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
-import de.stadtrallye.rallyesoft.exceptions.RestException;
 import de.stadtrallye.rallyesoft.model.Model;
 
 public class GCMIntentService extends GCMBaseIntentService {
 
-	private final SharedPreferences pref;
-	private final NotificationManager notes;
+	private SharedPreferences pref;
+	private NotificationManager notes;
 
 	public GCMIntentService()
 	{
 		super(Config.gcm);
+	}
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();
 		
 		notes = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 		pref = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
@@ -36,17 +33,19 @@ public class GCMIntentService extends GCMBaseIntentService {
 	
 	@Override
 	protected void onMessage(Context context, Intent intent) {
+		String extras = intent.getExtras().toString();
 		
-		final NotificationCompat.Builder b = new NotificationCompat.Builder(this);
-		b
-			.setSmallIcon(android.R.drawable.stat_notify_chat)
-			.setContentTitle("New GCM Message")
-			.setContentText(intent.toString())
-			.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0));
+		NotificationCompat.BigTextStyle big = new NotificationCompat.BigTextStyle(
+			new NotificationCompat.Builder(this)
+				.setSmallIcon(android.R.drawable.stat_notify_chat)
+				.setContentTitle("New GCM Message")
+				.setContentText(extras)
+				.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0)))
+			.bigText(extras);
 		
-		notes.notify(":GCM Mesage", R.string.gcm_notification, b.build());
+		notes.notify(":GCM Mesage", R.string.gcm_notification, big.build());
 		
-		Log.w("GCMIntentService", "Received Push Notification:\n " +intent.toString());
+		Log.w("GCMIntentService", "Received Push Notification:\n " +extras);
 	}
 
 	@Override
