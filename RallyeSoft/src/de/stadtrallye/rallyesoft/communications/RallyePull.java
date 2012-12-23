@@ -6,8 +6,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Log;
-import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
-import de.stadtrallye.rallyesoft.exceptions.Err;
+import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 
@@ -20,6 +19,7 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
 public class RallyePull extends Pull {
 	
 	private static final String THIS = RallyePull.class.getSimpleName();
+	private static final ErrorHandling err = new ErrorHandling(THIS);
 	
 	private String gcm;
 	private Context context;
@@ -48,7 +48,7 @@ public class RallyePull extends Pull {
 			.toString();
 			r.putPost(post, Mime.JSON);
 		} catch (JSONException e) {
-			throw Err.JSONDuringPostError(e, rest);
+			throw err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}
@@ -59,7 +59,7 @@ public class RallyePull extends Pull {
 		try {
 			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
 		} catch (JSONException e) {
-			throw Err.JSONDuringPostError(e, rest);
+			throw err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}
@@ -70,7 +70,7 @@ public class RallyePull extends Pull {
 		try {
 			r.putPost(new JSONObject().put(GCM, gcm).toString(), Mime.JSON);
 		} catch (JSONException e) {
-			throw Err.JSONDuringPostError(e, rest);
+			throw err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}
@@ -114,7 +114,7 @@ public class RallyePull extends Pull {
 			.put(TIMESTAMP, (timestamp == 0)? JSONObject.NULL : timestamp)
 			.toString(), Pull.Mime.JSON);
 		} catch (JSONException e) {
-			throw Err.JSONDuringPostError(e, rest);
+			throw err.JSONDuringPostError(e, rest);
 		}
 		return r;
 	}

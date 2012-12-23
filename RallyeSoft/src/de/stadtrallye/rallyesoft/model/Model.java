@@ -2,23 +2,25 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.android.gcm.GCMRegistrar;
-
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.util.SparseArray;
+
+import com.google.android.gcm.GCMRegistrar;
+
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.async.IAsyncFinished;
+import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.communications.UniPush;
+import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.util.JSONArray;
+import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 /**
  * My Model
@@ -30,6 +32,7 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
 public class Model implements IAsyncFinished {
 	
 	private static final String THIS = Model.class.getSimpleName();
+	private static final ErrorHandling err = new ErrorHandling(THIS);
 	
 	private static Model model;
 	
@@ -54,7 +57,7 @@ public class Model implements IAsyncFinished {
 	private String gcm;
 	private boolean loggedIn;
 	private ArrayList<IModelListener> listeners;
-	private int[] chatrooms;
+	private List<Integer> chatrooms;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
 		if (model != null)
@@ -89,20 +92,15 @@ public class Model implements IAsyncFinished {
 		listeners = new ArrayList<IModelListener>();
 	}
 	
-	private int[] extractChatRooms(String string) {
+	private List<Integer> extractChatRooms(String string) {
 		String rooms = pref.getString(CHATROOMS, "");
-		String[] spl = rooms.split(";");
 		ArrayList<Integer> out = new ArrayList<Integer>();
-		for (int i=0; i<spl.length; i++) {
+		for (String s: rooms.split(";")) {
 			try {
-				out.add(Integer.parseInt(spl[i]));
+				out.add(Integer.parseInt(s));
 			} catch (Exception e) {}
 		}
-		int[] arr = new int[out.size()];
-		for (int i=0; i<out.size(); i++) {
-			arr[i] = out.get(i);
-		}
-		return arr;
+		return out;
 	}
 
 	public void logout(IModelResult<Boolean> ui, int tag) {
@@ -111,62 +109,59 @@ public class Model implements IAsyncFinished {
 			loggedIn = false;
 			connectionStatusChange();
 		} catch (RestException e) {
-			Log.e(THIS, e.toString());
+			err.restError(e);
 		}
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
 		try {
-			UniPush p = new UniPush(this, --taskID);
-			callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.LOGIN, p));
-			p.execute(RallyePull.pendingLogin(context, server, group, password, gcm));
-			
+			startAsyncTask(ui, tag, Tasks.LOGIN, RallyePull.pendingLogin(context, server, group, password, gcm));
 			
 			this.server = server;
 			this.group = group;
 			this.password = password;
 		} catch (RestException e) {
-			Log.e(THIS, "invalid Rest URL", e);
+			err.restError(e);
 		}
 	}
 	
 	public void refreshSimpleChat(IModelResult<List<ChatEntry>> ui, int tag, int chatroom) {
 		if (!loggedIn) {
-			Log.e(THIS, "Aborting RefreshSimpleChat for not logged in!");
+			err.notLoggedIn();
 			return;
 		}
 		try {
-			UniPush p = new UniPush(this, --taskID);
-			callbacks.put(taskID, new Task<List<ChatEntry>>(ui, tag, Tasks.CHAT_REFRESH, p));
-			p.execute(pull.pendingChatRefresh(chatroom, 0));
+			startAsyncTask(ui, tag, Tasks.CHAT_REFRESH, pull.pendingChatRefresh(chatroom, 0));
 		} catch (RestException e) {
-			Log.e(THIS, "invalid Rest URL", e);
+			err.restError(e);
 		}
 	}
 	
-	public void checkServerStatus(IModelResult<Boolean> ui,	int tag) {
+	public void checkServerStatus(IModelResult<Boolean> ui,	int externalTag) {
 		try {
-			UniPush p = new UniPush(this, --taskID);
-			callbacks.put(taskID, new Task<Boolean>(ui, tag, Tasks.CHECK_SERVER, p));
-			p.execute(pull.pendingServerStatus(server));
+			startAsyncTask(ui, externalTag, Tasks.CHECK_SERVER, pull.pendingServerStatus(server));
 		} catch (RestException e) {
-			Log.e(THIS, "invalid Rest URL", e);
+			err.restError(e);
 		}
 		
 	}
 	
-	public void getMapNodes(IModelResult<List<MapNode>> ui, int tag) {
+	public void getMapNodes(IModelResult<List<MapNode>> ui, int externalTag) {
 		if (!loggedIn) {
-			Log.e(THIS, "Aborting RefreshSimpleChat for not logged in!");
+			err.notLoggedIn();
 			return;
 		}
 		try {
-			UniPush p = new UniPush(this, --taskID);
-			callbacks.put(taskID, new Task<List<MapNode>>(ui, tag, Tasks.MAP_NODES, p));
-			p.execute(pull.pendingMapNodes());
+			startAsyncTask(ui, externalTag, Tasks.MAP_NODES, pull.pendingMapNodes());
 		} catch (RestException e) {
-			Log.e(THIS, "invalid Rest URL", e);
+			err.restError(e);
 		}
+	}
+	
+	private <T> void startAsyncTask(IModelResult<T> ui, int externalTag, Tasks internalTask, PendingRequest payload) {
+		UniPush p = new UniPush(this, --taskID);
+		callbacks.put(taskID, new Task<T>(ui, externalTag, internalTask, p));
+		p.execute(payload);
 	}
 	
 	public boolean isLoggedIn() {
@@ -185,84 +180,69 @@ public class Model implements IAsyncFinished {
 		return pref.getString(PASSWORD, context.getString(R.string.default_password));
 	}
 	
-	public int[] getChatRooms() {
+	public List<Integer> getChatRooms() {
 		return chatrooms;
 	}
 
+	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void onAsyncFinished(int tag, UniPush task) {
-		Tasks type = callbacks.get(tag).type;
+	public void onAsyncFinished(int internalTag, UniPush task) {
+		Tasks type = callbacks.get(internalTag).type;
 		switch (type) {
 		case LOGIN:
 			boolean success = false;
 			try {
-				JSONArray js = new JSONArray(task.get());
-				int l = js.length();
-				int[] res = new int[l];
-				JSONObject next;
-				for (int i=0; i<l; ++i) {
-					next = js.getJSONObject(i);
-					res[i] = next.getInt("chatroom");
-				}
+				JSONConverter<Integer> conv = new JSONConverter<Integer>() {
+					@Override
+					public Integer doConvert(JSONObject o) throws JSONException {
+						return o.getInt("chatroom");
+					}
+				};
+				
+				JSONArray<JSONObject, Integer> js = new JSONArray<JSONObject, Integer>(conv, task.get());
+				
+				ArrayList<Integer> res = js.toList();
 				
 				chatrooms = res;
 				
 				success = true;
-			} catch (InterruptedException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
-			} catch (JSONException e) {
-				Log.e(THIS, "Unkown JSONException in UniPush", e);
-			} catch (ExecutionException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
+			} catch (Exception e) {
+				err.asyncTaskResponseError(e);
 			}
 			
 			if (success)
 				logInSuccessfull();
 			
-			((Task<Boolean>) callbacks.get(tag)).callback(success);
+			((Task<Boolean>) callbacks.get(internalTag)).callback(success);
 			break;
 		case CHAT_REFRESH:
 			try {
-				JSONArray js = new JSONArray(task.get());
-				((Task<List<ChatEntry>>) callbacks.get(tag)).callback(ChatEntry.translateJSON(js));
-			} catch (InterruptedException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
-			} catch (JSONException e) {
-				Log.e(THIS, "Unkown JSONException in UniPush", e);
-			} catch (ExecutionException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
+				((Task<List<ChatEntry>>) callbacks.get(internalTag)).callback(ChatEntry.translateJSON(task.get()));
+			} catch (Exception e) {
+				err.asyncTaskResponseError(e);
 			}
 			break;
 		case CHECK_SERVER:
 			try {
 				String res = task.get();
 				loggedIn = (task.getResponseCode() >= 200 && task.getResponseCode() < 300);
-				if (loggedIn && callbacks.get(tag).externalTag != 0)
-					((Task<Boolean>) callbacks.get(tag)).callback(loggedIn);
+				if (loggedIn && callbacks.get(internalTag).externalTag != 0)
+					((Task<Boolean>) callbacks.get(internalTag)).callback(loggedIn);
 				
 				connectionStatusChange();
-			} catch (InterruptedException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
-			} catch (ExecutionException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
 			} catch (Exception e) {
-				Log.e(THIS, "BTW: Unknwon Exception during CHECK_SERVER (to be expected if not logged in) FYI: "+ e);
+				err.asyncTaskResponseError(e);
 			}
 			break;
 		case MAP_NODES:
 			try {
-				JSONArray js = new JSONArray(task.get());
-				((Task<List<MapNode>>) callbacks.get(tag)).callback(MapNode.translateJSON(js));
-			} catch (InterruptedException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
-			} catch (JSONException e) {
-				Log.e(THIS, "Unkown JSONException in UniPush", e);
-			} catch (ExecutionException e) {
-				Log.e(THIS, "Unkown Exception in UniPush", e);
+				((Task<List<MapNode>>) callbacks.get(internalTag)).callback(MapNode.translateJSON(task.get()));
+			} catch (Exception e) {
+				err.asyncTaskResponseError(e);
 			}
 		}
-		callbacks.remove(tag);
+		callbacks.remove(internalTag);
 	}
 	
 	private void logInSuccessfull() {
@@ -272,7 +252,7 @@ public class Model implements IAsyncFinished {
 		connectionStatusChange();
 	}
 
-	private void saveLoginDetails(String server, int group, String password, int[] chatrooms) {
+	private void saveLoginDetails(String server, int group, String password, List<Integer> chatrooms) {
 		SharedPreferences.Editor edit = pref.edit();
 //		edit.putBoolean(LOGGED_IN, success);
 		edit.putString(SERVER, server);
@@ -286,6 +266,9 @@ public class Model implements IAsyncFinished {
 		edit.commit();
 	}
 
+	/**
+	 * Kill all AsyncTasks still running
+	 */
 	public void onDestroy() {
 		for (int i = callbacks.size()-1; i>=0; --i) {
 			callbacks.valueAt(i).task.cancel(true);
@@ -318,6 +301,7 @@ public class Model implements IAsyncFinished {
 	
 	/**
 	 * Redirects a finished Task to ui, with predetermined result
+	 * Useful if I only want to signal, when the Task was completed
 	 * @author Ramon
 	 *
 	 * @param <T>

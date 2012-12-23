@@ -2,12 +2,16 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.ArrayList;
 
-import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
+import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
+import de.stadtrallye.rallyesoft.util.JSONArray;
+import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class ChatEntry {
+	
+	private static ErrorHandling err = new ErrorHandling(ChatEntry.class.getSimpleName());
 	
 	public String message;
 	public int timestamp;
@@ -23,26 +27,19 @@ public class ChatEntry {
 		this.pictureID = pictureID;
 	}
 	
-	public static ArrayList<ChatEntry> translateJSON(JSONArray js) {
-		ArrayList<ChatEntry> messages = new ArrayList<ChatEntry>();
-				
-			JSONObject next;
-			int i = 0;
-			while ((next = (JSONObject) js.opt(i)) != null)
-			{
-				try {
-					++i;
-					messages.add(
-						new ChatEntry(next.getString("message"),
-							next.getInt("timestamp"),
-							next.getInt("groupID"),
-							next.getBoolean("self"),
-							(next.isNull("picture"))? 0 : next.getInt("picture")));
-				} catch (Exception e) {
-					Log.e("PullChat", e.toString());
-					e.printStackTrace();
-				}
+	public static ArrayList<ChatEntry> translateJSON(String js) {
+		JSONConverter<ChatEntry> conv = new JSONConverter<ChatEntry>() {
+			@Override
+			public ChatEntry doConvert(JSONObject o) throws JSONException {
+					return new ChatEntry(o.getString("message"),
+								o.getInt("timestamp"),
+								o.getInt("groupID"),
+								o.getBoolean("self"),
+								(o.isNull("picture"))? 0 : o.getInt("picture"));
 			}
+		};
+		
+		ArrayList<ChatEntry> messages = JSONArray.toList(conv, js);
 		
 		return messages;
 	}

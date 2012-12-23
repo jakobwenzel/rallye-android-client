@@ -1,13 +1,12 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
+import de.stadtrallye.rallyesoft.util.JSONArray;
+import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class MapNode {
 	public int ID;
@@ -31,21 +30,21 @@ public class MapNode {
 	}
 
 
-	public static List<MapNode> translateJSON(JSONArray js) {
-		ArrayList<MapNode> nodes = new ArrayList<MapNode>();
-		
-		JSONObject next;
-		int i = 0;
-		while ((next = (JSONObject) js.opt(i)) != null)
-		{
-			++i;
-			try {
-				nodes.add(new MapNode(next.getInt("nodeID"), next.getString("name"), next.getDouble("lat"), next.getDouble("lon"), next.getString("description")));
-			} catch (JSONException e) {
-				Log.e("PullChat", e.toString());
-				e.printStackTrace();
+	public static List<MapNode> translateJSON(String js) {
+
+		JSONConverter<MapNode> conv = new JSONConverter<MapNode>() {
+			@Override
+			public MapNode doConvert(JSONObject o) throws JSONException {
+				return new MapNode(
+						o.getInt("nodeID"),
+						o.getString("name"),
+						o.getDouble("lat"),
+						o.getDouble("lon"),
+						o.getString("description"));
 			}
-		}
+		};
+		
+		List<MapNode> nodes = JSONArray.toList(conv, js);
 		
 		return nodes;
 	}

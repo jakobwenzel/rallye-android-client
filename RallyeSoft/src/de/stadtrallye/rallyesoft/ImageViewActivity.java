@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
@@ -162,6 +161,7 @@ public class ImageViewActivity extends SherlockActivity {
 		public boolean isViewFromObject(View view, Object object) {
 			return view == object;
 		}
+		
 		
 	}
 

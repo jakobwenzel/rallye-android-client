@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import java.util.List;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -30,7 +32,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 	private ViewPager pager;
 	private TitlePageIndicator indicator;
 	private FragmentPagerAdapter fragmentAdapter;
-	private int[] currentRooms;
+	private List<Integer> currentRooms;
 	private int initialTab = 0;
 	
 	
@@ -148,12 +150,12 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 		
 		final private static String FRAGMENT_TITLE = "Chatroom ";
 
-		private int[] chatrooms;
+		private List<Integer> chatrooms;
 		
-		public ChatFragmentAdapter(FragmentManager fm, int[] chatrooms) {
+		public ChatFragmentAdapter(FragmentManager fm, List<Integer> currentRooms) {
 			super(fm);
 			
-			this.chatrooms = chatrooms;
+			this.chatrooms = currentRooms;
 		}
 		
 		/**
@@ -162,7 +164,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 		 */
 		@Override
 		public long getItemId(int position) {
-			return chatrooms[position];
+			return chatrooms.get(position);
 		}
 
 		@Override
@@ -171,7 +173,7 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 			Bundle b = new Bundle();
 			
 			f = new ChatroomFragment();
-			b.putInt("chatroom", chatrooms[pos]);
+			b.putInt("chatroom", chatrooms.get(pos));
 			
 			f.setArguments(b);
 			return f;
@@ -179,12 +181,12 @@ public class ChatsFragment extends BaseFragment implements IModelListener {
 
 		@Override
 		public int getCount() {
-			return chatrooms.length;
+			return chatrooms.size();
 		}
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-			return FRAGMENT_TITLE +chatrooms[pos];
+			return FRAGMENT_TITLE +chatrooms.get(pos);
 		}
 
 	}
