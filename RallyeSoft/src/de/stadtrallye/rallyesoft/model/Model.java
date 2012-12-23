@@ -13,10 +13,9 @@ import android.util.SparseArray;
 import com.google.android.gcm.GCMRegistrar;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.async.IAsyncFinished;
 import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
-import de.stadtrallye.rallyesoft.communications.UniPush;
+import de.stadtrallye.rallyesoft.communications.AsyncRequest;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 import de.stadtrallye.rallyesoft.util.JSONArray;
@@ -105,7 +104,7 @@ public class Model implements IAsyncFinished {
 
 	public void logout(IModelResult<Boolean> ui, int tag) {
 		try {
-			new UniPush(new Redirect<Boolean>(ui, true), tag).execute(pull.pendingLogout());
+			new AsyncRequest(new Redirect<Boolean>(ui, true), tag).execute(pull.pendingLogout());
 			loggedIn = false;
 			connectionStatusChange();
 		} catch (RestException e) {
@@ -159,7 +158,7 @@ public class Model implements IAsyncFinished {
 	}
 	
 	private <T> void startAsyncTask(IModelResult<T> ui, int externalTag, Tasks internalTask, PendingRequest payload) {
-		UniPush p = new UniPush(this, --taskID);
+		AsyncRequest p = new AsyncRequest(this, --taskID);
 		callbacks.put(taskID, new Task<T>(ui, externalTag, internalTask, p));
 		p.execute(payload);
 	}
@@ -187,7 +186,7 @@ public class Model implements IAsyncFinished {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void onAsyncFinished(int internalTag, UniPush task) {
+	public void onAsyncFinished(int internalTag, AsyncRequest task) {
 		Tasks type = callbacks.get(internalTag).type;
 		switch (type) {
 		case LOGIN:
@@ -284,10 +283,10 @@ public class Model implements IAsyncFinished {
 	private class Task<T> {
 		public IModelResult<T> ui;
 		public int externalTag;
-		public UniPush task;
+		public AsyncRequest task;
 		public Tasks type;
 		
-		public Task(IModelResult<T> ui, int externalTag, Tasks type, UniPush task) {
+		public Task(IModelResult<T> ui, int externalTag, Tasks type, AsyncRequest task) {
 			this.ui = ui;
 			this.externalTag = externalTag;
 			this.task = task;
@@ -316,7 +315,7 @@ public class Model implements IAsyncFinished {
 		}
 		
 		@Override
-		public void onAsyncFinished(int tag, UniPush task) {
+		public void onAsyncFinished(int tag, AsyncRequest task) {
 			ui.onModelFinished(tag, result);
 		}
 	}
@@ -343,7 +342,7 @@ public class Model implements IAsyncFinished {
 	
 	public static void enableDebugLogging() {
 		DEBUG = true;
-		UniPush.enableDebugLogging();
+		AsyncRequest.enableDebugLogging();
 	}
 
 	

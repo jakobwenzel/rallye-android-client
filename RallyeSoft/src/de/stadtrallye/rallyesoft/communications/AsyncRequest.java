@@ -3,10 +3,10 @@ package de.stadtrallye.rallyesoft.communications;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import de.stadtrallye.rallyesoft.async.IAsyncFinished;
 import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.IAsyncFinished;
 
 /**
  * Executes a PendingRequest (->REST), holds Result as String
@@ -15,7 +15,7 @@ import de.stadtrallye.rallyesoft.exceptions.RestException;
  * @author Ray
  *
  */
-public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
+public class AsyncRequest extends AsyncTask<PendingRequest, Boolean, String> {
 	
 	private static boolean DEBUG = false;
 	
@@ -25,7 +25,7 @@ public class UniPush extends AsyncTask<PendingRequest, Boolean, String> {
 	private int responseCode;
 	
 	
-	public UniPush(IAsyncFinished progressUi, int tag) {
+	public AsyncRequest(IAsyncFinished progressUi, int tag) {
 		ui = progressUi;
 		this.tag = tag;
 	}
