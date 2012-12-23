@@ -9,11 +9,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IModelListener;
+import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class OverviewFragment extends Fragment implements IModelResult<Boolean>, IModelListener {
+public class OverviewFragment extends Fragment implements IModelResult<Boolean>, IConnectionStatusListener {
 	
 	private static final String THIS = OverviewFragment.class.getSimpleName();
 	

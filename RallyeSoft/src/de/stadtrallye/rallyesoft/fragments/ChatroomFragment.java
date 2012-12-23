@@ -109,7 +109,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			ui.activateProgressAnimation();
 			if (DEBUG)
 				Log.v(THIS, "Model call from "+ this.toString() +" , Activity: "+ getActivity());
-			model.refreshSimpleChat(this, TASK_CHAT, chatroom);
+			model.retrieveCompleteChat(this, TASK_CHAT, chatroom);
 		}
 	}
 	

@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Log;
+import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
@@ -29,6 +30,8 @@ public class RallyePull extends Pull {
 	private final static String CHATROOM = "chatroom";
 	private final static String PASSWORD = "password";
 	private final static String GROUP = "groupID";
+	private static final String MSG = "mess";
+	private static final String PIC = "pic";
 	
 	public RallyePull(String server, String gcm, Context context) {
 		super(server);
@@ -124,6 +127,22 @@ public class RallyePull extends Pull {
 			Log.i(THIS, "pulling all nodes...");
 		final PendingRequest r;
 		r = new PendingRequest("/map/nodes");
+		return r;
+	}
+
+	public PendingRequest pendingChatPost(int chatroom, String msg, int pictureID) throws RestException {
+		final String rest = "/chat/add";
+		PendingRequest r = new PendingRequest(rest);
+		try {
+			r.putPost(new JSONObject()
+			.put(GCM, gcm)
+			.put(CHATROOM, chatroom)
+			.put(MSG, (msg.length()>0)? msg : JSONObject.NULL)
+			.put(PIC, (pictureID > 0)? pictureID : JSONObject.NULL)
+			.toString(), Pull.Mime.JSON);
+		} catch (JSONException e) {
+			throw err.JSONDuringPostError(e, rest);
+		}
 		return r;
 	}
 }

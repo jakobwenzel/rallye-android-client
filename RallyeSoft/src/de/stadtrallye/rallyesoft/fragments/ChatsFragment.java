@@ -17,7 +17,7 @@ import com.viewpagerindicator.TitlePageIndicator;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
-import de.stadtrallye.rallyesoft.model.IModelListener;
+import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.Model;
 
 /**
@@ -26,7 +26,7 @@ import de.stadtrallye.rallyesoft.model.Model;
  * @author Ramon
  *
  */
-public class ChatsFragment extends BaseFragment implements IModelListener {
+public class ChatsFragment extends BaseFragment implements IConnectionStatusListener {
 	
 	private Model model;
 	private ViewPager pager;

@@ -31,11 +31,11 @@ import de.stadtrallye.rallyesoft.communications.PushInit;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
-import de.stadtrallye.rallyesoft.model.IModelListener;
+import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IModelListener, IProgressUI {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IConnectionStatusListener, IProgressUI {
 	
 	final static private int TASK_LOGOUT = 1;
 	final static private int TASK_LOGIN = 2;

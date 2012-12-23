@@ -42,7 +42,7 @@ public class Model implements IAsyncFinished {
 	
 	private static boolean DEBUG = false;
 	
-	public enum Tasks { LOGIN, CHAT_REFRESH, CHECK_SERVER, MAP_NODES };
+	public enum Tasks { LOGIN, CHAT_DOWNLOAD, CHECK_SERVER, MAP_NODES, CHAT_REFRESH };
 	
 	private int taskID = 0;
 
@@ -55,7 +55,7 @@ public class Model implements IAsyncFinished {
 	private String password;
 	private String gcm;
 	private boolean loggedIn;
-	private ArrayList<IModelListener> listeners;
+	private ArrayList<IConnectionStatusListener> listeners;
 	private List<Integer> chatrooms;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
@@ -88,7 +88,7 @@ public class Model implements IAsyncFinished {
 		pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
 		
 		callbacks = new SparseArray<Task<? extends Object>>();
-		listeners = new ArrayList<IModelListener>();
+		listeners = new ArrayList<IConnectionStatusListener>();
 	}
 	
 	private List<Integer> extractChatRooms(String string) {
@@ -113,6 +113,10 @@ public class Model implements IAsyncFinished {
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
+		if (loggedIn) {
+			err.notLoggedIn();
+			return;
+		}
 		try {
 			startAsyncTask(ui, tag, Tasks.LOGIN, RallyePull.pendingLogin(context, server, group, password, gcm));
 			
@@ -124,16 +128,42 @@ public class Model implements IAsyncFinished {
 		}
 	}
 	
-	public void refreshSimpleChat(IModelResult<List<ChatEntry>> ui, int tag, int chatroom) {
+	public void retrieveCompleteChat(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom) {
 		if (!loggedIn) {
 			err.notLoggedIn();
 			return;
 		}
 		try {
-			startAsyncTask(ui, tag, Tasks.CHAT_REFRESH, pull.pendingChatRefresh(chatroom, 0));
+			startAsyncTask(ui, externalTag, Tasks.CHAT_DOWNLOAD, pull.pendingChatRefresh(chatroom, 0));
 		} catch (RestException e) {
 			err.restError(e);
 		}
+	}
+	
+	public void postChatMessage(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom, String msg) {
+		if (!loggedIn) {
+			err.notLoggedIn();
+			return;
+		}
+		try {
+			startAsyncTask(ui, externalTag, Tasks.CHAT_DOWNLOAD, pull.pendingChatPost(chatroom, msg, 0));
+		} catch (RestException e) {
+			err.restError(e);
+		}
+	}
+	
+	public void updateChat(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom, int beginningWith) {
+		if (!loggedIn) {
+			err.notLoggedIn();
+			return;
+		}
+		
+		try {
+			startAsyncTask(ui, externalTag, Tasks.CHAT_REFRESH, pull.pendingChatRefresh(chatroom, beginningWith));
+		} catch (RestException e) {
+			err.restError(e);
+		}
+		
 	}
 	
 	public void checkServerStatus(IModelResult<Boolean> ui,	int externalTag) {
@@ -216,6 +246,7 @@ public class Model implements IAsyncFinished {
 			((Task<Boolean>) callbacks.get(internalTag)).callback(success);
 			break;
 		case CHAT_REFRESH:
+		case CHAT_DOWNLOAD:
 			try {
 				((Task<List<ChatEntry>>) callbacks.get(internalTag)).callback(ChatEntry.translateJSON(task.get()));
 			} catch (Exception e) {
@@ -326,16 +357,16 @@ public class Model implements IAsyncFinished {
 		return res;
 	}
 	
-	public void addListener(IModelListener l) {
+	public void addListener(IConnectionStatusListener l) {
 		listeners.add(l);
 	}
 	
-	public void removeListener(IModelListener l) {
+	public void removeListener(IConnectionStatusListener l) {
 		listeners.remove(l);
 	}
 	
 	private void connectionStatusChange() {
-		for(IModelListener l: listeners) {
+		for(IConnectionStatusListener l: listeners) {
 			l.onConnectionStatusChange(loggedIn);
 		}
 	}

@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
-public interface IModelListener {
+public interface IConnectionStatusListener {
 
 	public void onConnectionStatusChange(boolean newStatus);
 }

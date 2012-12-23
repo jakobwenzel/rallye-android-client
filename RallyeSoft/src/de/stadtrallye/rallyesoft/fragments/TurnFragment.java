@@ -10,9 +10,9 @@ import android.widget.ListView;
 import com.actionbarsherlock.app.SherlockFragment;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IModelListener;
+import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 
-public class TurnFragment extends SherlockFragment implements IModelListener {
+public class TurnFragment extends SherlockFragment implements IConnectionStatusListener {
 	
 	private ListView list;
 
