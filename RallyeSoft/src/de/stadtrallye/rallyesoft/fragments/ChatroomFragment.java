@@ -96,14 +96,6 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
-	}
-	
-	/**
-	 * if we are logged in show progress and start asynchronous chat refresh
-	 */
-	@Override
-	public void onStart() {
-		super.onStart();
 		
 		if (model.isLoggedIn()) {
 			ui.activateProgressAnimation();
@@ -113,34 +105,65 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		}
 	}
 	
+	/**
+	 * if we are logged in show progress and start asynchronous chat refresh
+	 */
 	@Override
-	public void onResume() {
-		super.onResume();
+	public void onStart() {
+		super.onStart();
 		
-		restoreScrollState();
+		
 	}
 	
+//	@Override
+//	public void onResume() {
+//		super.onResume();
+//		
+//	}
+	
+//	@Override
+//	public void onPause() {
+//		super.onPause();
+//		
+//	}
+	
 	@Override
-	public void onPause() {
-		super.onPause();
+	public void onStop() {
+		super.onStop();
 		
+		
+	}
+	
+	private void saveScrollState() {
 		if (lastPos == null)
 			lastPos = new int[2];
+		
 		lastPos[0] = list.getFirstVisiblePosition(); 
 		
 		View v = list.getChildAt(0);
 		lastPos[1] = v.getTop(); 
 	}
 	
+	private void restoreScrollState() {
+		if (lastPos != null) {
+	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
+	    	if (DEBUG)
+				Log.v("ChatFragment", "ScrollState restored: "+ lastPos[0]);
+        } else
+        	list.setSelection(list.getCount()-1);
+	}
+	
 	/**
-	 * Save the current scroll position (not yet pixel accurate)
+	 * Save the current scroll position
 	 */
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		
+		saveScrollState();
+		
 		if (DEBUG)
-			Log.v("ChatFragment", "ScrollState: "+ lastPos);
+			Log.v("ChatFragment", "ScrollState saved: "+ lastPos[0]);
 		
 		outState.putIntArray(Std.LAST_POS, lastPos);
 	}
@@ -219,14 +242,6 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 //        visToInvis.start();
 //    }
 	
-	private void restoreScrollState() {
-		if (lastPos != null) {
-	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
-	    	if (DEBUG)
-				Log.v("ChatFragment", "ScrollState restored: "+ lastPos);
-        } else
-        	list.setSelection(list.getCount()-1);
-	}
 	
 	/**
 	 * Wraps around ChatEntry List

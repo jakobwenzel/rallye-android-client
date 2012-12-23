@@ -18,6 +18,7 @@ import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.communications.AsyncRequest;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 

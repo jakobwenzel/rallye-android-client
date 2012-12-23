@@ -33,7 +33,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private TitlePageIndicator indicator;
 	private FragmentPagerAdapter fragmentAdapter;
 	private List<Integer> currentRooms;
-	private int initialTab = 0;
+	private int currentTab = 0;
 	
 	
 	public ChatsFragment() {
@@ -44,6 +44,14 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		if (savedInstanceState != null)
+			currentTab = savedInstanceState.getInt(Std.TAB);
+//		setRetainInstance(false);
+	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -57,13 +65,6 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		return v;
 	}
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		setRetainInstance(false);
-	}
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -74,36 +75,37 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
+		
+		onConnectionStatusChange(model.isLoggedIn());
 	}
 	
 	@Override
 	public void onStart() {
 		super.onStart();
 		
-		onConnectionStatusChange(model.isLoggedIn());
-		
 		model.addListener(this);
 	}
 	
-	@Override
-	public void onResume() {
-		super.onResume();
-		
-		pager.setCurrentItem(initialTab);
-	}
+//	@Override
+//	public void onResume() {
+//		super.onResume();
+//		
+//		
+//	}
 	
-	@Override
-	public void onPause() {
-		super.onPause();
-		
-		initialTab = pager.getCurrentItem();
-	}
+//	@Override
+//	public void onPause() {
+//		super.onPause();
+//		
+//		
+//	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
 		
 		model.removeListener(this);
+		currentTab = pager.getCurrentItem();
 	}
 	
 	@Override
@@ -114,26 +116,19 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	}
 	
 	private void populateChats() {
-//		if (!Arrays.equals(model.getChatRooms(), currentRooms)) {
-			currentRooms = model.getChatRooms();
-			fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
-			pager.setAdapter(fragmentAdapter);
-			pager.setCurrentItem(initialTab);
-			indicator.setViewPager(pager);
-			indicator.invalidate();
-//		}
+		currentRooms = model.getChatRooms();
+		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
+		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
+		indicator.setCurrentItem(currentTab);
 	}
 	
 	private void chatsUnavailable() {
-//		if (/*!(fragmentAdapter instanceof DummyAdapter)*/true) {
-			currentRooms = null;
-			FragmentManager childManager = getChildFragmentManager();
-//			childManager.enableDebugLogging(true);
-			fragmentAdapter = new DummyAdapter(childManager);
-			pager.setAdapter(fragmentAdapter);
-			indicator.setViewPager(pager);
-			indicator.invalidate();
-//		}
+		currentRooms = null;
+		fragmentAdapter = new DummyAdapter(getChildFragmentManager());
+		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
+		indicator.invalidate();
 	}
 
 	@Override
