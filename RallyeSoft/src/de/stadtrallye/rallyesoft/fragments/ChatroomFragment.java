@@ -191,7 +191,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			return;
 		}
 		
-        final ChatAdapter chatAdapter = new ChatAdapter(getActivity(), R.layout.chat_item, result);
+        final ChatAdapter chatAdapter = new ChatAdapter(getActivity(), result);
         list.setAdapter(chatAdapter);
         
         restoreScrollState();
@@ -256,8 +256,8 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		private DateFormat converter;
 		private int[] pictures;
 
-		public ChatAdapter(Context context, int textViewResourceId, List<ChatEntry> entries) {
-			super(context, textViewResourceId, entries);
+		public ChatAdapter(Context context, List<ChatEntry> entries) {
+			super(context, R.layout.chat_item_left, entries);
 			this.entries = entries;
 			
 			loader = ImageLoader.getInstance();
@@ -294,7 +294,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate((o.self)? R.layout.chat_item_right : R.layout.chat_item, null);
+                v = vi.inflate((o.self)? R.layout.chat_item_right : R.layout.chat_item_left, null);
                 
                 mem = new ViewMem();
                 

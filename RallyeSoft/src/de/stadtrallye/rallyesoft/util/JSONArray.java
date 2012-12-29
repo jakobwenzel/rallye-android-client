@@ -12,16 +12,16 @@ public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> 
 	
 	private static final ErrorHandling err = new ErrorHandling(JSONArray.class.getSimpleName());
 	
-	private Converter<IN, T> converter;
+	private IConverter<IN, T> converter;
 
-	public JSONArray(Converter<IN, T>  converter, String json) throws JSONException {
+	public JSONArray(IConverter<IN, T>  converter, String json) throws JSONException {
 		super(json);
 		
 		this.converter = converter;
 	}
 	
 	@Deprecated
-	public JSONArray(Converter<IN,T> converter, org.json.JSONArray arr) throws JSONException {
+	public JSONArray(IConverter<IN,T> converter, org.json.JSONArray arr) throws JSONException {
 		this(converter, arr.toString());
 	}
 
@@ -63,7 +63,7 @@ public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> 
 		
 	}
 	
-	public static <T> JSONArray<JSONObject, T> getInstance(Converter<JSONObject, T> converter, String js) {
+	public static <T> JSONArray<JSONObject, T> getInstance(IConverter<JSONObject, T> converter, String js) {
 		try {
 			return new JSONArray<JSONObject, T>(converter, js);
 		} catch (JSONException e) {
@@ -73,7 +73,7 @@ public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> 
 	}
 
 	@Deprecated
-	public static <T> JSONArray<JSONObject, T> getInstance(Converter<JSONObject, T> converter, org.json.JSONArray js) {
+	public static <T> JSONArray<JSONObject, T> getInstance(IConverter<JSONObject, T> converter, org.json.JSONArray js) {
 		try {
 			return new JSONArray<JSONObject, T>(converter, js);
 		} catch (JSONException e) {

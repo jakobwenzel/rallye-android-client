@@ -6,9 +6,12 @@
     
 <ImageView 
     android:id="@+id/sender_img"
-    android:layout_width="72dp"
-    android:layout_height="72dp"
-    android:layout_marginRight="3dp" />
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:maxWidth="72dp"
+    android:maxHeight="72dp"
+    android:layout_marginRight="3dp"
+    android:contentDescription="@string/ok" />
 
 <TextView
     android:id="@+id/msg_sender"

@@ -46,7 +46,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		
 		notes.notify(":GCM Mesage", R.string.gcm_notification, big.build());
 		
-		Log.w("GCMIntentService", "Received Push Notification:\n " +extras);
+		Log.w("GCMIntentService.Push", "Note: " +extras);
 	}
 
 	@Override

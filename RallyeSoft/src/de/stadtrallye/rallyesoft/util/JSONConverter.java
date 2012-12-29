@@ -3,7 +3,7 @@ package de.stadtrallye.rallyesoft.util;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public abstract class JSONConverter<T> implements Converter<JSONObject, T> {
+public abstract class JSONConverter<T> implements IConverter<JSONObject, T> {
 	
 	@Override
 	public T fallback() {

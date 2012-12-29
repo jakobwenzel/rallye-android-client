@@ -8,6 +8,8 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.util.SparseArray;
 
 import com.google.android.gcm.GCMRegistrar;
@@ -377,5 +379,10 @@ public class Model implements IAsyncFinished {
 		AsyncRequest.enableDebugLogging();
 	}
 
+	public void testDB() {
+		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
+		SQLiteDatabase db = helper.getWritableDatabase();
+		
+	}
 	
 }
