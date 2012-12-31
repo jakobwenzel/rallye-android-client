@@ -128,6 +128,7 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
+	@Deprecated
 	public void retrieveCompleteChat(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom) {
 		if (!loggedIn) {
 			err.notLoggedIn();
@@ -140,18 +141,20 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
+	@Deprecated
 	public void postChatMessage(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom, String msg) {
-		if (!loggedIn) {
-			err.notLoggedIn();
-			return;
-		}
-		try {
-			startAsyncTask(ui, externalTag, Tasks.CHAT_DOWNLOAD, pull.pendingChatPost(chatroom, msg, 0));
-		} catch (RestException e) {
-			err.restError(e);
-		}
+        if (!loggedIn) {
+                err.notLoggedIn();
+                return;
+        }
+        try {
+                startAsyncTask(ui, externalTag, Tasks.CHAT_DOWNLOAD, pull.pendingChatPost(chatroom, msg, 0));
+        } catch (RestException e) {
+                err.restError(e);
+        }
 	}
 	
+	@Deprecated
 	public void updateChat(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom, int beginningWith) {
 		if (!loggedIn) {
 			err.notLoggedIn();
@@ -180,6 +183,7 @@ public class Model implements IModel, IAsyncFinished {
 		
 	}
 	
+	@Deprecated
 	public void getMapNodes(IModelResult<List<MapNode>> ui, int externalTag) {
 		if (!loggedIn) {
 			err.notLoggedIn();
@@ -235,6 +239,7 @@ public class Model implements IModel, IAsyncFinished {
 		
 		private int id;
 		private String name;
+		private int lastTime = 0;
 		
 		private List<IChatListener> listeners = new ArrayList<IChatListener>();
 		
@@ -260,8 +265,15 @@ public class Model implements IModel, IAsyncFinished {
 
 		@Override
 		public void adviseUse() {
-			// TODO Auto-generated method stub
-			
+			if (!loggedIn) {
+				err.notLoggedIn();
+				return;
+			}
+			try {
+				startAsyncTask(null, 0, Tasks.CHAT_DOWNLOAD, pull.pendingChatRefresh(id, lastTime));
+			} catch (RestException e) {
+				err.restError(e);
+			}
 		}
 
 		@Override
@@ -276,14 +288,26 @@ public class Model implements IModel, IAsyncFinished {
 
 		@Override
 		public List<ChatEntry> getChats() {
-			// TODO Auto-generated method stub
+			// TODO get From DB
 			return null;
 		}
 
 		@Override
 		public void addChat(String msg) {
-			// TODO Auto-generated method stub
-			
+			addChat(null, 0, msg);
+		}
+		
+		public void addChat(IModelResult<Boolean> ui, int externalTag, String msg) {
+			//TODO: save to DB
+			if (!loggedIn) {
+                err.notLoggedIn();
+                return;
+	        }
+	        try {
+	                startAsyncTask(ui, externalTag, Tasks.CHAT_DOWNLOAD, pull.pendingChatPost(id, msg, 0));
+	        } catch (RestException e) {
+	                err.restError(e);
+	        }
 		}
 	}
 	
