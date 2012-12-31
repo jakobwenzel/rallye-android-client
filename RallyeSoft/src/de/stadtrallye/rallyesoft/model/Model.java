@@ -1,6 +1,7 @@
 package de.stadtrallye.rallyesoft.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
@@ -15,6 +16,7 @@ import android.util.SparseArray;
 import com.google.android.gcm.GCMRegistrar;
 
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.communications.RallyePull;
 import de.stadtrallye.rallyesoft.communications.AsyncRequest;
@@ -31,17 +33,12 @@ import de.stadtrallye.rallyesoft.util.JSONConverter;
  * @author Ray
  *
  */
-public class Model implements IAsyncFinished {
+public class Model implements IModel, IAsyncFinished {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	
-	private static Model model;
-	
-	final private String SERVER = "server";
-	final private String GROUP = "group";
-	final private String PASSWORD = "password";
-	private static final String CHATROOMS = "chatrooms";
+	private static Model model; // Singleton Pattern
 	
 	private static boolean DEBUG = false;
 	
@@ -59,7 +56,7 @@ public class Model implements IAsyncFinished {
 	private String gcm;
 	private boolean loggedIn;
 	private ArrayList<IConnectionStatusListener> connectionListeners;
-	private List<Integer> chatrooms;
+	private List<Chatroom> chatrooms;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
 		if (model != null)
@@ -79,30 +76,25 @@ public class Model implements IAsyncFinished {
 		this.loggedIn = loggedIn;
 		
 		
-		server = pref.getString(SERVER, null);
+		server = pref.getString(Std.SERVER, null);
 		if (server == null) {
 			this.loggedIn = false;
 		} else {
-			group = pref.getInt(GROUP, 0);
-			password = pref.getString(PASSWORD, null);
-			chatrooms = extractChatRooms(pref.getString(CHATROOMS, ""));
+			group = pref.getInt(Std.GROUP, 0);
+			password = pref.getString(Std.PASSWORD, null);
+			createChatrooms(extractChatRooms(pref.getString(Std.CHATROOMS, "")));
 		}
 		
-		pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
+		pull = new RallyePull(pref.getString(Std.SERVER, "FAIL"), gcm, context);
 		
 		callbacks = new SparseArray<Task<? extends Object>>();
 		connectionListeners = new ArrayList<IConnectionStatusListener>();
 	}
 	
-	private List<Integer> extractChatRooms(String string) {
-		String rooms = pref.getString(CHATROOMS, "");
-		ArrayList<Integer> out = new ArrayList<Integer>();
-		for (String s: rooms.split(";")) {
-			try {
-				out.add(Integer.parseInt(s));
-			} catch (Exception e) {}
-		}
-		return out;
+	
+	@Override
+	public void logout() {
+		logout(null, 0);
 	}
 
 	public void logout(IModelResult<Boolean> ui, int tag) {
@@ -113,6 +105,11 @@ public class Model implements IAsyncFinished {
 		} catch (RestException e) {
 			err.restError(e);
 		}
+	}
+	
+	@Override
+	public void login(String server, String password, int group) {
+		login(null, 0, server, group, password);
 	}
 	
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
@@ -169,7 +166,12 @@ public class Model implements IAsyncFinished {
 		
 	}
 	
-	public void checkServerStatus(IModelResult<Boolean> ui,	int externalTag) {
+	@Override
+	public void checkConnectionStatus() {
+		checkConnectionStatus(null, 0);	
+	}
+	
+	public void checkConnectionStatus(IModelResult<Boolean> ui,	int externalTag) {
 		try {
 			startAsyncTask(ui, externalTag, Tasks.CHECK_SERVER, pull.pendingServerStatus(server));
 		} catch (RestException e) {
@@ -201,19 +203,95 @@ public class Model implements IAsyncFinished {
 	}
 	
 	public String getServer() {
-		return pref.getString(SERVER, context.getString(R.string.default_server));
+		return pref.getString(Std.SERVER, context.getString(R.string.default_server));
 	}
 	
 	public int getGroup() {
-		return pref.getInt(GROUP, context.getResources().getInteger(R.integer.default_group));
+		return pref.getInt(Std.GROUP, context.getResources().getInteger(R.integer.default_group));
 	}
 	
 	public String getPassword() {
-		return pref.getString(PASSWORD, context.getString(R.string.default_password));
+		return pref.getString(Std.PASSWORD, context.getString(R.string.default_password));
 	}
 	
 	public List<Integer> getChatRooms() {
+		List<Integer> l = new ArrayList<Integer>();
+		for (Chatroom c: chatrooms) {
+			l.add(c.getID());
+		}
+		return l;
+	}
+	
+	/**
+	 * 
+	 * WARNING: do not change List
+	 */
+	@Override
+	public List<Chatroom> getChatrooms() {
 		return chatrooms;
+	}
+	
+	private class Chatroom implements IChatroom {
+		
+		private int id;
+		private String name;
+		
+		private List<IChatListener> listeners = new ArrayList<IChatListener>();
+		
+		@Deprecated
+		public Chatroom(int id) {
+			this(id, "Chatroom "+ id);
+		}
+		
+		public Chatroom(int id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		@Override
+		public int getID() {
+			return id;
+		}
+
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public void adviseUse() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void addListener(IChatListener l) {
+			listeners.add(l);
+		}
+
+		@Override
+		public void removeListener(IChatListener l) {
+			listeners.remove(l);
+		}
+
+		@Override
+		public List<ChatEntry> getChats() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void addChat(String msg) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+	
+	@Override
+	public String getUrlFromImageId(int pictureID, char size) {
+		String res = getServer() +"/pic/get/"+ pictureID +"/"+ size;
+//		Log.v(THIS, res);
+		return res;
 	}
 
 	
@@ -236,7 +314,7 @@ public class Model implements IAsyncFinished {
 				
 				ArrayList<Integer> res = js.toList();
 				
-				chatrooms = res;
+				createChatrooms(res);
 				
 				success = true;
 			} catch (Exception e) {
@@ -285,23 +363,24 @@ public class Model implements IAsyncFinished {
 		connectionStatusChange();
 	}
 
-	private void saveLoginDetails(String server, int group, String password, List<Integer> chatrooms) {
+	private void saveLoginDetails(String server, int group, String password, List<Chatroom> chatrooms) {
 		SharedPreferences.Editor edit = pref.edit();
 //		edit.putBoolean(LOGGED_IN, success);
-		edit.putString(SERVER, server);
-		edit.putInt(GROUP, group);
-		edit.putString(PASSWORD, password);
+		edit.putString(Std.SERVER, server);
+		edit.putInt(Std.GROUP, group);
+		edit.putString(Std.PASSWORD, password);
 		StringBuilder rooms = new StringBuilder();
-		for (int i: chatrooms) {
-			rooms.append(Integer.toString(i)).append(';');
+		for (Chatroom c: chatrooms) {
+			rooms.append(Integer.toString(c.getID())).append(';');
 		}
-		edit.putString(CHATROOMS, rooms.toString());
+		edit.putString(Std.CHATROOMS, rooms.toString());
 		edit.commit();
 	}
 
 	/**
 	 * Kill all AsyncTasks still running
 	 */
+	@Override
 	public void onDestroy() {
 		for (int i = callbacks.size()-1; i>=0; --i) {
 			callbacks.valueAt(i).task.cancel(true);
@@ -353,27 +432,33 @@ public class Model implements IAsyncFinished {
 			ui.onModelFinished(tag, result);
 		}
 	}
-
-	public String getImageUrl(int pictureID, char size) {
-		String res = getServer() +"/pic/get/"+ pictureID +"/"+ size;
-//		Log.v(THIS, res);
-		return res;
+	
+	private void createChatrooms(List<Integer> l) {
+		chatrooms = new ArrayList<Chatroom>();
+		for (Integer i: l) {
+			chatrooms.add(new Chatroom(i));
+		}
 	}
 	
+	private List<Integer> extractChatRooms(String string) {
+		String rooms = pref.getString(Std.CHATROOMS, "");
+		ArrayList<Integer> out = new ArrayList<Integer>();
+		for (String s: rooms.split(";")) {
+			try {
+				out.add(Integer.parseInt(s));
+			} catch (Exception e) {}
+		}
+		return out;
+	}
+	
+	@Override
 	public void addListener(IConnectionStatusListener l) {
 		connectionListeners.add(l);
 	}
 	
+	@Override
 	public void removeListener(IConnectionStatusListener l) {
 		connectionListeners.remove(l);
-	}
-	
-	public void addListener(IChatListener l, int chatroom) {
-		
-	}
-	
-	public void removeListener(IChatListener l, int chatroom) {
-		
 	}
 	
 	private void connectionStatusChange() {

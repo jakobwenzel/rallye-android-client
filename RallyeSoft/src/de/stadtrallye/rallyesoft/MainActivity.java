@@ -86,7 +86,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		model = Model.getInstance(this, config, loggedIn);
 		model.addListener(this);
 		if (!loggedIn)
-			model.checkServerStatus(this, TASK_CHECK);
+			model.checkConnectionStatus(this, TASK_CHECK);
 		
 		
         // Populate SideBar

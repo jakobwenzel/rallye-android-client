@@ -116,7 +116,7 @@ public class ImageViewActivity extends SherlockActivity {
 				}
 			});
 
-			loader.displayImage(model.getImageUrl(images[position], 's'), imageView, new SimpleImageLoadingListener() {
+			loader.displayImage(model.getUrlFromImageId(images[position], 's'), imageView, new SimpleImageLoadingListener() {
 				@Override
 				public void onLoadingStarted() {
 					spinner.setVisibility(View.VISIBLE);

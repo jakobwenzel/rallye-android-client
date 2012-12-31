@@ -120,7 +120,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void onStart() {
 		super.onStart();
 		
-		model.addListener(this, chatroom);
+//		model.addListener(this, chatroom);
 	}
 	
 //	@Override
@@ -297,7 +297,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
                 // When called with null or "" as URL, will display empty pciture / default resource
                 // Otherwise ImageLoader will not be stable and start swapping images
                 if (o.pictureID > 0) {
-                	loader.displayImage(model.getImageUrl(o.pictureID, 't'), mem.img);
+                	loader.displayImage(model.getUrlFromImageId(o.pictureID, 't'), mem.img);
                 } else {
                 	loader.displayImage(null, mem.img);
                 }
