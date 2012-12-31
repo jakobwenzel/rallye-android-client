@@ -31,21 +31,20 @@ public class MapNode {
 
 
 	public static List<MapNode> translateJSON(String js) {
-
-		JSONConverter<MapNode> conv = new JSONConverter<MapNode>() {
-			@Override
-			public MapNode doConvert(JSONObject o) throws JSONException {
-				return new MapNode(
-						o.getInt("nodeID"),
-						o.getString("name"),
-						o.getDouble("lat"),
-						o.getDouble("lon"),
-						o.getString("description"));
-			}
-		};
+		return JSONArray.toList(new NodeConverter(), js);
+	}
+	
+	private static class NodeConverter extends JSONConverter<MapNode> {
 		
-		List<MapNode> nodes = JSONArray.toList(conv, js);
+		@Override
+		public MapNode doConvert(JSONObject o) throws JSONException {
+			return new MapNode(
+					o.getInt("nodeID"),
+					o.getString("name"),
+					o.getDouble("lat"),
+					o.getDouble("lon"),
+					o.getString("description"));
+		}
 		
-		return nodes;
 	}
 }

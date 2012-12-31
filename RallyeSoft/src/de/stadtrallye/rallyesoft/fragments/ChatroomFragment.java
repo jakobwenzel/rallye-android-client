@@ -9,13 +9,17 @@ import java.util.List;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -30,6 +34,7 @@ import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
+import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
@@ -38,15 +43,17 @@ import de.stadtrallye.rallyesoft.model.Model;
  * @author Ramon
  *
  */
-public class ChatroomFragment extends BaseFragment implements IModelResult<List<ChatEntry>> {
+public class ChatroomFragment extends BaseFragment implements IModelResult<List<ChatEntry>>, IChatListener, OnClickListener {
 	
 	final static private int TASK_CHAT = 101;
 
 	private Model model;
-	private IProgressUI ui;
-	private ListView list;
-//	private ImageView img;
-	private int[] lastPos = null;
+	private IProgressUI ui; // access to IndeterminateProgress in ActionBar
+	private ListView list;	//List of ChatEntries
+	private ChatAdapter chatAdapter; //Adapter for List
+	private Button send;
+	private EditText text;
+	private int[] lastPos = null; //[0] line, [1] pixels offset
 	private int chatroom;
 	
 	/**
@@ -77,8 +84,9 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.chat_list, container, false);
 		list = (ListView)v.findViewById(R.id.chat_list);
-//		img = (ImageView)v.findViewById(R.id.chat_backside);
-//		img.setRotationY(-90f);
+		text = (EditText) v.findViewById(R.id.edit_new_message);
+		send = (Button) v.findViewById(R.id.button_send);
+		send.setOnClickListener(this);
 		return v;
 	}
 	
@@ -112,7 +120,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void onStart() {
 		super.onStart();
 		
-		
+		model.addListener(this, chatroom);
 	}
 	
 //	@Override
@@ -191,7 +199,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			return;
 		}
 		
-        final ChatAdapter chatAdapter = new ChatAdapter(getActivity(), result);
+        chatAdapter = new ChatAdapter(getActivity(), result);
         list.setAdapter(chatAdapter);
         
         restoreScrollState();
@@ -214,35 +222,6 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
         ui.deactivateProgressAnimation();
 	}
 	
-//	private void flipit() {
-//        final ListView visibleList;
-//        final ListView invisibleList;
-//        if (mEnglishList.getVisibility() == View.GONE) {
-//            visibleList = mFrenchList;
-//            invisibleList = mEnglishList;
-//        } else {
-//            invisibleList = mFrenchList;
-//            visibleList = mEnglishList;
-//        }
-//        ObjectAnimator visToInvis = ObjectAnimator.ofFloat(visibleList, "rotationY", 0f, 90f);
-//        visToInvis.setDuration(500);
-//        visToInvis.setInterpolator(accelerator);
-//        final ObjectAnimator invisToVis = ObjectAnimator.ofFloat(invisibleList, "rotationY",
-//                -90f, 0f);
-//        invisToVis.setDuration(500);
-//        invisToVis.setInterpolator(decelerator);
-//        visToInvis.addListener(new AnimatorListenerAdapter() {
-//            @Override
-//            public void onAnimationEnd(Animator anim) {
-//                visibleList.setVisibility(View.GONE);
-//                invisToVis.start();
-//                invisibleList.setVisibility(View.VISIBLE);
-//            }
-//        });
-//        visToInvis.start();
-//    }
-	
-	
 	/**
 	 * Wraps around ChatEntry List
 	 * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $Chatentry.self
@@ -255,7 +234,15 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		private ImageLoader loader;
 		private DateFormat converter;
 		private int[] pictures;
-
+		
+		private class ViewMem {
+			public ImageView img;
+			public TextView msg;
+			public TextView sender;
+			public TextView time;
+		}
+		
+		
 		public ChatAdapter(Context context, List<ChatEntry> entries) {
 			super(context, R.layout.chat_item_left, entries);
 			this.entries = entries;
@@ -273,15 +260,6 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
             loader.init(config);
             
             converter = SimpleDateFormat.getDateTimeInstance();
-		}
-		
-		
-
-		public class ViewMem {
-			public ImageView img;
-			public TextView msg;
-			public TextView sender;
-			public TextView time;
 		}
 		
 		
@@ -360,6 +338,20 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 					return i;
 			}
 			return -1;
+		}
+	}
+	
+
+	@Override
+	public void addedChats(List<ChatEntry> entries) {
+		chatAdapter.addAll(entries);
+	}
+
+	@Override
+	public void onClick(View v) {
+		Editable msg = text.getText();
+		if (msg.length() > 0) {
+			//model.sendChat(msg.toString(), chatroom);
 		}
 	}
 }

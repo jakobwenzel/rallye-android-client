@@ -19,7 +19,7 @@
 	    android:background="@drawable/abs__ab_solid_light_holo">
 	    
         <EditText
-            android:id="@+id/new_message"
+            android:id="@+id/edit_new_message"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"

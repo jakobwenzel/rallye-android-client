@@ -8,20 +8,29 @@ import org.json.JSONObject;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 
-public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> {
+/**
+ * Extension to org.json.JSONArray that allows Iteration (e.g. with for(T t: jsonArray))
+ * 
+ * 
+ * @author Ramon
+ *
+ * @param <IN> Type contained in this JSONArray, mostly JSONObject, but all standard JSON types are allowed
+ * @param <T> Type to get from the Iterator
+ */
+public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 	
 	private static final ErrorHandling err = new ErrorHandling(JSONArray.class.getSimpleName());
 	
-	private IConverter<IN, T> converter;
+	private JSONConverter<T> converter;
 
-	public JSONArray(IConverter<IN, T>  converter, String json) throws JSONException {
+	public JSONArray(JSONConverter<T>  converter, String json) throws JSONException {
 		super(json);
 		
 		this.converter = converter;
 	}
 	
 	@Deprecated
-	public JSONArray(IConverter<IN,T> converter, org.json.JSONArray arr) throws JSONException {
+	public JSONArray(JSONConverter<T> converter, org.json.JSONArray arr) throws JSONException {
 		this(converter, arr.toString());
 	}
 
@@ -41,11 +50,9 @@ public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> 
 
 		@Override
 		public T next() {
-			IN o = null;
-			Object t = null;
 			try {
-				t = JSONArray.this.get(i++);
-				o = (IN)t;
+				@SuppressWarnings("unchecked")
+				JSONObject o = JSONArray.this.getJSONObject(i++);
 				return converter.convert(o);
 			} catch (JSONException e) {
 				e.printStackTrace();
@@ -58,14 +65,20 @@ public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> 
 
 		@Override
 		public void remove() {
-			throw new RuntimeException("Remove not Supported on MyJSONArray");
+			throw new UnsupportedOperationException("Remove not Supported on MyJSONArray");
 		}
 		
 	}
 	
-	public static <T> JSONArray<JSONObject, T> getInstance(IConverter<JSONObject, T> converter, String js) {
+	/**
+	 * Written to block JSONException, which Java does not allow in Constructors
+	 * @param converter
+	 * @param js
+	 * @return
+	 */
+	public static <T> JSONArray<T> getInstance(JSONConverter<T> converter, String js) {
 		try {
-			return new JSONArray<JSONObject, T>(converter, js);
+			return new JSONArray<T>(converter, js);
 		} catch (JSONException e) {
 			err.jsonError(e);
 			return null;
@@ -73,9 +86,9 @@ public class JSONArray<IN, T> extends org.json.JSONArray implements Iterable<T> 
 	}
 
 	@Deprecated
-	public static <T> JSONArray<JSONObject, T> getInstance(IConverter<JSONObject, T> converter, org.json.JSONArray js) {
+	public static <T> JSONArray<T> getInstance(JSONConverter<T> converter, org.json.JSONArray js) {
 		try {
-			return new JSONArray<JSONObject, T>(converter, js);
+			return new JSONArray<T>(converter, js);
 		} catch (JSONException e) {
 			err.jsonError(e);
 			return null;

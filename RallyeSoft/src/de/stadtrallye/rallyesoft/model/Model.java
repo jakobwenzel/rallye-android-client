@@ -58,7 +58,7 @@ public class Model implements IAsyncFinished {
 	private String password;
 	private String gcm;
 	private boolean loggedIn;
-	private ArrayList<IConnectionStatusListener> listeners;
+	private ArrayList<IConnectionStatusListener> connectionListeners;
 	private List<Integer> chatrooms;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
@@ -91,7 +91,7 @@ public class Model implements IAsyncFinished {
 		pull = new RallyePull(pref.getString(SERVER, "FAIL"), gcm, context);
 		
 		callbacks = new SparseArray<Task<? extends Object>>();
-		listeners = new ArrayList<IConnectionStatusListener>();
+		connectionListeners = new ArrayList<IConnectionStatusListener>();
 	}
 	
 	private List<Integer> extractChatRooms(String string) {
@@ -232,7 +232,7 @@ public class Model implements IAsyncFinished {
 					}
 				};
 				
-				JSONArray<JSONObject, Integer> js = new JSONArray<JSONObject, Integer>(conv, task.get());
+				JSONArray<Integer> js = new JSONArray<Integer>(conv, task.get());
 				
 				ArrayList<Integer> res = js.toList();
 				
@@ -361,15 +361,23 @@ public class Model implements IAsyncFinished {
 	}
 	
 	public void addListener(IConnectionStatusListener l) {
-		listeners.add(l);
+		connectionListeners.add(l);
 	}
 	
 	public void removeListener(IConnectionStatusListener l) {
-		listeners.remove(l);
+		connectionListeners.remove(l);
+	}
+	
+	public void addListener(IChatListener l, int chatroom) {
+		
+	}
+	
+	public void removeListener(IChatListener l, int chatroom) {
+		
 	}
 	
 	private void connectionStatusChange() {
-		for(IConnectionStatusListener l: listeners) {
+		for(IConnectionStatusListener l: connectionListeners) {
 			l.onConnectionStatusChange(loggedIn);
 		}
 	}

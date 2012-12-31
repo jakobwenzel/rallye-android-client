@@ -28,19 +28,18 @@ public class ChatEntry {
 	}
 	
 	public static ArrayList<ChatEntry> translateJSON(String js) {
-		JSONConverter<ChatEntry> conv = new JSONConverter<ChatEntry>() {
-			@Override
-			public ChatEntry doConvert(JSONObject o) throws JSONException {
-					return new ChatEntry(o.getString("message"),
-								o.getInt("timestamp"),
-								o.getInt("groupID"),
-								o.getBoolean("self"),
-								(o.isNull("picture"))? 0 : o.getInt("picture"));
-			}
-		};
+		return JSONArray.toList(new ChatConverter(), js);
+	}
+	
+	private static class ChatConverter extends JSONConverter<ChatEntry> {
 		
-		ArrayList<ChatEntry> messages = JSONArray.toList(conv, js);
-		
-		return messages;
+		@Override
+		public ChatEntry doConvert(JSONObject o) throws JSONException {
+				return new ChatEntry(o.getString("message"),
+							o.getInt("timestamp"),
+							o.getInt("groupID"),
+							o.getBoolean("self"),
+							(o.isNull("picture"))? 0 : o.getInt("picture"));
+		}
 	}
 }
