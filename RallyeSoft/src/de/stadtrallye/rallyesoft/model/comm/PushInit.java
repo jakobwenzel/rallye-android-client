@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.communications;
+package de.stadtrallye.rallyesoft.model.comm;
 
 import android.content.Context;
 import android.util.Log;

@@ -34,7 +34,7 @@ public class MapNode {
 		return JSONArray.toList(new NodeConverter(), js);
 	}
 	
-	private static class NodeConverter extends JSONConverter<MapNode> {
+	static class NodeConverter extends JSONConverter<MapNode> {
 		
 		@Override
 		public MapNode doConvert(JSONObject o) throws JSONException {

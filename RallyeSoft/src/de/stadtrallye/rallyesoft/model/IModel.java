@@ -25,6 +25,9 @@ interface IModel {
 	public void checkConnectionStatus();
 	
 	public String getUrlFromImageId(int id, char size);
+	public boolean isLoggedIn();
+	public String getServer();
+	public int getGroupId();
 	
 	public void onDestroy();
 	

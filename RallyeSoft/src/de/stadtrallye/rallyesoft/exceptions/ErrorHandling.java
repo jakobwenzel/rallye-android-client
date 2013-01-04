@@ -27,6 +27,10 @@ public class ErrorHandling {
 	public void notLoggedIn() {
 		Log.e(where, "Aborting, not logged in!");
 	}
+	
+	public void loggedIn() {
+		Log.e(where, "Aborting, still logged in!");
+	}
 
 	public void restError(RestException e) {
 		Log.e(where, "invalid Rest URL", e);

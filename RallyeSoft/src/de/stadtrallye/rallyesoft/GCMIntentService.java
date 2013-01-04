@@ -11,8 +11,8 @@ import android.util.Log;
 import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
-import de.stadtrallye.rallyesoft.communications.PushInit;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.comm.PushInit;
 
 public class GCMIntentService extends GCMBaseIntentService {
 

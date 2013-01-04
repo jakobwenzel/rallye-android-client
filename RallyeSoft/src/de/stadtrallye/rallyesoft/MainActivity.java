@@ -27,13 +27,13 @@ import com.google.android.gcm.GCMRegistrar;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
-import de.stadtrallye.rallyesoft.communications.PushInit;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.comm.PushInit;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IConnectionStatusListener, IProgressUI {
 	
@@ -284,7 +284,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			DialogFragment d = new LoginDialogFragment();
 			Bundle b = new Bundle();
 			b.putString("server", model.getServer());
-			b.putInt("group", model.getGroup());
+			b.putInt("group", model.getGroupId());
 			b.putString("password", model.getPassword());
 			d.setArguments(b);
 			d.show(getSupportFragmentManager(), "loginDialog");

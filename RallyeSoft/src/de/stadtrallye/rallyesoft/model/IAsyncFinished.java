@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
-import de.stadtrallye.rallyesoft.communications.AsyncRequest;
+import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
 
 
 public interface IAsyncFinished {

@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.communications;
+package de.stadtrallye.rallyesoft.model.comm;
 
 import java.io.BufferedReader;
 import java.io.IOException;

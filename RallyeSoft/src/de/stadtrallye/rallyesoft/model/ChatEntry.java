@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class ChatEntry {
 	
-	private static ErrorHandling err = new ErrorHandling(ChatEntry.class.getSimpleName());
+//	private static ErrorHandling err = new ErrorHandling(ChatEntry.class.getSimpleName());
 	
 	public String message;
 	public int timestamp;
@@ -31,7 +30,7 @@ public class ChatEntry {
 		return JSONArray.toList(new ChatConverter(), js);
 	}
 	
-	private static class ChatConverter extends JSONConverter<ChatEntry> {
+	static class ChatConverter extends JSONConverter<ChatEntry> {
 		
 		@Override
 		public ChatEntry doConvert(JSONObject o) throws JSONException {

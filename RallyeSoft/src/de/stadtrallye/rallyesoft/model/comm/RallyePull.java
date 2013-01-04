@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.communications;
+package de.stadtrallye.rallyesoft.model.comm;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -6,10 +6,10 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Log;
-import de.stadtrallye.rallyesoft.communications.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
 
 /**
  * REST Adapter

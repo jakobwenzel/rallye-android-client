@@ -1,0 +1,110 @@
+package de.stadtrallye.rallyesoft.model.comm;
+
+import java.util.concurrent.ExecutionException;
+
+import android.os.AsyncTask;
+import android.util.Log;
+
+import de.stadtrallye.rallyesoft.exceptions.HttpResponseException;
+import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.IAsyncFinished;
+import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
+import de.stadtrallye.rallyesoft.util.IConverter;
+
+/**
+ * Executes a PendingRequest (->REST), holds Result as String
+ * Usable for Login, Logout
+ * Enhancement for other Task possible TBD
+ * @author Ray
+ *
+ */
+public class AsyncRequest<T> extends AsyncTask<PendingRequest, Void, T> {
+	
+	private static boolean DEBUG = false;
+	
+	private Exception e;
+	private IAsyncFinished callback;
+	private int tag;
+	private int responseCode;
+
+	private IConverter<String, T> converter;
+	
+	/**
+	 * Background task to execute 1 {@link PendingRequest}
+	 * 
+	 * <b>NOTE: </b> If T is String converter may be <b>null<b/>
+	 * @param callback will execute [@link IAsyncFinished.callback(tag, this)
+	 * @param tag to uniquely identify this task
+	 * @param converter Will convert the String from HTTP Response to T (to offload work of converting e.g. JSON to Objects from ui thread)
+	 */
+	public AsyncRequest(IAsyncFinished callback, int tag, IConverter<String, T> converter) {
+		this.callback = callback;
+		this.tag = tag;
+		this.converter = converter;
+	}
+	
+	public static void enableDebugLogging() {
+		DEBUG = true;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected T doInBackground(PendingRequest... r) {
+		if (DEBUG)
+			Log.d("UniPush", "AsyncTask ("+tag+") started!");
+		
+		
+		try {
+			String res = r[0].readLine();
+			responseCode = r[0].getResponseCode();
+			
+			if (converter != null)
+				return converter.convert(res);
+			else
+				return (T) res;
+		} catch (HttpResponseException e) {
+			this.e = e;
+		} catch (RestException e) {
+			this.e = e;
+		} finally {
+			r[0].close();
+		}
+		this.cancel(false);
+		return null;
+	}
+	
+	@Override
+	protected void onPostExecute(T result) {
+		super.onPostExecute(result);
+		
+		if (DEBUG)
+			Log.d("UniPush", "AsyncTask ("+tag+") finished!");
+		
+//		ui.setSupportProgressBarIndeterminateVisibility(false);
+		callback.onAsyncFinished(tag, this);
+	}
+	
+	@Override
+	protected void onCancelled(T result) {
+		callback.onAsyncFinished(tag, this);
+	}
+	
+	public boolean isSuccessfull() {
+		try {
+			return this.get() != null;
+		} catch (InterruptedException e) {
+			return false;
+		} catch (ExecutionException e) {
+			return false;
+		}
+	}
+	
+	public Exception getException() {
+		return e;
+	}
+	
+	public int getResponseCode() {
+		return responseCode;
+	}
+
+}
