@@ -67,7 +67,7 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	}
 	
 	private <T> int startAsyncTask(Tasks type, PendingRequest payload, IConverter<String, T> converter) {
-		int id = model.getNewTaskId();
+		int id = model.getNextTaskId();
 		AsyncRequest<T> r = new AsyncRequest<T>(this, id, converter);
 		model.callbacks.put(id, new Model.Task<Void, T>(type, r, null));
 		

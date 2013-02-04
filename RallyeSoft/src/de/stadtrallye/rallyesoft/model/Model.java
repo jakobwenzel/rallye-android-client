@@ -57,6 +57,7 @@ public class Model implements IModel, IAsyncFinished {
 	private String gcm;
 	boolean loggedIn;
 	private ArrayList<IConnectionStatusListener> connectionListeners;
+	
 	private List<Chatroom> chatrooms;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
@@ -98,6 +99,7 @@ public class Model implements IModel, IAsyncFinished {
 		logout(null, 0); //TODO implement directly
 	}
 
+	@Deprecated
 	public void logout(IModelResult<Boolean> ui, int tag) {
 		try {
 			new AsyncRequest<String>(new Redirect<Boolean>(ui, true), tag, null).execute(pull.pendingLogout());
@@ -120,6 +122,7 @@ public class Model implements IModel, IAsyncFinished {
 		login(null, 0, server, group, password); //TODO implement directly
 	}
 	
+	@Deprecated
 	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
 		if (loggedIn) {
 			err.loggedIn();
@@ -184,6 +187,7 @@ public class Model implements IModel, IAsyncFinished {
 		checkConnectionStatus(null, 0);	//TODO implement directly
 	}
 	
+	@Deprecated
 	public void checkConnectionStatus(IModelResult<Boolean> ui,	int externalTag) {
 		try {
 			startAsyncTask(Tasks.CHECK_SERVER, pull.pendingServerStatus(server), null, ui);
@@ -206,12 +210,12 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
-	int getNewTaskId() {
+	int getNextTaskId() {
 		return --taskID;
 	}
 	
-	private <T, V> int startAsyncTask(Tasks internalTask, PendingRequest payload, IConverter<String, V> converter, IModelResult<T> ui) {
-		AsyncRequest<V> r = new AsyncRequest<V>(this, --taskID, converter);
+	<T> int startAsyncTask(Tasks internalTask, PendingRequest payload, IConverter<String, T> converter, IModelResult<T> ui) {
+		AsyncRequest<T> r = new AsyncRequest<V>(this, getNextTaskId(), converter);
 		callbacks.put(taskID, new Task<T, V>(internalTask, r, ui));
 		r.execute(payload);
 		
@@ -274,10 +278,10 @@ public class Model implements IModel, IAsyncFinished {
 			
 			boolean success = false;
 			try {
-				if (!t.task.isSuccessfull())
-					throw t.task.getException();
+				if (!t.request.isSuccessfull())
+					throw t.request.getException();
 			
-				chatrooms = Chatroom.getChatrooms(t.task.get(), this);
+				chatrooms = Chatroom.getChatrooms(t.request.get(), this);
 				success = true;
 				logInSuccessfull();
 			} catch (Exception e) {
@@ -302,7 +306,7 @@ public class Model implements IModel, IAsyncFinished {
 				loggedIn = (task.getResponseCode() >= 200 && task.getResponseCode() < 300);
 				connectionStatusChange();
 			} else
-				err.asyncTaskResponseError(t3.task.getException());
+				err.asyncTaskResponseError(t3.request.getException());
 			
 			t3.callback(loggedIn, internalTag);
 			
@@ -346,7 +350,7 @@ public class Model implements IModel, IAsyncFinished {
 	@Override
 	public void onDestroy() {
 		for (int i = callbacks.size()-1; i>=0; --i) {
-			callbacks.valueAt(i).task.cancel(true);
+			callbacks.valueAt(i).request.cancel(true);
 		}
 	}
 	
@@ -356,40 +360,21 @@ public class Model implements IModel, IAsyncFinished {
 	 *
 	 * @param <T>
 	 */
-	static class Task<T, V> {
+	static class Task<T> {
 		IModelResult<T> externalCallback;
-		AsyncRequest<V> task;
+		AsyncRequest<T> request;
 		Tasks type;
 		
 		
-		public Task(Tasks type, AsyncRequest<V> task, IModelResult<T> externalCallback) {
+		public Task(Tasks type, AsyncRequest<T> task, IModelResult<T> externalCallback) {
 			this.externalCallback = externalCallback;
-			this.task = task;
+			this.request = task;
 			this.type = type;
 		}
 		
 		public void callback(T result, int taskId) {
 			if (externalCallback != null)
 				externalCallback.onModelFinished(taskId, result);
-		}
-	}
-	
-	private class QuickTask<T> extends Task<T, T> {
-		public QuickTask(Tasks type, AsyncRequest<T> task, IModelResult<T> externalCallback) {
-			super(type, task, externalCallback);
-		}
-		
-		public void callback(int taskId) {
-			if (externalCallback != null)
-				try {
-					callback(task.get(), taskId);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 		}
 	}
 

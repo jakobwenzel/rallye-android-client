@@ -12,11 +12,12 @@ import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.util.IConverter;
 
 /**
- * Executes a PendingRequest (->REST), holds Result as String
- * Usable for Login, Logout
- * Enhancement for other Task possible TBD
+ * Special Thread implementation
+ * Executes a {@link PendingRequest} (->REST) which is returned as String
+ * uses a {@link IConverter} implementation to convert from String, to T
  * @author Ray
  *
+ *	@param <T> Target Type, necessary for IConverter<String, T>
  */
 public class AsyncRequest<T> extends AsyncTask<PendingRequest, Void, T> {
 	
