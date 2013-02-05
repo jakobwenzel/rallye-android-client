@@ -50,7 +50,8 @@ public class Model implements IModel, IAsyncFinished {
 	private SharedPreferences pref;
 	RallyePull pull;
 	private Context context;
-	SparseArray<Task> callbacks;
+//	SparseArray<Task> callbacks;
+	ArrayList<AsyncRequest> callbacks;
 	private String server;
 	private int group;
 	private String password;
@@ -89,20 +90,16 @@ public class Model implements IModel, IAsyncFinished {
 		
 		pull = new RallyePull(pref.getString(Std.SERVER, "FAIL"), gcm, context);
 		
-		callbacks = new SparseArray<Task>();
+//		callbacks = new SparseArray<Task>();
+		callbacks = new ArrayList<AsyncRequest>();
 		connectionListeners = new ArrayList<IConnectionStatusListener>();
 	}
 	
 	
 	@Override
 	public void logout() {
-		logout(null, 0); //TODO implement directly
-	}
-
-	@Deprecated
-	public void logout(IModelResult<Boolean> ui, int tag) {
 		try {
-			new AsyncRequest<String>(new Redirect<Boolean>(ui, true), tag, null).execute(pull.pendingLogout());
+			new AsyncRequest<String>(this, null).execute(pull.pendingLogout()); //TODO tag id
 			loggedIn = false;
 			connectionStatusChange();
 		} catch (RestException e) {
@@ -120,18 +117,14 @@ public class Model implements IModel, IAsyncFinished {
 	@Override
 	public void login(String server, String password, int group) {
 		login(null, 0, server, group, password); //TODO implement directly
-	}
-	
-	@Deprecated
-	public void login(IModelResult<Boolean> ui, int tag, String server, int group, String password) {
+		
 		if (loggedIn) {
 			err.loggedIn();
 			return;
 		}
 		try {
 			startAsyncTask(Tasks.LOGIN, RallyePull.pendingLogin(context, server, group, password, gcm),
-					new StringedJSONArrayConverter<Integer>(new LoginConverter()),
-					ui);
+					new StringedJSONArrayConverter<Integer>(new LoginConverter()));
 			
 			this.server = server;
 			this.group = group;
@@ -354,51 +347,51 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
-	/**
-	 * Envelops one UniPush instance for callbacks
-	 * @author Ramon
-	 *
-	 * @param <T>
-	 */
-	static class Task<T> {
-		IModelResult<T> externalCallback;
-		AsyncRequest<T> request;
-		Tasks type;
-		
-		
-		public Task(Tasks type, AsyncRequest<T> task, IModelResult<T> externalCallback) {
-			this.externalCallback = externalCallback;
-			this.request = task;
-			this.type = type;
-		}
-		
-		public void callback(T result, int taskId) {
-			if (externalCallback != null)
-				externalCallback.onModelFinished(taskId, result);
-		}
-	}
+//	/**
+//	 * Envelops one UniPush instance for callbacks
+//	 * @author Ramon
+//	 *
+//	 * @param <T>
+//	 */
+//	static class Task<T> {
+//		IModelResult<T> externalCallback;
+//		AsyncRequest<T> request;
+//		Tasks type;
+//		
+//		
+//		public Task(Tasks type, AsyncRequest<T> task, IModelResult<T> externalCallback) {
+//			this.externalCallback = externalCallback;
+//			this.request = task;
+//			this.type = type;
+//		}
+//		
+//		public void callback(T result, int taskId) {
+//			if (externalCallback != null)
+//				externalCallback.onModelFinished(taskId, result);
+//		}
+//	}
 
-	/**
-	 * Redirects a finished Task to ui, with predetermined result
-	 * Useful if I only want to signal, when the Task was completed
-	 * @author Ramon
-	 *
-	 * @param <T>
-	 */
-	private class Redirect<T> implements IAsyncFinished {
-		private IModelResult<T> ui;
-		private T result;
-		
-		public Redirect(IModelResult<T> ui, T result) {
-			this.ui = ui;
-			this.result = result;
-		}
-		
-		@Override
-		public void onAsyncFinished(int tag, AsyncRequest task) {
-			ui.onModelFinished(tag, result);
-		}
-	}
+//	/**
+//	 * Redirects a finished Task to ui, with predetermined result
+//	 * Useful if I only want to signal, when the Task was completed
+//	 * @author Ramon
+//	 *
+//	 * @param <T>
+//	 */
+//	private class Redirect<T> implements IAsyncFinished {
+//		private IModelResult<T> ui;
+//		private T result;
+//		
+//		public Redirect(IModelResult<T> ui, T result) {
+//			this.ui = ui;
+//			this.result = result;
+//		}
+//		
+//		@Override
+//		public void onAsyncFinished(int tag, AsyncRequest task) {
+//			ui.onModelFinished(tag, result);
+//		}
+//	}
 	
 	private List<Integer> extractChatRooms(String string) {
 		String rooms = pref.getString(Std.CHATROOMS, "");

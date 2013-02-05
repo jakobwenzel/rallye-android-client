@@ -13,7 +13,7 @@ import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class OverviewFragment extends Fragment implements IModelResult<Boolean>, IConnectionStatusListener {
+public class OverviewFragment extends Fragment implements IConnectionStatusListener {
 	
 	private static final String THIS = OverviewFragment.class.getSimpleName();
 	
@@ -58,13 +58,6 @@ public class OverviewFragment extends Fragment implements IModelResult<Boolean>,
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		return inflater.inflate(R.layout.overview_fragment, container, false);
-	}
-
-	@Override
-	public void onModelFinished(int tag, Boolean result) {
-		if (tag != TASK_CHECK_STATUS)
-			return;
-
 	}
 
 	@Override

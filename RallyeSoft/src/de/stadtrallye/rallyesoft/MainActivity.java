@@ -31,11 +31,10 @@ import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
-import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.comm.PushInit;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelResult<Boolean>, LoginDialogFragment.IDialogCallback, IModelActivity, IConnectionStatusListener, IProgressUI {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, LoginDialogFragment.IDialogCallback, IModelActivity, IConnectionStatusListener, IProgressUI {
 	
 	final static private int TASK_LOGOUT = 1;
 	final static private int TASK_LOGIN = 2;
@@ -317,17 +316,15 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 * IModelResult<boolean>
 	 */
 	@Override
-	public void onModelFinished(int tag, Boolean result) {
+	public void onModelTaskFinished(int tag, boolean success) {
 		deactivateProgressAnimation();
 		switch (tag) {
 		case TASK_LOGOUT:
-//			setProgressBarIndeterminateVisibility(false);
 			Log.i("MainActivity", "Logged out!");
 			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
 			break;
 		case TASK_LOGIN:
-//			setProgressBarIndeterminateVisibility(false);
-			if (result) {
+			if (success) {
 				Log.i("MainActivity", "Logged in!");
 				Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
 			} else {
@@ -335,13 +332,23 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 				Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
 			}
 			break;
-		case TASK_CHECK:
-			
-			break;
 		}
 		
 	}
-
+	
+	/**
+	 * IConnectionStatusListener
+	 */
+	@Override
+	public void onConnectionStatusChange(boolean newStatus) {
+		ActionBar ab = getSupportActionBar();
+		if (newStatus) {
+			ab.setSubtitle(R.string.connected);
+		} else {
+			ab.setSubtitle(R.string.notConnected);
+		}
+	}
+	
 	// LoginDialogFragment.IDialogCallback
 	@Override
 	public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw) {
@@ -382,16 +389,5 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		}
 	}
 
-	/**
-	 * IModelListener
-	 */
-	@Override
-	public void onConnectionStatusChange(boolean newStatus) {
-		ActionBar ab = getSupportActionBar();
-		if (newStatus) {
-			ab.setSubtitle(R.string.connected);
-		} else {
-			ab.setSubtitle(R.string.notConnected);
-		}
-	}
+	
 }
