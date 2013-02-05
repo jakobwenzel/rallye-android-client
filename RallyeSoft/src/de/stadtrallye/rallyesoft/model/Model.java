@@ -1,8 +1,8 @@
 package de.stadtrallye.rallyesoft.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,7 +11,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.SparseArray;
+import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
@@ -41,25 +41,24 @@ public class Model implements IModel, IAsyncFinished {
 	
 	private static Model model; // Singleton Pattern
 	
+	@SuppressWarnings("unused")
 	private static boolean DEBUG = false;
 	
-	public enum Tasks { LOGIN, CHAT_DOWNLOAD, CHECK_SERVER, MAP_NODES, CHAT_REFRESH };
-	
-	private int taskID = 0;
+	public enum Tasks { LOGIN, CHAT_DOWNLOAD, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST };
 
 	private SharedPreferences pref;
 	RallyePull pull;
 	private Context context;
-//	SparseArray<Task> callbacks;
-	ArrayList<AsyncRequest> callbacks;
+	@SuppressWarnings("rawtypes") HashMap<AsyncRequest, Tasks> runningRequests;
 	private String server;
 	private int group;
 	private String password;
 	private String gcm;
-	boolean loggedIn;
 	private ArrayList<IConnectionStatusListener> connectionListeners;
 	
 	private List<Chatroom> chatrooms;
+	private ConnectionStatus connectionStatus;
+	private IMapListener mapListener;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
 		if (model != null)
@@ -76,22 +75,21 @@ public class Model implements IModel, IAsyncFinished {
 		this.gcm = GCMRegistrar.getRegistrationId(context);
 		this.pref = pref;
 		this.context = context;
-		this.loggedIn = loggedIn;
+		this.connectionStatus = loggedIn? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
 		
 		
 		server = pref.getString(Std.SERVER, null);
 		if (server == null) {
-			this.loggedIn = false;
+			connectionStatus = ConnectionStatus.Disconnected; //TODO: Implement "No Network" Status
 		} else {
 			group = pref.getInt(Std.GROUP, 0);
 			password = pref.getString(Std.PASSWORD, null);
 			chatrooms = Chatroom.getChatrooms((extractChatRooms(pref.getString(Std.CHATROOMS, ""))), this);
 		}
 		
-		pull = new RallyePull(pref.getString(Std.SERVER, "FAIL"), gcm, context);
+		pull = new RallyePull(server, gcm, context);
 		
-//		callbacks = new SparseArray<Task>();
-		callbacks = new ArrayList<AsyncRequest>();
+		runningRequests = new HashMap<AsyncRequest, Tasks>();
 		connectionListeners = new ArrayList<IConnectionStatusListener>();
 	}
 	
@@ -99,15 +97,21 @@ public class Model implements IModel, IAsyncFinished {
 	@Override
 	public void logout() {
 		try {
-			new AsyncRequest<String>(this, null).execute(pull.pendingLogout()); //TODO tag id
-			loggedIn = false;
-			connectionStatusChange();
+			startAsyncTask(Tasks.LOGOUT, pull.pendingLogout(), null);
+			connectionStatusChange(ConnectionStatus.Disconnecting);
 		} catch (RestException e) {
 			err.restError(e);
 		}
 	}
 	
+	/**
+	 * Converts JSONObject's to Integer values
+	 * 
+	 * used in conjunction with {@link StringedJSONArrayConverter}
+	 * @author Ramon
+	 */
 	private static class LoginConverter extends JSONConverter<Integer> {
+		//TODO: put universal Converters in separate files / packages 
 		@Override
 		public Integer doConvert(JSONObject o) throws JSONException {
 			return o.getInt("chatroom");
@@ -116,15 +120,15 @@ public class Model implements IModel, IAsyncFinished {
 	
 	@Override
 	public void login(String server, String password, int group) {
-		login(null, 0, server, group, password); //TODO implement directly
-		
-		if (loggedIn) {
+		if (isLoggedIn()) {
 			err.loggedIn();
 			return;
 		}
 		try {
-			startAsyncTask(Tasks.LOGIN, RallyePull.pendingLogin(context, server, group, password, gcm),
+			startAsyncTask(Tasks.LOGIN,
+					RallyePull.pendingLogin(context, server, group, password, gcm),
 					new StringedJSONArrayConverter<Integer>(new LoginConverter()));
+			connectionStatusChange(ConnectionStatus.Connecting);
 			
 			this.server = server;
 			this.group = group;
@@ -134,90 +138,41 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
-	@Deprecated
-	public void retrieveCompleteChat(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom) {
-		if (!loggedIn) {
-			err.notLoggedIn();
-			return;
-		}
-		try {
-			startAsyncTask(Tasks.CHAT_DOWNLOAD, pull.pendingChatRefresh(chatroom, 0), new StringedJSONArrayConverter<ChatEntry>(new ChatEntry.ChatConverter()), ui);
-		} catch (RestException e) {
-			err.restError(e);
-		}
-	}
-	
-	@Deprecated
-	public void postChatMessage(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom, String msg) {
-        if (!loggedIn) {
-                err.notLoggedIn();
-                return;
-        }
-        try {
-                startAsyncTask(Tasks.CHAT_DOWNLOAD, pull.pendingChatPost(chatroom, msg, 0), null, ui);
-        } catch (RestException e) {
-                err.restError(e);
-        }
-	}
-	
-	@Deprecated
-	public void updateChat(IModelResult<List<ChatEntry>> ui, int externalTag, int chatroom, int beginningWith) {
-		if (!loggedIn) {
-			err.notLoggedIn();
-			return;
-		}
-		
-		try {
-			startAsyncTask(Tasks.CHAT_REFRESH, pull.pendingChatRefresh(chatroom, beginningWith), new StringedJSONArrayConverter<ChatEntry>(new ChatEntry.ChatConverter()), ui);
-		} catch (RestException e) {
-			err.restError(e);
-		}
-		
-	}
-	
 	@Override
 	public void checkConnectionStatus() {
-		checkConnectionStatus(null, 0);	//TODO implement directly
-	}
-	
-	@Deprecated
-	public void checkConnectionStatus(IModelResult<Boolean> ui,	int externalTag) {
 		try {
-			startAsyncTask(Tasks.CHECK_SERVER, pull.pendingServerStatus(server), null, ui);
+			startAsyncTask(Tasks.CHECK_SERVER, pull.pendingServerStatus(server), null);
 		} catch (RestException e) {
 			err.restError(e);
 		}
-		
 	}
 	
-	@Deprecated
-	public void getMapNodes(IModelResult<List<MapNode>> ui, int externalTag) {
-		if (!loggedIn) {
+	//TODO: always precache / refresh on mapNeeded??
+	public void getMapNodes() {
+		if (!isLoggedIn()) {
 			err.notLoggedIn();
 			return;
 		}
 		try {
-			startAsyncTask(Tasks.MAP_NODES, pull.pendingMapNodes(), new StringedJSONArrayConverter<MapNode>(new MapNode.NodeConverter()), ui);
+			startAsyncTask(Tasks.MAP_NODES, pull.pendingMapNodes(), new StringedJSONArrayConverter<MapNode>(new MapNode.NodeConverter()));
 		} catch (RestException e) {
 			err.restError(e);
 		}
 	}
 	
-	int getNextTaskId() {
-		return --taskID;
+	protected <T> void startAsyncTask(IAsyncFinished callback, Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
+		AsyncRequest<T> ar = new AsyncRequest<T>(callback, converter);
+		runningRequests.put(ar, taskType);
+		ar.execute(payload);
 	}
 	
-	<T> int startAsyncTask(Tasks internalTask, PendingRequest payload, IConverter<String, T> converter, IModelResult<T> ui) {
-		AsyncRequest<T> r = new AsyncRequest<V>(this, getNextTaskId(), converter);
-		callbacks.put(taskID, new Task<T, V>(internalTask, r, ui));
-		r.execute(payload);
-		
-		return taskID;
+	private <T> void startAsyncTask(Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
+		startAsyncTask(this, taskType, payload, converter);
 	}
 	
 	@Override
 	public boolean isLoggedIn() {
-		return loggedIn;
+		return connectionStatus == ConnectionStatus.Connected;
 	}
 	
 	@Override
@@ -232,15 +187,6 @@ public class Model implements IModel, IAsyncFinished {
 	
 	public String getPassword() {
 		return pref.getString(Std.PASSWORD, context.getString(R.string.default_password));
-	}
-	
-	@Deprecated
-	public List<Integer> getChatRooms() {
-		List<Integer> l = new ArrayList<Integer>();
-		for (Chatroom c: chatrooms) {
-			l.add(c.getID());
-		}
-		return l;
 	}
 	
 	/**
@@ -261,66 +207,62 @@ public class Model implements IModel, IAsyncFinished {
 	}
 
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public void onAsyncFinished(int internalTag, AsyncRequest task) {
-		Tasks type = callbacks.get(internalTag).type;
+	public void onAsyncFinished(final AsyncRequest request, final boolean success) {
+		Tasks type = runningRequests.get(request);
 		switch (type) {
 		case LOGIN:
-			final Task<Boolean, List<Integer>> t = (Task<Boolean, List<Integer>>) callbacks.get(internalTag);
-			
-			boolean success = false;
 			try {
-				if (!t.request.isSuccessfull())
-					throw t.request.getException();
+				if (!success) {
+					connectionFailure(request.getException(), ConnectionStatus.Disconnected);
+				} else {
 			
-				chatrooms = Chatroom.getChatrooms(t.request.get(), this);
-				success = true;
-				logInSuccessfull();
+					chatrooms = Chatroom.getChatrooms((List<Integer>) request.get(), this);
+					
+					saveLoginDetails(server, group, password, chatrooms);
+					
+					pull = new RallyePull(server, gcm, context);
+					
+					connectionStatusChange(ConnectionStatus.Connected);
+				}
+				
 			} catch (Exception e) {
 				err.asyncTaskResponseError(e);
 			}
-			
-			t.callback(success, internalTag);
-			
 			break;
-		case CHAT_REFRESH:
-		case CHAT_DOWNLOAD:
-			final QuickTask<List<ChatEntry>> t2 = (QuickTask<List<ChatEntry>>) callbacks.get(internalTag);
-			if (t2.task.isSuccessfull()){
-				t2.callback(internalTag);
-			} else
-				err.asyncTaskResponseError(t2.task.getException());
-			
+		case LOGOUT:
+			connectionStatusChange(ConnectionStatus.Disconnected);
 			break;
 		case CHECK_SERVER:
-			final Task<Boolean, String> t3 = callbacks.get(internalTag);
-			if (task.isSuccessfull()) {
-				loggedIn = (task.getResponseCode() >= 200 && task.getResponseCode() < 300);
-				connectionStatusChange();
+			if (success) {
+				ConnectionStatus state = (request.getResponseCode() >= 200 && request.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+				connectionStatusChange(state);
 			} else
-				err.asyncTaskResponseError(t3.request.getException());
-			
-			t3.callback(loggedIn, internalTag);
-			
+				err.asyncTaskResponseError(request.getException());
 			break;
 		case MAP_NODES:
-			final QuickTask<List<MapNode>> t4 = (QuickTask<List<MapNode>>) callbacks.get(internalTag);
-			
-			if (t4.task.isSuccessfull()) {
-				t4.callback(internalTag);
+			if (success) {
+				try {
+					mapUpdate((List<MapNode>)request.get());
+				} catch (Exception e) {
+					err.asyncTaskResponseError(e);
+				}
+//				mapUpdate(); //TODO: Implement Separate Logic for MapListener
 			} else
-				err.asyncTaskResponseError(t4.task.getException());
-			
+				err.asyncTaskResponseError(request.getException());
+		default:
+			Log.e(THIS, "Unknown Task callback: "+ request);
 		}
-		callbacks.remove(internalTag);
+		
+		runningRequests.remove(request);
 	}
 	
-	private void logInSuccessfull() {
-		loggedIn = true;
-		saveLoginDetails(server, group, password, chatrooms);
-		
-		connectionStatusChange();
+	public void setMapListener(IMapListener l) {
+		this.mapListener = l;
+	}
+
+	private void mapUpdate(List<MapNode> list) {
+		mapListener.nodeUpdate(list);
 	}
 
 	private void saveLoginDetails(String server, int group, String password, List<Chatroom> chatrooms) {
@@ -342,56 +284,12 @@ public class Model implements IModel, IAsyncFinished {
 	 */
 	@Override
 	public void onDestroy() {
-		for (int i = callbacks.size()-1; i>=0; --i) {
-			callbacks.valueAt(i).request.cancel(true);
+		for (@SuppressWarnings("rawtypes") AsyncRequest ar: runningRequests.keySet())
+		{
+			ar.cancel(true);
+			runningRequests.remove(ar);
 		}
 	}
-	
-//	/**
-//	 * Envelops one UniPush instance for callbacks
-//	 * @author Ramon
-//	 *
-//	 * @param <T>
-//	 */
-//	static class Task<T> {
-//		IModelResult<T> externalCallback;
-//		AsyncRequest<T> request;
-//		Tasks type;
-//		
-//		
-//		public Task(Tasks type, AsyncRequest<T> task, IModelResult<T> externalCallback) {
-//			this.externalCallback = externalCallback;
-//			this.request = task;
-//			this.type = type;
-//		}
-//		
-//		public void callback(T result, int taskId) {
-//			if (externalCallback != null)
-//				externalCallback.onModelFinished(taskId, result);
-//		}
-//	}
-
-//	/**
-//	 * Redirects a finished Task to ui, with predetermined result
-//	 * Useful if I only want to signal, when the Task was completed
-//	 * @author Ramon
-//	 *
-//	 * @param <T>
-//	 */
-//	private class Redirect<T> implements IAsyncFinished {
-//		private IModelResult<T> ui;
-//		private T result;
-//		
-//		public Redirect(IModelResult<T> ui, T result) {
-//			this.ui = ui;
-//			this.result = result;
-//		}
-//		
-//		@Override
-//		public void onAsyncFinished(int tag, AsyncRequest task) {
-//			ui.onModelFinished(tag, result);
-//		}
-//	}
 	
 	private List<Integer> extractChatRooms(String string) {
 		String rooms = pref.getString(Std.CHATROOMS, "");
@@ -414,9 +312,19 @@ public class Model implements IModel, IAsyncFinished {
 		connectionListeners.remove(l);
 	}
 	
-	private void connectionStatusChange() {
+	private void connectionStatusChange(ConnectionStatus newState) {
+		connectionStatus = newState;
+		
 		for(IConnectionStatusListener l: connectionListeners) {
-			l.onConnectionStatusChange(loggedIn);
+			l.onConnectionStatusChange(newState);
+		}
+	}
+	
+	private void connectionFailure(Exception e, ConnectionStatus fallbackState) {
+		connectionStatus = fallbackState;
+		
+		for(IConnectionStatusListener l: connectionListeners) {
+			l.onConnectionFailed(e, fallbackState);
 		}
 	}
 	
@@ -429,6 +337,10 @@ public class Model implements IModel, IAsyncFinished {
 		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
 		SQLiteDatabase db = helper.getWritableDatabase();
 		
+	}
+
+	public ConnectionStatus getConnectionStatus() {
+		return connectionStatus;
 	}
 	
 }

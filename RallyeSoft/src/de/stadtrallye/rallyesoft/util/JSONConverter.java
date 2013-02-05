@@ -3,6 +3,12 @@ package de.stadtrallye.rallyesoft.util;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Special IConverter to convert already interpreted JSONObject's to T
+ * @author Ramon
+ *
+ * @param <T> Target type
+ */
 public abstract class JSONConverter<T> implements IConverter<JSONObject, T> {
 	
 	@Override

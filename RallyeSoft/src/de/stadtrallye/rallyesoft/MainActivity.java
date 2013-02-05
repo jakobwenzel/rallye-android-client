@@ -31,14 +31,15 @@ import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.comm.PushInit;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, LoginDialogFragment.IDialogCallback, IModelActivity, IConnectionStatusListener, IProgressUI {
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener,
+																		LoginDialogFragment.IDialogCallback, IModelActivity,
+																		IConnectionStatusListener, IProgressUI {
 	
-	final static private int TASK_LOGOUT = 1;
-	final static private int TASK_LOGIN = 2;
-	final static public int TASK_CHECK = 3;
+	private static final String THIS = MainActivity.class.getSimpleName();
 	
 	public PushInit push;
 	private Model model;
@@ -85,7 +86,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		model = Model.getInstance(this, config, loggedIn);
 		model.addListener(this);
 		if (!loggedIn)
-			model.checkConnectionStatus(this, TASK_CHECK);
+			model.checkConnectionStatus();
 		
 		
         // Populate SideBar
@@ -117,7 +118,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		
 		//DEBUG
-		ChatsFragment.enableDebugLogging();
+//		ChatsFragment.enableDebugLogging();
 	}
 	
 	/**
@@ -289,8 +290,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
 		case R.id.menu_logout:
-			activateProgressAnimation();
-			model.logout(this, TASK_LOGOUT);
+			model.logout();
 			break;
 		}
 		return super.onOptionsItemSelected(item);
@@ -311,49 +311,50 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
 	}
-
-	/**
-	 * IModelResult<boolean>
-	 */
-	@Override
-	public void onModelTaskFinished(int tag, boolean success) {
-		deactivateProgressAnimation();
-		switch (tag) {
-		case TASK_LOGOUT:
-			Log.i("MainActivity", "Logged out!");
-			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
-			break;
-		case TASK_LOGIN:
-			if (success) {
-				Log.i("MainActivity", "Logged in!");
-				Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
-			} else {
-				Log.i("MainActivity", "Login failed!");
-				Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
-			}
-			break;
-		}
-		
-	}
 	
 	/**
 	 * IConnectionStatusListener
 	 */
 	@Override
-	public void onConnectionStatusChange(boolean newStatus) {
+	public void onConnectionStatusChange(ConnectionStatus status) {
 		ActionBar ab = getSupportActionBar();
-		if (newStatus) {
+		switch (status) {
+		case Connected:
+			deactivateProgressAnimation();
 			ab.setSubtitle(R.string.connected);
-		} else {
+			Log.i("MainActivity", "Logged in!");
+			Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
+			break;
+		case Disconnected:
+			deactivateProgressAnimation();
 			ab.setSubtitle(R.string.notConnected);
+			Log.i("MainActivity", "Logged out!");
+			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
+			break;
+		case Disconnecting:
+		case Connecting:
+			activateProgressAnimation();
+			//TODO: show message...
+			break;
+		case NoNetwork:
+			//TODO: No Network on UI
 		}
 	}
 	
-	// LoginDialogFragment.IDialogCallback
+	@Override
+	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
+		Log.i("MainActivity", "Login failed!");
+		Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
+		
+		onConnectionStatusChange(lastStatus);
+	}
+	
+	/**
+	 * LoginDialogFragment.IDialogCallback
+	 */
 	@Override
 	public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw) {
-		activateProgressAnimation();
-		model.login(this, TASK_LOGIN, server, group, pw);
+		model.login(server, pw, group);
 	}
 
 	@Override

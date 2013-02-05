@@ -34,8 +34,8 @@ import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
+import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.IChatListener;
-import de.stadtrallye.rallyesoft.model.IModelResult;
 import de.stadtrallye.rallyesoft.model.Model;
 
 /**
@@ -43,9 +43,10 @@ import de.stadtrallye.rallyesoft.model.Model;
  * @author Ramon
  *
  */
-public class ChatroomFragment extends BaseFragment implements IModelResult<List<ChatEntry>>, IChatListener, OnClickListener {
+public class ChatroomFragment extends BaseFragment implements IChatListener, OnClickListener {
 	
-	final static private int TASK_CHAT = 101;
+
+	private static final String CHATROOM = "chatroom";
 
 	private Model model;
 	private IProgressUI ui; // access to IndeterminateProgress in ActionBar
@@ -54,7 +55,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	private Button send;
 	private EditText text;
 	private int[] lastPos = null; //[0] line, [1] pixels offset
-	private int chatroom;
+	private Chatroom chatroom;
 	
 	/**
 	 * Only for DEBUG purposes
@@ -67,8 +68,14 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
+	public ChatroomFragment(Chatroom  chatroom) {
+		this();
+		
+		this.chatroom = chatroom;
+	}
+	
 	/**
-	 * retain saavedInstanceState for when creating the list (ScrollState)
+	 * retain savedInstanceState for when creating the list (ScrollState)
 	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -77,7 +84,6 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		if (savedInstanceState != null)
 			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
 		
-		chatroom = getArguments().getInt("chatroom");
 	}
 	
 	@Override
@@ -105,12 +111,35 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
 		
-		if (model.isLoggedIn()) {
-			ui.activateProgressAnimation();
-			if (DEBUG)
-				Log.v(THIS, "Model call from "+ this.toString() +" , Activity: "+ getActivity());
-			model.retrieveCompleteChat(this, TASK_CHAT, chatroom);
+		if (savedInstanceState != null && chatroom == null) {
+			for (Chatroom r: model.getChatrooms()) {
+				if (r.getID() == savedInstanceState.getInt(CHATROOM))
+				{
+					chatroom = r;
+				} else
+					throw new UnsupportedOperationException("ChatFragment could not find its previous Chatroom... (User has changed without telling me :-(  )");
+			}
 		}
+		
+		chatAdapter = new ChatAdapter(getActivity(), chatroom.getChats());
+        list.setAdapter(chatAdapter);
+        
+        restoreScrollState();
+        
+        list.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				if (!chatAdapter.hasPicture(pos))
+					return;
+				
+				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
+				intent.putExtra(Std.CHATROOM, chatroom.getID());
+				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
+				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
+				startActivity(intent);
+			}
+		});
 	}
 	
 	/**
@@ -120,7 +149,8 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void onStart() {
 		super.onStart();
 		
-//		model.addListener(this, chatroom);
+		chatroom.addListener(this);
+		chatroom.adviseUse();
 	}
 	
 //	@Override
@@ -139,7 +169,9 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void onStop() {
 		super.onStop();
 		
+		saveScrollState();
 		
+		chatroom.removeListener(this);
 	}
 	
 	private void saveScrollState() {
@@ -156,7 +188,7 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 		if (lastPos != null) {
 	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
 	    	if (DEBUG)
-				Log.v("ChatFragment", "ScrollState restored: "+ lastPos[0]);
+				Log.v(THIS, "ScrollState restored: "+ lastPos[0]);
         } else
         	list.setSelection(list.getCount()-1);
 	}
@@ -168,59 +200,15 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		
-		saveScrollState();
+//		saveScrollState();
 		
 		if (DEBUG)
-			Log.v("ChatFragment", "ScrollState saved: "+ lastPos[0]);
+			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
 		
 		outState.putIntArray(Std.LAST_POS, lastPos);
+		outState.putInt(CHATROOM, chatroom.getID());
 	}
 	
-	
-	/**
-	 * Callback from Model, expecting:
-	 * - tag:TASK_CHAT
-	 */
-	@Override
-	public void onModelFinished(int tag, List<ChatEntry> result) {
-		
-		if (tag != TASK_CHAT)
-			return;
-		
-		// Only DEBUG, activity should never be null.
-		// turns out i tried to forcefully re use an already destroyed fragment, because my FragmentHandler remembered it
-		if (getActivity() != null)
-		{
-			if (DEBUG)
-				Log.v(THIS, "Model callback to "+ this.toString() +" , Activity: "+ getActivity());
-		} else {
-			if (DEBUG)
-				Log.e(THIS, "Model callback to "+ this.toString() +" , Activity: null");
-			return;
-		}
-		
-        chatAdapter = new ChatAdapter(getActivity(), result);
-        list.setAdapter(chatAdapter);
-        
-        restoreScrollState();
-        
-        list.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				if (!chatAdapter.hasPicture(pos))
-					return;
-				
-				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
-				intent.putExtra(Std.CHATROOM, chatroom);
-				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
-				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
-				startActivity(intent);
-			}
-		});
-        
-        ui.deactivateProgressAnimation();
-	}
 	
 	/**
 	 * Wraps around ChatEntry List
@@ -346,12 +334,37 @@ public class ChatroomFragment extends BaseFragment implements IModelResult<List<
 	public void addedChats(List<ChatEntry> entries) {
 		chatAdapter.addAll(entries);
 	}
-
+	
+	@Override
+	public void onChatStatusChanged(ChatStatus newStatus) {
+		
+		switch (newStatus) {
+		case Refreshing:
+			Log.d(THIS, "Refreshing");
+			ui.activateProgressAnimation();
+			break;
+		case Online:
+			Log.d(THIS, "Online");
+			ui.deactivateProgressAnimation();
+			break;
+		case Offline:
+			Log.d(THIS, "Offline");
+			ui.deactivateProgressAnimation();
+			break;
+		case Posting:
+			Log.d(THIS, "Posting");
+			ui.activateProgressAnimation();
+			break;
+		}
+	}
+	
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();
 		if (msg.length() > 0) {
-			//model.sendChat(msg.toString(), chatroom);
+			chatroom.addChat(msg.toString());
 		}
 	}
+
+	
 }

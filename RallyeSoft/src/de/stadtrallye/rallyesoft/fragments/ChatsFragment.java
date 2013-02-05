@@ -17,11 +17,13 @@ import com.viewpagerindicator.TitlePageIndicator;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 
 /**
- * Tab that contains the chat functions (several chatrooms)
+ * Tab that contains the chat functions (several {@link ChatroomFragment}s)
  * If not logged in will use {@link DummyAdapter} instead of {@link ChatAdapter} to display special tab
  * @author Ramon
  *
@@ -32,7 +34,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private ViewPager pager;
 	private TitlePageIndicator indicator;
 	private FragmentPagerAdapter fragmentAdapter;
-	private List<Integer> currentRooms;
+	private List<Chatroom> chatrooms;
 	private int currentTab = 0;
 	
 	
@@ -76,7 +78,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
 		
-		onConnectionStatusChange(model.isLoggedIn());
+		onConnectionStatusChange(model.getConnectionStatus());
 	}
 	
 	@Override
@@ -116,15 +118,15 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	}
 	
 	private void populateChats() {
-		currentRooms = model.getChatRooms();
-		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), currentRooms);
+		chatrooms = model.getChatrooms();
+		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), chatrooms);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
 		indicator.setCurrentItem(currentTab);
 	}
 	
 	private void chatsUnavailable() {
-		currentRooms = null;
+		chatrooms = null;
 		fragmentAdapter = new DummyAdapter(getChildFragmentManager());
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
@@ -132,25 +134,29 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	}
 
 	@Override
-	public void onConnectionStatusChange(boolean newStatus) {
-		if (newStatus) {
+	public void onConnectionStatusChange(ConnectionStatus newStatus) {
+		if (newStatus == ConnectionStatus.Connected) {
 			populateChats();
 		} else {
 			chatsUnavailable();
 		}
-		
+	}
+	
+	@Override
+	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
+		onConnectionStatusChange(lastStatus);
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
 		
 		final private static String FRAGMENT_TITLE = "Chatroom ";
 
-		private List<Integer> chatrooms;
+		private List<Chatroom> chatrooms;
 		
-		public ChatFragmentAdapter(FragmentManager fm, List<Integer> currentRooms) {
+		public ChatFragmentAdapter(FragmentManager fm, List<Chatroom> chatrooms) {
 			super(fm);
 			
-			this.chatrooms = currentRooms;
+			this.chatrooms = chatrooms;
 		}
 		
 		/**
@@ -159,18 +165,15 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		 */
 		@Override
 		public long getItemId(int position) {
-			return chatrooms.get(position);
+			return chatrooms.get(position).getID();
 		}
 
 		@Override
 		public Fragment getItem(int pos) {
 			Fragment f;
-			Bundle b = new Bundle();
 			
-			f = new ChatroomFragment();
-			b.putInt("chatroom", chatrooms.get(pos));
+			f = new ChatroomFragment(chatrooms.get(pos));
 			
-			f.setArguments(b);
 			return f;
 		}
 
@@ -181,7 +184,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-			return FRAGMENT_TITLE +chatrooms.get(pos);
+			return FRAGMENT_TITLE +chatrooms.get(pos).getID();
 		}
 
 	}

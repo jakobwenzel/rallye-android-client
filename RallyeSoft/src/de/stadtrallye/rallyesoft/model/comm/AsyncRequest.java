@@ -25,7 +25,6 @@ public class AsyncRequest<T> extends AsyncTask<PendingRequest, Void, T> {
 	
 	private Exception e;
 	private IAsyncFinished callback;
-	private int tag;
 	private int responseCode;
 
 	private IConverter<String, T> converter;
@@ -33,14 +32,13 @@ public class AsyncRequest<T> extends AsyncTask<PendingRequest, Void, T> {
 	/**
 	 * Background task to execute 1 {@link PendingRequest}
 	 * 
-	 * <b>NOTE: </b> If T is String converter may be <b>null<b/>
+	 * <b>NOTE: </b> If T is String, converter may be <b>null<b/>
 	 * @param callback will execute [@link IAsyncFinished.callback(tag, this)
 	 * @param tag to uniquely identify this task
 	 * @param converter Will convert the String from HTTP Response to T (to offload work of converting e.g. JSON to Objects from ui thread)
 	 */
-	public AsyncRequest(IAsyncFinished callback, int tag, IConverter<String, T> converter) {
+	public AsyncRequest(IAsyncFinished callback, IConverter<String, T> converter) {
 		this.callback = callback;
-		this.tag = tag;
 		this.converter = converter;
 	}
 	
@@ -52,7 +50,7 @@ public class AsyncRequest<T> extends AsyncTask<PendingRequest, Void, T> {
 	@Override
 	protected T doInBackground(PendingRequest... r) {
 		if (DEBUG)
-			Log.d("UniPush", "AsyncTask ("+tag+") started!");
+			Log.d("UniPush", "AsyncTask ("+this+") started!");
 		
 		
 		try {
@@ -78,16 +76,18 @@ public class AsyncRequest<T> extends AsyncTask<PendingRequest, Void, T> {
 	protected void onPostExecute(T result) {
 		super.onPostExecute(result);
 		
-		if (DEBUG)
-			Log.d("UniPush", "AsyncTask ("+tag+") finished!");
+		if (DEBUG) {
+			Log.d("UniPush", "AsyncTask ("+this+") finished!");
+			Log.d("UniPush", "Answer: "+ result);
+		}
 		
 //		ui.setSupportProgressBarIndeterminateVisibility(false);
-		callback.onAsyncFinished(tag, this);
+		callback.onAsyncFinished(this, isSuccessfull());
 	}
 	
 	@Override
 	protected void onCancelled(T result) {
-		callback.onAsyncFinished(tag, this);
+		callback.onAsyncFinished(this, false);
 	}
 	
 	public boolean isSuccessfull() {

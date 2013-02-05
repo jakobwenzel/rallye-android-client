@@ -3,26 +3,30 @@ package de.stadtrallye.rallyesoft.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.util.Log;
+
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.IChatListener.ChatStatus;
 import de.stadtrallye.rallyesoft.model.Model.Tasks;
 import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
-import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
-import de.stadtrallye.rallyesoft.util.IConverter;
+import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
 
 public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	
 	// statics
-	private static final String THIS = Model.class.getSimpleName();
+	private static final String THIS = Chatroom.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	
 	// members
 	private Model model;
 	private int id;
 	private String name;
-	private int lastTime = 0;
+	private long lastTime = 0;
+	private long pendingLastTime = 0;
 	
 	private List<IChatListener> listeners = new ArrayList<IChatListener>();
+	private ChatStatus status;
 	
 	
 	// Constructors | Singleton pattern
@@ -55,28 +59,40 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 
 	@Override
 	public void adviseUse() {
-		if (!model.loggedIn) {
+		if (!model.isLoggedIn()) {
 			err.notLoggedIn();
 			return;
 		}
 		try {
-			model.startAsyncTask(null, 0, Tasks.CHAT_DOWNLOAD, model.pull.pendingChatRefresh(id, lastTime));
+			if (pendingLastTime != 0)
+				Log.w(THIS, "Already refreshing Chat");
+			pendingLastTime = System.currentTimeMillis();
+			model.startAsyncTask(this, Tasks.CHAT_DOWNLOAD, //TODO: Refresh
+					model.pull.pendingChatRefresh(id, lastTime),
+					new StringedJSONArrayConverter<ChatEntry>(new ChatEntry.ChatConverter()));
+			
+			chatStatusChange(ChatStatus.Refreshing);
+			
 		} catch (RestException e) {
 			err.restError(e);
 		}
 	}
 	
-	private <T> int startAsyncTask(Tasks type, PendingRequest payload, IConverter<String, T> converter) {
-		int id = model.getNextTaskId();
-		AsyncRequest<T> r = new AsyncRequest<T>(this, id, converter);
-		model.callbacks.put(id, new Model.Task<Void, T>(type, r, null));
+	private void chatUpdate(List<ChatEntry> entries) {
+		//TODO: write to DB
 		
-		r.execute(payload);
-		
-		return id;
+		for (IChatListener l: listeners) {
+			l.addedChats(entries);
+		}
 	}
 	
-	private 
+	private void chatStatusChange(ChatStatus newStatus) {
+		status = newStatus;
+		
+		for (IChatListener l: listeners) {
+			l.onChatStatusChanged(newStatus);
+		}
+	}
 
 	@Override
 	public void addListener(IChatListener l) {
@@ -91,30 +107,60 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	@Override
 	public List<ChatEntry> getChats() {
 		// TODO get From DB
-		return null;
-	}
-
-	@Override
-	public void addChat(String msg) {
-		addChat(null, 0, msg);
+		return new ArrayList<ChatEntry>();
 	}
 	
-	public void addChat(IModelResult<Boolean> ui, int externalTag, String msg) {
+	@Override
+	public void addChat(String msg) {
 		//TODO: save to DB
-		if (!model.loggedIn) {
+		if (!model.isLoggedIn()) {
             err.notLoggedIn();
             return;
         }
         try {
-                model.startAsyncTask(ui, externalTag, Tasks.CHAT_DOWNLOAD, model.pull.pendingChatPost(id, msg, 0));
+                model.startAsyncTask(this, Tasks.CHAT_POST, model.pull.pendingChatPost(id, msg, 0), null);
+                chatStatusChange(ChatStatus.Posting);
         } catch (RestException e) {
                 err.restError(e);
         }
 	}
 
 	@Override
-	public void onAsyncFinished(int tag, AsyncRequest task) {
-		// TODO Auto-generated method stub
+	public void onAsyncFinished(AsyncRequest request, boolean success) {
+		Tasks type = model.runningRequests.get(request);
 		
+		switch (type) {
+		case CHAT_DOWNLOAD:
+		case CHAT_REFRESH:
+			try {
+				if (success){
+					List<ChatEntry> res = ((AsyncRequest<List<ChatEntry>>)request).get();
+					
+					lastTime = pendingLastTime;
+					pendingLastTime = 0;
+					
+					Log.i(THIS, "Received "+ res.size() +" new Chats in Chatroom "+ this.id +" (since "+ this.lastTime +")");
+					chatUpdate(res);
+					chatStatusChange(ChatStatus.Online);
+				} else {
+					err.asyncTaskResponseError(request.getException());
+					chatStatusChange(ChatStatus.Offline);
+				}
+			} catch (Exception e) {
+				err.asyncTaskResponseError(e);
+			}
+			break;
+		case CHAT_POST:
+			if (success) {
+				chatStatusChange(ChatStatus.Online);
+			} else {
+				chatStatusChange(ChatStatus.Offline);
+			}
+			break;
+		default:
+			Log.e(THIS, "Unknown Task callback: "+ request);
+		}
+		
+		model.runningRequests.remove(request);
 	}
 }

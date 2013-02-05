@@ -11,16 +11,12 @@ import com.actionbarsherlock.app.SherlockFragment;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 
 public class TurnFragment extends SherlockFragment implements IConnectionStatusListener {
 	
 	private ListView list;
 
-	@Override
-	public void onConnectionStatusChange(boolean newStatus) {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -36,6 +32,18 @@ public class TurnFragment extends SherlockFragment implements IConnectionStatusL
 		super.onStart();
 		
 //		ArrayAdapter<Object> adapter = new ArrayAdapter<Object>(context, textViewResourceId, objects);
+	}
+
+	@Override
+	public void onConnectionStatusChange(ConnectionStatus status) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

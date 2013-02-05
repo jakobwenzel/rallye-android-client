@@ -107,14 +107,14 @@ public class RallyePull extends Pull {
 		return res;
 	}
 	
-	public PendingRequest pendingChatRefresh(int chatroom, int timestamp) throws RestException {
+	public PendingRequest pendingChatRefresh(int chatroom, long lastTime) throws RestException {
 		final String rest = "/chat/get";
 		PendingRequest r = new PendingRequest(rest);
 		try {
 			r.putPost(new JSONObject()
 			.put(GCM, gcm)
 			.put(CHATROOM, chatroom)
-			.put(TIMESTAMP, (timestamp == 0)? JSONObject.NULL : timestamp)
+			.put(TIMESTAMP, (lastTime == 0)? JSONObject.NULL : lastTime)
 			.toString(), Pull.Mime.JSON);
 		} catch (JSONException e) {
 			throw err.JSONDuringPostError(e, rest);

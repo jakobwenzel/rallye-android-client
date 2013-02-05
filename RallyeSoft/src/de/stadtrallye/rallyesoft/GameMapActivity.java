@@ -19,15 +19,12 @@ import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
-import de.stadtrallye.rallyesoft.model.IModelResult;
+import de.stadtrallye.rallyesoft.model.IMapListener;
 import de.stadtrallye.rallyesoft.model.MapNode;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.model.comm.RallyePull;
 
-public class GameMapActivity extends SherlockMapActivity implements IModelResult<List<MapNode>> {
+public class GameMapActivity extends SherlockMapActivity implements IMapListener {
 	
-	private static final int TASK_NODES = 501;
-	public RallyePull pull;
 	private MapView map;
 	private SharedPreferences config;
 	private Model model;
@@ -78,7 +75,8 @@ public class GameMapActivity extends SherlockMapActivity implements IModelResult
 		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 		
 		model = Model.getInstance(getApplicationContext(), config, true);
-		model.getMapNodes(this, TASK_NODES);
+		model.setMapListener(this);
+		model.getMapNodes();
 	}
 	
 //	@Override
@@ -186,11 +184,10 @@ public class GameMapActivity extends SherlockMapActivity implements IModelResult
 	}
 
 	@Override
-	public void onModelFinished(int tag, List<MapNode> result) {
-		ItemizedOverlay<OverlayItem> overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, result);
+	public void nodeUpdate(List<MapNode> nodes) {
+		ItemizedOverlay<OverlayItem> overlay = new RallyeOverlay(this.getResources().getDrawable(R.drawable.marker), this, nodes);
 		map.getOverlays().add(overlay);
 		map.invalidate();
-		
 	}
 
 }

@@ -89,7 +89,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w("GCMIntentService", "Unregistered GCM!");
 //		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
-		Model.getInstance(getApplicationContext(), pref, false).logout(null, 0);
+		Model.getInstance(getApplicationContext(), pref, false).logout();
 	}
 
 }

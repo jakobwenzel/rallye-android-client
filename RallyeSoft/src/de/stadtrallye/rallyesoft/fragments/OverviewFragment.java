@@ -10,14 +10,13 @@ import android.widget.TextView;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
-import de.stadtrallye.rallyesoft.model.IModelResult;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 
 public class OverviewFragment extends Fragment implements IConnectionStatusListener {
 	
 	private static final String THIS = OverviewFragment.class.getSimpleName();
 	
-	private static final int TASK_CHECK_STATUS = 201;
 	private Model model;
 	private TextView connectionStatus;
 
@@ -44,7 +43,7 @@ public class OverviewFragment extends Fragment implements IConnectionStatusListe
 		super.onStart();
 
 		connectionStatus = (TextView) getView().findViewById(R.id.server_status);
-		onConnectionStatusChange(model.isLoggedIn());
+		onConnectionStatusChange(model.getConnectionStatus());
 		model.addListener(this);
 		
 	}
@@ -61,8 +60,13 @@ public class OverviewFragment extends Fragment implements IConnectionStatusListe
 	}
 
 	@Override
-	public void onConnectionStatusChange(boolean newStatus) {
+	public void onConnectionStatusChange(ConnectionStatus newStatus) {
 		Log.v(THIS, "connectionStatusChange("+ newStatus +")");
-		connectionStatus.setText((newStatus)? R.string.connected : R.string.notConnected);
+		connectionStatus.setText((newStatus == ConnectionStatus.Connected)? R.string.connected : R.string.notConnected);
+	}
+
+	@Override
+	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
+		connectionStatus.setText(e.getMessage());
 	}
 }

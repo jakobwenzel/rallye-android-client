@@ -2,7 +2,9 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.List;
 
-interface IModel {
+public interface IModel {
+	
+	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected };
 	
 	public List<? extends IChatroom> getChatrooms();
 	
