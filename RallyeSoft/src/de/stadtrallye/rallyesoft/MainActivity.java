@@ -263,7 +263,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		boolean act = model.isLoggedIn();
 		menu.findItem(R.id.menu_login).setEnabled(!act);
 		menu.findItem(R.id.menu_logout).setEnabled(act);
-		Log.d("MainActivity", "isLoggedIn(): " +act);
 		
 		return true;
 	}
@@ -322,13 +321,11 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case Connected:
 			deactivateProgressAnimation();
 			ab.setSubtitle(R.string.connected);
-			Log.i("MainActivity", "Logged in!");
 			Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
 			break;
 		case Disconnected:
 			deactivateProgressAnimation();
 			ab.setSubtitle(R.string.notConnected);
-			Log.i("MainActivity", "Logged out!");
 			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
 			break;
 		case Disconnecting:
@@ -343,7 +340,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
-		Log.i("MainActivity", "Login failed!");
 		Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
 		
 		onConnectionStatusChange(lastStatus);

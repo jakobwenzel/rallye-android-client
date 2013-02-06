@@ -1,5 +1,11 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.PrintStream;
+import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +21,8 @@ import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
 public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	
 	// statics
-	private static final String THIS = Chatroom.class.getSimpleName();
-	private static final ErrorHandling err = new ErrorHandling(THIS);
+	private static final String CLASS = Chatroom.class.getSimpleName();
+	private static final ErrorHandling err = new ErrorHandling(CLASS);
 	
 	// members
 	private Model model;
@@ -24,6 +30,8 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	private String name;
 	private long lastTime = 0;
 	private long pendingLastTime = 0;
+	
+	private final String THIS;
 	
 	private List<IChatListener> listeners = new ArrayList<IChatListener>();
 	private ChatStatus status;
@@ -40,10 +48,12 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 		return out;
 	}
 	
-	private Chatroom(int id, String name, Model model) {
+	Chatroom(int id, String name, Model model) {
 		this.id = id;
 		this.name = name;
 		this.model = model;
+		
+		THIS = CLASS +" "+ id;
 	}
 	
 	// Implementation
@@ -68,7 +78,7 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 				Log.w(THIS, "Already refreshing Chat");
 			pendingLastTime = System.currentTimeMillis();
 			model.startAsyncTask(this, Tasks.CHAT_DOWNLOAD, //TODO: Refresh
-					model.pull.pendingChatRefresh(id, lastTime),
+					model.pull.pendingChatRefresh(id, lastTime / 1000), //TODO: Discuss definition of TIMESTAMP
 					new StringedJSONArrayConverter<ChatEntry>(new ChatEntry.ChatConverter()));
 			
 			chatStatusChange(ChatStatus.Refreshing);
@@ -89,6 +99,8 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	private void chatStatusChange(ChatStatus newStatus) {
 		status = newStatus;
 		
+		Log.i(THIS, "Status: "+ newStatus);
+		
 		for (IChatListener l: listeners) {
 			l.onChatStatusChanged(newStatus);
 		}
@@ -108,6 +120,20 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	public List<ChatEntry> getChats() {
 		// TODO get From DB
 		return new ArrayList<ChatEntry>();
+	}
+	
+	@Override
+	public void saveCurrentState(Serializable additional) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ObjectOutputStream os;
+		try {
+			os = new ObjectOutputStream(out);
+			os.writeObject(additional);
+			Log.d(THIS, out.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -136,10 +162,11 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 				if (success){
 					List<ChatEntry> res = ((AsyncRequest<List<ChatEntry>>)request).get();
 					
+					Log.i(THIS, "Received "+ res.size() +" new Chats in Chatroom "+ this.id +" (since "+ this.lastTime +")");
+					
 					lastTime = pendingLastTime;
 					pendingLastTime = 0;
 					
-					Log.i(THIS, "Received "+ res.size() +" new Chats in Chatroom "+ this.id +" (since "+ this.lastTime +")");
 					chatUpdate(res);
 					chatStatusChange(ChatStatus.Online);
 				} else {

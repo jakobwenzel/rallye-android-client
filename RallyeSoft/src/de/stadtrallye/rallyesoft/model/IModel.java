@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 public interface IModel {
@@ -14,12 +15,14 @@ public interface IModel {
 		public String getName();
 		
 		public void adviseUse();
+		public void saveCurrentState(Serializable additional);
 		
 		public void addListener(IChatListener l);
 		public void removeListener(IChatListener l);
 		
 		public List<ChatEntry> getChats();
 		public void addChat(String msg);
+		
 	}
 	
 	public void login(String server, String password, int group);

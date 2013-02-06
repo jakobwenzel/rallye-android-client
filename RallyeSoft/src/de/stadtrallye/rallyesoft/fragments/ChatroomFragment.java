@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	private ChatAdapter chatAdapter; //Adapter for List
 	private Button send;
 	private EditText text;
-	private int[] lastPos = null; //[0] line, [1] pixels offset
+	private UIState lastPos = null; //[0] line, [1] pixels offset
 	private Chatroom chatroom;
 	
 	/**
@@ -74,6 +75,13 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		this.chatroom = chatroom;
 	}
 	
+	private static class UIState implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		public int line;
+		public int pxOffset;
+	}
+	
 	/**
 	 * retain savedInstanceState for when creating the list (ScrollState)
 	 */
@@ -82,8 +90,10 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		super.onCreate(savedInstanceState);
 		
 		if (savedInstanceState != null)
-			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
-		
+			lastPos = (UIState)savedInstanceState.getSerializable(Std.LAST_POS);
+		else
+			lastPos = new UIState();
+
 	}
 	
 	@Override
@@ -171,24 +181,27 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		
 		saveScrollState();
 		
+		chatroom.saveCurrentState(lastPos);
+		
 		chatroom.removeListener(this);
 	}
 	
 	private void saveScrollState() {
-		if (lastPos == null)
-			lastPos = new int[2];
+		lastPos.line = list.getFirstVisiblePosition(); 
 		
-		lastPos[0] = list.getFirstVisiblePosition(); 
-		
-		View v = list.getChildAt(0);
-		lastPos[1] = v.getTop(); 
+		if (lastPos.line == 0) {
+			lastPos.pxOffset = 0;
+		} else {
+			View v = list.getChildAt(0);
+			lastPos.pxOffset = v.getTop(); 
+		}
 	}
 	
 	private void restoreScrollState() {
 		if (lastPos != null) {
-	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
+	    	list.setSelectionFromTop(lastPos.line, lastPos.pxOffset);
 	    	if (DEBUG)
-				Log.v(THIS, "ScrollState restored: "+ lastPos[0]);
+				Log.v(THIS, "ScrollState restored: "+ lastPos.line);
         } else
         	list.setSelection(list.getCount()-1);
 	}
@@ -203,9 +216,9 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 //		saveScrollState();
 		
 		if (DEBUG)
-			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
+			Log.v(THIS, "ScrollState saved: "+ lastPos.line);
 		
-		outState.putIntArray(Std.LAST_POS, lastPos);
+		outState.putSerializable(Std.LAST_POS, lastPos);
 		outState.putInt(CHATROOM, chatroom.getID());
 	}
 	
@@ -340,19 +353,15 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		
 		switch (newStatus) {
 		case Refreshing:
-			Log.d(THIS, "Refreshing");
 			ui.activateProgressAnimation();
 			break;
 		case Online:
-			Log.d(THIS, "Online");
 			ui.deactivateProgressAnimation();
 			break;
 		case Offline:
-			Log.d(THIS, "Offline");
 			ui.deactivateProgressAnimation();
 			break;
 		case Posting:
-			Log.d(THIS, "Posting");
 			ui.activateProgressAnimation();
 			break;
 		}

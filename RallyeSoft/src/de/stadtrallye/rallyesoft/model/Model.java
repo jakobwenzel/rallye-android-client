@@ -59,6 +59,7 @@ public class Model implements IModel, IAsyncFinished {
 	private List<Chatroom> chatrooms;
 	private ConnectionStatus connectionStatus;
 	private IMapListener mapListener;
+	private SQLiteDatabase db;
 	
 	public static Model getInstance(Context context, SharedPreferences pref, boolean loggedIn) {
 		if (model != null)
@@ -81,16 +82,20 @@ public class Model implements IModel, IAsyncFinished {
 		server = pref.getString(Std.SERVER, null);
 		if (server == null) {
 			connectionStatus = ConnectionStatus.Disconnected; //TODO: Implement "No Network" Status
+			server = context.getString(R.string.default_server);
 		} else {
 			group = pref.getInt(Std.GROUP, 0);
 			password = pref.getString(Std.PASSWORD, null);
-			chatrooms = Chatroom.getChatrooms((extractChatRooms(pref.getString(Std.CHATROOMS, ""))), this);
+			chatrooms = Chatroom.getChatrooms((extractChatRooms(pref.getString(Std.CHATROOMS, ""))), this); //TODO: move to DB
 		}
 		
 		pull = new RallyePull(server, gcm, context);
 		
 		runningRequests = new HashMap<AsyncRequest, Tasks>();
 		connectionListeners = new ArrayList<IConnectionStatusListener>();
+		
+		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
+		db = helper.getWritableDatabase();
 	}
 	
 	
@@ -110,11 +115,20 @@ public class Model implements IModel, IAsyncFinished {
 	 * used in conjunction with {@link StringedJSONArrayConverter}
 	 * @author Ramon
 	 */
-	private static class LoginConverter extends JSONConverter<Integer> {
+	private static class LoginConverter extends JSONConverter<Chatroom> {
 		//TODO: put universal Converters in separate files / packages 
 		@Override
-		public Integer doConvert(JSONObject o) throws JSONException {
-			return o.getInt("chatroom");
+		public Chatroom doConvert(JSONObject o) throws JSONException {
+			int i = o.getInt("chatroom");
+			String name;
+			
+			try {
+				name = o.getString("name");
+			} catch (Exception e) {
+				name = "Chatroom "+ i;
+			}
+			
+			return new Chatroom(i, name, model);
 		}
 	}
 	
@@ -127,7 +141,8 @@ public class Model implements IModel, IAsyncFinished {
 		try {
 			startAsyncTask(Tasks.LOGIN,
 					RallyePull.pendingLogin(context, server, group, password, gcm),
-					new StringedJSONArrayConverter<Integer>(new LoginConverter()));
+					new StringedJSONArrayConverter<Chatroom>(new LoginConverter()));
+			
 			connectionStatusChange(ConnectionStatus.Connecting);
 			
 			this.server = server;
@@ -215,9 +230,10 @@ public class Model implements IModel, IAsyncFinished {
 			try {
 				if (!success) {
 					connectionFailure(request.getException(), ConnectionStatus.Disconnected);
+					this.logout(); //TODO: do retry's / currently logging out on default Server
 				} else {
 			
-					chatrooms = Chatroom.getChatrooms((List<Integer>) request.get(), this);
+					chatrooms = (List<Chatroom>) request.get();
 					
 					saveLoginDetails(server, group, password, chatrooms);
 					
@@ -250,6 +266,7 @@ public class Model implements IModel, IAsyncFinished {
 //				mapUpdate(); //TODO: Implement Separate Logic for MapListener
 			} else
 				err.asyncTaskResponseError(request.getException());
+			break;
 		default:
 			Log.e(THIS, "Unknown Task callback: "+ request);
 		}
@@ -315,6 +332,8 @@ public class Model implements IModel, IAsyncFinished {
 	private void connectionStatusChange(ConnectionStatus newState) {
 		connectionStatus = newState;
 		
+		Log.i(THIS, "Status: "+ newState);
+		
 		for(IConnectionStatusListener l: connectionListeners) {
 			l.onConnectionStatusChange(newState);
 		}
@@ -322,6 +341,8 @@ public class Model implements IModel, IAsyncFinished {
 	
 	private void connectionFailure(Exception e, ConnectionStatus fallbackState) {
 		connectionStatus = fallbackState;
+		
+		Log.e(THIS, e +"\n fallback: "+ fallbackState);
 		
 		for(IConnectionStatusListener l: connectionListeners) {
 			l.onConnectionFailed(e, fallbackState);
@@ -331,12 +352,6 @@ public class Model implements IModel, IAsyncFinished {
 	public static void enableDebugLogging() {
 		DEBUG = true;
 		AsyncRequest.enableDebugLogging();
-	}
-
-	public void testDB() {
-		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
-		SQLiteDatabase db = helper.getWritableDatabase();
-		
 	}
 
 	public ConnectionStatus getConnectionStatus() {

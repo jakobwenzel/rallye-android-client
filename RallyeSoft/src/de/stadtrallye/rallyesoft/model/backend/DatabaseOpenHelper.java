@@ -7,17 +7,21 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 	
 	private static final class Chatrooms {
 		public static final String NAME = "chatrooms";
 		public static final String KEY_ID = "chatroomID";
 		public static final String KEY_NAME = "name";
+		public static final String KEY_LAST_UPDATE = "lastUpdate";
+		public static final String KEY_UI_STATE = "uiState";
 		public static final String CREATE =
 				"CREATE TABLE "+ NAME +" ("+
 					KEY_ID +" int NOT NULL PRIMARY KEY, "+
-					KEY_NAME +" VARCHAR(50) NOT NULL)";
+					KEY_NAME +" VARCHAR(50) NOT NULL, "+
+					KEY_LAST_UPDATE +" timestamp, "+
+					KEY_UI_STATE +" VARCHAR(512))";
 	}
   
 	private static final class Chats {
@@ -25,12 +29,14 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 		public static final String KEY_ID = "chatID";
 		public static final String KEY_TIME = "timestamp";
 		public static final String KEY_GROUP = "groupID";
+		public static final String KEY_SELF = "self";
 		public static final String KEY_PICTURE = "pictureID";
 		public static final String CREATE =
 				"CREATE TABLE "+ NAME +" ("+
-				  KEY_ID +" int NOT NULL AUTOINCREMENT PRIMARY KEY, "+
+				  KEY_ID +" int NOT NULL PRIMARY KEY, "+
 				  KEY_TIME +" timestamp NOT NULL, "+
 				  KEY_GROUP +" int NOT NULL, "+
+				  KEY_SELF +" BOOLEAN NOT NULL DEFAULT false, "+
 				  Messages.KEY_ID +" int DEFAULT NULL REFERENCES "+ Messages.NAME +" ON DELETE CASCADE ON UPDATE CASCADE, "+
 				  KEY_PICTURE +" int DEAULT NULL, "+
 				  Chatrooms.KEY_ID +" int NOT NULL REFERENCES "+ Chatrooms.NAME +" ON DELETE CASCADE ON UPDATE CASCADE)";
@@ -42,7 +48,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 		public static final String KEY_MSG = "msg";
     	public static final String CREATE =
                 "CREATE TABLE "+ NAME +" ("+
-                KEY_ID +" int NOT NULL AUTOINCREMENT PRIMARY KEY, "+
+                KEY_ID +" int NOT NULL PRIMARY KEY, "+
                 KEY_MSG + " TEXT)";
     }
     

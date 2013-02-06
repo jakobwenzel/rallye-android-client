@@ -61,7 +61,6 @@ public class OverviewFragment extends Fragment implements IConnectionStatusListe
 
 	@Override
 	public void onConnectionStatusChange(ConnectionStatus newStatus) {
-		Log.v(THIS, "connectionStatusChange("+ newStatus +")");
 		connectionStatus.setText((newStatus == ConnectionStatus.Connected)? R.string.connected : R.string.notConnected);
 	}
 

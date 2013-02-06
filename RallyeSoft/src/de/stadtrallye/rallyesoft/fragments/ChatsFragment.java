@@ -184,7 +184,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-			return FRAGMENT_TITLE +chatrooms.get(pos).getID();
+			return chatrooms.get(pos).getName();
 		}
 
 	}

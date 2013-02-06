@@ -160,6 +160,8 @@ public class Pull {
 				}
 				
 				return reader.readLine();
+			} catch (HttpResponseException e) {
+				throw e;
 			} catch (IOException e) {
 				throw new RestException(conn.getURL().toString(), e);
 			}
