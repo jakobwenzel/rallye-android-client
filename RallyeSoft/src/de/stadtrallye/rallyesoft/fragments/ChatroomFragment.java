@@ -55,7 +55,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	private ChatAdapter chatAdapter; //Adapter for List
 	private Button send;
 	private EditText text;
-	private UIState lastPos = null; //[0] line, [1] pixels offset
+	private UIState lastPos = null;
 	private Chatroom chatroom;
 	
 	/**
