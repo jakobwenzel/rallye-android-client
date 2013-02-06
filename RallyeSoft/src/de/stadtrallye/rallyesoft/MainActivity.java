@@ -282,9 +282,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case R.id.menu_login:
 			DialogFragment d = new LoginDialogFragment();
 			Bundle b = new Bundle();
-			b.putString("server", model.getServer());
-			b.putInt("group", model.getGroupId());
-			b.putString("password", model.getPassword());
+			b.putString(Std.SERVER, model.getServer());
+			b.putInt(Std.GROUP, model.getGroupId());
+			b.putString(Std.PASSWORD, model.getPassword());
 			d.setArguments(b);
 			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
@@ -297,7 +297,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	protected void onDestroy() {
-		Log.d("MainActivity", "Destroying...");
+		Log.d(THIS, "Destroying...");
 		
 		model.onDestroy();
 		

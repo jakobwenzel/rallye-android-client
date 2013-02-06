@@ -86,7 +86,7 @@ public class Model implements IModel, IAsyncFinished {
 		} else {
 			group = pref.getInt(Std.GROUP, 0);
 			password = pref.getString(Std.PASSWORD, null);
-			chatrooms = Chatroom.getChatrooms((extractChatRooms(pref.getString(Std.CHATROOMS, ""))), this); //TODO: move to DB
+			chatrooms = Chatroom.getChatrooms(extractChatRooms(pref.getString(Std.CHATROOMS, "")), this); //TODO: move to DB
 		}
 		
 		pull = new RallyePull(server, gcm, context);
@@ -213,6 +213,17 @@ public class Model implements IModel, IAsyncFinished {
 		return chatrooms;
 	}
 	
+	public Chatroom getChatroom(int id) { //TODO: increase Efficiency
+		for (Chatroom r: chatrooms) {
+			if (r.getID() == id)
+			{
+				return r;
+			}
+		}
+		
+		return null;
+	}
+	
 	
 	@Override
 	public String getUrlFromImageId(int pictureID, char size) {
@@ -225,6 +236,13 @@ public class Model implements IModel, IAsyncFinished {
 	@Override
 	public void onAsyncFinished(final AsyncRequest request, final boolean success) {
 		Tasks type = runningRequests.get(request);
+		
+		if (type == null) {
+			Log.e(THIS, "Task Callback with type 'null'");
+			return;
+		}
+		
+		
 		switch (type) {
 		case LOGIN:
 			try {

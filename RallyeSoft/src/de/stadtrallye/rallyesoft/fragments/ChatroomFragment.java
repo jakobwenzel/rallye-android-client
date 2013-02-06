@@ -45,9 +45,6 @@ import de.stadtrallye.rallyesoft.model.Model;
  *
  */
 public class ChatroomFragment extends BaseFragment implements IChatListener, OnClickListener {
-	
-
-	private static final String CHATROOM = "chatroom";
 
 	private Model model;
 	private IProgressUI ui; // access to IndeterminateProgress in ActionBar
@@ -122,13 +119,11 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		}
 		
 		if (savedInstanceState != null && chatroom == null) {
-			for (Chatroom r: model.getChatrooms()) {
-				if (r.getID() == savedInstanceState.getInt(CHATROOM))
-				{
-					chatroom = r;
-				} else
-					throw new UnsupportedOperationException("ChatFragment could not find its previous Chatroom... (User has changed without telling me :-(  )");
-			}
+			chatroom = model.getChatroom(savedInstanceState.getInt(Std.CHATROOM));
+		}
+		
+		if (chatroom == null) {
+			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
 		
 		chatAdapter = new ChatAdapter(getActivity(), chatroom.getChats());
@@ -219,7 +214,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			Log.v(THIS, "ScrollState saved: "+ lastPos.line);
 		
 		outState.putSerializable(Std.LAST_POS, lastPos);
-		outState.putInt(CHATROOM, chatroom.getID());
+		outState.putInt(Std.CHATROOM, chatroom.getID());
 	}
 	
 	

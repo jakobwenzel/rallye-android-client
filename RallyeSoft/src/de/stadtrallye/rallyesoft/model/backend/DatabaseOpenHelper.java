@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 2;
+	private static final int DATABASE_VERSION = 4;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 	
 	private static final class Chatrooms {
@@ -15,13 +15,13 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 		public static final String KEY_ID = "chatroomID";
 		public static final String KEY_NAME = "name";
 		public static final String KEY_LAST_UPDATE = "lastUpdate";
-		public static final String KEY_UI_STATE = "uiState";
+		public static final String KEY_LAST_READ = "lastRead";
 		public static final String CREATE =
 				"CREATE TABLE "+ NAME +" ("+
 					KEY_ID +" int NOT NULL PRIMARY KEY, "+
 					KEY_NAME +" VARCHAR(50) NOT NULL, "+
 					KEY_LAST_UPDATE +" timestamp, "+
-					KEY_UI_STATE +" VARCHAR(512))";
+					KEY_LAST_READ +" int)";
 	}
   
 	private static final class Chats {
@@ -75,7 +75,11 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		db.execSQL("DROP TABLE "+ Chatrooms.NAME);
+		db.execSQL("DROP TABLE "+ Chats.NAME);
+		db.execSQL("DROP TABLE "+ Messages.NAME);
+		
+		this.onCreate(db);
 	}
 	
 	@Override
