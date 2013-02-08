@@ -10,12 +10,14 @@ import android.widget.EditText;
 import com.actionbarsherlock.app.SherlockDialogFragment;
 
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public class LoginDialogFragment extends SherlockDialogFragment {
 	
 	
 	public interface IDialogCallback {
-		public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw);
+		public void onDialogPositiveClick(LoginDialogFragment dialog, Login login);
 	    public void onDialogNegativeClick(LoginDialogFragment dialog);
 	}
 	
@@ -24,7 +26,16 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	private EditText group;
 	private EditText pw;
 	private IDialogCallback ui;
+	private Login login;
 	
+	
+	public LoginDialogFragment(Login login) {
+		this.login = login;
+	}
+	
+	public LoginDialogFragment() {
+		
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -33,12 +44,12 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 		
 	}
 	
-//	@Override
-//	public void onSaveInstanceState(Bundle state) {
-//		super.onSaveInstanceState(state);
-//		
-//		state.
-//	}
+	@Override
+	public void onSaveInstanceState(Bundle state) {
+		super.onSaveInstanceState(state);
+		
+		state.putParcelable(Std.LOGIN, login);
+	}
 	
 	@Override
 	public void onAttach(Activity activity) {
@@ -56,6 +67,8 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		
+		if (login == null && savedInstanceState != null)
+			login = savedInstanceState.getParcelable(Std.LOGIN);
 		
 		// Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -63,8 +76,9 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         		.setView(getActivity().getLayoutInflater().inflate(R.layout.dialog_login, null))
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
-        				ui.onDialogPositiveClick(LoginDialogFragment.this, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
-//        				model.login(ui, tag, server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
+        				Login l = new Login(server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
+        				ui.onDialogPositiveClick(LoginDialogFragment.this, l.equals(login)? login : l);
+        				
         			}
         		})
         		.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -87,10 +101,8 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         group = (EditText) dialog.findViewById(R.id.group);
         pw = (EditText) dialog.findViewById(R.id.password);
         
-        Bundle b = getArguments();
-        
-		server.setText(b.getString("server"));
-		group.setText(Integer.toString(b.getInt("group")));
-		pw.setText(b.getString("password"));
+		server.setText(login.getServer());
+		group.setText(Integer.toString(login.getGroup()));
+		pw.setText(login.getPassword());
 	}
 }

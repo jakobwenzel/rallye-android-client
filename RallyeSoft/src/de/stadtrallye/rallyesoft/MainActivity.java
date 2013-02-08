@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -34,6 +33,7 @@ import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.comm.PushInit;
+import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener,
 																		LoginDialogFragment.IDialogCallback, IModelActivity,
@@ -46,7 +46,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private boolean progressCircle = false;
 //	private Fragment currentFragment;
 	private int lastTab = 0;
-	private SharedPreferences config;
 	private ArrayList<FragmentHandler<?>> tabs;
 	
 	@Override
@@ -82,8 +81,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		// Ray's INIT
 		PushInit.ensureRegistration(this);
-		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		model = Model.getInstance(this, config, loggedIn);
+		model = Model.getInstance(this, loggedIn);
 		model.addListener(this);
 		if (!loggedIn)
 			model.checkConnectionStatus();
@@ -282,9 +280,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case R.id.menu_login:
 			DialogFragment d = new LoginDialogFragment();
 			Bundle b = new Bundle();
-			b.putString(Std.SERVER, model.getServer());
-			b.putInt(Std.GROUP, model.getGroupId());
-			b.putString(Std.PASSWORD, model.getPassword());
+//			b.putString(Std.SERVER, model.getServer());
+//			b.putInt(Std.GROUP, model.getGroupId());
+//			b.putString(Std.PASSWORD, model.getPassword());
+			b.putParcelable(Std.LOGIN, model.getLogin());
 			d.setArguments(b);
 			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
@@ -349,8 +348,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 * LoginDialogFragment.IDialogCallback
 	 */
 	@Override
-	public void onDialogPositiveClick(LoginDialogFragment dialog, String server, int group, String pw) {
-		model.login(server, pw, group);
+	public void onDialogPositiveClick(LoginDialogFragment dialog, Login login) {
+		model.login(login);
 	}
 
 	@Override

@@ -16,4 +16,14 @@ public class Std {
 	public static final String GROUP = "group";
 	public static final String PASSWORD = "password";
 	public static final String CHATROOMS = "chatrooms";
+	public static final String LAST_LOGIN = "last_login";
+	public static final String LAST_CONTACT = "last_contact";
+	public static final String LOGIN = "login";
+	
+	
+	public final static String GCM = "gcm";
+	public final static String TIMESTAMP = "timestamp";
+	public final static String GROUPID = "groupID";
+	public static final String MSG = "mess";
+	public static final String PIC = "pic";
 }

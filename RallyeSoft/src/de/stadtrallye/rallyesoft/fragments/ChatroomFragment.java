@@ -33,10 +33,10 @@ import de.stadtrallye.rallyesoft.IProgressUI;
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
-import de.stadtrallye.rallyesoft.model.ChatEntry;
 import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.Model;
 
 /**

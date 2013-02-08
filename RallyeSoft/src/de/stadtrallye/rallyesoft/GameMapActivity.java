@@ -5,7 +5,6 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,13 +19,12 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
 import de.stadtrallye.rallyesoft.model.IMapListener;
-import de.stadtrallye.rallyesoft.model.MapNode;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.structures.MapNode;
 
 public class GameMapActivity extends SherlockMapActivity implements IMapListener {
 	
 	private MapView map;
-	private SharedPreferences config;
 	private Model model;
 	
 	
@@ -72,9 +70,7 @@ public class GameMapActivity extends SherlockMapActivity implements IMapListener
 		
 		map = (MapView) findViewById(R.id.mapview);
 		
-		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		
-		model = Model.getInstance(getApplicationContext(), config, true);
+		model = Model.getInstance(getApplicationContext(), true);
 		model.setMapListener(this);
 		model.getMapNodes();
 	}

@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.model.structures;
 
 import java.util.ArrayList;
 
@@ -30,7 +30,7 @@ public class ChatEntry {
 		return JSONArray.toList(new ChatConverter(), js);
 	}
 	
-	static class ChatConverter extends JSONConverter<ChatEntry> {
+	public static class ChatConverter extends JSONConverter<ChatEntry> {
 		
 		@Override
 		public ChatEntry doConvert(JSONObject o) throws JSONException {

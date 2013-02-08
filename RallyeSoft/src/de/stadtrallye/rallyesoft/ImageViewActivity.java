@@ -1,7 +1,5 @@
 package de.stadtrallye.rallyesoft;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
@@ -30,7 +28,6 @@ public class ImageViewActivity extends SherlockActivity {
 	private ViewPager pager;
 	private int chatroom;
 	private int imgID;
-	private SharedPreferences config;
 	private Model model;
 	private ImageAdapter adapter;
 	private int[] images;
@@ -49,8 +46,7 @@ public class ImageViewActivity extends SherlockActivity {
 		// Show the Up button in the action bar.
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		
-		config = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
-		model = Model.getInstance(this, config, false);
+		model = Model.getInstance(this, false);
 		
 		pager = (ViewPager)findViewById(R.id.image_pager);
 		Bundle b = getIntent().getExtras();

@@ -2,6 +2,8 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.List;
 
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+
 public interface IChatroom {
 	
 	public enum ChatStatus { Offline, Online, Refreshing, Posting };
@@ -19,4 +21,6 @@ public interface IChatroom {
 	public List<ChatEntry> getAllChats();
 	public void addChat(String msg);
 	
+	public void onDestroy();
+	public void onStop();
 }

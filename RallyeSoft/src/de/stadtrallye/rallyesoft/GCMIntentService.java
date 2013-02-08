@@ -12,7 +12,6 @@ import android.util.Log;
 import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
-import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.comm.PushInit;
@@ -21,7 +20,6 @@ public class GCMIntentService extends GCMBaseIntentService {
 	
 	private static final String THIS = GCMIntentService.class.getSimpleName();
 
-	private SharedPreferences pref;
 	private NotificationManager notes;
 
 	public GCMIntentService()
@@ -34,7 +32,6 @@ public class GCMIntentService extends GCMBaseIntentService {
 		super.onCreate();
 		
 		notes = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-		pref = getSharedPreferences(getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 	}
 	
 	@Override
@@ -56,7 +53,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w(THIS, extras.get("t").toString());
 		
 		if ("100".equals(extras.getString("t"))) { //TODO: discuss definition of int
-			Model model = Model.getInstance(context, pref, true);
+			Model model = Model.getInstance(context, true);
 			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
 			if (r != null) {
 				r.adviseUse(); //TODO: specialize...
@@ -75,29 +72,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 	protected void onRegistered(Context context, String registrationId) {
 		Log.i("GCMIntentService", "Registered GCM!");
 		
-		
-		if (pref.getString("server", null) == null) {
-			Log.w("GCMIntentService", "Cannot Register on Server, no server configured");
-			return;
-		}
-		
 		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
-		
-//		RallyePull pull = RallyePull.getPull(getApplicationContext());
-//		pull.setGcmId(registrationId);
-//		
-//		try {
-//			JSONArray res = pull.pushLogin();
-//			
-//			GCMRegistrar.setRegisteredOnServer(getApplicationContext(), true);
-//			Log.i("RPushService", "Registered on Server");
-//		} catch (HttpResponseException e) {
-//			Log.e("RallyeGCM", "Unknown Http Exception:: " +e.toString());
-//		} catch (RestException e) {
-//			Log.e("RallyeGCM", "Unknown Rest Exception:: " +e.toString());
-//		} catch (JSONException e) {
-//			Log.e("RallyeGCM", "Unknown JSON Exception:: " +e.toString());
-//		}
 	}
 
 	@Override
@@ -105,7 +80,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w("GCMIntentService", "Unregistered GCM!");
 //		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
-		Model.getInstance(getApplicationContext(), pref, false).logout();
+		Model.getInstance(getApplicationContext(), false).logout();
 	}
 
 }

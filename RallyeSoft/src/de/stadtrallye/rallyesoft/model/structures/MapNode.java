@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.model.structures;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public class MapNode {
 		return JSONArray.toList(new NodeConverter(), js);
 	}
 	
-	static class NodeConverter extends JSONConverter<MapNode> {
+	public static class NodeConverter extends JSONConverter<MapNode> {
 		
 		@Override
 		public MapNode doConvert(JSONObject o) throws JSONException {

@@ -44,6 +44,10 @@ public class Pull {
 		base = baseURL;
 	}
 	
+	public void setBaseURL(String baseURL) {
+		this.base = baseURL;
+	}
+	
 	public static void enableDebugLogging() {
 		DEBUG = true;
 	}
