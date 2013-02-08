@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface IModel {
 	
-	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected };
+	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected}
 	
 	public List<? extends IChatroom> getChatrooms();
 	

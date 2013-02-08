@@ -322,8 +322,9 @@ public class Model implements IModel, IAsyncFinished {
 		for (@SuppressWarnings("rawtypes") AsyncRequest ar: runningRequests.keySet())
 		{
 			ar.cancel(true);
-			runningRequests.remove(ar);
 		}
+		
+		runningRequests.clear();
 	}
 	
 	private List<Integer> extractChatRooms(String string) {

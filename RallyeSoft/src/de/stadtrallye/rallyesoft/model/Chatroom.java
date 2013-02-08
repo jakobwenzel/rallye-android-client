@@ -76,7 +76,7 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 				Log.w(THIS, "Already refreshing Chat");
 			pendingLastTime = System.currentTimeMillis();
 			model.startAsyncTask(this, Tasks.CHAT_DOWNLOAD, //TODO: Refresh
-					model.pull.pendingChatRefresh(id, lastTime / 1000), //TODO: Discuss definition of TIMESTAMP
+					model.pull.pendingChatRefresh(id, lastTime / 1000),
 					new StringedJSONArrayConverter<ChatEntry>(new ChatEntry.ChatConverter()));
 			
 			chatStatusChange(ChatStatus.Refreshing);
