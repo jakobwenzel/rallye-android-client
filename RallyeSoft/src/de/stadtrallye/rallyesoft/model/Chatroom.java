@@ -1,9 +1,5 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,12 +7,11 @@ import android.util.Log;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
-import de.stadtrallye.rallyesoft.model.IChatListener.ChatStatus;
 import de.stadtrallye.rallyesoft.model.Model.Tasks;
 import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
 import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
 
-public class Chatroom implements IModel.IChatroom, IAsyncFinished {
+public class Chatroom implements IChatroom, IAsyncFinished {
 	
 	// statics
 	private static final String CLASS = Chatroom.class.getSimpleName();
@@ -103,6 +98,10 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 			l.onChatStatusChanged(newStatus);
 		}
 	}
+	
+	public ChatStatus getChatStatus() {
+		return status;
+	}
 
 	@Override
 	public void addListener(IChatListener l) {
@@ -115,23 +114,14 @@ public class Chatroom implements IModel.IChatroom, IAsyncFinished {
 	}
 
 	@Override
-	public List<ChatEntry> getChats() {
+	public List<ChatEntry> getAllChats() {
 		// TODO get From DB
 		return new ArrayList<ChatEntry>();
 	}
 	
 	@Override
-	public void saveCurrentState(Serializable additional) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ObjectOutputStream os;
-		try {
-			os = new ObjectOutputStream(out);
-			os.writeObject(additional);
-			Log.d(THIS, out.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void saveCurrentState(int lastRead) {
+		
 	}
 	
 	@Override

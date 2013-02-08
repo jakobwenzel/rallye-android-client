@@ -17,7 +17,7 @@ import com.viewpagerindicator.TitlePageIndicator;
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
-import de.stadtrallye.rallyesoft.model.Chatroom;
+import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
@@ -34,7 +34,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private ViewPager pager;
 	private TitlePageIndicator indicator;
 	private FragmentPagerAdapter fragmentAdapter;
-	private List<Chatroom> chatrooms;
+	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
 	
 	
@@ -148,12 +148,10 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
-		
-		final private static String FRAGMENT_TITLE = "Chatroom ";
 
-		private List<Chatroom> chatrooms;
+		private List<? extends IChatroom> chatrooms;
 		
-		public ChatFragmentAdapter(FragmentManager fm, List<Chatroom> chatrooms) {
+		public ChatFragmentAdapter(FragmentManager fm, List<? extends IChatroom> chatrooms) {
 			super(fm);
 			
 			this.chatrooms = chatrooms;

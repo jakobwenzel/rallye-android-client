@@ -209,12 +209,12 @@ public class Model implements IModel, IAsyncFinished {
 	 * WARNING: do not change List
 	 */
 	@Override
-	public List<Chatroom> getChatrooms() {
+	public List<? extends IChatroom> getChatrooms() {
 		return chatrooms;
 	}
 	
-	public Chatroom getChatroom(int id) { //TODO: increase Efficiency
-		for (Chatroom r: chatrooms) {
+	public IChatroom getChatroom(int id) { //TODO: increase Efficiency
+		for (IChatroom r: chatrooms) {
 			if (r.getID() == id)
 			{
 				return r;

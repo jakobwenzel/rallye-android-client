@@ -13,6 +13,7 @@ import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
 import de.stadtrallye.rallyesoft.model.Chatroom;
+import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.comm.PushInit;
 
@@ -56,7 +57,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		
 		if ("100".equals(extras.getString("t"))) { //TODO: discuss definition of int
 			Model model = Model.getInstance(context, pref, true);
-			Chatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
+			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
 			if (r != null) {
 				r.adviseUse(); //TODO: specialize...
 			} else

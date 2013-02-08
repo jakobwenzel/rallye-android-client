@@ -1,6 +1,5 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,8 +34,9 @@ import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.model.ChatEntry;
-import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.IChatListener;
+import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 
 /**
@@ -52,8 +52,8 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	private ChatAdapter chatAdapter; //Adapter for List
 	private Button send;
 	private EditText text;
-	private UIState lastPos = null;
-	private Chatroom chatroom;
+	private int[] lastPos = null; //[0] = line, [1] = px
+	private IChatroom chatroom;
 	
 	/**
 	 * Only for DEBUG purposes
@@ -66,17 +66,10 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
-	public ChatroomFragment(Chatroom  chatroom) {
+	public ChatroomFragment(IChatroom  chatroom) {
 		this();
 		
 		this.chatroom = chatroom;
-	}
-	
-	private static class UIState implements Serializable {
-		private static final long serialVersionUID = 1L;
-		
-		public int line;
-		public int pxOffset;
 	}
 	
 	/**
@@ -87,10 +80,9 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		super.onCreate(savedInstanceState);
 		
 		if (savedInstanceState != null)
-			lastPos = (UIState)savedInstanceState.getSerializable(Std.LAST_POS);
+			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
 		else
-			lastPos = new UIState();
-
+			lastPos = new int[2];
 	}
 	
 	@Override
@@ -126,7 +118,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
 		
-		chatAdapter = new ChatAdapter(getActivity(), chatroom.getChats());
+		chatAdapter = new ChatAdapter(getActivity(), chatroom.getAllChats());
         list.setAdapter(chatAdapter);
         
         restoreScrollState();
@@ -176,27 +168,27 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		
 		saveScrollState();
 		
-		chatroom.saveCurrentState(lastPos);
+		chatroom.saveCurrentState(lastPos[0]);
 		
 		chatroom.removeListener(this);
 	}
 	
 	private void saveScrollState() {
-		lastPos.line = list.getFirstVisiblePosition(); 
+		lastPos[0] = list.getFirstVisiblePosition(); 
 		
-		if (lastPos.line == 0) {
-			lastPos.pxOffset = 0;
+		if (lastPos[0] == 0) {
+			lastPos[1] = 0;
 		} else {
 			View v = list.getChildAt(0);
-			lastPos.pxOffset = v.getTop(); 
+			lastPos[1] = v.getTop(); 
 		}
 	}
 	
 	private void restoreScrollState() {
 		if (lastPos != null) {
-	    	list.setSelectionFromTop(lastPos.line, lastPos.pxOffset);
+	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
 	    	if (DEBUG)
-				Log.v(THIS, "ScrollState restored: "+ lastPos.line);
+				Log.v(THIS, "ScrollState restored: "+ lastPos[0]);
         } else
         	list.setSelection(list.getCount()-1);
 	}
@@ -211,7 +203,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 //		saveScrollState();
 		
 		if (DEBUG)
-			Log.v(THIS, "ScrollState saved: "+ lastPos.line);
+			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
 		
 		outState.putSerializable(Std.LAST_POS, lastPos);
 		outState.putInt(Std.CHATROOM, chatroom.getID());
