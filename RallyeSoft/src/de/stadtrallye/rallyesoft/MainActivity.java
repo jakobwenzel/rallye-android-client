@@ -159,9 +159,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			return tag;
 		}
 		
-		public Bundle getArguments() {
-			return arg;
-		}
+//		public Bundle getArguments() {
+//			return arg;
+//		}
 	}
 	
 	@Override
@@ -230,14 +230,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		return true;
 	}
 	
-	@Override
-	public void onBackPressed() {
-		
-//		if (getSlidingMenu().isMenuShowing())
-			super.onBackPressed(); //TODO: Either put Fragments on Backstack or close when in SlidingMenu and Back is pressed
-//		else
-//			getSlidingMenu().showMenu();
-	}
+//	@Override
+//	public void onBackPressed() {
+//		
+////		if (getSlidingMenu().isMenuShowing())
+//			super.onBackPressed(); //TODO: Either put Fragments on Backstack or close when in SlidingMenu and Back is pressed
+////		else
+////			getSlidingMenu().showMenu();
+//	}
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
@@ -332,7 +332,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			activateProgressAnimation();
 			//TODO: show message...
 			break;
-		case NoNetwork:
+		default:
 			//TODO: No Network on UI
 		}
 	}

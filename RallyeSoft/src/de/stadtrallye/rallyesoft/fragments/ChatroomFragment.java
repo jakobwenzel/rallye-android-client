@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -332,7 +333,21 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 
 	@Override
 	public void addedChats(List<ChatEntry> entries) {
-		chatAdapter.addAll(entries);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
+        	addChatsApi11(entries);
+        else
+        	addChatsApi1(entries);
+	}
+	
+	public void addChatsApi1(List<ChatEntry> l) {
+		for (ChatEntry c: l) {
+			chatAdapter.add(c);
+		}
+	}
+	
+	@TargetApi(11)
+	public void addChatsApi11(List<ChatEntry> l) {
+		chatAdapter.addAll(l);
 	}
 	
 	@Override

@@ -93,11 +93,19 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 	    }
 	}
 	
+	/**
+	 * Supported since Api 16
+	 * @param db
+	 */
 	@TargetApi(16)
 	private void enableForeignKeysApi16(SQLiteDatabase db) {
 		db.setForeignKeyConstraintsEnabled(true);
 	}
 	
+	/**
+	 * Supported since SQLite shipped with Api 8
+	 * @param db
+	 */
 	private void enableForeignKeysApi8(SQLiteDatabase db) {
 		db.execSQL("PRAGMA foreign_keys=ON;");
 	}

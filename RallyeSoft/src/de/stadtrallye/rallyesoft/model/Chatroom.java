@@ -145,7 +145,7 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 	}
 
 	@Override
-	public void onAsyncFinished(AsyncRequest request, boolean success) {
+	public void onAsyncFinished(@SuppressWarnings("rawtypes") AsyncRequest request, boolean success) {
 		Tasks type = model.getRunningRequests().get(request);
 		
 		switch (type) {

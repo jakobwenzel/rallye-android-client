@@ -59,9 +59,10 @@ public class Model implements IModel, IAsyncFinished {
 	
 	@SuppressWarnings("rawtypes")
 	private HashMap<AsyncRequest, Tasks> runningRequests;
+	
+	private ConnectionStatus connectionStatus;
 	private ArrayList<IConnectionStatusListener> connectionListeners;
 	private IMapListener mapListener;
-	private ConnectionStatus connectionStatus;
 	
 	private List<Chatroom> chatrooms;
 	
@@ -79,6 +80,7 @@ public class Model implements IModel, IAsyncFinished {
 		return context.getSharedPreferences(context.getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
 		String gcm = GCMRegistrar.getRegistrationId(context);
 		this.pref = pref;
@@ -89,9 +91,8 @@ public class Model implements IModel, IAsyncFinished {
 		currentLogin = readLogin();
 		if (!currentLogin.isComplete()) {
 			connectionStatus = ConnectionStatus.Disconnected; //TODO: Implement "No Network" Status
-//			currentLogin = getDefaultLogin(context);
 		} else {
-			readChatRooms(); //TODO: move to DB
+			readChatRooms();
 		}
 		
 		pull = new RallyePull(currentLogin.getServer(), gcm);
@@ -103,6 +104,7 @@ public class Model implements IModel, IAsyncFinished {
 		db = helper.getWritableDatabase();
 	}
 	
+	@SuppressWarnings("rawtypes")
 	HashMap<AsyncRequest, Tasks> getRunningRequests() {
 		return runningRequests;
 	}
@@ -249,7 +251,7 @@ public class Model implements IModel, IAsyncFinished {
 
 	
 	@Override
-	public void onAsyncFinished(final AsyncRequest request, final boolean success) {
+	public void onAsyncFinished(@SuppressWarnings("rawtypes") final AsyncRequest request, final boolean success) {
 		Tasks type = runningRequests.get(request);
 		
 		if (type == null) {
@@ -346,7 +348,7 @@ public class Model implements IModel, IAsyncFinished {
 				pref.getLong(Std.LAST_LOGIN, 0));
 	}
 	
-	private void readChatRooms() {
+	private void readChatRooms() { //TODO: move to DB
 		String rooms = pref.getString(Std.CHATROOMS, "");
 		chatrooms = Chatroom.getChatrooms(rooms, model);
 	}

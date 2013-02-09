@@ -26,8 +26,8 @@ import de.stadtrallye.rallyesoft.model.Model;
 public class ImageViewActivity extends SherlockActivity {
 	
 	private ViewPager pager;
-	private int chatroom;
-	private int imgID;
+//	private int chatroom;
+//	private int imgID;
 	private Model model;
 	private ImageAdapter adapter;
 	private int[] images;
@@ -50,7 +50,7 @@ public class ImageViewActivity extends SherlockActivity {
 		
 		pager = (ViewPager)findViewById(R.id.image_pager);
 		Bundle b = getIntent().getExtras();
-		chatroom = b.getInt(Std.CHATROOM);
+//		chatroom = b.getInt(Std.CHATROOM);
 		images = b.getIntArray(Std.IMAGE_LIST);
 		startPos = b.getInt(Std.IMAGE);
         
