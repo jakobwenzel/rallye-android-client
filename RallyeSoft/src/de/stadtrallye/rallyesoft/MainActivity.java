@@ -3,8 +3,11 @@ package de.stadtrallye.rallyesoft;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -61,7 +64,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
-		ab.setDisplayShowTitleEnabled(true);
+		ab.setDisplayShowTitleEnabled(false);
 		
 		// Settings for SideBar
 		SlidingMenu sm = getSlidingMenu();
@@ -83,8 +86,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		PushInit.ensureRegistration(this);
 		model = Model.getInstance(this, loggedIn);
 		model.addListener(this);
-		if (!loggedIn)
-			model.checkConnectionStatus();
 		
 		
         // Populate SideBar
@@ -169,6 +170,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		super.onStart();
 		
 		setSupportProgressBarIndeterminateVisibility(false);
+		onConnectionStatusChange(model.getConnectionStatus());
 	}
 	
 	private void getOverflowMenu() {
@@ -208,9 +210,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		switch (pos) {
 		case 1:
-//			newFragment = new MapFragment();
 			Intent i = new Intent(this, GameMapActivity.class);
-//			i.putExtra("pull", pull);
+			getSupportActionBar().setSelectedNavigationItem(lastTab);
 			startActivity(i);
 		return true;
 		case 2:
@@ -220,6 +221,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		FragmentHandler<?> tab = tabs.get(pos);
+		
 		ft
 			.replace(R.id.content_frame, tab.getFragment(), tab.getTag())
 //			.addToBackStack(null)
@@ -229,6 +231,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		lastTab = pos;
 		return true;
 	}
+	
+	
 	
 //	@Override
 //	public void onBackPressed() {
@@ -278,13 +282,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		    startActivityForResult(intent, 100);
 //		    break;
 		case R.id.menu_login:
-			DialogFragment d = new LoginDialogFragment();
-			Bundle b = new Bundle();
-//			b.putString(Std.SERVER, model.getServer());
-//			b.putInt(Std.GROUP, model.getGroupId());
-//			b.putString(Std.PASSWORD, model.getPassword());
-			b.putParcelable(Std.LOGIN, model.getLogin());
-			d.setArguments(b);
+			DialogFragment d = new LoginDialogFragment(model.getLogin());
+//			Bundle b = new Bundle();
+//			b.putParcelable(Std.LOGIN, model.getLogin());
+//			d.setArguments(b);
 			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
 		case R.id.menu_logout:
@@ -316,24 +317,28 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public void onConnectionStatusChange(ConnectionStatus status) {
 		ActionBar ab = getSupportActionBar();
-		switch (status) {
-		case Connected:
-			deactivateProgressAnimation();
-			ab.setSubtitle(R.string.connected);
-			Toast.makeText(this, getResources().getString(R.string.login), Toast.LENGTH_SHORT).show();
-			break;
-		case Disconnected:
-			deactivateProgressAnimation();
-			ab.setSubtitle(R.string.notConnected);
-			Toast.makeText(this, getResources().getString(R.string.logout), Toast.LENGTH_SHORT).show();
-			break;
+		switch (status) {//TODO: No Network on UI
 		case Disconnecting:
 		case Connecting:
 			activateProgressAnimation();
-			//TODO: show message...
+			break;
+		case Unknown:
+		case Disconnected:
+		case Connected:
+		default:
+			deactivateProgressAnimation();
+		}
+		
+		Drawable d = getResources().getDrawable(R.drawable.ic_launcher);
+		
+		switch (status) {
+		case Connected:
+			d.setColorFilter(null);
+			ab.setIcon(d);
 			break;
 		default:
-			//TODO: No Network on UI
+			d.setColorFilter(0x66666666, Mode.MULTIPLY);
+			ab.setIcon(d);
 		}
 	}
 	

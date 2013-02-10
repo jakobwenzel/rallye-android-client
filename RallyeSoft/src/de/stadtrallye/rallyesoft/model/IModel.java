@@ -6,7 +6,7 @@ import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public interface IModel {
 	
-	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying };
+	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying, Unknown };
 	
 	public List<? extends IChatroom> getChatrooms();
 	public IChatroom getChatroom(int id);

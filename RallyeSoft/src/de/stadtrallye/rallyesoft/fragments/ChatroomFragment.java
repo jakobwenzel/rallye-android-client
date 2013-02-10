@@ -25,6 +25,10 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -148,7 +152,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		super.onStart();
 		
 		chatroom.addListener(this);
-		chatroom.adviseUse();
+		chatroom.refresh();
 	}
 	
 //	@Override
@@ -209,7 +213,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		outState.putSerializable(Std.LAST_POS, lastPos);
 		outState.putInt(Std.CHATROOM, chatroom.getID());
 	}
-	
 	
 	/**
 	 * Wraps around ChatEntry List
@@ -357,7 +360,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		case Refreshing:
 			ui.activateProgressAnimation();
 			break;
-		case Online:
+		case Ready:
 			ui.deactivateProgressAnimation();
 			break;
 		case Offline:
@@ -376,6 +379,4 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			chatroom.addChat(msg.toString());
 		}
 	}
-
-	
 }

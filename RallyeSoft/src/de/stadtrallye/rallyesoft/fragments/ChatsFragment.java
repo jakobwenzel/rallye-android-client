@@ -12,6 +12,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.viewpagerindicator.TitlePageIndicator;
 
 import de.stadtrallye.rallyesoft.IModelActivity;
@@ -52,7 +55,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		if (savedInstanceState != null)
 			currentTab = savedInstanceState.getInt(Std.TAB);
-//		setRetainInstance(false);
+		setRetainInstance(true);
+		setHasOptionsMenu(true);
 	}
 	
 	@Override
@@ -85,6 +89,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	public void onStart() {
 		super.onStart();
 		
+		indicator.setCurrentItem(currentTab);
+		
 		model.addListener(this);
 	}
 	
@@ -115,6 +121,27 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		super.onSaveInstanceState(outState);
 		
 		outState.putInt(Std.TAB, pager.getCurrentItem());
+	}
+	
+	private static final int REFRESH_ID = -199;
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		MenuItem m = menu.add(Menu.NONE, REFRESH_ID, Menu.NONE, getString(R.string.refresh));
+		
+		m.setIcon(R.drawable.ic_refresh_inverse);
+		m.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (REFRESH_ID == item.getItemId()) {
+			chatrooms.get(pager.getCurrentItem()).refresh();
+		} else {
+			Log.d(THIS, "Not hiton menu item "+ item);
+		}
+		
+		return super.onOptionsItemSelected(item);
 	}
 	
 	private void populateChats() {

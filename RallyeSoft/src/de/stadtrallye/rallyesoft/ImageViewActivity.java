@@ -1,12 +1,20 @@
 package de.stadtrallye.rallyesoft;
 
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.ScaleGestureDetector.OnScaleGestureListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -23,7 +31,9 @@ import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
 import de.stadtrallye.rallyesoft.model.Model;
 
-public class ImageViewActivity extends SherlockActivity {
+public class ImageViewActivity extends SherlockActivity implements OnTouchListener {
+	
+	private static final String THIS = ImageViewActivity.class.getSimpleName();
 	
 	private ViewPager pager;
 //	private int chatroom;
@@ -31,8 +41,8 @@ public class ImageViewActivity extends SherlockActivity {
 	private Model model;
 	private ImageAdapter adapter;
 	private int[] images;
-	private int startPos;
-	
+	private int startPos;	
+//	private ScaleGestureDetector detector;
 	
 
 	@Override
@@ -42,6 +52,7 @@ public class ImageViewActivity extends SherlockActivity {
 		requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
 		
 		setContentView(R.layout.activity_image_view);
+		findViewById(R.id.image_pager).setOnTouchListener(this);
 		
 		// Show the Up button in the action bar.
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -49,6 +60,7 @@ public class ImageViewActivity extends SherlockActivity {
 		model = Model.getInstance(this, false);
 		
 		pager = (ViewPager)findViewById(R.id.image_pager);
+		
 		Bundle b = getIntent().getExtras();
 //		chatroom = b.getInt(Std.CHATROOM);
 		images = b.getIntArray(Std.IMAGE_LIST);
@@ -59,6 +71,8 @@ public class ImageViewActivity extends SherlockActivity {
         adapter = new ImageAdapter(images);
         pager.setAdapter(adapter);
         pager.setCurrentItem(startPos);
+        
+//        findViewById(R.id.image_pager).setOnTouchListener(this);
 	}
 	
 	@Override
@@ -141,6 +155,7 @@ public class ImageViewActivity extends SherlockActivity {
 				@Override
 				public void onLoadingComplete(Bitmap loadedImage) {
 					spinner.setVisibility(View.GONE);
+					
 				}
 			});
 
@@ -183,6 +198,71 @@ public class ImageViewActivity extends SherlockActivity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	private PointF begin = new PointF();
+	private PointF p2 = new PointF();
+	private Matrix mBase = new Matrix();
+	private Matrix mScale = new Matrix();
+	private enum Mode { None, Drag, Zoom };
+	private Mode mode = Mode.None;
+
+	@Override
+	public boolean onTouch(View v, MotionEvent e) {
+		
+		switch (e.getActionMasked()) {
+		case MotionEvent.ACTION_DOWN:
+			mScale.preScale(2, 2);
+			mode = Mode.Drag;
+			begin = new PointF(e.getX(), e.getY());
+			break;
+		case MotionEvent.ACTION_UP:
+			mode = Mode.None;
+//			begin = null;
+			break;
+		case MotionEvent.ACTION_MOVE:
+			mBase.set(mScale);
+			mBase.postTranslate(e.getX() - begin.x, e.getY() - begin.y);
+			break;
+		default:
+			Log.w(THIS, "Unhandled Action: ");
+			dumpEvent(e);
+		}
+		
+		
+		
+		ImageView img = (ImageView) pager.getChildAt(pager.getCurrentItem()).findViewById(R.id.image);
+		img.setImageMatrix(mBase);
+		
+		return false;
+	}
+	
+	
+	
+	private void dumpEvent(MotionEvent event) {
+		String names[] = { "DOWN", "UP", "MOVE", "CANCEL", "OUTSIDE",
+				"POINTER_DOWN", "POINTER_UP", "7?", "8?", "9?" };
+		StringBuilder sb = new StringBuilder();
+		int action = event.getAction();
+		int actionCode = action & MotionEvent.ACTION_MASK;
+		sb.append("event ACTION_").append(names[actionCode]);
+		if (actionCode == MotionEvent.ACTION_POINTER_DOWN
+				|| actionCode == MotionEvent.ACTION_POINTER_UP) {
+			sb.append("(pid ").append(
+					action >> MotionEvent.ACTION_POINTER_ID_SHIFT);
+			sb.append(")");
+		}
+		sb.append("[");
+		for (int i = 0; i < event.getPointerCount(); i++) {
+			sb.append("#").append(i);
+			sb.append("(pid ").append(event.getPointerId(i));
+			sb.append(")=").append((int) event.getX(i));
+			sb.append(",").append((int) event.getY(i));
+			if (i + 1 < event.getPointerCount())
+				sb.append(";");
+		}
+		sb.append("]");
+		Log.d(THIS, sb.toString());
 	}
 
 }

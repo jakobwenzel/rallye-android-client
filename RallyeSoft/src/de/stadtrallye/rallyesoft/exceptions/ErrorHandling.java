@@ -63,4 +63,8 @@ public class ErrorHandling {
 	public void jsonCastError(ClassCastException e) {
 		Log.e(where, "During JSON Conversion, Object could not be casted to source class", e);
 	}
+
+	public void dbInsertError(String string) {
+		Log.e(where, "Failed to insert into DB: "+ string);
+	}
 }

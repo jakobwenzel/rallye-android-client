@@ -7,8 +7,10 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -20,6 +22,7 @@ import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Groups;
 import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
 import de.stadtrallye.rallyesoft.model.comm.RallyePull;
 import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
@@ -44,7 +47,7 @@ public class Model implements IModel, IAsyncFinished {
 	private static boolean DEBUG = false;
 	
 	
-	public enum Tasks { LOGIN, CHAT_DOWNLOAD, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST };
+	public enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST };
 	
 	
 	private static Model model; // Singleton Pattern
@@ -58,10 +61,10 @@ public class Model implements IModel, IAsyncFinished {
 	private Login newLogin;
 	
 	@SuppressWarnings("rawtypes")
-	private HashMap<AsyncRequest, Tasks> runningRequests;
+	private HashMap<AsyncRequest, Tasks> runningRequests = new HashMap<AsyncRequest, Tasks>();
 	
-	private ConnectionStatus connectionStatus;
-	private ArrayList<IConnectionStatusListener> connectionListeners;
+	private ConnectionStatus connectionStatus = ConnectionStatus.Unknown;
+	private ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
 	private IMapListener mapListener;
 	
 	private List<Chatroom> chatrooms;
@@ -69,41 +72,77 @@ public class Model implements IModel, IAsyncFinished {
 	private SQLiteDatabase db;
 	
 	
-	public static Model getInstance(Context context, boolean loggedIn) {
+	public static Model getInstance(Context context, boolean loggedIn) {//TODO: detect rotate/ prevent killing model during rotate
 		if (model != null)
-			return model;
+			return model.ensureConnections();
 		else
 			return model = new Model(context, getDefaultPreferences(context), loggedIn);
+	}
+	
+	private Model ensureConnections() {
+		db = new DatabaseOpenHelper(context).getWritableDatabase();
+		
+		return model;
 	}
 	
 	private static SharedPreferences getDefaultPreferences(Context context) {
 		return context.getSharedPreferences(context.getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
 	}
 	
-	@SuppressWarnings("rawtypes")
 	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
 		String gcm = GCMRegistrar.getRegistrationId(context);
 		this.pref = pref;
 		this.context = context;
-		this.connectionStatus = loggedIn? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+		this.connectionStatus = loggedIn? ConnectionStatus.Connected : ConnectionStatus.Unknown;
 		
-		
-		currentLogin = readLogin();
-		if (!currentLogin.isComplete()) {
-			connectionStatus = ConnectionStatus.Disconnected; //TODO: Implement "No Network" Status
-		} else {
-			readChatRooms();
-		}
-		
-		pull = new RallyePull(currentLogin.getServer(), gcm);
-		
-		runningRequests = new HashMap<AsyncRequest, Tasks>();
-		connectionListeners = new ArrayList<IConnectionStatusListener>();
+		pull = new RallyePull(gcm);
 		
 		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
 		db = helper.getWritableDatabase();
+		
+		currentLogin = readLogin();
+		
+		if (connectionStatus == ConnectionStatus.Connected) {
+			Log.i(THIS, "Warm Start: assuming previously logged in!");
+			
+			pull.setBaseURL(currentLogin.getServer());
+		} else {
+			if (currentLogin.isValid()) {
+				if (isDbSynchronized()) {
+					Log.i(THIS, "Cold Start: Found Login-Data and DB -> checking connection");
+					connectionStatus = ConnectionStatus.Connecting;
+					
+					chatrooms = Chatroom.getChatrooms(this);
+					
+					pull.setBaseURL(currentLogin.getServer());
+					
+					checkConnectionStatus();
+				} else {
+					Log.w(THIS, "Cold Start: Found Login-Data, but DB incompatible -> Log In");
+					connectionStatus = ConnectionStatus.Retrying;
+					
+					pull.setBaseURL(currentLogin.getServer());
+					
+					newLogin = currentLogin;
+					logout(); //During Retrying after logout completed a new attempt at login will be started at newLogin
+				}
+			} else {
+				Log.w(THIS, "No usable Login-Data found -> stay offline");
+				connectionStatus = ConnectionStatus.Disconnected; //TODO: Implement "No Network" Status
+				
+				currentLogin = null;
+			}
+		}
 	}
 	
+	private boolean isDbSynchronized() {
+		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.getGroup(), null, null, null, null);
+		if (c.getCount() != 1)
+			return false;
+		else
+			return true;
+	}
+
 	@SuppressWarnings("rawtypes")
 	HashMap<AsyncRequest, Tasks> getRunningRequests() {
 		return runningRequests;
@@ -113,9 +152,19 @@ public class Model implements IModel, IAsyncFinished {
 		return pull;
 	}
 	
+	SQLiteDatabase getDb() {
+		return db;
+	}
+	
 	
 	@Override
 	public void logout() {
+		if (currentLogin == null && newLogin == null) {
+			Log.e(THIS, "Cannot logout: no server specified");
+			connectionFailure(new Exception("Cannot logout: no server specified"), ConnectionStatus.Unknown);
+			return;
+		}
+		
 		try {
 			startAsyncTask(Tasks.LOGOUT, pull.pendingLogout(), null);
 			connectionStatusChange(ConnectionStatus.Disconnecting);
@@ -158,9 +207,12 @@ public class Model implements IModel, IAsyncFinished {
 		 
 		if (newLogin.isComplete()) {
 			try {
+				String gcm = GCMRegistrar.getRegistrationId(context);
+				pull = new RallyePull(gcm);
+				pull.setBaseURL(login.getServer());
 				
 				startAsyncTask(Tasks.LOGIN,
-						RallyePull.pendingLogin(newLogin, GCMRegistrar.getRegistrationId(context)),
+						pull.pendingLogin(newLogin, gcm),
 						new StringedJSONArrayConverter<Chatroom>(new LoginConverter()));
 				
 				connectionStatusChange(ConnectionStatus.Connecting);
@@ -176,7 +228,7 @@ public class Model implements IModel, IAsyncFinished {
 	@Override
 	public void checkConnectionStatus() {
 		try {
-			startAsyncTask(Tasks.CHECK_SERVER, pull.pendingServerStatus(currentLogin.getServer()), null);
+			startAsyncTask(Tasks.CHECK_SERVER, pull.pendingServerStatus(), null);
 		} catch (RestException e) {
 			err.restError(e);
 		}
@@ -195,14 +247,15 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
-	protected <T> void startAsyncTask(IAsyncFinished callback, Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
+	protected <T> AsyncRequest<T> startAsyncTask(IAsyncFinished callback, Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
 		AsyncRequest<T> ar = new AsyncRequest<T>(callback, converter);
 		runningRequests.put(ar, taskType);
 		ar.execute(payload);
+		return ar;
 	}
 	
-	private <T> void startAsyncTask(Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
-		startAsyncTask(this, taskType, payload, converter);
+	private <T> AsyncRequest<T> startAsyncTask(Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
+		return startAsyncTask(this, taskType, payload, converter);
 	}
 	
 	@Override
@@ -254,7 +307,10 @@ public class Model implements IModel, IAsyncFinished {
 	public void onAsyncFinished(@SuppressWarnings("rawtypes") final AsyncRequest request, final boolean success) {
 		Tasks type = runningRequests.get(request);
 		
-		if (type == null) {
+		if (type == null && !success) {
+			Log.w(THIS, "Task Callback with type 'null' => cancelled Task");
+			return;
+		} else if (type == null) {
 			Log.e(THIS, "Task Callback with type 'null'");
 			return;
 		}
@@ -268,6 +324,7 @@ public class Model implements IModel, IAsyncFinished {
 						connectionStatusChange(ConnectionStatus.Retrying);
 						this.logout();
 					} else {
+						newLogin = currentLogin = null;
 						connectionFailure(request.getException(), ConnectionStatus.Disconnected);
 					}
 				} else {
@@ -295,12 +352,12 @@ public class Model implements IModel, IAsyncFinished {
 			
 			break;
 		case CHECK_SERVER:
-			if (success) {
+			if (success) {//TODO: get rid of throw Except
 				ConnectionStatus state = (request.getResponseCode() >= 200 && request.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
 				currentLogin.validated();
 				connectionStatusChange(state);
 			} else
-				err.asyncTaskResponseError(request.getException());
+				connectionStatusChange(ConnectionStatus.Disconnected);
 			break;
 		case MAP_NODES:
 			if (success) {
@@ -337,7 +394,17 @@ public class Model implements IModel, IAsyncFinished {
 		edit.putString(Std.SERVER, currentLogin.getServer());
 		edit.putInt(Std.GROUP, currentLogin.getGroup());
 		edit.putString(Std.PASSWORD, currentLogin.getPassword());
-		edit.putString(Std.CHATROOMS, serializeChatroomIds());
+//		edit.putString(Std.CHATROOMS, serializeChatroomIds());
+		
+		ContentValues insert = new ContentValues();
+		insert.put(Groups.KEY_ID, currentLogin.getGroup());
+		//TODO: put Name
+		db.insert(Groups.TABLE, null, insert);
+		
+		for (Chatroom c: chatrooms) {
+			c.writeToDb();
+		}
+		
 		edit.commit();
 	}
 	
@@ -348,10 +415,11 @@ public class Model implements IModel, IAsyncFinished {
 				pref.getLong(Std.LAST_LOGIN, 0));
 	}
 	
-	private void readChatRooms() { //TODO: move to DB
-		String rooms = pref.getString(Std.CHATROOMS, "");
-		chatrooms = Chatroom.getChatrooms(rooms, model);
-	}
+//	@Deprecated
+//	private void readChatRooms() { //TODO: move to DB
+//		String rooms = pref.getString(Std.CHATROOMS, "");
+//		chatrooms = Chatroom.getChatrooms(rooms, this);
+//	}
 	
 	private Login getDefaultLogin() {
 		return new Login(context.getString(R.string.default_server),
@@ -382,6 +450,8 @@ public class Model implements IModel, IAsyncFinished {
 		}
 		
 		runningRequests.clear();
+		
+		db.close();
 	}
 	
 	public void setMapListener(IMapListener l) {
@@ -403,7 +473,10 @@ public class Model implements IModel, IAsyncFinished {
 	}
 	
 	private void connectionStatusChange(ConnectionStatus newState) {
-		if (connectionStatus == ConnectionStatus.Retrying && (newState != ConnectionStatus.Disconnected || newState != ConnectionStatus.Connected))
+		if (connectionStatus == ConnectionStatus.Retrying && (newState != ConnectionStatus.Disconnected && newState != ConnectionStatus.Connected)) {
+			Log.i(THIS, "Status: Ignoring change to "+ newState +" while retrying");
+			return;
+		}
 		
 		connectionStatus = newState;
 		

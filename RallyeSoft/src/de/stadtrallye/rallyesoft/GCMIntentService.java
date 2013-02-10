@@ -56,7 +56,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 			Model model = Model.getInstance(context, true);
 			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
 			if (r != null) {
-				r.adviseUse(); //TODO: specialize...
+				r.refresh(); //TODO: specialize...
 			} else
 				Log.e(THIS, "Chat push received, but not my chatroom ("+extras.getInt("d")+")");
 		}

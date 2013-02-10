@@ -6,12 +6,12 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 public interface IChatroom {
 	
-	public enum ChatStatus { Offline, Online, Refreshing, Posting };
+	public enum ChatStatus { Offline, Ready, Refreshing, Posting };
 	
 	public int getID();
 	public String getName();
 	
-	public void adviseUse();
+	public void refresh();
 	public void saveCurrentState(int lastRead);
 	
 	public void addListener(IChatListener l);

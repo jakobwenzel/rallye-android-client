@@ -40,10 +40,6 @@ public class Pull {
 	
 	public enum RequestResponse { jsArray, jsObject, String	};
 	
-	public Pull(String baseURL) {
-		base = baseURL;
-	}
-	
 	public void setBaseURL(String baseURL) {
 		this.base = baseURL;
 	}

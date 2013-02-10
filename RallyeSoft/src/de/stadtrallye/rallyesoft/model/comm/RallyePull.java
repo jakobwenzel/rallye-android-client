@@ -22,15 +22,16 @@ public class RallyePull extends Pull {
 	
 	private String gcm;
 	
-	public RallyePull(String server, String gcm) {
-		super(server);
-		
+	public RallyePull(String gcm) {
 		this.gcm = gcm;
+		
+		if (gcm == null || gcm.length() == 0)
+			Log.e(THIS, "Empty GCM ID");
 	}
 	
-	public static PendingRequest pendingLogin(Login login, String gcm) throws RestException { //TODO:use this.gcm
+	public PendingRequest pendingLogin(Login login, String gcm) throws RestException { //TODO:use this.gcm
 		final String rest = "/user/register";
-		PendingRequest r = new Pull(login.getServer()).new PendingRequest(rest);
+		PendingRequest r = new PendingRequest(rest);
 		try {
 			String post = new JSONObject()
 			.put(Std.GCM, gcm)
@@ -55,9 +56,9 @@ public class RallyePull extends Pull {
 		return r;
 	}
 	
-	public PendingRequest pendingServerStatus(String server) throws RestException {
+	public PendingRequest pendingServerStatus() throws RestException {
 		final String rest = "/system/status";
-		PendingRequest r = new Pull(server).new PendingRequest(rest);
+		PendingRequest r = new PendingRequest(rest);
 		try {
 			r.putPost(new JSONObject().put(Std.GCM, gcm).toString(), Mime.JSON);
 		} catch (JSONException e) {
