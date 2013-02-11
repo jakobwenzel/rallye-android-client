@@ -137,8 +137,10 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 				
 				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
 				intent.putExtra(Std.CHATROOM, chatroom.getID());
-				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
-				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
+				intent.putExtra(Std.IMAGE, chatAdapter.getChatEntry(pos).pictureID);
+//				intent.putExtra(Std.NAME, chatroom.getName());
+//				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
+//				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
 				startActivity(intent);
 			}
 		});
@@ -225,7 +227,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		private List<ChatEntry> entries;
 		private ImageLoader loader;
 		private DateFormat converter;
-		private int[] pictures;
 		
 		private class ViewMem {
 			public ImageView img;
@@ -255,6 +256,11 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		}
 		
 		
+		public ChatEntry getChatEntry(int pos) {
+			return entries.get(pos);
+		}
+
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
@@ -289,7 +295,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
                 // When called with null or "" as URL, will display empty pciture / default resource
                 // Otherwise ImageLoader will not be stable and start swapping images
                 if (o.pictureID > 0) {
-                	loader.displayImage(model.getUrlFromImageId(o.pictureID, 't'), mem.img);
+                	loader.displayImage(chatroom.getUrlFromImageId(o.pictureID, 't'), mem.img);
                 } else {
                 	loader.displayImage(null, mem.img);
                 }
@@ -302,34 +308,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		
 		public boolean hasPicture(int pos) {
 			return entries.get(pos).pictureID != 0;
-		}
-		
-		public int[] getPictures() {
-			if (pictures != null)
-				return pictures;
-			
-			ArrayList<Integer> l = new ArrayList<Integer>();
-			
-			for (ChatEntry c: entries) {
-				if (c.pictureID > 0)
-					l.add(c.pictureID);
-			}
-			
-			pictures = new int[l.size()];
-			for (int i=l.size()-1;i>=0;--i)
-				pictures[i] = l.get(i);
-			
-			return pictures;
-		}
-		
-		public int getPicturePos(int pos) {
-			final int pictureID = entries.get(pos).pictureID;
-			
-			for (int i=pictures.length-1; i>=0; --i) {
-				if (pictures[i] == pictureID)
-					return i;
-			}
-			return -1;
 		}
 	}
 	

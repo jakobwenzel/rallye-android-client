@@ -146,6 +146,10 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	
 	private void populateChats() {
 		chatrooms = model.getChatrooms();
+		if (chatrooms == null) {
+			Log.e(THIS, "Chatroom null");
+			return;
+		}
 		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), chatrooms);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);

@@ -24,8 +24,6 @@ public interface IModel {
 	public void removeListener(IConnectionStatusListener l);
 	public ConnectionStatus getConnectionStatus();
 	
-	public String getUrlFromImageId(int id, char size);
-	
 	public void onDestroy();
 	public void onStop();
 	

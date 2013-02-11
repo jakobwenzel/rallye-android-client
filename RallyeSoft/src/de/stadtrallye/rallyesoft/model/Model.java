@@ -293,14 +293,6 @@ public class Model implements IModel, IAsyncFinished {
 		
 		return null;
 	}
-	
-	
-	@Override
-	public String getUrlFromImageId(int pictureID, char size) {
-		String res = currentLogin.getServer() +"/pic/get/"+ pictureID +"/"+ size;
-//		Log.v(THIS, res);
-		return res;
-	}
 
 	
 	@Override

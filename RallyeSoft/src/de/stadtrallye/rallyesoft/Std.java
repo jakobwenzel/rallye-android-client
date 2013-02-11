@@ -26,4 +26,5 @@ public class Std {
 	public final static String GROUPID = "groupID";
 	public static final String MSG = "mess";
 	public static final String PIC = "pic";
+	public static final String NAME = "name";
 }

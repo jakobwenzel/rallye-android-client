@@ -239,26 +239,6 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 			l.addedChats(entries);
 		}
 	}
-	
-//	private void removeRedundantChats(List<ChatEntry> entries, SQLiteDatabase db) {
-//		int i = entries.size()-1;
-//		ChatEntry mine = entries.get(i);
-//		ChatEntry theirs;
-//		int last = mine.timestamp;
-//		if (last == lastUpdate) {
-//			
-//			Cursor c = db.query(Chats.TABLE+" LEFT JOIN "+Messages.TABLE+" USING ("+Chats.FOREIGN_MSG+")", new String[]{Messages.KEY_MSG, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.KEY_PICTURE}, null, null, null, null, Chats.KEY_TIME+" DESC");
-//			
-//			
-//			do {
-//				theirs = new ChatEntry(c.getString(0), c.getInt(1), c.getInt(2), sqlToBool(c.getInt(3)), c.getInt(4));
-//				mine = null;
-//				if (theirs.equals(mine))
-//					entries.remove(mine);
-//				i--;
-//			} while (mine.timestamp == theirs.timestamp);
-//		}
-//	}
 
 	private void chatStatusChange(ChatStatus newStatus) {
 		status = newStatus;
@@ -303,6 +283,46 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 		}
 		
 		return out;
+	}
+	
+	private class PictureGallery extends AbstractPictureGallery {
+		
+		public PictureGallery(int initialPictureID) {
+			pictures = new ArrayList<Integer>();
+			
+			Cursor c = model.getDb().query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE+" <> 0 AND "+Chats.FOREIGN_ROOM+" = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+			
+			int picId, i = 0;
+			while (c.moveToNext()) {
+				picId = c.getInt(0);
+				pictures.add(picId);
+				if (picId == initialPictureID) {
+					initialPos = i;
+				}
+				i++;
+			}
+		}
+		
+		@Override
+		public String getPictureUrl(int pos, char size) {
+			return Chatroom.this.getUrlFromImageId(pictures.get(pos), size);
+		}
+		
+	}
+	
+	/**
+	 * @param initialPictureId -1 results in a initialPosition of 0
+	 */
+	@Override
+	public IPictureGallery getPictureGallery(int initialPictureId) {
+		return new PictureGallery(initialPictureId);
+	}
+	
+	@Override
+	public String getUrlFromImageId(int pictureID, char size) {
+		String res = model.getLogin().getServer() +"/pic/get/"+ pictureID +"/"+ size;
+//		Log.v(THIS, res);
+		return res;
 	}
 	
 	@Override

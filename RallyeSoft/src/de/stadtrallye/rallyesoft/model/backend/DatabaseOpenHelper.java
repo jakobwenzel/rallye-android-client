@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 9;
+	private static final int DATABASE_VERSION = 10;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 	
 	public static final class Groups {
@@ -32,7 +32,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 					KEY_ID +" INTEGER PRIMARY KEY, "+
 					KEY_NAME +" VARCHAR(50) NOT NULL, "+
 					Groups.KEY_ID +" INTEGER NOT NULL REFERENCES "+ Groups.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
-					KEY_LAST_UPDATE +" timestamp, "+
+					KEY_LAST_UPDATE +" TIMESTAMP, "+
 					KEY_LAST_ID +" INTEGER)";
 	}
   
@@ -48,12 +48,12 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 		public static final String CREATE =
 				"CREATE TABLE "+ TABLE +" ("+
 				  KEY_ID +" INTEGER PRIMARY KEY, "+
-				  KEY_TIME +" timestamp NOT NULL, "+
-				  Groups.KEY_ID +" int NOT NULL REFERENCES "+ Groups.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
+				  KEY_TIME +" TIMESTAMP NOT NULL, "+
+				  Groups.KEY_ID +" INTEGER NOT NULL REFERENCES "+ Groups.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
 				  KEY_SELF +" BOOLEAN NOT NULL DEFAULT false, "+
-				  Messages.KEY_ID +" int DEFAULT NULL REFERENCES "+ Messages.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
-				  KEY_PICTURE +" int DEAULT NULL, "+
-				  Chatrooms.KEY_ID +" int NOT NULL REFERENCES "+ Chatrooms.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE)";
+				  Messages.KEY_ID +" INTEGER DEFAULT NULL REFERENCES "+ Messages.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
+				  KEY_PICTURE +" INTEGER, "+
+				  Chatrooms.KEY_ID +" INTEGER NOT NULL REFERENCES "+ Chatrooms.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE)";
 	}
 	
     public static final class Messages {

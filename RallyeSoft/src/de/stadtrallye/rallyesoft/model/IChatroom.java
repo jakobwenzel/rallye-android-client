@@ -21,6 +21,9 @@ public interface IChatroom {
 	public List<ChatEntry> getAllChats();
 	public void addChat(String msg);
 	
+	public String getUrlFromImageId(int pictureID, char size);
+	public IPictureGallery getPictureGallery(int initialPictureId);
+	
 	public void onDestroy();
 	public void onStop();
 }
