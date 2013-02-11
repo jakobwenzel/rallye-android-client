@@ -222,7 +222,8 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		
 		private float baseScale = 1;
 		private float beginScale = 1, currentScale = 1;
-		private boolean block = true;
+		private boolean block = false;
+		private boolean widthLimit;
 		
 		private Mode mode = Mode.None;
 		private ImageView img;
@@ -243,52 +244,57 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 					mBase.set(img.getImageMatrix());
 					pImg = new PointF(img.getDrawable().getIntrinsicWidth(), img.getDrawable().getIntrinsicHeight());
 					pBox = new PointF(img.getWidth(), img.getHeight());
-					currentScale = beginScale = baseScale = mBase.mapRadius(1);
+					widthLimit = ((pBox.x / pBox.y) < (pImg.x / pImg.y));
+						
+					beginScale = baseScale = mBase.mapRadius(1);
 				}
 				
-//				mBegin.set(img.getImageMatrix());
+				mBegin.set(img.getImageMatrix());
 				pBegin.set(e.getX(), e.getY());
-				return false;
+				return block;
 			case MotionEvent.ACTION_UP:
 				mode = Mode.None;
-				return false;
+				return block;
 			case MotionEvent.ACTION_POINTER_DOWN:
 				mode = Mode.Zoom;
 				Log.d(THIS, "Zoom");
 				
-//				mBegin.set(mCurrent);
+				mBegin.set(mCurrent);
 				dBegin = distance(e);
 				pBegin = midPoint(e);
-				return false;
+				beginScale = mBegin.mapRadius(1);
+				return block;
 			case MotionEvent.ACTION_POINTER_UP:
 				mode = Mode.Drag;
 				
-//				mBegin.set(mCurrent);
-				beginScale = currentScale;
+				mBegin.set(mCurrent);
+				beginScale = mBegin.mapRadius(1);
 				pBegin.set(e.getX(), e.getY());
-				return false;
+				return block;
 			case MotionEvent.ACTION_MOVE:
-//				if (mode == Mode.Drag && beginScale == baseScale)
-//					return false;
+				if (mode == Mode.Drag && beginScale == baseScale)
+					return false;
 				
-				mCurrent.set(mBase);
+				mCurrent.set(mBegin);
 				
 				PointF d;
 				
 				if (mode == Mode.Zoom) {
 					float s = distance(e) / dBegin;
-//					if (beginScale * s < baseScale) {
-//						Log.d(THIS, "blocked scale down: "+ s);
-//						s = baseScale;
-//					}
-					currentScale = s * beginScale;
+					if (beginScale * s > baseScale) {
+						Log.d(THIS, "scaling, blocking pager");
+						touchFilter.redirect = this;
+						block = true;
+					}
+					currentScale = s/* * beginScale*/;
 					
 					d = midPoint(e);
+					mCurrent.postScale(currentScale, currentScale, pBegin.x, pBegin.y);
 				} else {
 					d = new PointF(e.getX(), e.getY());
 				}
 				
-				mCurrent.postScale(currentScale, currentScale, pBegin.x, pBegin.y);
+				
 				mCurrent.postTranslate(d.x - pBegin.x, d.y - pBegin.y);
 				
 				correctTransform();
@@ -307,120 +313,47 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		}
 		
 		private void correctTransform() {
-			float[] t = new float[]{0, 0};
+			float[] t = new float[]{0, 0, pImg.x, pImg.y};
 			mCurrent.mapPoints(t);
 			PointF v = new PointF();
-			boolean trans = false, scale = false;
+			int flags = 0;
 			
-			if (t[0] > 0) {
-				v.x = -t[0];
-				trans = true;
-			}
-			if (t[1] > 0) {
-				v.y = -t[1];
-				trans = true;
-			}
-			t = new float[]{pImg.x, pImg.y};
-			mCurrent.mapPoints(t);
+			if (widthLimit) {
 			
-			if (t[0] < pBox.x) {
-				if (trans) {
-					scale = true;
-				} else
-					v.x = t[0];
-			}
-			if (t[1] < pBox.y) {
-				if (trans) {
-					scale = true;
-				} else
-					v.y = t[1];
+				if (t[0] > 0) {
+					v.x = -t[0];
+					flags += 1;
+					Log.d(THIS, "caught LEFT inside");
+				}
+				if (t[2] < pBox.x) {
+					flags += 1;
+					v.x = pBox.x - t[2];
+					Log.d(THIS, "caught RIGHT inside");
+				}
+				
+			} else {
+				if (t[1] > 0) {
+					v.y = -t[1];
+					flags += 1;
+					Log.d(THIS, "caught TOP inside");
+				}
+				if (t[3] < pBox.y) {
+					flags += 1;
+						v.y = pBox.y - t[3];
+					Log.d(THIS, "caught BOTTOM inside");
+				}
 			}
 			
-			if (!scale && trans) {
+			if (flags == 1) {
 				Log.d(THIS, "blocked translation inside bounds");
 				mCurrent.postTranslate(v.x, v.y);
-			} else if (scale) {
+			} else if (flags > 1) {
 				Log.d(THIS, "blocked scaling inside bounds");
+				Log.d(THIS, "allowing pager");
 				mCurrent.set(mBase);
-				currentScale = baseScale;
+				touchFilter.redirect = null;
+				block = false;
 			}
-		}
-		
-		public boolean onTouch2(View v, MotionEvent e) {
-			
-			switch (e.getActionMasked()) {
-			case MotionEvent.ACTION_DOWN:
-				mode = Mode.Drag;
-				
-				mBase.set(img.getImageMatrix());
-				mCurrent.set(img.getImageMatrix());
-				
-				
-				pBegin = new PointF(e.getX(), e.getY());
-				Log.d(THIS, "Drag");
-				return false;
-			case MotionEvent.ACTION_UP:
-				mode = Mode.None;
-				return false;
-			case MotionEvent.ACTION_POINTER_DOWN:
-				mode = Mode.Zoom;
-				touchFilter.redirect = this;
-				Log.d(THIS, "Pager blocked");
-				Log.d(THIS, "Zoom");
-				mBase.set(mCurrent);
-				dBegin = distance(e);
-				pBegin = midPoint(e);
-				return false;
-			case MotionEvent.ACTION_POINTER_UP:
-				mode = Mode.Drag;
-				mBase.set(mCurrent);
-				baseScale = mBase.mapRadius(1);
-				pBegin = new PointF(e.getX(), e.getY());
-				if (baseScale - 0.01 <= 1) {
-					touchFilter.redirect = null;
-					Log.d(THIS, "Pager allowed");
-				}
-				return false;
-			case MotionEvent.ACTION_MOVE:
-				if (mode == Mode.Drag && baseScale <= 1)
-					return false;
-				
-				mCurrent.set(mBase);
-				
-				PointF d;
-				
-				if (mode == Mode.Zoom) {
-					float s = distance(e) / dBegin;
-					if (baseScale * s < 1) {
-						Log.d(THIS, "blocked scale down: "+ s);
-						s = 1 / baseScale;
-						
-					}
-					mCurrent.postScale(s, s, pBegin.x, pBegin.y);
-					
-					d = midPoint(e);
-				} else {
-					d = new PointF(e.getX(), e.getY());
-				}
-				
-				mCurrent.postTranslate(d.x - pBegin.x, d.y - pBegin.y);
-				
-				break;
-			default:
-				Log.w(THIS, "Unhandled Action: ");
-				dumpEvent(e);
-				return false;
-			}
-			
-			
-			
-			if (mode == Mode.Drag || mode == Mode.Zoom) {
-				if (img.getScaleType() != ScaleType.MATRIX)
-					img.setScaleType(ScaleType.MATRIX);
-				img.setImageMatrix(mCurrent);
-				return true;
-			} else
-				return false;
 		}
 		
 		private float distance(MotionEvent e) {
@@ -467,7 +400,8 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		@Override
 		public boolean onTouch(View v, MotionEvent event) {
 			if (redirect != null) {
-				return redirect.onTouch(v, event);
+				redirect.onTouch(v, event);
+				return true;
 			} else {
 				return false;
 			}
