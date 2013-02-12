@@ -2,9 +2,7 @@ package de.stadtrallye.rallyesoft;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.graphics.Matrix.ScaleToFit;
 import android.graphics.PointF;
-import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -33,16 +31,17 @@ import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.widget.GalleryPager;
 
 public class ImageViewActivity extends SherlockActivity implements OnClickListener {
 	
 	private static final String THIS = ImageViewActivity.class.getSimpleName();
 	
-	private ViewPager pager;
+	private GalleryPager pager;
 	private Model model;
 	private ImageAdapter adapter;
 	
-	private TouchFilter touchFilter = new TouchFilter();
+//	private TouchFilter touchFilter = new TouchFilter();
 
 	private IChatroom chatroom;
 	private IPictureGallery gallery;
@@ -61,8 +60,8 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		
 		model = Model.getInstance(this, true);
 		
-		pager = (ViewPager)findViewById(R.id.image_pager);
-		pager.setOnTouchListener(touchFilter);
+		pager = (GalleryPager)findViewById(R.id.image_pager);
+//		pager.setOnTouchListener(touchFilter);
 		
 		Bundle b = getIntent().getExtras();
 		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
@@ -94,7 +93,7 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 			DisplayImageOptions disp = new DisplayImageOptions.Builder()
 				.cacheOnDisc()
 				.cacheInMemory() // Still unlimited Cache on Disk
-				.showImageForEmptyUri(R.drawable.stub_image)
+//				.showImageForEmptyUri(R.drawable.stub_image)
 				.build();
 			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(ImageViewActivity.this)
 //				.enableLogging()
@@ -131,7 +130,7 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 			final ProgressBar spinner = (ProgressBar) imageLayout.findViewById(R.id.loading);
 			
 			imageLayout.setOnClickListener(ImageViewActivity.this);
-			imageLayout.setOnTouchListener(new Pincher(imageView));
+			imageLayout.setOnTouchListener(new TouchControl(imageView));
 
 			loader.displayImage(gallery.getPictureUrl(position, 's'), imageView, new SimpleImageLoadingListener() {
 				@Override
@@ -209,10 +208,10 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 	
 	private enum Mode { None, Drag, Zoom };
 	
-	private class Pincher implements OnTouchListener {
+	private class TouchControl implements OnTouchListener {
 	
 		private PointF pBegin = new PointF();
-		private PointF vTrans = new PointF();
+//		private PointF vTrans = new PointF();
 		private Matrix mBase = new Matrix();
 		private Matrix mBegin = new Matrix();
 		private Matrix mCurrent = new Matrix();
@@ -229,7 +228,7 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		private ImageView img;
 		
 		
-		public Pincher(ImageView img) {
+		public TouchControl(ImageView img) {
 			this.img = img;
 		}
 		
@@ -283,7 +282,7 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 					float s = distance(e) / dBegin;
 					if (beginScale * s > baseScale) {
 						Log.d(THIS, "scaling, blocking pager");
-						touchFilter.redirect = this;
+						pager.touchEnabled = false;
 						block = true;
 					}
 					currentScale = s/* * beginScale*/;
@@ -351,7 +350,7 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 				Log.d(THIS, "blocked scaling inside bounds");
 				Log.d(THIS, "allowing pager");
 				mCurrent.set(mBase);
-				touchFilter.redirect = null;
+				pager.touchEnabled = true;
 				block = false;
 			}
 		}
@@ -393,19 +392,19 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		}
 	}
 	
-	private static class TouchFilter implements OnTouchListener {
-		
-		public OnTouchListener redirect = null;
-
-		@Override
-		public boolean onTouch(View v, MotionEvent event) {
-			if (redirect != null) {
-				redirect.onTouch(v, event);
-				return true;
-			} else {
-				return false;
-			}
-		}
-		
-	}
+//	private static class TouchFilter implements OnTouchListener {
+//		
+//		public OnTouchListener redirect = null;
+//
+//		@Override
+//		public boolean onTouch(View v, MotionEvent event) {
+//			if (redirect != null) {
+//				redirect.onTouch(v, event);
+//				return true;
+//			} else {
+//				return false;
+//			}
+//		}
+//		
+//	}
 }
