@@ -3,6 +3,7 @@ package de.stadtrallye.rallyesoft.model;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +17,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.model.LatLng;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
@@ -28,9 +31,11 @@ import de.stadtrallye.rallyesoft.model.comm.RallyePull;
 import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 import de.stadtrallye.rallyesoft.model.structures.MapNode;
+import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
+import de.stadtrallye.rallyesoft.util.StringedJSONObjectConverter;
 
 /**
  * My Model
@@ -47,7 +52,7 @@ public class Model implements IModel, IAsyncFinished {
 	private static boolean DEBUG = false;
 	
 	
-	public enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST };
+	public enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST, CONFIG };
 	
 	
 	private static Model model; // Singleton Pattern
@@ -59,6 +64,7 @@ public class Model implements IModel, IAsyncFinished {
 	
 	private Login currentLogin;
 	private Login newLogin;
+	private ServerConfig serverConfig;
 	
 	@SuppressWarnings("rawtypes")
 	private HashMap<AsyncRequest, Tasks> runningRequests = new HashMap<AsyncRequest, Tasks>();
@@ -247,6 +253,15 @@ public class Model implements IModel, IAsyncFinished {
 		}
 	}
 	
+	private void refreshServerConfig() {
+		try {
+			Log.d(THIS, "getting Server config");
+			startAsyncTask(Tasks.CONFIG, pull.pendingServerConfig(), new ServerConfig.ServerConfigConverter());
+		} catch (RestException e) {
+			err.restError(e);
+		}
+	}
+	
 	protected <T> AsyncRequest<T> startAsyncTask(IAsyncFinished callback, Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
 		AsyncRequest<T> ar = new AsyncRequest<T>(callback, converter);
 		runningRequests.put(ar, taskType);
@@ -284,6 +299,9 @@ public class Model implements IModel, IAsyncFinished {
 	 * Will iterate through all chatrooms until found or null
 	 */
 	public IChatroom getChatroom(int id) {
+		if (connectionStatus != connectionStatus.Connected)
+			return null;
+		
 		for (IChatroom r: chatrooms) {
 			if (r.getID() == id)
 			{
@@ -292,6 +310,10 @@ public class Model implements IModel, IAsyncFinished {
 		}
 		
 		return null;
+	}
+	
+	public LatLng getMapLocation() {
+		return serverConfig.getLocation();
 	}
 
 	
@@ -328,6 +350,7 @@ public class Model implements IModel, IAsyncFinished {
 					newLogin = null;
 					
 					writeLoginAndChatrooms();
+					refreshServerConfig();
 					
 					connectionStatusChange(ConnectionStatus.Connected);
 				}
@@ -347,9 +370,19 @@ public class Model implements IModel, IAsyncFinished {
 			if (success) {//TODO: get rid of throw Except
 				ConnectionStatus state = (request.getResponseCode() >= 200 && request.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
 				currentLogin.validated();
+				refreshServerConfig();
 				connectionStatusChange(state);
 			} else
 				connectionStatusChange(ConnectionStatus.Disconnected);
+			break;
+		case CONFIG:
+			if (success) {
+				try {
+					serverConfig = (ServerConfig) request.get();
+				} catch (Exception e) {
+					err.asyncTaskResponseError(e);
+				}
+			}
 			break;
 		case MAP_NODES:
 			if (success) {

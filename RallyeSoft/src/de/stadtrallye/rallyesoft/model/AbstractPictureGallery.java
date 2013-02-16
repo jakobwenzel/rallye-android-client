@@ -9,6 +9,17 @@ abstract class AbstractPictureGallery implements IPictureGallery {
 	
 	protected int initialPos = 0;
 	protected List<Integer> pictures;
+	protected Size size = Size.Small;
+	
+	@Override
+	public Size getImageSize() {
+		return size;
+	}
+	
+	@Override
+	public void setImageSize(Size size) {
+		this.size = size;
+	}
 
 	@Override
 	public void add(int location, Integer object) {

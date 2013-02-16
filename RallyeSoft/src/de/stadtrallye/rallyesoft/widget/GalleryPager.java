@@ -7,7 +7,8 @@ import android.view.MotionEvent;
 
 public class GalleryPager extends ViewPager {
 	
-	public boolean touchEnabled = true;
+	private boolean touchEnabled = true;
+	private boolean cancelled = false;
 
 	public GalleryPager(Context context) {
 		super(context);
@@ -17,9 +18,25 @@ public class GalleryPager extends ViewPager {
 		super(context, attrs);
 	}
 	
+	public void setInterceptTouch(boolean enabled) {
+		touchEnabled = enabled;
+		cancelled = enabled;
+	}
+	
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
-		return (touchEnabled)? super.onInterceptTouchEvent(ev) : false;
+		if (touchEnabled) {
+			return super.onInterceptTouchEvent(ev);
+		} else {
+			if (!cancelled) {
+				MotionEvent e = MotionEvent.obtain(ev);
+				e.setAction(MotionEvent.ACTION_CANCEL);
+				super.onInterceptTouchEvent(e);
+				cancelled = true;
+				e.recycle();
+			}
+			return false;
+		}
 	}
 
 }

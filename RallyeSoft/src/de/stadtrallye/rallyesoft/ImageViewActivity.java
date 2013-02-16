@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -30,18 +32,17 @@ import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.IPictureGallery.Size;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.widget.GalleryPager;
 
-public class ImageViewActivity extends SherlockActivity implements OnClickListener {
+public class ImageViewActivity extends SherlockActivity {
 	
 	private static final String THIS = ImageViewActivity.class.getSimpleName();
 	
 	private GalleryPager pager;
 	private Model model;
 	private ImageAdapter adapter;
-	
-//	private TouchFilter touchFilter = new TouchFilter();
 
 	private IChatroom chatroom;
 	private IPictureGallery gallery;
@@ -58,10 +59,10 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		// Show the Up button in the action bar.
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		
-		model = Model.getInstance(this, true);
 		
 		pager = (GalleryPager)findViewById(R.id.image_pager);
-//		pager.setOnTouchListener(touchFilter);
+		
+		model = Model.getInstance(this, true);
 		
 		Bundle b = getIntent().getExtras();
 		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
@@ -108,31 +109,15 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		}
 		
 		@Override
-		public void setPrimaryItem(ViewGroup container, int position, Object object) {
-//			try {
-//				
-//				ImageView img = (ImageView)((View)object).findViewById(R.id.image);
-//				if (currentImg != null && currentImg != img)
-//					currentImg.setScaleType(ScaleType.FIT_CENTER);
-//				currentImg = img;
-//				
-////				Log.d(THIS, "Pager: "+position+": "+ currentImg);
-//			} catch (Exception e) {
-//				Log.e(THIS, "no image", e);
-//			}
-			super.setPrimaryItem(container, position, object);
-		}
-		
-		@Override
 		public Object instantiateItem(View view, int position) {
 			final View imageLayout = inflater.inflate(R.layout.item_pager_image, null);
 			final ImageView imageView = (ImageView) imageLayout.findViewById(R.id.image);
 			final ProgressBar spinner = (ProgressBar) imageLayout.findViewById(R.id.loading);
 			
-			imageLayout.setOnClickListener(ImageViewActivity.this);
+			imageLayout.setClickable(true);
 			imageLayout.setOnTouchListener(new TouchControl(imageView));
 
-			loader.displayImage(gallery.getPictureUrl(position, 's'), imageView, new SimpleImageLoadingListener() {
+			loader.displayImage(gallery.getPictureUrl(position), imageView, new SimpleImageLoadingListener() {
 				@Override
 				public void onLoadingStarted() {
 					spinner.setVisibility(View.VISIBLE);
@@ -184,7 +169,16 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-//		getMenuInflater().inflate(R.menu.activity_image_view, menu);
+		getSupportMenuInflater().inflate(R.menu.activity_image_view, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		boolean small = (gallery.getImageSize() == Size.Small);
+		
+		menu.findItem(R.id.image_level_large).setEnabled(small);
+		menu.findItem(R.id.image_level_small).setEnabled(!small);
 		return true;
 	}
 
@@ -194,12 +188,19 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		case android.R.id.home:
 			onBackPressed();
 			return true;
+		case R.id.image_level_large:
+			gallery.setImageSize(Size.Large);
+			
+			break;
+		case R.id.image_level_small:
+			gallery.setImageSize(Size.Small);
+			//TODO: switch current images
+			break;
 		}
-		return super.onOptionsItemSelected(item);
+		return false;
 	}
 	
-	@Override
-	public void onClick(View v) {
+	public void toggleActionBar() {
 		if (getSupportActionBar().isShowing())
 			getSupportActionBar().hide();
 		else
@@ -208,20 +209,25 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 	
 	private enum Mode { None, Drag, Zoom };
 	
-	private class TouchControl implements OnTouchListener {
+	private class TouchControl extends SimpleOnGestureListener implements OnTouchListener {
 	
-		private PointF pBegin = new PointF();
-//		private PointF vTrans = new PointF();
-		private Matrix mBase = new Matrix();
-		private Matrix mBegin = new Matrix();
-		private Matrix mCurrent = new Matrix();
-		private float dBegin;
+		private PointF pLast = new PointF();
+		
+		private GestureDetector tap = new GestureDetector(getApplicationContext(), this);
+		
 		private PointF pImg;
-		private PointF pBox;
+		private PointF pView;
+		
+		private Matrix mBase = new Matrix();
+		private Matrix mCurrent = new Matrix();
+		
+		private float dLast;
+		private float dCurrent;
 		
 		private float baseScale = 1;
-		private float beginScale = 1, currentScale = 1;
-		private boolean block = false;
+		private float currentScale = 1;
+		private static final float maxScale = 5;
+		
 		private boolean widthLimit;
 		
 		private Mode mode = Mode.None;
@@ -234,70 +240,92 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 		
 		@Override
 		public boolean onTouch(View v, MotionEvent e) {
+			tap.onTouchEvent(e);
+			
 			switch (e.getActionMasked()) {
 			case MotionEvent.ACTION_DOWN:
 				mode = Mode.Drag;
-				Log.d(THIS, "Drag");
+//				Log.d(THIS, "Drag");
 				
 				if (pImg == null) {
 					mBase.set(img.getImageMatrix());
 					pImg = new PointF(img.getDrawable().getIntrinsicWidth(), img.getDrawable().getIntrinsicHeight());
-					pBox = new PointF(img.getWidth(), img.getHeight());
-					widthLimit = ((pBox.x / pBox.y) < (pImg.x / pImg.y));
+					pView = new PointF(img.getWidth(), img.getHeight());
+					widthLimit = ((pView.x / pView.y) < (pImg.x / pImg.y));
+					
+					mCurrent.set(mBase);
 						
-					beginScale = baseScale = mBase.mapRadius(1);
+					currentScale = baseScale = mBase.mapRadius(1);
 				}
 				
-				mBegin.set(img.getImageMatrix());
-				pBegin.set(e.getX(), e.getY());
-				return block;
+				pLast.set(e.getX(), e.getY());
+//				pDown.set(pLast);
+//				tDown = System.currentTimeMillis();
+				return true;
 			case MotionEvent.ACTION_UP:
 				mode = Mode.None;
-				return block;
+
+//				if (distance(pDown, e) <= clickMargin && System.currentTimeMillis()-tDown <= timeMargin) {
+//					toggleActionBar();
+//				}
+				
+				return true;
 			case MotionEvent.ACTION_POINTER_DOWN:
 				mode = Mode.Zoom;
-				Log.d(THIS, "Zoom");
+//				Log.d(THIS, "scaling, blocking pager");
+				pager.setInterceptTouch(false);
+//				Log.d(THIS, "Zoom");
 				
-				mBegin.set(mCurrent);
-				dBegin = distance(e);
-				pBegin = midPoint(e);
-				beginScale = mBegin.mapRadius(1);
-				return block;
+				dLast = distance(e);
+				pLast = midPoint(e);
+				return true;
 			case MotionEvent.ACTION_POINTER_UP:
 				mode = Mode.Drag;
 				
-				mBegin.set(mCurrent);
-				beginScale = mBegin.mapRadius(1);
-				pBegin.set(e.getX(), e.getY());
-				return block;
+				if (currentScale <= baseScale) {
+					pager.setInterceptTouch(true);
+				}
+				int i = (e.getActionIndex() == 1)? 0 : 1; // multi touch proof, works if more than 2 fingers were on the screen (worst case: jump)
+				pLast.set(e.getX(i), e.getY(i));
+				return true;
 			case MotionEvent.ACTION_MOVE:
-				if (mode == Mode.Drag && beginScale == baseScale)
+				if (mode == Mode.Drag && currentScale == baseScale)
 					return false;
 				
-				mCurrent.set(mBegin);
-				
-				PointF d;
+				PointF pCurrent;
 				
 				if (mode == Mode.Zoom) {
-					float s = distance(e) / dBegin;
-					if (beginScale * s > baseScale) {
-						Log.d(THIS, "scaling, blocking pager");
-						pager.touchEnabled = false;
-						block = true;
-					}
-					currentScale = s/* * beginScale*/;
+					pCurrent = midPoint(e);
+					dCurrent = distance(e);
 					
-					d = midPoint(e);
-					mCurrent.postScale(currentScale, currentScale, pBegin.x, pBegin.y);
+					float s = dCurrent / dLast;
+					dLast = dCurrent;
+					float newScale = currentScale * s;
+//					Log.d(THIS, "currentScale: "+ currentScale +" , newScale: "+ newScale);
+					
+					if (newScale <= baseScale) {
+						s = baseScale / currentScale;
+						currentScale = baseScale;
+					} else if (newScale > maxScale) {
+						s = maxScale / currentScale;
+						currentScale = maxScale;
+					} else { // maybe margin for error?
+						currentScale = newScale;
+					}
+					
+					
+					mCurrent.postScale(s, s, getFocal(pImg.x, pView.x, pLast.x), getFocal(pImg.y, pView.y, pLast.y));
 				} else {
-					d = new PointF(e.getX(), e.getY());
+					pCurrent = new PointF(e.getX(), e.getY());
 				}
 				
+				PointF d = new PointF(pCurrent.x - pLast.x, pCurrent.y - pLast.y);
 				
-				mCurrent.postTranslate(d.x - pBegin.x, d.y - pBegin.y);
+				mCurrent.postTranslate(d.x, d.y);
 				
 				correctTransform();
 				
+				pLast.set(pCurrent);
 				
 				if (img.getScaleType() != ScaleType.MATRIX)
 					img.setScaleType(ScaleType.MATRIX);
@@ -311,53 +339,78 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 			}
 		}
 		
-		private void correctTransform() {
-			float[] t = new float[]{0, 0, pImg.x, pImg.y};
-			mCurrent.mapPoints(t);
-			PointF v = new PointF();
-			int flags = 0;
-			
-			if (widthLimit) {
-			
-				if (t[0] > 0) {
-					v.x = -t[0];
-					flags += 1;
-					Log.d(THIS, "caught LEFT inside");
-				}
-				if (t[2] < pBox.x) {
-					flags += 1;
-					v.x = pBox.x - t[2];
-					Log.d(THIS, "caught RIGHT inside");
-				}
-				
+		private float getFocal(float size, float available, float user) {
+			return (size * currentScale >= available)? user : available / 2;
+		}
+		
+		@Override
+		public boolean onDoubleTap(MotionEvent e) {
+			float s;
+			if (currentScale <= maxScale /3) {
+				s = maxScale / (currentScale * 2);
+				currentScale = maxScale / 2;
+				mCurrent.postScale(s, s, e.getX(), e.getY());
 			} else {
-				if (t[1] > 0) {
-					v.y = -t[1];
-					flags += 1;
-					Log.d(THIS, "caught TOP inside");
-				}
-				if (t[3] < pBox.y) {
-					flags += 1;
-						v.y = pBox.y - t[3];
-					Log.d(THIS, "caught BOTTOM inside");
-				}
+				s = baseScale / currentScale;
+				currentScale = baseScale;
+				mCurrent.set(mBase);
+			}
+			correctTransform();
+			img.setImageMatrix(mCurrent);
+			return true;
+		}
+		
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent e) {
+			toggleActionBar();
+			return true;
+		}
+		
+		private void correctTransform() {//  b/2 -a/2
+			float[] t = new float[]{0, 0, pImg.x, pImg.y};
+			float[] v = new float[]{0,0};
+			float[] max = new float[]{pView.x, pView.y};
+			mCurrent.mapPoints(t);
+			int prim, sec;
+			int primC = 0;
+			
+			prim = (widthLimit)? 0 : 1;
+			sec = (widthLimit)? 1: 0;
+			
+			if (t[prim] > 0) {
+				v[prim] = -t[prim];
+				primC += 1;
+			}
+			if (t[prim+2] < max[prim]) {
+				primC += 1;
+				v[prim] = max[prim] - t[prim+2];
 			}
 			
-			if (flags == 1) {
-				Log.d(THIS, "blocked translation inside bounds");
-				mCurrent.postTranslate(v.x, v.y);
-			} else if (flags > 1) {
-				Log.d(THIS, "blocked scaling inside bounds");
-				Log.d(THIS, "allowing pager");
-				mCurrent.set(mBase);
-				pager.touchEnabled = true;
-				block = false;
+			boolean center = (t[sec+2] - t[sec] < max[sec]);
+				
+			if (t[sec] > 0) {
+				v[sec] = (center)? -t[sec]/2 : -t[sec];
+			}
+			if (t[sec+2] < max[sec]) {
+				v[sec] += (center)? (max[sec] - t[sec+2])/2 : max[sec] - t[sec+2];
+			}
+			
+			if (primC > 1) {
+				Log.w(THIS, "conflicting inside bounds => scale problem");
+			} else {
+				mCurrent.postTranslate(v[0], v[1]);
 			}
 		}
 		
 		private float distance(MotionEvent e) {
-			float a = e.getX(0) - e.getX(1);
-			float b = e.getY(0) - e.getY(1);
+			return distance(e.getX(0), e.getY(0), e.getX(1), e.getY(1));
+		}
+//		private float distance(PointF a, MotionEvent b) {
+//			return distance(a.x, a.y, b.getX(), b.getY());
+//		}
+		private float distance(float ax, float ay, float bx, float by) {
+			float a = ax - bx;
+			float b = ay - by;
 			return (float) Math.sqrt(a*a + b*b);
 		}
 		
@@ -391,20 +444,4 @@ public class ImageViewActivity extends SherlockActivity implements OnClickListen
 			Log.d(THIS, sb.toString());
 		}
 	}
-	
-//	private static class TouchFilter implements OnTouchListener {
-//		
-//		public OnTouchListener redirect = null;
-//
-//		@Override
-//		public boolean onTouch(View v, MotionEvent event) {
-//			if (redirect != null) {
-//				redirect.onTouch(v, event);
-//				return true;
-//			} else {
-//				return false;
-//			}
-//		}
-//		
-//	}
 }

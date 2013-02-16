@@ -304,8 +304,8 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 		}
 		
 		@Override
-		public String getPictureUrl(int pos, char size) {
-			return Chatroom.this.getUrlFromImageId(pictures.get(pos), size);
+		public String getPictureUrl(int pos) {
+			return Chatroom.this.getUrlFromImageId(pictures.get(pos), size.toChar());
 		}
 		
 	}

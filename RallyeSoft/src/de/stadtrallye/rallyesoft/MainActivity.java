@@ -1,6 +1,7 @@
 package de.stadtrallye.rallyesoft;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import android.annotation.TargetApi;
@@ -26,10 +27,14 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
 import com.google.android.gcm.GCMRegistrar;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
+import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
@@ -50,6 +55,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //	private Fragment currentFragment;
 	private int lastTab = 0;
 	private ArrayList<FragmentHandler<?>> tabs;
+
+	private FragmentHandler<GameMapFragment> mapFragmentHandler;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -70,8 +77,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		SlidingMenu sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
 		sm.setShadowDrawable(R.drawable.defaultshadow);
-//		sm.setBehindOffsetRes(R.dimen.slidingmenu_offset);
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
+		sm.setBehindScrollScale(0);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
 		// Set last tab if any
@@ -90,7 +97,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
         // Populate SideBar
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
-        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
+        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, R.layout.dashboard_item, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(this);
 		
@@ -105,13 +112,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
         //Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
 		getOverflowMenu();
 		
-		
 		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
-		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class, null));
+		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
+		tabs.add(mapFragmentHandler = new FragmentHandler<GameMapFragment>("map", GameMapFragment.class));
 		tabs.add(null);
-		tabs.add(null);
-		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class, null));
+		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class));
 		
 		getSupportActionBar().setSelectedNavigationItem(tabIndex);
 		
@@ -128,41 +134,40 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 */
 	private class FragmentHandler<T extends Fragment> {
 		
-//		public static final boolean RE_USE = true;
-//		public static final boolean NEW = false;
-		
-		private String tag;
-		private Class<T> clz;
-//		private Fragment fragment;
+		protected String tag;
+		protected Class<T> clz;
 		private Bundle arg;
-//		private boolean reUse;
 
-		public FragmentHandler(String tag, Class<T> clz, Bundle arg) {
+		public FragmentHandler(String tag, Class<T> clz) {
 			this.tag = tag;
 			this.clz = clz;
+		}
+		
+		public FragmentHandler(String tag, Class<T> clz, Bundle arg) {
+			this(tag, clz);
 			this.arg = arg;
-//			this.reUse = reUse;
+		}
+		
+		public void setArguments(Bundle arg) {
+			this.arg = arg;
 		}
 		
 		public Fragment getFragment() {
 			Fragment f = getSupportFragmentManager().findFragmentByTag(tag);
 			
 			if (f == null) {
-				f = Fragment.instantiate(MainActivity.this, clz.getName());
-				
-				if (arg != null)
-					f.setArguments(arg);
+				if (arg == null)
+					f = Fragment.instantiate(MainActivity.this, clz.getName());
+				else
+					f = Fragment.instantiate(MainActivity.this, clz.getName(), arg);
 			}
+			
 			return f;
 		}
 		
 		public String getTag() {
 			return tag;
 		}
-		
-//		public Bundle getArguments() {
-//			return arg;
-//		}
 	}
 	
 	@Override
@@ -209,14 +214,20 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private boolean onSwitchTab(int pos, long id) {
 		
 		switch (pos) {
-		case 1:
-			Intent i = new Intent(this, GameMapActivity.class);
-			getSupportActionBar().setSelectedNavigationItem(lastTab);
-			startActivity(i);
-		return true;
-		case 2:
+		case 0://Overview
+			break;
+		case 1://Map
+			Bundle b = new Bundle();
+			GoogleMapOptions gmo = new GoogleMapOptions().camera(new CameraPosition(model.getMapLocation(), 13, 0, 0));
+			b.putParcelable("MapOptions", gmo);
+			mapFragmentHandler.setArguments(b);
+			break;
+//		case 2://Next Play
+		case 3://Chat
+			break;
+		default:
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
-		return false;
+			return false;
 		}
 		
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -225,6 +236,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ft
 			.replace(R.id.content_frame, tab.getFragment(), tab.getTag())
 //			.addToBackStack(null)
+//			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 			;
 		ft.commit();
 		
@@ -260,8 +272,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		super.onPrepareOptionsMenu(menu);
-		
 		boolean act = model.isLoggedIn();
 		menu.findItem(R.id.menu_login).setEnabled(!act);
 		menu.findItem(R.id.menu_logout).setEnabled(act);
@@ -292,7 +302,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			model.logout();
 			break;
 		}
-		return super.onOptionsItemSelected(item);
+		return true;
 	}
 	
 	@Override

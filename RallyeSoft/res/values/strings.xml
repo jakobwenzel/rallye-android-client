@@ -31,5 +31,8 @@
     <string name="refresh">Aktualisieren</string>
     <string name="title_activity_image_view">Image Viewer</string>
     <string name="gcm_notification">de.stadtrallye.rallyesoft.gcm_notification</string>
+    <string name="image_level">Bild-Größe</string>
+    <string name="image_level_large">Groß</string>
+    <string name="image_level_small">Klein</string>
 
 </resources>

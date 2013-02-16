@@ -7,6 +7,7 @@ import android.util.Log;
 import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 
 /**
@@ -132,6 +133,13 @@ public class RallyePull extends Pull {
 		} catch (JSONException e) {
 			throw err.JSONDuringPostError(e, rest);
 		}
+		return r;
+	}
+
+	public PendingRequest pendingServerConfig() throws RestException {
+		final String rest = "/system/config";
+		
+		PendingRequest r = new PendingRequest(rest);
 		return r;
 	}
 }
