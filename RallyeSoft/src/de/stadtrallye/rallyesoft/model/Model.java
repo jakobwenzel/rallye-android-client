@@ -299,8 +299,13 @@ public class Model implements IModel, IAsyncFinished {
 	 * Will iterate through all chatrooms until found or null
 	 */
 	public IChatroom getChatroom(int id) {
-		if (connectionStatus != connectionStatus.Connected)
+		if (connectionStatus != ConnectionStatus.Connected)
 			return null;
+		
+		if (chatrooms == null) {
+			Log.e(THIS, "Chatrooms empty / status: "+ connectionStatus);
+			return null;
+		}
 		
 		for (IChatroom r: chatrooms) {
 			if (r.getID() == id)

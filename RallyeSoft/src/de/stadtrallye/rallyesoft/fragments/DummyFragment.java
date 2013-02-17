@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import de.stadtrallye.rallyesoft.Std;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -7,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class DummyFragment extends BaseFragment {
-
-	public static final String LAYOUT = "layout";
 	
 	public DummyFragment() {
 		
@@ -26,6 +25,6 @@ public class DummyFragment extends BaseFragment {
 	}
 
 	public View onCreateView(LayoutInflater inflater,ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(getArguments().getInt(LAYOUT), container, false);
+		return inflater.inflate(getArguments().getInt(Std.LAYOUT), container, false);
 	}
 }

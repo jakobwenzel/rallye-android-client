@@ -2,7 +2,6 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -25,10 +24,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -71,12 +66,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
-	public ChatroomFragment(IChatroom  chatroom) {
-		this();
-		
-		this.chatroom = chatroom;
-	}
-	
 	/**
 	 * retain savedInstanceState for when creating the list (ScrollState)
 	 */
@@ -115,9 +104,15 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
 		
-		if (savedInstanceState != null && chatroom == null) {
-			chatroom = model.getChatroom(savedInstanceState.getInt(Std.CHATROOM));
-		}
+		Bundle b = getArguments();
+		int rid = -1;
+		if (b != null)
+			rid = b.getInt(Std.CHATROOM, -1);
+//		if (savedInstanceState != null && rid == -1) {
+//			rid = savedInstanceState.getInt(Std.CHATROOM, -1);
+//		}
+		
+		chatroom = model.getChatroom(rid);
 		
 		if (chatroom == null) {
 			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
@@ -213,7 +208,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
 		
 		outState.putSerializable(Std.LAST_POS, lastPos);
-		outState.putInt(Std.CHATROOM, chatroom.getID());
+//		outState.putInt(Std.CHATROOM, chatroom.getID());//Arguments are already saved
 	}
 	
 	/**

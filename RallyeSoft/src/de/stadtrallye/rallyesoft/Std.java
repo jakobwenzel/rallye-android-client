@@ -27,4 +27,7 @@ public class Std {
 	public static final String MSG = "mess";
 	public static final String PIC = "pic";
 	public static final String NAME = "name";
+	
+	public static final String LAYOUT = "layout";
+	public static final int PICK_IMAGE = 1337;
 }

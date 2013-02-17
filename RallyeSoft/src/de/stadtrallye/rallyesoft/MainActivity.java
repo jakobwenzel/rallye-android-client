@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -110,7 +112,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
         ab.setListNavigationCallbacks(list, this);
 		
         //Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
-		getOverflowMenu();
+		forceOverflowMenu();
 		
 		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
@@ -178,7 +180,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		onConnectionStatusChange(model.getConnectionStatus());
 	}
 	
-	private void getOverflowMenu() {
+	private void forceOverflowMenu() {
 	     try {
 	        ViewConfiguration config = ViewConfiguration.get(this);
 	        Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
@@ -234,7 +236,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		FragmentHandler<?> tab = tabs.get(pos);
 		
 		ft
-			.replace(R.id.content_frame, tab.getFragment(), tab.getTag())
+			.replace(android.R.id.content, tab.getFragment(), tab.getTag())
 //			.addToBackStack(null)
 //			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 			;
@@ -301,6 +303,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case R.id.menu_logout:
 			model.logout();
 			break;
+		default:
+			return false;
 		}
 		return true;
 	}
@@ -318,7 +322,26 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
+		if(/*requestCode == Std.PICK_IMAGE && */data != null && data.getData() != null){
+	        Uri uri = data.getData();
+
+	        if (uri != null) {
+	            //User had pick an image.
+	            Cursor cursor = getContentResolver().query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+	            cursor.moveToFirst();
+
+	            //Link to the image
+	            final String imageFilePath = cursor.getString(0);
+	            
+	            Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
+	            Log.i(THIS, "Picture taken/selected: "+ imageFilePath);
+	            
+	            cursor.close();
+	        }
+	    }
+		
+		
+	    super.onActivityResult(requestCode, resultCode, data);
 	}
 	
 	/**
