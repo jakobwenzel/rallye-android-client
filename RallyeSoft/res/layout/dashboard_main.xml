@@ -5,19 +5,23 @@
     android:orientation="vertical"
     android:paddingLeft="8dp"
     android:paddingRight="8dp"
+    android:background="@drawable/abs__ab_solid_dark_holo"
     >
     
-    <TextView
+    <!-- <TextView
+        style="@style/Dashboard"
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:textSize="@dimen/dash_menu_height"
 	    android:text="@string/dash_menu"
-	    />
+	    />-->
 
 	<ListView
 	    android:id="@+id/dashboard_list"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
+	    android:divider="@android:color/black"
+	    android:dividerHeight="1dp"
 	    />
 	
 </LinearLayout>

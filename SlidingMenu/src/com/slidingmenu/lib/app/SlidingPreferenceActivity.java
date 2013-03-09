@@ -1,12 +1,12 @@
 package com.slidingmenu.lib.app;
 
+import com.actionbarsherlock.app.SherlockPreferenceActivity;
+import com.slidingmenu.lib.SlidingMenu;
+
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-
-import com.actionbarsherlock.app.SherlockPreferenceActivity;
-import com.slidingmenu.lib.SlidingMenu;
 
 public class SlidingPreferenceActivity extends SherlockPreferenceActivity implements SlidingActivityBase {
 

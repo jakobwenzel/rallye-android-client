@@ -1,41 +1,30 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.io.Serializable;
 import java.util.List;
+
+import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public interface IModel {
 	
-	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected };
+	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying, Unknown };
 	
 	public List<? extends IChatroom> getChatrooms();
+	public IChatroom getChatroom(int id);
 	
-	public interface IChatroom {
-		
-		public int getID();
-		public String getName();
-		
-		public void adviseUse();
-		public void saveCurrentState(Serializable additional);
-		
-		public void addListener(IChatListener l);
-		public void removeListener(IChatListener l);
-		
-		public List<ChatEntry> getChats();
-		public void addChat(String msg);
-		
-	}
-	
-	public void login(String server, String password, int group);
+	public void login(Login login);
 	public void logout();
 	public void checkConnectionStatus();
 	
-	public String getUrlFromImageId(int id, char size);
 	public boolean isLoggedIn();
-	public String getServer();
-	public int getGroupId();
-	
-	public void onDestroy();
+//	public String getServer();
+//	public int getGroupId();
+	public Login getLogin();
 	
 	public void addListener(IConnectionStatusListener l);
 	public void removeListener(IConnectionStatusListener l);
+	public ConnectionStatus getConnectionStatus();
+	
+	public void onDestroy();
+	public void onStop();
+	
 }

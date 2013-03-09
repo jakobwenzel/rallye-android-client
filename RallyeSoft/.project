@@ -3,6 +3,9 @@
 	<name>RallyeSoft</name>
 	<comment></comment>
 	<projects>
+		<project>SherlockActionBar</project>
+		<project>SlidingMenu</project>
+		<project>ViewPagerIndicator</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

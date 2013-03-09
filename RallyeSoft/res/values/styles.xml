@@ -1,11 +1,11 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="RallyeTheme" parent="Theme.Sherlock.Light">
+    <style name="RallyeTheme" parent="@style/Theme.Sherlock.Light.DarkActionBar">
         <item name="homeAsUpIndicator">@drawable/home_indicator</item>
         <item name="android:homeAsUpIndicator">@drawable/home_indicator</item>
     </style>
     
-    <style name="Dashboard" parent="@android:style/TextAppearance">
+    <style name="Dashboard">
         <item name="android:textColor">@color/abs__primary_text_holo_dark</item>
     </style>
 

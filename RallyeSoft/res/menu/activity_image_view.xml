@@ -1,9 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <item
-        android:id="@+id/menu_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/menu_settings"/>
-
+    <!-- <item
+        android:showAsAction="always"
+        android:title="@string/image_level"
+        android:icon="@drawable/abs__ic_menu_moreoverflow_holo_dark">
+        <menu> -->
+	        <item android:id="@+id/image_level_large"
+	            android:showAsAction="collapseActionView"
+	            android:title="@string/image_level_large" />
+	        <item android:id="@+id/image_level_small"
+	            android:showAsAction="collapseActionView"
+	            android:title="@string/image_level_small" />
+	    <!--  </menu>
+    </item>-->
 </menu>

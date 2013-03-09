@@ -6,6 +6,12 @@ import android.util.Log;
 
 import com.actionbarsherlock.app.SherlockFragment;
 
+/**
+ * Adds Debug abilities to a Fragment
+ * if enableDebugLogging() was called static, attaching, creating, starting, destroying will be logged with the tag THIS
+ * @author Ramon
+ *
+ */
 public class BaseFragment extends SherlockFragment {
 	
 	protected String THIS = null;

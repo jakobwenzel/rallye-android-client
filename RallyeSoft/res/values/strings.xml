@@ -28,8 +28,12 @@
     <string name="unavailable">Nicht verfügbar</string>
     <string name="connected">Verbunden</string>
     <string name="notConnected">Getrennt</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="refresh">Aktualisieren</string>
     <string name="title_activity_image_view">Image Viewer</string>
     <string name="gcm_notification">de.stadtrallye.rallyesoft.gcm_notification</string>
+    <string name="image_level">Bild-Größe</string>
+    <string name="image_level_large">Groß</string>
+    <string name="image_level_small">Klein</string>
+    <string name="select_take_picture">Foto aufnehmen oder auswählen</string>
 
 </resources>

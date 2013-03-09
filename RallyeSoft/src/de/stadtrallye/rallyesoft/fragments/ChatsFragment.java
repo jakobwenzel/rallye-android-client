@@ -2,7 +2,10 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import java.util.List;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -12,12 +15,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.viewpagerindicator.TitlePageIndicator;
 
 import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
-import de.stadtrallye.rallyesoft.model.Chatroom;
+import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
@@ -34,8 +40,10 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private ViewPager pager;
 	private TitlePageIndicator indicator;
 	private FragmentPagerAdapter fragmentAdapter;
-	private List<Chatroom> chatrooms;
+	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
+	private MenuItem refreshMenuItem;
+	private MenuItem pictureMenuItem;
 	
 	
 	public ChatsFragment() {
@@ -52,7 +60,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		if (savedInstanceState != null)
 			currentTab = savedInstanceState.getInt(Std.TAB);
-//		setRetainInstance(false);
+		setRetainInstance(true);
+		setHasOptionsMenu(true);
 	}
 	
 	@Override
@@ -84,6 +93,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	@Override
 	public void onStart() {
 		super.onStart();
+		
+		indicator.setCurrentItem(currentTab);
 		
 		model.addListener(this);
 	}
@@ -117,8 +128,54 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		outState.putInt(Std.TAB, pager.getCurrentItem());
 	}
 	
+//	private static final int REFRESH_ID = -199;
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, Menu.NONE, R.string.refresh);
+		
+		refreshMenuItem.setIcon(R.drawable.ic_refresh);
+		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		
+		pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, Menu.NONE, R.string.photo);
+		
+		pictureMenuItem.setIcon(R.drawable.ic_compose);
+		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.refresh_menu:
+			chatrooms.get(pager.getCurrentItem()).refresh();
+			return true;
+		case R.id.picture_menu:
+			Intent pickIntent = new Intent();
+			pickIntent.setType("image/*");
+			pickIntent.setAction(Intent.ACTION_GET_CONTENT);
+
+			Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+			
+//			Uri out = getOutputMediaFileUri(null); // create a file to save the image
+//		    takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, out); // set the image file name
+
+			Intent chooserIntent = Intent.createChooser(pickIntent, getString(R.string.select_take_picture));
+			chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePhotoIntent});
+
+			startActivityForResult(chooserIntent, Std.PICK_IMAGE);
+			return true;
+		default:
+			Log.d(THIS, "Not hit on menu item "+ item);
+			return false;
+		}
+	}
+	
 	private void populateChats() {
 		chatrooms = model.getChatrooms();
+		if (chatrooms == null) {
+			Log.e(THIS, "Chatroom null");
+			return;
+		}
 		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), chatrooms);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
@@ -148,12 +205,10 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
-		
-		final private static String FRAGMENT_TITLE = "Chatroom ";
 
-		private List<Chatroom> chatrooms;
+		private List<? extends IChatroom> chatrooms;
 		
-		public ChatFragmentAdapter(FragmentManager fm, List<Chatroom> chatrooms) {
+		public ChatFragmentAdapter(FragmentManager fm, List<? extends IChatroom> chatrooms) {
 			super(fm);
 			
 			this.chatrooms = chatrooms;
@@ -170,9 +225,12 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 
 		@Override
 		public Fragment getItem(int pos) {
-			Fragment f;
+			ChatroomFragment f;
 			
-			f = new ChatroomFragment(chatrooms.get(pos));
+			f = new ChatroomFragment();
+			Bundle b = new Bundle();
+			b.putInt(Std.CHATROOM, chatrooms.get(pos).getID());
+			f.setArguments(b);
 			
 			return f;
 		}
@@ -199,7 +257,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		public Fragment getItem(int arg0) {
 			Fragment f = new DummyFragment();
 			Bundle b = new Bundle();
-			b.putInt(DummyFragment.LAYOUT, R.layout.chat_unavailable);
+			b.putInt(Std.LAYOUT, R.layout.chat_unavailable);
 			f.setArguments(b);
 			return f;
 		}

@@ -1,12 +1,11 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -34,9 +33,10 @@ import de.stadtrallye.rallyesoft.IProgressUI;
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
-import de.stadtrallye.rallyesoft.model.ChatEntry;
-import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.IChatListener;
+import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.Model;
 
 /**
@@ -45,9 +45,6 @@ import de.stadtrallye.rallyesoft.model.Model;
  *
  */
 public class ChatroomFragment extends BaseFragment implements IChatListener, OnClickListener {
-	
-
-	private static final String CHATROOM = "chatroom";
 
 	private Model model;
 	private IProgressUI ui; // access to IndeterminateProgress in ActionBar
@@ -55,8 +52,8 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	private ChatAdapter chatAdapter; //Adapter for List
 	private Button send;
 	private EditText text;
-	private UIState lastPos = null; //[0] line, [1] pixels offset
-	private Chatroom chatroom;
+	private int[] lastPos = null; //[0] = line, [1] = px
+	private IChatroom chatroom;
 	
 	/**
 	 * Only for DEBUG purposes
@@ -69,19 +66,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			Log.v(THIS, "Instantiated "+ this.toString());
 	}
 	
-	public ChatroomFragment(Chatroom  chatroom) {
-		this();
-		
-		this.chatroom = chatroom;
-	}
-	
-	private static class UIState implements Serializable {
-		private static final long serialVersionUID = 1L;
-		
-		public int line;
-		public int pxOffset;
-	}
-	
 	/**
 	 * retain savedInstanceState for when creating the list (ScrollState)
 	 */
@@ -90,10 +74,9 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		super.onCreate(savedInstanceState);
 		
 		if (savedInstanceState != null)
-			lastPos = (UIState)savedInstanceState.getSerializable(Std.LAST_POS);
+			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
 		else
-			lastPos = new UIState();
-
+			lastPos = new int[2];
 	}
 	
 	@Override
@@ -121,17 +104,21 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
 		
-		if (savedInstanceState != null && chatroom == null) {
-			for (Chatroom r: model.getChatrooms()) {
-				if (r.getID() == savedInstanceState.getInt(CHATROOM))
-				{
-					chatroom = r;
-				} else
-					throw new UnsupportedOperationException("ChatFragment could not find its previous Chatroom... (User has changed without telling me :-(  )");
-			}
+		Bundle b = getArguments();
+		int rid = -1;
+		if (b != null)
+			rid = b.getInt(Std.CHATROOM, -1);
+//		if (savedInstanceState != null && rid == -1) {
+//			rid = savedInstanceState.getInt(Std.CHATROOM, -1);
+//		}
+		
+		chatroom = model.getChatroom(rid);
+		
+		if (chatroom == null) {
+			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
 		
-		chatAdapter = new ChatAdapter(getActivity(), chatroom.getChats());
+		chatAdapter = new ChatAdapter(getActivity(), chatroom.getAllChats());
         list.setAdapter(chatAdapter);
         
         restoreScrollState();
@@ -145,8 +132,10 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 				
 				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
 				intent.putExtra(Std.CHATROOM, chatroom.getID());
-				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
-				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
+				intent.putExtra(Std.IMAGE, chatAdapter.getChatEntry(pos).pictureID);
+//				intent.putExtra(Std.NAME, chatroom.getName());
+//				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
+//				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
 				startActivity(intent);
 			}
 		});
@@ -160,7 +149,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		super.onStart();
 		
 		chatroom.addListener(this);
-		chatroom.adviseUse();
+		chatroom.refresh();
 	}
 	
 //	@Override
@@ -181,27 +170,27 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		
 		saveScrollState();
 		
-		chatroom.saveCurrentState(lastPos);
+		chatroom.saveCurrentState(lastPos[0]);
 		
 		chatroom.removeListener(this);
 	}
 	
 	private void saveScrollState() {
-		lastPos.line = list.getFirstVisiblePosition(); 
+		lastPos[0] = list.getFirstVisiblePosition(); 
 		
-		if (lastPos.line == 0) {
-			lastPos.pxOffset = 0;
+		if (lastPos[0] == 0) {
+			lastPos[1] = 0;
 		} else {
 			View v = list.getChildAt(0);
-			lastPos.pxOffset = v.getTop(); 
+			lastPos[1] = v.getTop(); 
 		}
 	}
 	
 	private void restoreScrollState() {
 		if (lastPos != null) {
-	    	list.setSelectionFromTop(lastPos.line, lastPos.pxOffset);
+	    	list.setSelectionFromTop(lastPos[0], lastPos[1]);
 	    	if (DEBUG)
-				Log.v(THIS, "ScrollState restored: "+ lastPos.line);
+				Log.v(THIS, "ScrollState restored: "+ lastPos[0]);
         } else
         	list.setSelection(list.getCount()-1);
 	}
@@ -216,12 +205,11 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 //		saveScrollState();
 		
 		if (DEBUG)
-			Log.v(THIS, "ScrollState saved: "+ lastPos.line);
+			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
 		
 		outState.putSerializable(Std.LAST_POS, lastPos);
-		outState.putInt(CHATROOM, chatroom.getID());
+//		outState.putInt(Std.CHATROOM, chatroom.getID());//Arguments are already saved
 	}
-	
 	
 	/**
 	 * Wraps around ChatEntry List
@@ -234,7 +222,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		private List<ChatEntry> entries;
 		private ImageLoader loader;
 		private DateFormat converter;
-		private int[] pictures;
 		
 		private class ViewMem {
 			public ImageView img;
@@ -264,6 +251,11 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		}
 		
 		
+		public ChatEntry getChatEntry(int pos) {
+			return entries.get(pos);
+		}
+
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = convertView;
@@ -298,7 +290,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
                 // When called with null or "" as URL, will display empty pciture / default resource
                 // Otherwise ImageLoader will not be stable and start swapping images
                 if (o.pictureID > 0) {
-                	loader.displayImage(model.getUrlFromImageId(o.pictureID, 't'), mem.img);
+                	loader.displayImage(chatroom.getUrlFromImageId(o.pictureID, 't'), mem.img);
                 } else {
                 	loader.displayImage(null, mem.img);
                 }
@@ -312,40 +304,26 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		public boolean hasPicture(int pos) {
 			return entries.get(pos).pictureID != 0;
 		}
-		
-		public int[] getPictures() {
-			if (pictures != null)
-				return pictures;
-			
-			ArrayList<Integer> l = new ArrayList<Integer>();
-			
-			for (ChatEntry c: entries) {
-				if (c.pictureID > 0)
-					l.add(c.pictureID);
-			}
-			
-			pictures = new int[l.size()];
-			for (int i=l.size()-1;i>=0;--i)
-				pictures[i] = l.get(i);
-			
-			return pictures;
-		}
-		
-		public int getPicturePos(int pos) {
-			final int pictureID = entries.get(pos).pictureID;
-			
-			for (int i=pictures.length-1; i>=0; --i) {
-				if (pictures[i] == pictureID)
-					return i;
-			}
-			return -1;
-		}
 	}
 	
 
 	@Override
 	public void addedChats(List<ChatEntry> entries) {
-		chatAdapter.addAll(entries);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
+        	addChatsApi11(entries);
+        else
+        	addChatsApi1(entries);
+	}
+	
+	public void addChatsApi1(List<ChatEntry> l) {
+		for (ChatEntry c: l) {
+			chatAdapter.add(c);
+		}
+	}
+	
+	@TargetApi(11)
+	public void addChatsApi11(List<ChatEntry> l) {
+		chatAdapter.addAll(l);
 	}
 	
 	@Override
@@ -355,7 +333,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		case Refreshing:
 			ui.activateProgressAnimation();
 			break;
-		case Online:
+		case Ready:
 			ui.deactivateProgressAnimation();
 			break;
 		case Offline:
@@ -374,6 +352,4 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			chatroom.addChat(msg.toString());
 		}
 	}
-
-	
 }

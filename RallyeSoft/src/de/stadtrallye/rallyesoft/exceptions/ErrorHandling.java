@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 
+import de.stadtrallye.rallyesoft.model.structures.Login;
+
 import android.util.Log;
 
 public class ErrorHandling {
@@ -31,6 +33,10 @@ public class ErrorHandling {
 	public void loggedIn() {
 		Log.e(where, "Aborting, still logged in!");
 	}
+	
+	public void loginInvalid(Login login) {
+		Log.e(where, "Invalid login: "+ login);
+	}
 
 	public void restError(RestException e) {
 		Log.e(where, "invalid Rest URL", e);
@@ -56,5 +62,9 @@ public class ErrorHandling {
 
 	public void jsonCastError(ClassCastException e) {
 		Log.e(where, "During JSON Conversion, Object could not be casted to source class", e);
+	}
+
+	public void dbInsertError(String string) {
+		Log.e(where, "Failed to insert into DB: "+ string);
 	}
 }

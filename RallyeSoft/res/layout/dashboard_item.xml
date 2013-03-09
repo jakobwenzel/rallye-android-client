@@ -4,6 +4,9 @@
     android:id="@android:id/text1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    style="@style/Dashboard"
+    android:textAppearance="?android:attr/textAppearanceMediumInverse"
     android:gravity="center_vertical"
+    android:paddingStart="6dp"
+    android:paddingEnd="6dp"
+    android:minHeight="50dp"
 />

@@ -51,7 +51,6 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 		@Override
 		public T next() {
 			try {
-				@SuppressWarnings("unchecked")
 				JSONObject o = JSONArray.this.getJSONObject(i++);
 				return converter.convert(o);
 			} catch (JSONException e) {
