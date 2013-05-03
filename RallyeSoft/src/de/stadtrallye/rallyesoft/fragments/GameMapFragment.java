@@ -73,8 +73,8 @@ public class GameMapFragment extends SupportMapFragment implements IMapListener 
 		map = getMap();
 		map.setMyLocationEnabled(true);
 		
-		model = Model.getInstance(getActivity(), true);
-		model.setMapListener(this);
+		model = Model.getInstance(getActivity().getApplicationContext(), true);
+		model.addListener(this);
 		model.getMapNodes();
 	}
 	
@@ -82,7 +82,7 @@ public class GameMapFragment extends SupportMapFragment implements IMapListener 
 	public void onStop() {
 		super.onStop();
 		
-		model.setMapListener(null);
+		model.removeListener(this);
 	}
 	
 //	@Override

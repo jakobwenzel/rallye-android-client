@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -42,6 +43,7 @@ import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.comm.NfcCallback;
 import de.stadtrallye.rallyesoft.model.comm.PushInit;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 
@@ -53,6 +55,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	public PushInit push;
 	private Model model;
+	private boolean keepModel = false;
 	private boolean progressCircle = false;
 //	private Fragment currentFragment;
 	private int lastTab = 0;
@@ -64,16 +67,62 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		// Titel und Inhalt + SideBar
+		ActionBar ab = initFrame();
+		
+		initSlidingMenu();
+		
+		populateTabList(ab);
+		
+		// Recover Last State
+		int tabIndex;
+		boolean loggedIn;
+		if (savedInstanceState != null) {
+			tabIndex = savedInstanceState.getInt("tabIndex", 0);
+			loggedIn = savedInstanceState.getBoolean("loggedIn", false);
+		} else {
+			tabIndex = 0;
+			loggedIn = false;
+		}
+		
+		// Ray's INIT
+		PushInit.ensureRegistration(this);
+		model = (Model) getLastCustomNonConfigurationInstance();
+		if (model == null)
+			model = Model.getInstance(getApplicationContext(), loggedIn);
+		model.addListener(this);
+		keepModel = false;
+		
+        //Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
+		forceOverflowMenu();
+		
+		initFragments();
+		
+		ab.setSelectedNavigationItem(tabIndex);
+		
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			initNFC();
+		}
+		
+		//DEBUG
+//		ChatsFragment.enableDebugLogging();
+	}
+	
+	private ActionBar initFrame() {
+		// Titel und Inhalt
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		    
 		setTitle(R.string.title_main);
 		setContentView(R.layout.main);
-		setBehindContentView(R.layout.dashboard_main);
 		
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(false);
+        
+        return ab;
+	}
+	
+	private void initSlidingMenu() {
+		setBehindContentView(R.layout.dashboard_main);
 		
 		// Settings for SideBar
 		SlidingMenu sm = getSlidingMenu();
@@ -83,49 +132,51 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		sm.setBehindScrollScale(0);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
-		// Set last tab if any
-		int tabIndex = 0;
-		boolean loggedIn = false;
-		if (savedInstanceState != null) {
-			tabIndex = savedInstanceState.getInt("tabIndex");
-			loggedIn = savedInstanceState.getBoolean("loggedIn");
-		}
-		
-		// Ray's INIT
-		PushInit.ensureRegistration(this);
-		model = Model.getInstance(this, loggedIn);
-		model.addListener(this);
-		
-		
-        // Populate SideBar
+		// Populate SideBar
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
         ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, R.layout.dashboard_item, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(this);
-		
-        // Populate tabs
+	}
+	
+	private void populateTabList(ActionBar ab) {
+		// Populate tabs
 		Context context = ab.getThemedContext();
 		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
         list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
-		
+        
 		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         ab.setListNavigationCallbacks(list, this);
-		
-        //Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
-		forceOverflowMenu();
-		
+	}
+	
+	private void initFragments() {
 		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
 		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
 		tabs.add(mapFragmentHandler = new FragmentHandler<GameMapFragment>("map", GameMapFragment.class));
 		tabs.add(null);
 		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class));
-		
-		getSupportActionBar().setSelectedNavigationItem(tabIndex);
-		
-		
-		//DEBUG
-//		ChatsFragment.enableDebugLogging();
+	}
+	
+	@TargetApi(14)
+	private void initNFC() {
+		NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
+		if (nfc != null) {
+			nfc.setNdefPushMessageCallback(new NfcCallback(), this);
+		}
+	}
+	
+	private void forceOverflowMenu() {
+	     try {
+	        ViewConfiguration config = ViewConfiguration.get(this);
+	        Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
+	        if(menuKeyField != null) {
+	            menuKeyField.setAccessible(true);
+	            menuKeyField.setBoolean(config, false);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
 	
 	/**
@@ -178,19 +229,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		setSupportProgressBarIndeterminateVisibility(false);
 		onConnectionStatusChange(model.getConnectionStatus());
-	}
-	
-	private void forceOverflowMenu() {
-	     try {
-	        ViewConfiguration config = ViewConfiguration.get(this);
-	        Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
-	        if(menuKeyField != null) {
-	            menuKeyField.setAccessible(true);
-	            menuKeyField.setBoolean(config, false);
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
 	}
 	
 	/**
@@ -258,6 +296,15 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //	}
 	
 	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+            processNfcIntent(getIntent());
+        }
+	}
+	
+	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
@@ -294,10 +341,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		    startActivityForResult(intent, 100);
 //		    break;
 		case R.id.menu_login:
-			DialogFragment d = new LoginDialogFragment(model.getLogin());
-//			Bundle b = new Bundle();
-//			b.putParcelable(Std.LOGIN, model.getLogin());
-//			d.setArguments(b);
+			DialogFragment d = new LoginDialogFragment();
+			Bundle b = new Bundle();
+			b.putParcelable(Std.LOGIN, model.getLogin());
+			d.setArguments(b);
 			d.show(getSupportFragmentManager(), "loginDialog");
 			break;
 		case R.id.menu_logout:
@@ -309,11 +356,27 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		return true;
 	}
 	
+	/**
+	 * Called if we e.g. Rotate the App
+	 * We are saving the Model
+	 */
+	@Override
+	public Object onRetainCustomNonConfigurationInstance() {
+		keepModel = true;
+		return model;
+	}
+	
+	/**
+	 * Passed-Through to Model (if not kept for ConfigurationChange) and GCMRegistrar
+	 */
 	@Override
 	protected void onDestroy() {
-		Log.d(THIS, "Destroying...");
+		Log.i(THIS, "Destroying...");
 		
-		model.onDestroy();
+		model.removeListener(this);
+		
+		if (!keepModel)
+			model.onDestroy();
 		
 		GCMRegistrar.onDestroy(this);
 		
@@ -342,6 +405,24 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		
 	    super.onActivityResult(requestCode, resultCode, data);
+	}
+	
+	@Override
+	protected void onNewIntent(Intent intent) {
+		setIntent(intent);
+	}
+	
+	private void processNfcIntent(Intent intent) {//TODO
+		Toast.makeText(this, "NFC Beam received", Toast.LENGTH_LONG).show();
+		/*
+		 * textView = (TextView) findViewById(R.id.textView);
+	        Parcelable[] rawMsgs = intent.getParcelableArrayExtra(
+	                NfcAdapter.EXTRA_NDEF_MESSAGES);
+	        // only one message sent during the beam
+	        NdefMessage msg = (NdefMessage) rawMsgs[0];
+	        // record 0 contains the MIME type, record 1 is the AAR, if present
+	        textView.setText(new String(msg.getRecords()[0].getPayload()));
+		 */
 	}
 	
 	/**
@@ -387,7 +468,16 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 */
 	@Override
 	public void onDialogPositiveClick(LoginDialogFragment dialog, Login login) {
-		model.login(login);
+		if (login.isComplete())
+			model.login(login);
+		else {
+			Toast.makeText(this, getString(R.string.invalid), Toast.LENGTH_SHORT).show();
+			DialogFragment d = new LoginDialogFragment();
+			Bundle b = new Bundle();
+			b.putParcelable(Std.LOGIN, login);
+			d.setArguments(b);
+			d.show(getSupportFragmentManager(), "loginDialog");
+		}
 	}
 
 	@Override

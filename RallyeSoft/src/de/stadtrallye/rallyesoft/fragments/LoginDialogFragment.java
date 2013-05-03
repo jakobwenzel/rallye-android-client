@@ -24,31 +24,24 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	
 	private EditText server;
 	private EditText group;
+	private EditText name;
 	private EditText pw;
 	private IDialogCallback ui;
 	private Login login;
 	
 	
-	public LoginDialogFragment(Login login) {
-		this.login = login;
-	}
-	
-	public LoginDialogFragment() {
-		
-	}
-	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		
+		login = (Login) getArguments().getParcelable(Std.LOGIN);
 	}
 	
 	@Override
 	public void onSaveInstanceState(Bundle state) {
 		super.onSaveInstanceState(state);
 		
-		state.putParcelable(Std.LOGIN, login);
+//		state.putParcelable(Std.LOGIN, login);
 	}
 	
 	@Override
@@ -76,9 +69,9 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         		.setView(getActivity().getLayoutInflater().inflate(R.layout.dialog_login, null))
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
-        				Login l = new Login(server.getText().toString(), Integer.parseInt(group.getText().toString()), pw.getText().toString());
-        				ui.onDialogPositiveClick(LoginDialogFragment.this, l.equals(login)? login : l);
+        				Login l = new Login(server.getText().toString(), Integer.parseInt(group.getText().toString()), name.getText().toString(), pw.getText().toString());
         				
+        				ui.onDialogPositiveClick(LoginDialogFragment.this, l);
         			}
         		})
         		.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -99,10 +92,12 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 		
 		server = (EditText) dialog.findViewById(R.id.server);
         group = (EditText) dialog.findViewById(R.id.group);
+        name = (EditText) dialog.findViewById(R.id.name);
         pw = (EditText) dialog.findViewById(R.id.password);
         
 		server.setText(login.getServer());
 		group.setText(Integer.toString(login.getGroup()));
+		name.setText(login.getName());
 		pw.setText(login.getPassword());
 	}
 }

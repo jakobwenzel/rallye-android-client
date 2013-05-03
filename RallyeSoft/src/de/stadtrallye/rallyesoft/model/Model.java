@@ -14,16 +14,18 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
-import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.model.LatLng;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Groups;
 import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
@@ -70,24 +72,35 @@ public class Model implements IModel, IAsyncFinished {
 	private HashMap<AsyncRequest, Tasks> runningRequests = new HashMap<AsyncRequest, Tasks>();
 	
 	private ConnectionStatus connectionStatus = ConnectionStatus.Unknown;
-	private ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
-	private IMapListener mapListener;
+	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
+	final ArrayList<IMapListener> mapListeners = new ArrayList<IMapListener>();
+	
+	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	
 	private List<Chatroom> chatrooms;
 	
 	private SQLiteDatabase db;
 	
-	
-	public static Model getInstance(Context context, boolean loggedIn) {//TODO: detect rotate/ prevent killing model during rotate
+	/**
+	 * Model can now be kept through Configuration Changes
+	 * @param context needed for Database, Preferences, GCMid (and Res-Strings for default_login [not lang-specific]) => give ApplicationContext
+	 * @param loggedIn login state to assume until checked
+	 * @return
+	 */
+	public static Model getInstance(Context context, boolean loggedIn) {
 		if (model != null)
 			return model.ensureConnections();
 		else
 			return model = new Model(context, getDefaultPreferences(context), loggedIn);
 	}
 	
+	/**
+	 * Make sure we have a valid DatabaseConnection
+	 * @return Model instance for convenience
+	 */
 	private Model ensureConnections() {
-		db = new DatabaseOpenHelper(context).getWritableDatabase();
-		
+		if (db == null)
+			db = new DatabaseOpenHelper(context).getWritableDatabase();
 		return model;
 	}
 	
@@ -392,7 +405,7 @@ public class Model implements IModel, IAsyncFinished {
 		case MAP_NODES:
 			if (success) {
 				try {
-					mapUpdate((List<MapNode>)request.get());
+					notifyMapUpdate((List<MapNode>)request.get());
 				} catch (Exception e) {
 					err.asyncTaskResponseError(e);
 				}
@@ -441,6 +454,7 @@ public class Model implements IModel, IAsyncFinished {
 	private Login readLogin() {
 		return new Login(pref.getString(Std.SERVER, null),
 				pref.getInt(Std.GROUP, 0),
+				pref.getString(Std.NAME, null),
 				pref.getString(Std.PASSWORD, null),
 				pref.getLong(Std.LAST_LOGIN, 0));
 	}
@@ -454,6 +468,7 @@ public class Model implements IModel, IAsyncFinished {
 	private Login getDefaultLogin() {
 		return new Login(context.getString(R.string.default_server),
 				Integer.valueOf(context.getString(R.string.default_group)),
+				context.getString(R.string.default_name),
 				context.getString(R.string.default_password));
 	}
 	
@@ -470,6 +485,8 @@ public class Model implements IModel, IAsyncFinished {
 	 */
 	@Override
 	public void onDestroy() {
+		Log.i(THIS, "Destroying Model...");
+		
 		for (Chatroom c: chatrooms) {
 			c.onDestroy();
 		}
@@ -484,12 +501,25 @@ public class Model implements IModel, IAsyncFinished {
 		db.close();
 	}
 	
-	public void setMapListener(IMapListener l) {
-		this.mapListener = l;
+	@Override
+	public void addListener(IMapListener l) {
+		mapListeners.add(l);
+	}
+	
+	@Override
+	public void removeListener(IMapListener l) {
+		mapListeners.remove(l);
 	}
 
-	private void mapUpdate(List<MapNode> list) {
-		mapListener.nodeUpdate(list);
+	private void notifyMapUpdate(final List<MapNode> list) {
+		uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for(IMapListener l: mapListeners) {
+					l.nodeUpdate(list);
+				}
+			}
+		});
 	}
 	
 	@Override
@@ -502,7 +532,7 @@ public class Model implements IModel, IAsyncFinished {
 		connectionListeners.remove(l);
 	}
 	
-	private void connectionStatusChange(ConnectionStatus newState) {
+	private void connectionStatusChange(final ConnectionStatus newState) {
 		if (connectionStatus == ConnectionStatus.Retrying && (newState != ConnectionStatus.Disconnected && newState != ConnectionStatus.Connected)) {
 			Log.i(THIS, "Status: Ignoring change to "+ newState +" while retrying");
 			return;
@@ -512,19 +542,29 @@ public class Model implements IModel, IAsyncFinished {
 		
 		Log.i(THIS, "Status: "+ newState);
 		
-		for(IConnectionStatusListener l: connectionListeners) {
-			l.onConnectionStatusChange(newState);
-		}
+		uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for(IConnectionStatusListener l: connectionListeners) {
+					l.onConnectionStatusChange(newState);
+				}
+			}
+		});
 	}
 	
-	private void connectionFailure(Exception e, ConnectionStatus fallbackState) {
+	private void connectionFailure(final Exception e, final ConnectionStatus fallbackState) {
 		connectionStatus = fallbackState;
 		
 		Log.e(THIS, e +"\n fallback: "+ fallbackState);
 		
-		for(IConnectionStatusListener l: connectionListeners) {
-			l.onConnectionFailed(e, fallbackState);
-		}
+		uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for(IConnectionStatusListener l: connectionListeners) {
+					l.onConnectionFailed(e, fallbackState);
+				}
+			}
+		});
 	}
 	
 	private boolean isRetrying() {

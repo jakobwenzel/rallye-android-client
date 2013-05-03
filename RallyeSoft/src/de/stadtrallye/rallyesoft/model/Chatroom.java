@@ -36,9 +36,9 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 	
 	private final String THIS;
 	
-	private List<IChatListener> listeners = new ArrayList<IChatListener>();
 	private ChatStatus status;
 	
+	private ArrayList<IChatListener> listeners = new ArrayList<IChatListener>();
 	
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
@@ -151,7 +151,7 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 	private static final String CHATS_COLS = strStr(Chats.KEY_ID, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.FOREIGN_MSG, Chats.KEY_PICTURE, Chats.FOREIGN_ROOM);
 	private static final String MSG_COLS = strStr(Messages.KEY_ID, Messages.KEY_MSG);
 	
-	private void chatUpdate(List<ChatEntry> entries) {//TODO: last entry will be add every refresh
+	private void chatUpdate(final List<ChatEntry> entries) {//TODO: last entry will be add every refresh
 		SQLiteDatabase db = model.getDb();
 		
 //		removeRedundantChats(entries, db);
@@ -235,19 +235,29 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 		
 		Log.i(THIS, "Received "+ entries.size() +" new Chats in Chatroom "+ this.id +" (since "+ this.lastUpdate +")  (eliminated "+ eliminated +")");
 		
-		for (IChatListener l: listeners) {
-			l.addedChats(entries);
-		}
+		model.uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for(IChatListener l: listeners) {
+					l.addedChats(entries);
+				}
+			}
+		});
 	}
 
-	private void chatStatusChange(ChatStatus newStatus) {
+	private void chatStatusChange(final ChatStatus newStatus) {
 		status = newStatus;
 		
 		Log.i(THIS, "Status: "+ newStatus);
 		
-		for (IChatListener l: listeners) {
-			l.onChatStatusChanged(newStatus);
-		}
+		model.uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for (IChatListener l: listeners) {
+					l.onChatStatusChanged(newStatus);
+				}
+			}
+		});
 	}
 	
 	public ChatStatus getChatStatus() {
@@ -288,14 +298,14 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 	private class PictureGallery extends AbstractPictureGallery {
 		
 		public PictureGallery(int initialPictureID) {
-			pictures = new ArrayList<Integer>();
+			this.pictures = new ArrayList<Integer>();
 			
 			Cursor c = model.getDb().query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE+" <> 0 AND "+Chats.FOREIGN_ROOM+" = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
 			
 			int picId, i = 0;
 			while (c.moveToNext()) {
 				picId = c.getInt(0);
-				pictures.add(picId);
+				this.pictures.add(picId);
 				if (picId == initialPictureID) {
 					initialPos = i;
 				}
@@ -305,7 +315,7 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 		
 		@Override
 		public String getPictureUrl(int pos) {
-			return Chatroom.this.getUrlFromImageId(pictures.get(pos), size.toChar());
+			return Chatroom.this.getUrlFromImageId(this.pictures.get(pos), size.toChar());
 		}
 		
 	}
@@ -377,8 +387,10 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 			break;
 		case CHAT_POST:
 			if (success) {
+				chatStatusChange(ChatStatus.PostSuccessfull);
 				chatStatusChange(ChatStatus.Ready);
 			} else {
+				chatStatusChange(ChatStatus.PostFailed);
 				chatStatusChange(ChatStatus.Offline);
 			}
 			break;

@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -47,13 +48,16 @@ import de.stadtrallye.rallyesoft.model.Model;
 public class ChatroomFragment extends BaseFragment implements IChatListener, OnClickListener {
 
 	private Model model;
+	private int[] lastPos = null; //[0] = line, [1] = px
+	private IChatroom chatroom;
+	
 	private IProgressUI ui; // access to IndeterminateProgress in ActionBar
+	
 	private ListView list;	//List of ChatEntries
 	private ChatAdapter chatAdapter; //Adapter for List
 	private Button send;
 	private EditText text;
-	private int[] lastPos = null; //[0] = line, [1] = px
-	private IChatroom chatroom;
+	private ProgressBar loading;
 	
 	/**
 	 * Only for DEBUG purposes
@@ -86,6 +90,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		text = (EditText) v.findViewById(R.id.edit_new_message);
 		send = (Button) v.findViewById(R.id.button_send);
 		send.setOnClickListener(this);
+		loading = (ProgressBar) v.findViewById(R.id.loading);
 		return v;
 	}
 	
@@ -133,9 +138,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
 				intent.putExtra(Std.CHATROOM, chatroom.getID());
 				intent.putExtra(Std.IMAGE, chatAdapter.getChatEntry(pos).pictureID);
-//				intent.putExtra(Std.NAME, chatroom.getName());
-//				intent.putExtra(Std.IMAGE_LIST, chatAdapter.getPictures());
-//				intent.putExtra(Std.IMAGE, chatAdapter.getPicturePos(pos));
 				startActivity(intent);
 			}
 		});
@@ -149,7 +151,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		super.onStart();
 		
 		chatroom.addListener(this);
-		chatroom.refresh();
+		chatroom.refresh();// TODO: do not refresh on UI Lifecycle!
 	}
 	
 //	@Override
@@ -335,12 +337,22 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 			break;
 		case Ready:
 			ui.deactivateProgressAnimation();
+			send.setEnabled(true);
 			break;
 		case Offline:
 			ui.deactivateProgressAnimation();
+			send.setEnabled(false);
 			break;
 		case Posting:
 			ui.activateProgressAnimation();
+			send.setVisibility(View.GONE);
+			loading.setVisibility(View.VISIBLE);
+			break;
+		case PostSuccessfull:
+			text.getText().clear();
+		case PostFailed:
+			send.setVisibility(View.VISIBLE);
+			loading.setVisibility(View.GONE);
 			break;
 		}
 	}

@@ -6,7 +6,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 public interface IChatroom {
 	
-	public enum ChatStatus { Offline, Ready, Refreshing, Posting };
+	public enum ChatStatus { Offline, Ready, Refreshing, Posting, PostSuccessfull, PostFailed };
 	
 	public int getID();
 	public String getName();

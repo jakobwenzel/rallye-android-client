@@ -62,7 +62,7 @@ public class ImageViewActivity extends SherlockActivity {
 		
 		pager = (GalleryPager)findViewById(R.id.image_pager);
 		
-		model = Model.getInstance(this, true);
+		model = Model.getInstance(getApplicationContext(), true);
 		
 		Bundle b = getIntent().getExtras();
 		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));

@@ -28,12 +28,25 @@
             android:minHeight="45dp">
         </EditText>
 	    
-        <Button
-            android:id="@+id/button_send"
+        
+        <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:text="@string/send" />
+            android:layout_height="match_parent">
+            
+            <Button
+	            android:id="@+id/button_send"
+	            android:layout_width="wrap_content"
+	            android:layout_height="match_parent"
+	            android:layout_gravity="right"
+	            android:text="@string/send" />
+            
+            <ProgressBar
+		        android:id="@+id/loading"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_gravity="center"
+		        android:visibility="gone" />
+        </FrameLayout>
         
     </LinearLayout>
     

@@ -22,6 +22,8 @@ public interface IModel {
 	
 	public void addListener(IConnectionStatusListener l);
 	public void removeListener(IConnectionStatusListener l);
+	public void addListener(IMapListener l);
+	public void removeListener(IMapListener l);
 	public ConnectionStatus getConnectionStatus();
 	
 	public void onDestroy();

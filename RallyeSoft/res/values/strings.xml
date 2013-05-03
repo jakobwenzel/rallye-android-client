@@ -14,6 +14,7 @@
     <string name="default_server">http://hajoschja.de:10101/StadtRallye</string>
     <string name="default_group">3</string>
     <string name="default_password">test</string>
+    <string name="default_name">Ray</string>
     <string name="MainPrefHandler">de.stadtrallye.rallyesoft.server</string>
     <string name="login">Login</string>
     <string name="logout">Logout</string>
@@ -23,6 +24,7 @@
     <string name="configuration">Configuration</string>
     <string name="server">Server</string>
     <string name="group">Gruppennummer</string>
+    <string name="name">Name</string>
     <string name="password">Passwort</string>
     <string name="status">Status</string>
     <string name="unavailable">Nicht verfügbar</string>
@@ -35,5 +37,6 @@
     <string name="image_level_large">Groß</string>
     <string name="image_level_small">Klein</string>
     <string name="select_take_picture">Foto aufnehmen oder auswählen</string>
+    <string name="invalid">Ungültig</string>
 
 </resources>

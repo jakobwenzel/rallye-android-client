@@ -53,7 +53,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w(THIS, extras.get("t").toString());
 		
 		if ("100".equals(extras.getString("t"))) { //TODO: discuss definition of int
-			Model model = Model.getInstance(context, true);
+			Model model = Model.getInstance(getApplicationContext(), true);
 			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
 			if (r != null) {
 				r.refresh(); //TODO: specialize...

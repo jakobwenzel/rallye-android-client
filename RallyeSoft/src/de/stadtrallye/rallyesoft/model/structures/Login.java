@@ -12,15 +12,17 @@ public class Login implements Parcelable {
 	private String server;
 	private int group;
 	private String password;
+	private String name;
 	
-	public Login(String server, int group, String password) {
-		this(server, group, password, 0);
+	public Login(String server, int group, String name, String password) {
+		this(server, group, name, password, 0);
 	}
 	
-	public Login(String server, int group, String password, long lastValidated) {
+	public Login(String server, int group, String name, String password, long lastValidated) {
 		this.server = server;
 		this.group = group;
 		this.password = password;
+		this.name = name;
 		this.lastValidated = lastValidated;
 		this.valid = (lastValidated > 0)? State.Validated : State.Unknown;
 	}
@@ -36,6 +38,10 @@ public class Login implements Parcelable {
 	
 	public String getPassword() {
 		return password;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public long getLastValidated() {
@@ -75,7 +81,7 @@ public class Login implements Parcelable {
 	
 	@Override
 	public String toString() {
-		return "Server: "+ server +"|"+ group+ " pw: " +password;
+		return "Server: "+ server +"| "+name+ "@" +group+ " pw: " +password;
 	}
 
 	@Override
@@ -93,6 +99,11 @@ public class Login implements Parcelable {
 			if (other.password != null)
 				return false;
 		} else if (!password.equals(other.password))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
 			return false;
 		if (server == null) {
 			if (other.server != null)
@@ -112,6 +123,7 @@ public class Login implements Parcelable {
 	public void writeToParcel(Parcel d, int flags) {
 		d.writeString(server);
 		d.writeInt(group);
+		d.writeString(name);
 		d.writeString(password);
 		d.writeLong(lastValidated);
 	}
@@ -125,7 +137,7 @@ public class Login implements Parcelable {
 		
 		@Override
 		public Login createFromParcel(Parcel s) {
-			return new Login(s.readString(), s.readInt(), s.readString(), s.readLong());
+			return new Login(s.readString(), s.readInt(), s.readString(), s.readString(), s.readLong());
 		}
 	};
 }
