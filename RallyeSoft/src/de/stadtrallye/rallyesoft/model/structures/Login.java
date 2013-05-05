@@ -1,5 +1,8 @@
 package de.stadtrallye.rallyesoft.model.structures;
 
+import de.stadtrallye.rallyesoft.common.Std;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -82,6 +85,32 @@ public class Login implements Parcelable {
 	@Override
 	public String toString() {
 		return "Server: "+ server +"| "+name+ "@" +group+ " pw: " +password;
+	}
+	
+	public static Login fromPref(SharedPreferences pref) {
+		Login l = new Login(pref.getString(Std.SERVER, null),
+				pref.getInt(Std.GROUP, 0),
+				pref.getString(Std.NAME, null),
+				pref.getString(Std.PASSWORD, null),
+				pref.getLong(Std.LAST_LOGIN, 0));
+		
+		if (l.isComplete()) {
+			return l;
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * SharedPreferences.edit()
+	 * @param edit
+	 */
+	public void toPref(Editor edit) {
+		edit.putString(Std.SERVER, server);
+		edit.putInt(Std.GROUP, group);
+		edit.putString(Std.PASSWORD, password);
+		edit.putLong(Std.LAST_LOGIN, lastValidated);
+		edit.putString(Std.NAME, name);
 	}
 
 	@Override

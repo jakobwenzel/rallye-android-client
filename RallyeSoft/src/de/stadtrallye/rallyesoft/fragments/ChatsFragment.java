@@ -20,9 +20,9 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.viewpagerindicator.TitlePageIndicator;
 
-import de.stadtrallye.rallyesoft.IModelActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
@@ -94,6 +94,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	public void onStart() {
 		super.onStart();
 		
+//		indicator.setViewPager(pager);
 		indicator.setCurrentItem(currentTab);
 		
 		model.addListener(this);
@@ -165,7 +166,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 			startActivityForResult(chooserIntent, Std.PICK_IMAGE);
 			return true;
 		default:
-			Log.d(THIS, "Not hit on menu item "+ item);
+			Log.d(THIS, "No hit on menu item "+ item);
 			return false;
 		}
 	}

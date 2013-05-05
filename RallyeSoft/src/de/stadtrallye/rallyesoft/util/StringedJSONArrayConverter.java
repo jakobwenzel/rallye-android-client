@@ -20,10 +20,4 @@ public class StringedJSONArrayConverter<T> implements IConverter<String, List<T>
 	public List<T> convert(String input) {
 		return JSONArray.toList(converter, input);
 	}
-
-	@Override
-	public List<T> fallback() {
-		return null;
-	}
-
 }

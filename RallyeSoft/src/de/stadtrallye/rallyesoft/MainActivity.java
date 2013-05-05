@@ -36,6 +36,9 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
+import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
+import de.stadtrallye.rallyesoft.UIComm.IProgressUI;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;

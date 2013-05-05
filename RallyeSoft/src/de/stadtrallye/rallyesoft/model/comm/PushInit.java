@@ -9,6 +9,10 @@ public class PushInit {
 	
 	final public static String gcm = "157370816729";
 
+	/**
+	 * Make sure there is a GCM ID available to use
+	 * @param context
+	 */
 	public static void ensureRegistration(Context context) {
 		// Register with GCM
         GCMRegistrar.checkDevice(context);

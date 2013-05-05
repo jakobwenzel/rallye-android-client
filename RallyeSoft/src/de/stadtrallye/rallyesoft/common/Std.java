@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft;
+package de.stadtrallye.rallyesoft.common;
 
 /**
  * Constants for Internal Use, identify Items, in Tables, Bundles, preferences

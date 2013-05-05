@@ -11,16 +11,16 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
-import de.stadtrallye.rallyesoft.exceptions.RestException;
+import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Model.Tasks;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Chatrooms;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Chats;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Messages;
-import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
+import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
+import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
 
-public class Chatroom implements IChatroom, IAsyncFinished {
+public class Chatroom implements IChatroom, RequestExecutor.Callback<Model.Tasks> {
 	
 	// statics
 	private static final String CLASS = Chatroom.class.getSimpleName();
@@ -65,7 +65,7 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 	 * @param model needed for access to current group, DB, etc.
 	 * @param writeDb wether to ensure that this Chatroom is in the DB
 	 */
-	Chatroom(int id, String name, Model model) {
+	public Chatroom(int id, String name, Model model) {
 		this.id = id;
 		this.name = name;
 		this.model = model;
@@ -124,14 +124,25 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 //				return;
 //			}
 //			pendingLastTime = now;
-			model.startAsyncTask(this, Tasks.CHAT_REFRESH, //TODO: Refresh
-					model.getRallyePull().pendingChatRefresh(id, lastUpdate),
-					new StringedJSONArrayConverter<ChatEntry>(new ChatEntry.ChatConverter()));
+			setChatStatus(ChatStatus.Refreshing);
 			
-			chatStatusChange(ChatStatus.Refreshing);
+			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, Tasks>(model.factory.chatRefreshRequest(id, lastUpdate), new ChatEntry.ChatConverter(), this, Tasks.CHAT_REFRESH));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+		}
+	}
+	
+	private void chatRefreshResult(RequestExecutor<List<ChatEntry>, ?> r) {
+		if (r.isSuccessful()){
+			List<ChatEntry> res = r.getResult();
 			
-		} catch (RestException e) {
-			err.restError(e);
+			model.getLogin().validated();
+			
+			chatUpdate(res);
+			setChatStatus(ChatStatus.Ready);
+		} else {
+			err.asyncTaskResponseError(r.getException());
+			setChatStatus(ChatStatus.Offline);
 		}
 	}
 	
@@ -151,7 +162,7 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 	private static final String CHATS_COLS = strStr(Chats.KEY_ID, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.FOREIGN_MSG, Chats.KEY_PICTURE, Chats.FOREIGN_ROOM);
 	private static final String MSG_COLS = strStr(Messages.KEY_ID, Messages.KEY_MSG);
 	
-	private void chatUpdate(final List<ChatEntry> entries) {//TODO: last entry will be add every refresh
+	private void chatUpdate(final List<ChatEntry> entries) {
 		SQLiteDatabase db = model.getDb();
 		
 //		removeRedundantChats(entries, db);
@@ -245,7 +256,7 @@ public class Chatroom implements IChatroom, IAsyncFinished {
 		});
 	}
 
-	private void chatStatusChange(final ChatStatus newStatus) {
+	private void setChatStatus(final ChatStatus newStatus) {
 		status = newStatus;
 		
 		Log.i(THIS, "Status: "+ newStatus);
@@ -348,57 +359,37 @@ public class Chatroom implements IChatroom, IAsyncFinished {
             return;
         }
         try {
-                model.startAsyncTask(this, Tasks.CHAT_POST, model.getRallyePull().pendingChatPost(id, msg, 0), null);
-                chatStatusChange(ChatStatus.Posting);
-        } catch (RestException e) {
-                err.restError(e);
+        	setChatStatus(ChatStatus.Posting);
+        	model.exec.execute(new RequestExecutor<String, Tasks>(model.factory.chatPostRequest(id, msg, 0), null, this, Tasks.CHAT_POST));
+        } catch (HttpRequestException e) {
+                err.requestException(e);
         }
 	}
-
-	@Override
-	public void onAsyncFinished(@SuppressWarnings("rawtypes") AsyncRequest request, boolean success) {
-		Tasks type = model.getRunningRequests().get(request);
-		
-		if (type == null && !success) {
-			Log.w(THIS, "Task Callback with type 'null' => cancelled Task");
-			return;
-		} else if (type == null) {
-			Log.e(THIS, "Task Callback with type 'null'");
-			return;
+	
+	private void addChatResult(RequestExecutor<String, ?> r) {
+		if (r.isSuccessful()) {
+			setChatStatus(ChatStatus.PostSuccessfull);
+			setChatStatus(ChatStatus.Ready);
+		} else {
+			setChatStatus(ChatStatus.PostFailed);
+			setChatStatus(ChatStatus.Offline);
 		}
-		
-		switch (type) {
-		case CHAT_REFRESH:
-			try {
-				if (success){
-					List<ChatEntry> res = ((AsyncRequest<List<ChatEntry>>)request).get();
-					
-					model.getLogin().validated();
-					
-					chatUpdate(res);
-					chatStatusChange(ChatStatus.Ready);
-				} else {
-					err.asyncTaskResponseError(request.getException());
-					chatStatusChange(ChatStatus.Offline);
-				}
-			} catch (Exception e) {
-				err.asyncTaskResponseError(e);
-			}
-			break;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void executorResult(RequestExecutor<?, Tasks> r, Tasks callbackId) {
+		switch (callbackId) {
 		case CHAT_POST:
-			if (success) {
-				chatStatusChange(ChatStatus.PostSuccessfull);
-				chatStatusChange(ChatStatus.Ready);
-			} else {
-				chatStatusChange(ChatStatus.PostFailed);
-				chatStatusChange(ChatStatus.Offline);
-			}
+			addChatResult((RequestExecutor<String, ?>) r);
+			break;
+		case CHAT_REFRESH:
+			chatRefreshResult((RequestExecutor<List<ChatEntry>, ?>) r);
 			break;
 		default:
-			Log.e(THIS, "Unknown Task callback: "+ request);
+			Log.e(THIS, "Unknown Executor Callback");
+			break;
 		}
-		
-		model.getRunningRequests().remove(request);
 	}
 	
 	@Override

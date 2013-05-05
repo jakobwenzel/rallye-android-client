@@ -1,9 +1,12 @@
 package de.stadtrallye.rallyesoft.exceptions;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 
 import android.util.Log;
@@ -15,15 +18,17 @@ public class ErrorHandling {
 	public ErrorHandling(String where) {
 		this.where = where;
 	}
-
-	public RestException postError() {
-		return null;
+	
+	public HttpRequestException JSONDuringRequestCreationError(JSONException e, URL url) {
+		Log.e(where, "JSON error before connection");
+		e.printStackTrace();
+		return new HttpRequestException(-2,"JSON error before connection", url, e);
 	}
 	
-	public RestException JSONDuringPostError(JSONException e, String rest) {
-		Log.e("RallyePull", "Logout: Unkown JSON error during POST");
+	public HttpRequestException MalformedURLError(MalformedURLException e, URL base, String path) {
+		Log.e(where, "Malformed URL");
 		e.printStackTrace();
-		return new RestException(rest, e);
+		return new HttpRequestException(-3,"Malformed URL: "+ path, base, e);
 	}
 
 	public void notLoggedIn() {
@@ -38,8 +43,8 @@ public class ErrorHandling {
 		Log.e(where, "Invalid login: "+ login);
 	}
 
-	public void restError(RestException e) {
-		Log.e(where, "invalid Rest URL", e);
+	public void requestException(Exception e) {
+		Log.e(where, "Failed Request", e);
 	}
 
 	public void asyncTaskResponseError(Exception found) {
@@ -66,5 +71,20 @@ public class ErrorHandling {
 
 	public void dbInsertError(String string) {
 		Log.e(where, "Failed to insert into DB: "+ string);
+	}
+
+	public Exception logoutInvalid() {
+		Exception e = new Exception("Cannot logout: no server specified");
+		Log.e(where, e.getMessage());
+		return e;
+	}
+
+	public void concurrentConnectionChange(String type) {
+		Log.e(where, "ConnectionStatus is changing, refusing: "+ type);
+	}
+
+	public void connectionFailure(Exception e, ConnectionStatus fallbackState) {
+		e.printStackTrace();
+		Log.e(where,"fallback: "+ fallbackState);
 	}
 }

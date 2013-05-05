@@ -29,11 +29,11 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
-import de.stadtrallye.rallyesoft.IModelActivity;
-import de.stadtrallye.rallyesoft.IProgressUI;
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
+import de.stadtrallye.rallyesoft.UIComm.IProgressUI;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;

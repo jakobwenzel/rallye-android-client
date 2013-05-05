@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.common.Std;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;

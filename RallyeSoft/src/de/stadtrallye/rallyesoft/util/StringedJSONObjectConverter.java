@@ -10,15 +10,9 @@ public abstract class StringedJSONObjectConverter<T> implements IConverter<Strin
 		try {
 			return doConvert(new JSONObject(input));
 		} catch (JSONException e) { 
-			return fallback();
+			return null;
 		}
 	}
 	
 	public abstract T doConvert(JSONObject o) throws JSONException;
-
-	@Override
-	public T fallback() {
-		return null;
-	}
-
 }

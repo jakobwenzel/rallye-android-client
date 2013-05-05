@@ -10,7 +10,7 @@ import android.widget.EditText;
 import com.actionbarsherlock.app.SherlockDialogFragment;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public class LoginDialogFragment extends SherlockDialogFragment {

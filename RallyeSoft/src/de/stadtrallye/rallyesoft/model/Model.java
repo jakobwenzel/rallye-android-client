@@ -1,12 +1,10 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -14,6 +12,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -22,22 +21,19 @@ import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.maps.model.LatLng;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.Std;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
-import de.stadtrallye.rallyesoft.exceptions.RestException;
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
+import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
+import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Groups;
-import de.stadtrallye.rallyesoft.model.comm.AsyncRequest;
-import de.stadtrallye.rallyesoft.model.comm.RallyePull;
-import de.stadtrallye.rallyesoft.model.comm.Pull.PendingRequest;
+import de.stadtrallye.rallyesoft.model.comm.RequestFactory;
+import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
+import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
+import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 import de.stadtrallye.rallyesoft.model.structures.MapNode;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
-import de.stadtrallye.rallyesoft.util.IConverter;
-import de.stadtrallye.rallyesoft.util.JSONConverter;
-import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
-import de.stadtrallye.rallyesoft.util.StringedJSONObjectConverter;
 
 /**
  * My Model
@@ -46,12 +42,12 @@ import de.stadtrallye.rallyesoft.util.StringedJSONObjectConverter;
  * @author Ray
  *
  */
-public class Model implements IModel, IAsyncFinished {
+public class Model extends Binder implements IModel, LoginExecutor.Callback, RequestExecutor.Callback<Model.Tasks> {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	@SuppressWarnings("unused")
-	private static boolean DEBUG = false;
+	final private static boolean DEBUG = false;
 	
 	
 	public enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST, CONFIG };
@@ -60,22 +56,19 @@ public class Model implements IModel, IAsyncFinished {
 	private static Model model; // Singleton Pattern
 
 	
-	private SharedPreferences pref;
-	private RallyePull pull;
-	private Context context;
+	final private SharedPreferences pref;
+	final private Context context;
 	
 	private Login currentLogin;
-	private Login newLogin;
 	private ServerConfig serverConfig;
 	
-	@SuppressWarnings("rawtypes")
-	private HashMap<AsyncRequest, Tasks> runningRequests = new HashMap<AsyncRequest, Tasks>();
-	
-	private ConnectionStatus connectionStatus = ConnectionStatus.Unknown;
+	private ConnectionStatus status = ConnectionStatus.Unknown;
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
 	final ArrayList<IMapListener> mapListeners = new ArrayList<IMapListener>();
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
+	final RequestFactory factory;
+	final ExecutorService exec;
 	
 	private List<Chatroom> chatrooms;
 	
@@ -109,66 +102,47 @@ public class Model implements IModel, IAsyncFinished {
 	}
 	
 	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
-		String gcm = GCMRegistrar.getRegistrationId(context);
 		this.pref = pref;
 		this.context = context;
-		this.connectionStatus = loggedIn? ConnectionStatus.Connected : ConnectionStatus.Unknown;
-		
-		pull = new RallyePull(gcm);
+//		this.connectionStatus = loggedIn? ConnectionStatus.Connected : ConnectionStatus.Unknown;//TODO: Network check
 		
 		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
 		db = helper.getWritableDatabase();
 		
-		currentLogin = readLogin();
+		exec = Executors.newCachedThreadPool();
 		
-		if (connectionStatus == ConnectionStatus.Connected) {
-			Log.i(THIS, "Warm Start: assuming previously logged in!");
-			
-			pull.setBaseURL(currentLogin.getServer());
-		} else {
-			if (currentLogin.isValid()) {
-				if (isDbSynchronized()) {
-					Log.i(THIS, "Cold Start: Found Login-Data and DB -> checking connection");
-					connectionStatus = ConnectionStatus.Connecting;
-					
-					chatrooms = Chatroom.getChatrooms(this);
-					
-					pull.setBaseURL(currentLogin.getServer());
-					
-					checkConnectionStatus();
-				} else {
-					Log.w(THIS, "Cold Start: Found Login-Data, but DB incompatible -> Log In");
-					connectionStatus = ConnectionStatus.Retrying;
-					
-					pull.setBaseURL(currentLogin.getServer());
-					
-					newLogin = currentLogin;
-					logout(); //During Retrying after logout completed a new attempt at login will be started at newLogin
-				}
-			} else {
-				Log.w(THIS, "No usable Login-Data found -> stay offline");
-				connectionStatus = ConnectionStatus.Disconnected; //TODO: Implement "No Network" Status
+		currentLogin = Login.fromPref(pref);
+		
+		factory = new RequestFactory(null, Std.GCM);
+		
+		try {
+			if (currentLogin == null || !currentLogin.isComplete() || !isDbSynchronized())
+				throw new LoginFailedException();
 				
-				currentLogin = null;
-			}
+			URL url = new URL(currentLogin.getServer());
+			factory.setBaseURL(url);
+			factory.setID(GCMRegistrar.getRegistrationId(context));
+			
+			Log.i(THIS, "Cold Start: Found Login-Data and DB -> checking connection");
+			
+			checkConnectionStatus();
+		} catch (Exception e) {
+			Log.w(THIS, "No usable Login-Data found -> stay offline");
+			setConnectionStatus(ConnectionStatus.Disconnected);
 		}
 	}
 	
-	private boolean isDbSynchronized() {
+	/**
+	 * Checks if DB contains at least one group
+	 * (Means we have been logged in before)
+	 * @return
+	 */
+	private boolean isDbSynchronized() {//TODO: precise check
 		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.getGroup(), null, null, null, null);
 		if (c.getCount() != 1)
 			return false;
 		else
 			return true;
-	}
-
-	@SuppressWarnings("rawtypes")
-	HashMap<AsyncRequest, Tasks> getRunningRequests() {
-		return runningRequests;
-	}
-	
-	RallyePull getRallyePull() {
-		return pull;
 	}
 	
 	SQLiteDatabase getDb() {
@@ -178,41 +152,22 @@ public class Model implements IModel, IAsyncFinished {
 	
 	@Override
 	public void logout() {
-		if (currentLogin == null && newLogin == null) {
-			Log.e(THIS, "Cannot logout: no server specified");
-			connectionFailure(new Exception("Cannot logout: no server specified"), ConnectionStatus.Unknown);
+		if (currentLogin == null || status == ConnectionStatus.Disconnected) {
+			Exception e = err.logoutInvalid();
+			connectionFailure(e, ConnectionStatus.Disconnected);
 			return;
 		}
 		
 		try {
-			startAsyncTask(Tasks.LOGOUT, pull.pendingLogout(), null);
-			connectionStatusChange(ConnectionStatus.Disconnecting);
-		} catch (RestException e) {
-			err.restError(e);
+			setConnectionStatus(ConnectionStatus.Disconnecting);
+			exec.execute(new RequestExecutor<String, Tasks>(factory.logoutRequest(), null, this, Tasks.LOGOUT));
+		} catch (Exception e) {
+			err.requestException(e);
 		}
 	}
 	
-	/**
-	 * Converts JSONObject's to Chatrooms
-	 * 
-	 * used in conjunction with {@link StringedJSONArrayConverter}
-	 * @author Ramon
-	 */
-	private static class LoginConverter extends JSONConverter<Chatroom> {
-		//TODO: put universal Converters in separate files / packages 
-		@Override
-		public Chatroom doConvert(JSONObject o) throws JSONException {
-			int i = o.getInt("chatroom");
-			String name;
-			
-			try {
-				name = o.getString("name");
-			} catch (Exception e) {
-				name = "Chatroom "+ i;
-			}
-			
-			return new Chatroom(i, name, model);
-		}
+	private void logoutResult(RequestExecutor<String, ?> r) {
+		setConnectionStatus(ConnectionStatus.Disconnected);
 	}
 	
 	@Override
@@ -220,37 +175,68 @@ public class Model implements IModel, IAsyncFinished {
 		if (isLoggedIn()) {
 			err.loggedIn();
 			return;
-		}
+		} else if (isConnectionChanging()) {
+			err.concurrentConnectionChange("Login");
+		} else if (!login.isComplete()) {
+			err.loginInvalid(login);
+			return;
+		} else if (login.equals(currentLogin)) {
+			login = currentLogin;
+		}// Sanity
 		
-		newLogin = login;
-		 
-		if (newLogin.isComplete()) {
-			try {
-				String gcm = GCMRegistrar.getRegistrationId(context);
-				pull = new RallyePull(gcm);
-				pull.setBaseURL(login.getServer());
-				
-				startAsyncTask(Tasks.LOGIN,
-						pull.pendingLogin(newLogin, gcm),
-						new StringedJSONArrayConverter<Chatroom>(new LoginConverter()));
-				
-				connectionStatusChange(ConnectionStatus.Connecting);
-				
-			} catch (RestException e) {
-				err.restError(e);
-			}
-		} else {
-			err.loginInvalid(newLogin);
+		try {
+			factory.setID(GCMRegistrar.getRegistrationId(context));
+			factory.setBaseURL(new URL(login.getServer()));
+			
+			LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);
+			setConnectionStatus(ConnectionStatus.Connecting);
+			exec.execute(rex);
+		
+		} catch (Exception e) {
+			err.requestException(e);
 		}
 	}
 	
 	@Override
-	public void checkConnectionStatus() {
-		try {
-			startAsyncTask(Tasks.CHECK_SERVER, pull.pendingServerStatus(), null);
-		} catch (RestException e) {
-			err.restError(e);
+	public void loginResult(LoginExecutor r) {
+		if (r.isSuccessful()) {
+			chatrooms = r.getResult();
+			
+			currentLogin = r.getLogin();
+			writeLoginAndChatrooms();//TODO: setLogin();
+			refreshServerConfig();
+			setConnectionStatus(ConnectionStatus.Connected);
+		} else {
+			connectionFailure(r.getException(), ConnectionStatus.Disconnected);
 		}
+	}
+	
+	/**
+	 * Start async check if the server accepts us
+	 */
+	@Override
+	public void checkConnectionStatus() {
+		if (isConnectionChanging()) {
+			err.concurrentConnectionChange("Status");
+			return;
+		}
+		
+		setConnectionStatus(ConnectionStatus.Connecting);
+		
+		try {
+			exec.execute(new RequestExecutor<String, Tasks>(factory.serverStatusRequest(), null, this, Tasks.CHECK_SERVER));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+		}
+	}
+	
+	private void checkStatusResult(RequestExecutor<String, ?> r) {
+		if (r.isSuccessful()) {
+			currentLogin.validated();
+			refreshServerConfig();
+			setConnectionStatus((r.getResponseCode() >= 200 && r.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected);
+		} else
+			setConnectionStatus(ConnectionStatus.Disconnected);
 	}
 	
 	//TODO: always precache / refresh on mapNeeded??
@@ -260,35 +246,49 @@ public class Model implements IModel, IAsyncFinished {
 			return;
 		}
 		try {
-			startAsyncTask(Tasks.MAP_NODES, pull.pendingMapNodes(), new StringedJSONArrayConverter<MapNode>(new MapNode.NodeConverter()));
-		} catch (RestException e) {
-			err.restError(e);
+			exec.execute(new JSONArrayRequestExecutor<MapNode, Tasks>(factory.mapNodesRequest(), new MapNode.NodeConverter(), this, Tasks.MAP_NODES));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
 		}
+	}
+	
+	private void mapNodeResult(JSONArrayRequestExecutor<MapNode, ?> r) {
+		if (r.isSuccessful()) {
+			try {
+				notifyMapUpdate(r.getResult());
+			} catch (Exception e) {
+				err.asyncTaskResponseError(e);
+			}
+		} else
+			err.asyncTaskResponseError(r.getException());
 	}
 	
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
-			startAsyncTask(Tasks.CONFIG, pull.pendingServerConfig(), new ServerConfig.ServerConfigConverter());
-		} catch (RestException e) {
-			err.restError(e);
+			exec.execute(new RequestExecutor<ServerConfig, Tasks>(factory.serverConfigRequest(), new ServerConfig.ServerConfigConverter(), this, Tasks.CONFIG));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
 		}
 	}
 	
-	protected <T> AsyncRequest<T> startAsyncTask(IAsyncFinished callback, Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
-		AsyncRequest<T> ar = new AsyncRequest<T>(callback, converter);
-		runningRequests.put(ar, taskType);
-		ar.execute(payload);
-		return ar;
+	private void serverConfigResult(RequestExecutor<ServerConfig, ?> r) {//TODO synchronize
+		if (r.isSuccessful()) {
+			try {
+				serverConfig = r.getResult();
+			} catch (Exception e) {
+				err.asyncTaskResponseError(e);
+			}
+		}
 	}
 	
-	private <T> AsyncRequest<T> startAsyncTask(Tasks taskType, PendingRequest payload, IConverter<String, T> converter) {
-		return startAsyncTask(this, taskType, payload, converter);
+	public boolean isConnectionChanging() {
+		return status == ConnectionStatus.Connecting || status == ConnectionStatus.Disconnecting;
 	}
 	
 	@Override
 	public boolean isLoggedIn() {
-		return connectionStatus == ConnectionStatus.Connected;
+		return status == ConnectionStatus.Connected;
 	}
 	
 	@Override
@@ -312,11 +312,11 @@ public class Model implements IModel, IAsyncFinished {
 	 * Will iterate through all chatrooms until found or null
 	 */
 	public IChatroom getChatroom(int id) {
-		if (connectionStatus != ConnectionStatus.Connected)
+		if (status != ConnectionStatus.Connected)
 			return null;
 		
 		if (chatrooms == null) {
-			Log.e(THIS, "Chatrooms empty / status: "+ connectionStatus);
+			Log.e(THIS, "Chatrooms empty / status: "+ status);
 			return null;
 		}
 		
@@ -333,111 +333,33 @@ public class Model implements IModel, IAsyncFinished {
 	public LatLng getMapLocation() {
 		return serverConfig.getLocation();
 	}
-
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public void onAsyncFinished(@SuppressWarnings("rawtypes") final AsyncRequest request, final boolean success) {
-		Tasks type = runningRequests.get(request);
-		
-		if (type == null && !success) {
-			Log.w(THIS, "Task Callback with type 'null' => cancelled Task");
-			return;
-		} else if (type == null) {
-			Log.e(THIS, "Task Callback with type 'null'");
-			return;
-		}
-		
-		
-		switch (type) {
-		case LOGIN:
-			try {
-				if (!success) {
-					if (!isRetrying()) { //TODO: only when unauthorized by server because of previous login (subject to change)
-						connectionStatusChange(ConnectionStatus.Retrying);
-						this.logout();
-					} else {
-						newLogin = currentLogin = null;
-						connectionFailure(request.getException(), ConnectionStatus.Disconnected);
-					}
-				} else {
-			
-					chatrooms = (List<Chatroom>) request.get();
-					
-					newLogin.validated();
-					currentLogin = newLogin;
-					newLogin = null;
-					
-					writeLoginAndChatrooms();
-					refreshServerConfig();
-					
-					connectionStatusChange(ConnectionStatus.Connected);
-				}
-				
-			} catch (Exception e) {
-				err.asyncTaskResponseError(e);
-			}
-			break;
-		case LOGOUT:
-			if (isRetrying()) {
-				this.login(newLogin);
-			} else
-				connectionStatusChange(ConnectionStatus.Disconnected);
-			
-			break;
+	public void executorResult(RequestExecutor<?, Tasks> r, Tasks callbackId) {
+		switch (callbackId) {
 		case CHECK_SERVER:
-			if (success) {//TODO: get rid of throw Except
-				ConnectionStatus state = (request.getResponseCode() >= 200 && request.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
-				currentLogin.validated();
-				refreshServerConfig();
-				connectionStatusChange(state);
-			} else
-				connectionStatusChange(ConnectionStatus.Disconnected);
+			checkStatusResult((RequestExecutor<String, Tasks>) r);
 			break;
 		case CONFIG:
-			if (success) {
-				try {
-					serverConfig = (ServerConfig) request.get();
-				} catch (Exception e) {
-					err.asyncTaskResponseError(e);
-				}
-			}
+			serverConfigResult((RequestExecutor<ServerConfig, ?>) r);
+			break;
+		case LOGOUT:
+			logoutResult((RequestExecutor<String, Tasks>) r);
 			break;
 		case MAP_NODES:
-			if (success) {
-				try {
-					notifyMapUpdate((List<MapNode>)request.get());
-				} catch (Exception e) {
-					err.asyncTaskResponseError(e);
-				}
-			} else
-				err.asyncTaskResponseError(request.getException());
+			mapNodeResult((JSONArrayRequestExecutor<MapNode, ?>) r);
 			break;
 		default:
-			Log.e(THIS, "Unknown Task callback: "+ request);
+			Log.e(THIS, "Unknown Executor Callback");
+			break;
+		
 		}
-		
-		runningRequests.remove(request);
-	}
-	
-	@Deprecated
-	private String serializeChatroomIds() {
-		StringBuilder rooms = new StringBuilder();
-		
-		for (Chatroom c: chatrooms) {
-			rooms.append(Integer.toString(c.getID())).append(';');
-		}
-		
-		return rooms.toString();
 	}
 
 	private void writeLoginAndChatrooms() {
 		SharedPreferences.Editor edit = pref.edit();
-		edit.putLong(Std.LAST_LOGIN, currentLogin.getLastValidated());
-//		edit.putLong(Std.LAST_CONTACT, time);
-		edit.putString(Std.SERVER, currentLogin.getServer());
-		edit.putInt(Std.GROUP, currentLogin.getGroup());
-		edit.putString(Std.PASSWORD, currentLogin.getPassword());
-//		edit.putString(Std.CHATROOMS, serializeChatroomIds());
+		currentLogin.toPref(edit);
 		
 		ContentValues insert = new ContentValues();
 		insert.put(Groups.KEY_ID, currentLogin.getGroup());
@@ -450,20 +372,6 @@ public class Model implements IModel, IAsyncFinished {
 		
 		edit.commit();
 	}
-	
-	private Login readLogin() {
-		return new Login(pref.getString(Std.SERVER, null),
-				pref.getInt(Std.GROUP, 0),
-				pref.getString(Std.NAME, null),
-				pref.getString(Std.PASSWORD, null),
-				pref.getLong(Std.LAST_LOGIN, 0));
-	}
-	
-//	@Deprecated
-//	private void readChatRooms() { //TODO: move to DB
-//		String rooms = pref.getString(Std.CHATROOMS, "");
-//		chatrooms = Chatroom.getChatrooms(rooms, this);
-//	}
 	
 	private Login getDefaultLogin() {
 		return new Login(context.getString(R.string.default_server),
@@ -491,12 +399,7 @@ public class Model implements IModel, IAsyncFinished {
 			c.onDestroy();
 		}
 		
-		for (@SuppressWarnings("rawtypes") AsyncRequest ar: runningRequests.keySet())
-		{
-			ar.cancel(true);
-		}
-		
-		runningRequests.clear();
+		exec.shutdownNow();
 		
 		db.close();
 	}
@@ -532,13 +435,13 @@ public class Model implements IModel, IAsyncFinished {
 		connectionListeners.remove(l);
 	}
 	
-	private void connectionStatusChange(final ConnectionStatus newState) {
-		if (connectionStatus == ConnectionStatus.Retrying && (newState != ConnectionStatus.Disconnected && newState != ConnectionStatus.Connected)) {
-			Log.i(THIS, "Status: Ignoring change to "+ newState +" while retrying");
+	private void setConnectionStatus(final ConnectionStatus newState) {
+		if (newState == status) {
+			Log.w(THIS, "Duplicate Status: "+ newState);
 			return;
 		}
 		
-		connectionStatus = newState;
+		status = newState;
 		
 		Log.i(THIS, "Status: "+ newState);
 		
@@ -553,9 +456,9 @@ public class Model implements IModel, IAsyncFinished {
 	}
 	
 	private void connectionFailure(final Exception e, final ConnectionStatus fallbackState) {
-		connectionStatus = fallbackState;
+		status = fallbackState;
 		
-		Log.e(THIS, e +"\n fallback: "+ fallbackState);
+		err.connectionFailure(e, fallbackState);
 		
 		uiHandler.post(new Runnable(){
 			@Override
@@ -567,17 +470,7 @@ public class Model implements IModel, IAsyncFinished {
 		});
 	}
 	
-	private boolean isRetrying() {
-		return connectionStatus == ConnectionStatus.Retrying;
-	}
-	
 	public ConnectionStatus getConnectionStatus() {
-		return connectionStatus;
+		return status;
 	}
-	
-	public static void enableDebugLogging() {
-		DEBUG = true;
-		AsyncRequest.enableDebugLogging();
-	}
-	
 }

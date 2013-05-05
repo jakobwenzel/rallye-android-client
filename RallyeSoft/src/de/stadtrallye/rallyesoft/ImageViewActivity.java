@@ -11,9 +11,7 @@ import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.view.ViewGroup;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
@@ -30,6 +28,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
 import de.stadtrallye.rallyesoft.model.IPictureGallery.Size;
@@ -61,14 +60,13 @@ public class ImageViewActivity extends SherlockActivity {
 		
 		
 		pager = (GalleryPager)findViewById(R.id.image_pager);
+		pager.setPageMargin(10);
 		
 		model = Model.getInstance(getApplicationContext(), true);
 		
 		Bundle b = getIntent().getExtras();
 		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
 		gallery = chatroom.getPictureGallery(b.getInt(Std.IMAGE));
-        
-		pager.setPageMargin(10);
 		
         adapter = new ImageAdapter();
         pager.setAdapter(adapter);

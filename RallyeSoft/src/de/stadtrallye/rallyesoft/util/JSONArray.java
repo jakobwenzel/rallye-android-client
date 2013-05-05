@@ -55,10 +55,10 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 				return converter.convert(o);
 			} catch (JSONException e) {
 				e.printStackTrace();
-				return converter.fallback();
+				return null;
 			} catch (ClassCastException e) {
 				err.jsonCastError(e);
-				return converter.fallback();
+				return null;
 			}
 		}
 
