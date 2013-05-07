@@ -197,7 +197,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		/**
 		 * Needed so the FragmentManager can distinguish tabs of different chatrooms (, if re logging in as different user)
-		 * Default behavior, will name Fragments after there position
+		 * Default behavior, will name Fragments after their position
 		 */
 		@Override
 		public long getItemId(int position) {
