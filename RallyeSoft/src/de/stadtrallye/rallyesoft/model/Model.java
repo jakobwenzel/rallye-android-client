@@ -50,7 +50,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	final private static boolean DEBUG = false;
 	
 	
-	public enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, CHAT_REFRESH, LOGOUT, CHAT_POST, CONFIG };
+	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG };
 	
 	
 	private static Model model; // Singleton Pattern
@@ -233,6 +233,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	private void checkStatusResult(RequestExecutor<String, ?> r) {
 		if (r.isSuccessful()) {
 			currentLogin.validated();
+			chatrooms = Chatroom.getChatrooms(this);
 			refreshServerConfig();
 			setConnectionStatus((r.getResponseCode() >= 200 && r.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected);
 		} else

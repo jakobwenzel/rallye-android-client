@@ -12,19 +12,22 @@ import android.util.Log;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.model.Model.Tasks;
+import de.stadtrallye.rallyesoft.model.Chatroom.Tasks;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Chatrooms;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Chats;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Messages;
+import de.stadtrallye.rallyesoft.model.comm.Paths;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
-public class Chatroom implements IChatroom, RequestExecutor.Callback<Model.Tasks> {
+public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	
 	// statics
 	private static final String CLASS = Chatroom.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(CLASS);
+	
+	enum Tasks { CHAT_REFRESH, CHAT_POST };
 	
 	// members
 	private Model model;
@@ -40,6 +43,12 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Model.Tasks
 	
 	private ArrayList<IChatListener> listeners = new ArrayList<IChatListener>();
 	
+	/**
+	 * Get Chatrooms from Database
+	 * Requires: Previously logged in with identical login
+	 * @param model
+	 * @return
+	 */
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
 		//TODO: currently Chatrooms can only ever belong to 1 group, and will not be shown, even if another group has rights to access
@@ -341,7 +350,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Model.Tasks
 	
 	@Override
 	public String getUrlFromImageId(int pictureID, char size) {
-		String res = model.getLogin().getServer() +"/pic/get/"+ pictureID +"/"+ size;
+		String res = model.getLogin().getServer() + Paths.getPic(pictureID, size);
 //		Log.v(THIS, res);
 		return res;
 	}

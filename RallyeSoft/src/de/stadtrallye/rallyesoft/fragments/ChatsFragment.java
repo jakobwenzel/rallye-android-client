@@ -3,7 +3,6 @@ package de.stadtrallye.rallyesoft.fragments;
 import java.util.List;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -39,7 +38,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private Model model;
 	private ViewPager pager;
 	private TitlePageIndicator indicator;
-	private FragmentPagerAdapter fragmentAdapter;
+	private ChatFragmentAdapter fragmentAdapter;
 	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
 	private MenuItem refreshMenuItem;
@@ -60,6 +59,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		if (savedInstanceState != null)
 			currentTab = savedInstanceState.getInt(Std.TAB);
+		
+		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager());
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
 	}
@@ -73,6 +74,10 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
         pager.setPageMargin(5);
 
         indicator = (TitlePageIndicator)v.findViewById(R.id.indicator);
+        
+        pager.setAdapter(fragmentAdapter);
+        
+        indicator.setViewPager(pager);
 		
 		return v;
 	}
@@ -86,33 +91,17 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
-		
-		onConnectionStatusChange(model.getConnectionStatus());
 	}
 	
 	@Override
 	public void onStart() {
 		super.onStart();
 		
-//		indicator.setViewPager(pager);
+		onConnectionStatusChange(model.getConnectionStatus());
 		indicator.setCurrentItem(currentTab);
 		
 		model.addListener(this);
 	}
-	
-//	@Override
-//	public void onResume() {
-//		super.onResume();
-//		
-//		
-//	}
-	
-//	@Override
-//	public void onPause() {
-//		super.onPause();
-//		
-//		
-//	}
 	
 	@Override
 	public void onStop() {
@@ -148,7 +137,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.refresh_menu:
-			chatrooms.get(pager.getCurrentItem()).refresh();
+			chatrooms.get(pager.getCurrentItem()).refresh();//TODO disable if no chatrooms loaded/offline
 			return true;
 		case R.id.picture_menu:
 			Intent pickIntent = new Intent();
@@ -170,33 +159,14 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 			return false;
 		}
 	}
-	
-	private void populateChats() {
-		chatrooms = model.getChatrooms();
-		if (chatrooms == null) {
-			Log.e(THIS, "Chatroom null");
-			return;
-		}
-		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager(), chatrooms);
-		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
-		indicator.setCurrentItem(currentTab);
-	}
-	
-	private void chatsUnavailable() {
-		chatrooms = null;
-		fragmentAdapter = new DummyAdapter(getChildFragmentManager());
-		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
-		indicator.invalidate();
-	}
 
 	@Override
 	public void onConnectionStatusChange(ConnectionStatus newStatus) {
 		if (newStatus == ConnectionStatus.Connected) {
-			populateChats();
+			chatrooms = model.getChatrooms();
+			fill();
 		} else {
-			chatsUnavailable();
+			clear();
 		}
 	}
 	
@@ -205,14 +175,24 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		onConnectionStatusChange(lastStatus);
 	}
 	
+	public void fill() {
+		fragmentAdapter.enable = true;
+		fragmentAdapter.notifyDataSetChanged();
+		indicator.invalidate();
+	}
+	
+	public void clear() {
+		fragmentAdapter.enable = false;
+		fragmentAdapter.notifyDataSetChanged();
+		indicator.invalidate();
+	}
+	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
 
-		private List<? extends IChatroom> chatrooms;
+		private boolean enable = false;
 		
-		public ChatFragmentAdapter(FragmentManager fm, List<? extends IChatroom> chatrooms) {
+		public ChatFragmentAdapter(FragmentManager fm) {
 			super(fm);
-			
-			this.chatrooms = chatrooms;
 		}
 		
 		/**
@@ -221,11 +201,26 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		 */
 		@Override
 		public long getItemId(int position) {
-			return chatrooms.get(position).getID();
+			return (enable)? chatrooms.get(position).getID() : -1;
 		}
 
 		@Override
 		public Fragment getItem(int pos) {
+			if (enable)
+				return getChatFragment(pos);
+			else 
+				return getDummyFragment();
+		}
+		
+		private Fragment getDummyFragment() {
+			Fragment f = new DummyFragment();
+			Bundle b = new Bundle();
+			b.putInt(Std.LAYOUT, R.layout.chat_unavailable);
+			f.setArguments(b);
+			return f;
+		}
+		
+		private Fragment getChatFragment(int pos) {
 			ChatroomFragment f;
 			
 			f = new ChatroomFragment();
@@ -238,45 +233,23 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 
 		@Override
 		public int getCount() {
-			return chatrooms.size();
+			return (enable)? chatrooms.size() : 1;
+		}
+		
+		@Override
+		public int getItemPosition(Object object) {
+			if (enable && object instanceof DummyFragment)
+				return POSITION_NONE;
+			else if (!enable && object instanceof ChatroomFragment)
+				return POSITION_NONE;
+			else
+				return POSITION_UNCHANGED;
 		}
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-			return chatrooms.get(pos).getName();
+			return (enable)? chatrooms.get(pos).getName() : null;
 		}
 
 	}
-	
-	private class DummyAdapter extends FragmentPagerAdapter {
-
-		public DummyAdapter(FragmentManager fm) {
-			super(fm);
-		}
-
-		@Override
-		public Fragment getItem(int arg0) {
-			Fragment f = new DummyFragment();
-			Bundle b = new Bundle();
-			b.putInt(Std.LAYOUT, R.layout.chat_unavailable);
-			f.setArguments(b);
-			return f;
-		}
-		
-		/**
-		 * So as not be confused with actual chatrooms in FragmentManager
-		 * @see ChatFragmentAdapter
-		 */
-		@Override
-		public long getItemId(int position) {
-			return -1;
-		}
-
-		@Override
-		public int getCount() {
-			return 1;
-		}
-		
-	}
-	
 }
