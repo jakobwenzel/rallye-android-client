@@ -11,11 +11,11 @@ import de.stadtrallye.rallyesoft.util.StringedJSONObjectConverter;
 
 public class ServerConfig {
 	
-	private String name;
-	private LatLng location;
-	private int rounds;
-	private int roundTime;
-	private int startTime;
+	final public String name;
+	final public LatLng location;
+	final public int rounds;
+	final public int roundTime;
+	final public int startTime;
 	
 	public ServerConfig(String name, double lat, double lon, int rounds, int roundTime, int startTime) {
 		this.name = name;
@@ -23,10 +23,6 @@ public class ServerConfig {
 		this.rounds = rounds;
 		this.roundTime = roundTime;
 		this.startTime = startTime;
-	}
-	
-	public LatLng getLocation() {
-		return location;
 	}
 	
 	@Override
@@ -41,6 +37,10 @@ public class ServerConfig {
 		return s.toString();
 	}
 	
+	public boolean isComplete() {
+		return name != null;
+	}
+
 	public static class ServerConfigConverter extends StringedJSONObjectConverter<ServerConfig> {
 		@Override
 		public ServerConfig doConvert(JSONObject o) throws JSONException {

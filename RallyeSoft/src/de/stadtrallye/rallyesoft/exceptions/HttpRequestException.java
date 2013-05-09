@@ -1,6 +1,5 @@
 package de.stadtrallye.rallyesoft.exceptions;
 
-import java.io.IOException;
 import java.net.URL;
 
 public class HttpRequestException extends Exception {

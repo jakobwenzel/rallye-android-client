@@ -13,9 +13,9 @@ public interface IModel {
 	
 	public void login(Login login);
 	public void logout();
-	public void checkConnectionStatus();
+	public void checkLoginStatus();
 	
-	public boolean isLoggedIn();
+	public boolean isConnected();
 //	public String getServer();
 //	public int getGroupId();
 	public Login getLogin();
@@ -28,5 +28,6 @@ public interface IModel {
 	
 	public void onDestroy();
 	public void onStop();
+	public boolean isDisconnected();
 	
 }

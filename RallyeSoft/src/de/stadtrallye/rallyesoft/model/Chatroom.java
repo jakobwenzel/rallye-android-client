@@ -52,7 +52,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
 		//TODO: currently Chatrooms can only ever belong to 1 group, and will not be shown, even if another group has rights to access
-		Cursor c = model.getDb().query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().getGroup(), null, null, null, null);
+		Cursor c = model.getDb().query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().group, null, null, null, null);
 		
 		while (c.moveToNext()) {
 			out.add(new Chatroom(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), model));
@@ -99,7 +99,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			ContentValues insert = new ContentValues();
 			insert.put(Chatrooms.KEY_ID, id);
 			insert.put(Chatrooms.KEY_NAME, name);
-			insert.put(Chatrooms.FOREIGN_GROUP, model.getLogin().getGroup());
+			insert.put(Chatrooms.FOREIGN_GROUP, model.getLogin().group);
 			insert.put(Chatrooms.KEY_LAST_UPDATE, 0);
 			insert.put(Chatrooms.KEY_LAST_ID, lastId);
 			db.insert(Chatrooms.TABLE, null, insert);
@@ -119,7 +119,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 
 	@Override
 	public void refresh() {
-		if (!model.isLoggedIn()) {
+		if (!model.isConnected()) {
 			err.notLoggedIn();
 			return;
 		}
@@ -178,7 +178,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		
 		
 		SQLiteStatement s = db.compileStatement("INSERT INTO "+ Chats.TABLE +
-				" ("+ CHATS_COLS +") VALUES (?, ?, "+ model.getLogin().getGroup() +", ?, ?, ?, "+ id +")");
+				" ("+ CHATS_COLS +") VALUES (?, ?, "+ model.getLogin().group +", ?, ?, ?, "+ id +")");
 		SQLiteStatement t = db.compileStatement("INSERT INTO "+ Messages.TABLE +
 				" ("+ MSG_COLS +") VALUES (null, ?)");
 		SQLiteStatement u = db.compileStatement("SELECT COUNT(*) FROM "+ Chats.TABLE +" WHERE "+ Chats.KEY_ID +"=?");
@@ -350,7 +350,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	
 	@Override
 	public String getUrlFromImageId(int pictureID, char size) {
-		String res = model.getLogin().getServer() + Paths.getPic(pictureID, size);
+		String res = model.getLogin().server + Paths.getPic(pictureID, size);
 //		Log.v(THIS, res);
 		return res;
 	}
@@ -363,7 +363,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	@Override
 	public void addChat(String msg) {
 		//TODO: save to DB
-		if (!model.isLoggedIn()) {
+		if (!model.isConnected()) {
             err.notLoggedIn();
             return;
         }

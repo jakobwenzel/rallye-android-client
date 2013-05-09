@@ -1,21 +1,26 @@
 package de.stadtrallye.rallyesoft.model.structures;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import de.stadtrallye.rallyesoft.common.Std;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 public class Login implements Parcelable {
 	
+	private static final String THIS = Login.class.getSimpleName();
+	private static final int version = 1; 
+
 	public enum State {Unknown, Validated, Invalidated};
 	private State valid;
 	private long lastValidated;
 	
-	private String server;
-	private int group;
-	private String password;
-	private String name;
+	final public String server;
+	final public int group;
+	final public String password;
+	final public String name;
 	
 	public Login(String server, int group, String name, String password) {
 		this(server, group, name, password, 0);
@@ -30,23 +35,6 @@ public class Login implements Parcelable {
 		this.valid = (lastValidated > 0)? State.Validated : State.Unknown;
 	}
 	
-	
-	public String getServer() {
-		return server;
-	}
-	
-	public int getGroup() {
-		return group;
-	}
-	
-	public String getPassword() {
-		return password;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
 	public long getLastValidated() {
 		return lastValidated;
 	}
@@ -54,7 +42,6 @@ public class Login implements Parcelable {
 	public boolean isValid() {
 		return valid == State.Validated;
 	}
-	
 	
 	public boolean isInvalid() {
 		return valid == State.Invalidated;
@@ -75,42 +62,20 @@ public class Login implements Parcelable {
 	}
 	
 	public boolean isComplete() {
-		return hasServer() && password != null;
+		return hasServer() && password != null && hasName();
 	}
 	
 	public boolean hasServer() {
 		return server != null && server.length() > 3;
 	}
 	
+	public boolean hasName() {
+		return name != null && name.length() >= 3;
+	}
+	
 	@Override
 	public String toString() {
 		return "Server: "+ server +"| "+name+ "@" +group+ " pw: " +password;
-	}
-	
-	public static Login fromPref(SharedPreferences pref) {
-		Login l = new Login(pref.getString(Std.SERVER, null),
-				pref.getInt(Std.GROUP, 0),
-				pref.getString(Std.NAME, null),
-				pref.getString(Std.PASSWORD, null),
-				pref.getLong(Std.LAST_LOGIN, 0));
-		
-		if (l.isComplete()) {
-			return l;
-		} else {
-			return null;
-		}
-	}
-	
-	/**
-	 * SharedPreferences.edit()
-	 * @param edit
-	 */
-	public void toPref(Editor edit) {
-		edit.putString(Std.SERVER, server);
-		edit.putInt(Std.GROUP, group);
-		edit.putString(Std.PASSWORD, password);
-		edit.putLong(Std.LAST_LOGIN, lastValidated);
-		edit.putString(Std.NAME, name);
 	}
 
 	@Override
@@ -140,6 +105,35 @@ public class Login implements Parcelable {
 		} else if (!server.equals(other.server))
 			return false;
 		return true;
+	}
+	
+	public String toJSON() {
+		JSONObject js = new JSONObject();
+		try {
+			js.put(Std.VERSION, version)
+				.put(Std.SERVER, server)
+				.put(Std.GROUP, group)
+				.put(Std.PASSWORD, password);
+		} catch (JSONException e) {
+			Log.e(THIS, "JSON Generation Failed!", e);
+		}
+		return js.toString();
+	}
+	
+	public static Login fromJSON(String json) {
+		JSONObject js;
+		try {
+			js = new JSONObject(json);
+			if (js.getInt(Std.VERSION) != version) {
+				Log.e(THIS, "Incompatible Versions of Login!");
+				return null;
+			}
+			
+			return new Login(js.getString(Std.SERVER), js.getInt(Std.GROUP), null, js.getString(Std.PASSWORD));
+		} catch (JSONException e) {
+			Log.e(THIS, "JSON invalid!", e);
+			return null;
+		}
 	}
 
 	///Parcelable

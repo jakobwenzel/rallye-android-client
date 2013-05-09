@@ -11,11 +11,6 @@
     <string name="picture_taken">Bild gemacht!</string>
     <string name="title_maps">Karte</string>
     <string name="overview_welcome">Willkommen zu RallyeSoft</string>
-    <string name="default_server">http://hajoschja.de:10101/StadtRallye</string>
-    <string name="default_group">3</string>
-    <string name="default_password">test</string>
-    <string name="default_name">Ray</string>
-    <string name="MainPrefHandler">de.stadtrallye.rallyesoft.server</string>
     <string name="login">Login</string>
     <string name="logout">Logout</string>
     <string name="photo">Foto</string>
@@ -32,11 +27,12 @@
     <string name="notConnected">Getrennt</string>
     <string name="refresh">Aktualisieren</string>
     <string name="title_activity_image_view">Image Viewer</string>
-    <string name="gcm_notification">de.stadtrallye.rallyesoft.gcm_notification</string>
     <string name="image_level">Bild-Größe</string>
     <string name="image_level_large">Groß</string>
     <string name="image_level_small">Klein</string>
     <string name="select_take_picture">Foto aufnehmen oder auswählen</string>
     <string name="invalid">Ungültig</string>
+    <string name="share_barcode">Share Barcode</string>
+    <string name="scan_barcode">Scan Barcode</string>
 
 </resources>

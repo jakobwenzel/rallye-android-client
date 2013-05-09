@@ -1,7 +1,9 @@
 package de.stadtrallye.rallyesoft.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -100,6 +102,14 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 			list.add(t);
 		
 		return list;
+	}
+	
+	public <INDEX> Map<INDEX, T> toMap(IConverter<T, INDEX> converter) {
+		HashMap<INDEX, T> map = new HashMap<INDEX, T>();
+		for (T t: this)
+			map.put(converter.convert(t), t);
+		
+		return map;
 	}
 
 	public static <T> ArrayList<T> toList(JSONConverter<T> converter, String js) {

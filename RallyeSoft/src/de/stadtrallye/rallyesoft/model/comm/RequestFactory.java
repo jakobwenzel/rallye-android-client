@@ -51,8 +51,8 @@ public class RequestFactory {
 		
 		try {
 			JSONObject post = getIdJsonObject()
-				.put(Std.GROUPID, login.getGroup())
-				.put(Std.PASSWORD, login.getPassword());
+				.put(Std.GROUPID, login.group)
+				.put(Std.PASSWORD, login.password);
 			r.putPost(post);
 			return r;
 		} catch (JSONException e) {
@@ -100,6 +100,13 @@ public class RequestFactory {
 
 	public Request mapNodesRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.MAP_NODES);
+		Request r = new Request(url);
+		
+		return r;
+	}
+	
+	public Request mapEdgesRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.MAP_EDGES);
 		Request r = new Request(url);
 		
 		return r;

@@ -3,12 +3,14 @@ package de.stadtrallye.rallyesoft.model;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -20,7 +22,6 @@ import android.util.Log;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.maps.model.LatLng;
 
-import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
@@ -28,10 +29,11 @@ import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper;
 import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Groups;
 import de.stadtrallye.rallyesoft.model.comm.RequestFactory;
-import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
+import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.MapEdge;
 import de.stadtrallye.rallyesoft.model.structures.MapNode;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 
@@ -42,7 +44,7 @@ import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
  * @author Ray
  *
  */
-public class Model extends Binder implements IModel, LoginExecutor.Callback, RequestExecutor.Callback<Model.Tasks> {
+public class Model extends Binder implements IModel, LoginExecutor.Callback, RequestExecutor.Callback<Model.Tasks>, MapUpdateExecutor.Callback {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
@@ -62,7 +64,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	private Login currentLogin;
 	private ServerConfig serverConfig;
 	
-	private ConnectionStatus status = ConnectionStatus.Unknown;
+	private ConnectionStatus status = ConnectionStatus.Unknown; //TODO: add network state
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
 	final ArrayList<IMapListener> mapListeners = new ArrayList<IMapListener>();
 	
@@ -98,20 +100,19 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	private static SharedPreferences getDefaultPreferences(Context context) {
-		return context.getSharedPreferences(context.getResources().getString(R.string.MainPrefHandler), Context.MODE_PRIVATE);
+		return context.getSharedPreferences(Std.CONFIG_MAIN, Context.MODE_PRIVATE);
 	}
 	
 	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
 		this.pref = pref;
 		this.context = context;
-//		this.connectionStatus = loggedIn? ConnectionStatus.Connected : ConnectionStatus.Unknown;//TODO: Network check
 		
 		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
 		db = helper.getWritableDatabase();
 		
 		exec = Executors.newCachedThreadPool();
 		
-		currentLogin = Login.fromPref(pref);
+		restoreLogin();
 		
 		factory = new RequestFactory(null, Std.GCM);
 		
@@ -119,13 +120,28 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			if (currentLogin == null || !currentLogin.isComplete() || !isDbSynchronized())
 				throw new LoginFailedException();
 				
-			URL url = new URL(currentLogin.getServer());
+			URL url = new URL(currentLogin.server);
 			factory.setBaseURL(url);
 			factory.setID(GCMRegistrar.getRegistrationId(context));
 			
-			Log.i(THIS, "Cold Start: Found Login-Data and DB -> checking connection");
 			
-			checkConnectionStatus();
+			restoreServerConfig();
+			restoreConnectionStatus();
+			
+			try {
+				chatrooms = Chatroom.getChatrooms(this);
+			} catch (Exception e) {
+				Log.e(THIS, "Chatrooms could not be restored");
+			}
+			
+			if (serverConfig == null) {
+				Log.e(THIS, "ServerConfig could not be restored");
+				refreshServerConfig();
+			}
+			if (status == ConnectionStatus.Unknown) {
+				Log.e(THIS, "ConnectionStatus previously not connected");
+				checkLoginStatus();
+			}
 		} catch (Exception e) {
 			Log.w(THIS, "No usable Login-Data found -> stay offline");
 			setConnectionStatus(ConnectionStatus.Disconnected);
@@ -138,7 +154,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	 * @return
 	 */
 	private boolean isDbSynchronized() {//TODO: precise check
-		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.getGroup(), null, null, null, null);
+		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.group, null, null, null, null);
 		if (c.getCount() != 1)
 			return false;
 		else
@@ -152,14 +168,16 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	
 	@Override
 	public void logout() {
-		if (currentLogin == null || status == ConnectionStatus.Disconnected) {
+		if (currentLogin == null || !isConnected()) {
 			Exception e = err.logoutInvalid();
 			connectionFailure(e, ConnectionStatus.Disconnected);
 			return;
 		}
 		
+		setConnectionStatus(ConnectionStatus.Disconnecting);
+		save().saveConnectionStatus(ConnectionStatus.Disconnected).commit();
+		
 		try {
-			setConnectionStatus(ConnectionStatus.Disconnecting);
 			exec.execute(new RequestExecutor<String, Tasks>(factory.logoutRequest(), null, this, Tasks.LOGOUT));
 		} catch (Exception e) {
 			err.requestException(e);
@@ -172,29 +190,34 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	
 	@Override
 	public void login(Login login) {
-		if (isLoggedIn()) {
-			err.loggedIn();
-			return;
-		} else if (isConnectionChanging()) {
-			err.concurrentConnectionChange("Login");
-		} else if (!login.isComplete()) {
-			err.loginInvalid(login);
-			return;
-		} else if (login.equals(currentLogin)) {
-			login = currentLogin;
-		}// Sanity
-		
-		try {
-			factory.setID(GCMRegistrar.getRegistrationId(context));
-			factory.setBaseURL(new URL(login.getServer()));
+		synchronized (this) {
+			if (!isDisconnected()) {
+				if (isConnected()) {
+					err.loggedIn();
+				} else if (isConnectionChanging()) {
+					err.concurrentConnectionChange("Login");
+				} else if (!login.isComplete()) {
+					err.loginInvalid(login);
+				}
+				return;
+			} else if (login.equals(currentLogin)) {
+				login = currentLogin;
+			}//Sanity
 			
-			LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);
 			setConnectionStatus(ConnectionStatus.Connecting);
-			exec.execute(rex);
-		
-		} catch (Exception e) {
-			err.requestException(e);
 		}
+			try {
+				factory.setID(GCMRegistrar.getRegistrationId(context));
+				factory.setBaseURL(new URL(login.server));
+				
+				LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);
+				exec.execute(rex);
+			
+			} catch (Exception e) {
+				err.requestException(e);
+				connectionFailure(e, ConnectionStatus.Disconnected);
+			}
+		
 	}
 	
 	@Override
@@ -203,7 +226,9 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			chatrooms = r.getResult();
 			
 			currentLogin = r.getLogin();
-			writeLoginAndChatrooms();//TODO: setLogin();
+			
+			save().saveChatrooms().saveLogin().saveConnectionStatus(ConnectionStatus.Connected).commit();
+			
 			refreshServerConfig();
 			setConnectionStatus(ConnectionStatus.Connected);
 		} else {
@@ -215,7 +240,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	 * Start async check if the server accepts us
 	 */
 	@Override
-	public void checkConnectionStatus() {
+	public void checkLoginStatus() {
 		if (isConnectionChanging()) {
 			err.concurrentConnectionChange("Status");
 			return;
@@ -233,30 +258,33 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	private void checkStatusResult(RequestExecutor<String, ?> r) {
 		if (r.isSuccessful()) {
 			currentLogin.validated();
-			chatrooms = Chatroom.getChatrooms(this);
+			chatrooms = Chatroom.getChatrooms(this);//TODO: recover only if empty (in case checkStatus will be uses if already logged in?)
 			refreshServerConfig();
-			setConnectionStatus((r.getResponseCode() >= 200 && r.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected);
+			ConnectionStatus state = (r.getResponseCode() >= 200 && r.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+			save().saveConnectionStatus(state).commit();
+			setConnectionStatus(state);
 		} else
 			setConnectionStatus(ConnectionStatus.Disconnected);
 	}
 	
 	//TODO: always precache / refresh on mapNeeded??
 	public void getMapNodes() {
-		if (!isLoggedIn()) {
+		if (!isConnected()) {
 			err.notLoggedIn();
 			return;
 		}
 		try {
-			exec.execute(new JSONArrayRequestExecutor<MapNode, Tasks>(factory.mapNodesRequest(), new MapNode.NodeConverter(), this, Tasks.MAP_NODES));
+			exec.execute(new MapUpdateExecutor(factory.mapNodesRequest(), factory.mapEdgesRequest(), this));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
 	}
 	
-	private void mapNodeResult(JSONArrayRequestExecutor<MapNode, ?> r) {
+	@Override
+	public void mapUpdateResult(MapUpdateExecutor r) {
 		if (r.isSuccessful()) {
 			try {
-				notifyMapUpdate(r.getResult());
+				notifyMapUpdate(r.getNodes(), r.getEdges());
 			} catch (Exception e) {
 				err.asyncTaskResponseError(e);
 			}
@@ -277,6 +305,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		if (r.isSuccessful()) {
 			try {
 				serverConfig = r.getResult();
+				save().saveServerConfig().commit();
 			} catch (Exception e) {
 				err.asyncTaskResponseError(e);
 			}
@@ -288,8 +317,13 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	@Override
-	public boolean isLoggedIn() {
+	public boolean isConnected() {
 		return status == ConnectionStatus.Connected;
+	}
+	
+	@Override
+	public boolean isDisconnected() {
+		return status == ConnectionStatus.Disconnected;
 	}
 	
 	@Override
@@ -332,7 +366,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	public LatLng getMapLocation() {
-		return serverConfig.getLocation();
+		return serverConfig.location;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -348,37 +382,99 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		case LOGOUT:
 			logoutResult((RequestExecutor<String, Tasks>) r);
 			break;
-		case MAP_NODES:
-			mapNodeResult((JSONArrayRequestExecutor<MapNode, ?>) r);
-			break;
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
 		
 		}
 	}
-
-	private void writeLoginAndChatrooms() {
-		SharedPreferences.Editor edit = pref.edit();
-		currentLogin.toPref(edit);
+	
+	private Saver save() {
+		return new Saver();
+	}
+	
+	private class Saver {
+		private Editor edit;
 		
-		ContentValues insert = new ContentValues();
-		insert.put(Groups.KEY_ID, currentLogin.getGroup());
-		//TODO: put Name
-		db.insert(Groups.TABLE, null, insert);
-		
-		for (Chatroom c: chatrooms) {
-			c.writeToDb();
+		public Saver() {
+			this.edit = pref.edit();
 		}
 		
-		edit.commit();
+		public Saver saveLogin() {
+			edit.putString(Std.SERVER, currentLogin.server);
+			edit.putInt(Std.GROUP, currentLogin.group);
+			edit.putString(Std.PASSWORD, currentLogin.password);
+			edit.putLong(Std.LAST_LOGIN, currentLogin.getLastValidated());
+			edit.putString(Std.USER+Std.NAME, currentLogin.name);
+			return this;
+		}
+		
+		public Saver saveChatrooms() {
+			ContentValues insert = new ContentValues();
+			insert.put(Groups.KEY_ID, currentLogin.group);
+			//TODO: put Name
+			db.insert(Groups.TABLE, null, insert);
+			
+			for (Chatroom c: chatrooms) {
+				c.writeToDb();
+			}
+			
+			return this;
+		}
+		
+		public Saver saveConnectionStatus(ConnectionStatus conn) {
+			edit.putBoolean(Std.CONNECTED, conn == ConnectionStatus.Connected);
+			
+			return this;
+		}
+		
+		public Saver saveServerConfig() {
+			edit.putLong(Std.LATITUDE, (long) (serverConfig.location.latitude* 1000000));
+			edit.putLong(Std.LONGITUDE, (long) (serverConfig.location.longitude* 1000000));
+			edit.putString(Std.SERVER+Std.NAME, serverConfig.name);
+			edit.putInt(Std.ROUNDS, serverConfig.rounds);
+			edit.putInt(Std.ROUND_TIME, serverConfig.roundTime);
+			edit.putInt(Std.START_TIME, serverConfig.startTime);
+			return this;
+		}
+		
+		public void commit() {
+			edit.commit();
+		}
+		
+	}
+	
+	private void restoreServerConfig() {
+		ServerConfig s = new ServerConfig(
+				pref.getString(Std.SERVER+Std.NAME, null),
+				pref.getLong(Std.LATITUDE, 0)/1000000f,
+				pref.getLong(Std.LONGITUDE, 0)/1000000f,
+				pref.getInt(Std.ROUNDS, 0),
+				pref.getInt(Std.ROUND_TIME, 0),
+				pref.getInt(Std.START_TIME, 0));
+		
+		serverConfig = (s.isComplete())? s : null;//TODO: null?
+	}
+	
+	private void restoreLogin() {
+		Login l = new Login(pref.getString(Std.SERVER, null),
+				pref.getInt(Std.GROUP, 0),
+				pref.getString(Std.USER+Std.NAME, null),
+				pref.getString(Std.PASSWORD, null),
+				pref.getLong(Std.LAST_LOGIN, 0));
+		
+		currentLogin = (l.isComplete())? l : null;
+	}
+	
+	private void restoreConnectionStatus() {
+		status = (pref.getBoolean(Std.CONNECTED, false))? ConnectionStatus.Connected : ConnectionStatus.Unknown;
 	}
 	
 	private Login getDefaultLogin() {
-		return new Login(context.getString(R.string.default_server),
-				Integer.valueOf(context.getString(R.string.default_group)),
-				context.getString(R.string.default_name),
-				context.getString(R.string.default_password));
+		return new Login(Std.DefaultLogin.SERVER,
+				Std.DefaultLogin.GROUP,
+				Std.DefaultLogin.NAME,
+				Std.DefaultLogin.PASSWORD);
 	}
 	
 	
@@ -415,12 +511,12 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		mapListeners.remove(l);
 	}
 
-	private void notifyMapUpdate(final List<MapNode> list) {
+	private void notifyMapUpdate(final Map<Integer, MapNode> nodes, final List<MapEdge> edges) {
 		uiHandler.post(new Runnable(){
 			@Override
 			public void run() {
 				for(IMapListener l: mapListeners) {
-					l.nodeUpdate(list);
+					l.mapUpdate(nodes, edges);
 				}
 			}
 		});

@@ -5,28 +5,29 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.android.gms.maps.model.LatLng;
+
+import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class MapNode {
-	public int ID;
-	public String name;
-	public double lat;
-	public double lon;
-	public String description;
+	final public int ID;
+	final public String name;
+	final public LatLng position;
+	final public String description;
 
 	public MapNode(int ID, String name, double lat, double lon, String description) {
 		this.ID = ID;
 		this.name = name;
-		this.lat = lat;
-		this.lon = lon;
 		this.description = description;
+		this.position = new LatLng(lat, lon);
 	}
 	
 	
 	@Override
 	public String toString() {
-		return name +" ( "+lat+" , "+lon+" )";
+		return name +" ( "+position.latitude+" , "+position.longitude+" )";
 	}
 
 
@@ -44,6 +45,15 @@ public class MapNode {
 					o.getDouble("lat"),
 					o.getDouble("lon"),
 					o.getString("description"));
+		}
+		
+	}
+	
+	public static class IndexGetter implements IConverter<MapNode, Integer> {
+
+		@Override
+		public Integer convert(MapNode input) {
+			return input.ID;
 		}
 		
 	}

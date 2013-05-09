@@ -7,6 +7,13 @@ package de.stadtrallye.rallyesoft.common;
  */
 public class Std {
 	
+	public static class DefaultLogin {
+		public static final String SERVER = "http://hajoschja.de:10101/StadtRallye/";
+		public static final int GROUP = 3;
+		public static final String PASSWORD = "test";
+		public static final String NAME = "Mister X";
+	}
+	
 	public static final String IMAGE = "img";
 	public static final String CHATROOM = "chatroom";
 	public static final String IMAGE_LIST = "image_list";
@@ -30,4 +37,15 @@ public class Std {
 	
 	public static final String LAYOUT = "layout";
 	public static final int PICK_IMAGE = 1337;
+	public static final String VERSION = "version";
+	public static final String APP_MIME = "application/de.stadtrallye.rallyesoft";
+	public static final String CONFIG_MAIN = "de.stadtrallye.rallyesoft.server";
+	public static final String LATITUDE = "latitude";
+	public static final String LONGITUDE = "longitude";
+	public static final String USER = "user";
+	public static final String ROUNDS = "rounds";
+	public static final String ROUND_TIME = "round_time";
+	public static final String START_TIME = "start_time";
+	public static final String CONNECTED = "connected";
+	public static final int GCM_NOTIFICATION = 1;
 }

@@ -2,7 +2,6 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,7 @@ import de.stadtrallye.rallyesoft.model.Model;
 
 public class OverviewFragment extends Fragment implements IConnectionStatusListener {
 	
+	@SuppressWarnings("unused")
 	private static final String THIS = OverviewFragment.class.getSimpleName();
 	
 	private Model model;

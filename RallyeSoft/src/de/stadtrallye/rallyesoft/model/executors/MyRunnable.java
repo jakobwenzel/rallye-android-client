@@ -3,7 +3,7 @@ package de.stadtrallye.rallyesoft.model.executors;
 public abstract class MyRunnable<T> implements Runnable {
 	
 	private Exception exception;
-	private T res;
+	protected T res;
 
 	@Override
 	public void run() {

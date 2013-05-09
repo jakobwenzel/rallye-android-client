@@ -1,7 +1,6 @@
 package de.stadtrallye.rallyesoft;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import android.annotation.TargetApi;
@@ -11,8 +10,10 @@ import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -31,8 +32,9 @@ import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.maps.GoogleMapOptions;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingFragmentActivity;
 
@@ -65,6 +67,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private ArrayList<FragmentHandler<?>> tabs;
 
 	private FragmentHandler<GameMapFragment> mapFragmentHandler;
+	
+	private Login deferredLogin;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -165,7 +169,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private void initNFC() {
 		NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
 		if (nfc != null) {
-			nfc.setNdefPushMessageCallback(new NfcCallback(), this);
+			nfc.setNdefPushMessageCallback(new NfcCallback(model), this);
 		}
 	}
 	
@@ -197,11 +201,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		public FragmentHandler(String tag, Class<T> clz) {
 			this.tag = tag;
 			this.clz = clz;
-		}
-		
-		public FragmentHandler(String tag, Class<T> clz, Bundle arg) {
-			this(tag, clz);
-			this.arg = arg;
 		}
 		
 		public void setArguments(Bundle arg) {
@@ -305,13 +304,17 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
             processNfcIntent(getIntent());
         }
+		if (deferredLogin != null) {
+			showLoginDialog(deferredLogin);
+			deferredLogin = null;
+		}
 	}
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
-		outState.putBoolean("loggedIn", model.isLoggedIn());
+		outState.putBoolean("loggedIn", model.isConnected());
 	}
 	
 	@Override
@@ -324,9 +327,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		boolean act = model.isLoggedIn();
+		boolean act = model.isConnected();
 		menu.findItem(R.id.menu_login).setEnabled(!act);
 		menu.findItem(R.id.menu_logout).setEnabled(act);
+		menu.findItem(R.id.menu_share_barcode).setEnabled(act);
 		
 		return true;
 	}
@@ -344,19 +348,27 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		    startActivityForResult(intent, 100);
 //		    break;
 		case R.id.menu_login:
-			DialogFragment d = new LoginDialogFragment();
-			Bundle b = new Bundle();
-			b.putParcelable(Std.LOGIN, model.getLogin());
-			d.setArguments(b);
-			d.show(getSupportFragmentManager(), "loginDialog");
+			showLoginDialog(model.getLogin());
 			break;
 		case R.id.menu_logout:
 			model.logout();
+			break;
+		case R.id.menu_share_barcode:
+			IntentIntegrator zx = new IntentIntegrator(this);
+			zx.shareText(model.getLogin().toJSON());
 			break;
 		default:
 			return false;
 		}
 		return true;
+	}
+	
+	private void showLoginDialog(Login login) {
+		DialogFragment d = new LoginDialogFragment();
+		Bundle b = new Bundle();
+		b.putParcelable(Std.LOGIN, login);
+		d.setArguments(b);
+		d.show(getSupportFragmentManager(), "loginDialog");
 	}
 	
 	/**
@@ -388,7 +400,13 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(/*requestCode == Std.PICK_IMAGE && */data != null && data.getData() != null){
+		if (requestCode == IntentIntegrator.REQUEST_CODE) {
+			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+			if (scanResult == null) return;
+			
+			deferredLogin = Login.fromJSON(scanResult.getContents());
+			
+		} else if(requestCode == Std.PICK_IMAGE && data != null && data.getData() != null){
 	        Uri uri = data.getData();
 
 	        if (uri != null) {
@@ -415,17 +433,21 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		setIntent(intent);
 	}
 	
-	private void processNfcIntent(Intent intent) {//TODO
-		Toast.makeText(this, "NFC Beam received", Toast.LENGTH_LONG).show();
-		/*
-		 * textView = (TextView) findViewById(R.id.textView);
-	        Parcelable[] rawMsgs = intent.getParcelableArrayExtra(
-	                NfcAdapter.EXTRA_NDEF_MESSAGES);
-	        // only one message sent during the beam
-	        NdefMessage msg = (NdefMessage) rawMsgs[0];
-	        // record 0 contains the MIME type, record 1 is the AAR, if present
-	        textView.setText(new String(msg.getRecords()[0].getPayload()));
-		 */
+	private void processNfcIntent(Intent intent) {
+		Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+		// only one message sent during the beam
+		NdefMessage msg = (NdefMessage) rawMsgs[0];
+		// record 0 contains the MIME type, record 1 is the AAR, if present
+		if (Std.APP_MIME.equals(new String(msg.getRecords()[0].getPayload()))) {
+			if (model.isDisconnected()) {
+				showLoginDialog(Login.fromJSON(new String(msg.getRecords()[2].getPayload())));
+			} else {
+				Toast.makeText(this, "Logout first!", Toast.LENGTH_LONG).show();
+			}
+		} else {
+			Toast.makeText(this, "Unknown NFC Beam received", Toast.LENGTH_LONG).show();
+		}
+		
 	}
 	
 	/**
@@ -475,11 +497,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			model.login(login);
 		else {
 			Toast.makeText(this, getString(R.string.invalid), Toast.LENGTH_SHORT).show();
-			DialogFragment d = new LoginDialogFragment();
-			Bundle b = new Bundle();
-			b.putParcelable(Std.LOGIN, login);
-			d.setArguments(b);
-			d.show(getSupportFragmentManager(), "loginDialog");
+			showLoginDialog(login);
 		}
 	}
 

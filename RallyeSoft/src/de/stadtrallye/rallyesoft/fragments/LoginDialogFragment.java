@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.widget.EditText;
 
 import com.actionbarsherlock.app.SherlockDialogFragment;
+import com.google.zxing.integration.android.IntentIntegrator;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -33,6 +34,8 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		setRetainInstance(true);
 		
 		login = (Login) getArguments().getParcelable(Std.LOGIN);
 	}
@@ -67,6 +70,14 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.login)
         		.setView(getActivity().getLayoutInflater().inflate(R.layout.dialog_login, null))
+        		.setNeutralButton(R.string.scan_barcode, new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int id) {
+						IntentIntegrator zx = new IntentIntegrator(getActivity());
+						zx.initiateScan(IntentIntegrator.QR_CODE_TYPES);
+					}
+				})
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
         				Login l = new Login(server.getText().toString(), Integer.parseInt(group.getText().toString()), name.getText().toString(), pw.getText().toString());
@@ -85,6 +96,19 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	}
 	
 	@Override
+	public void onDismiss(DialogInterface dialog) {
+		
+	}
+	
+	@Override
+	 public void onDestroyView() {
+	     if (getDialog() != null && getRetainInstance())
+	         getDialog().setDismissMessage(null);
+//	     	getDialog().setOnDismissListener(null);
+	         super.onDestroyView();
+	 }
+	
+	@Override
 	public void onStart() {
 		super.onStart();
 		
@@ -95,9 +119,9 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         name = (EditText) dialog.findViewById(R.id.name);
         pw = (EditText) dialog.findViewById(R.id.password);
         
-		server.setText(login.getServer());
-		group.setText(Integer.toString(login.getGroup()));
-		name.setText(login.getName());
-		pw.setText(login.getPassword());
+		server.setText(login.server);
+		group.setText(Integer.toString(login.group));
+		name.setText(login.name);
+		pw.setText(login.password);
 	}
 }
