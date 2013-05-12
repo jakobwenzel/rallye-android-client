@@ -60,9 +60,9 @@ public class ImageViewActivity extends SherlockActivity {
 		
 		
 		pager = (GalleryPager)findViewById(R.id.image_pager);
-		pager.setPageMargin(10);
+		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 		
-		model = Model.getInstance(getApplicationContext(), true);
+		model = Model.getInstance(getApplicationContext());
 		
 		Bundle b = getIntent().getExtras();
 		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
@@ -162,7 +162,6 @@ public class ImageViewActivity extends SherlockActivity {
 			return view == object;
 		}
 		
-		
 	}
 
 	@Override
@@ -188,11 +187,11 @@ public class ImageViewActivity extends SherlockActivity {
 			return true;
 		case R.id.image_level_large:
 			gallery.setImageSize(Size.Large);
-			
+			pager.setAdapter(adapter);
 			break;
 		case R.id.image_level_small:
 			gallery.setImageSize(Size.Small);
-			//TODO: switch current images
+			pager.setAdapter(adapter);
 			break;
 		}
 		return false;

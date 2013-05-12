@@ -390,13 +390,13 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	
 	@Override
 	public void onDestroy() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	@Override
 	public void onStop() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 }

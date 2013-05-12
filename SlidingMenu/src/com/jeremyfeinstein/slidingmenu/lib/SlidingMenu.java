@@ -769,6 +769,28 @@ public class SlidingMenu extends RelativeLayout {
 	public void setSecondaryShadowDrawable(Drawable d) {
 		mViewBehind.setSecondaryShadowDrawable(d);
 	}
+	
+	/**
+	 * 
+	 * @author Ray
+	 * @param resId
+	 */
+	public void setIndicatorDrawable(int resId) {
+		setIndicatorDrawable(getContext().getResources().getDrawable(resId));
+	}
+	
+	/**
+	 * 
+	 * @author Ray
+	 * @param d
+	 */
+	public void setIndicatorDrawable(Drawable d) {
+		mViewBehind.setIndicatorDrawable(d);
+	}
+	
+	public void setIndicatorTop(int top) {
+		mViewBehind.indicatorTop = top;
+	}
 
 	/**
 	 * Sets the shadow width.

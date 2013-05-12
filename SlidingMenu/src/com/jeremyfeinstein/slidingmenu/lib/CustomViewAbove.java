@@ -832,6 +832,7 @@ public class CustomViewAbove extends ViewGroup {
 		mViewBehind.drawShadow(mContent, canvas);
 		mViewBehind.drawFade(mContent, canvas, getPercentOpen());
 		mViewBehind.drawSelector(mContent, canvas, getPercentOpen());
+		mViewBehind.drawIndicator(mContent, canvas);
 	}
 
 	// variables for drawing

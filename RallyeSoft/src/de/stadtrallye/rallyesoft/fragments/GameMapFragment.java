@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;

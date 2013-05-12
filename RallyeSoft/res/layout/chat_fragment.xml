@@ -7,13 +7,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
     
-    <com.viewpagerindicator.TitlePageIndicator
+    <com.astuetz.viewpager.extensions.PagerSlidingTabStrip
         android:id="@+id/indicator"
-        android:padding="10dip"
-        android:layout_height="wrap_content"
+        android:layout_height="36dp"
         android:layout_width="match_parent"
-		android:textColor="@color/abs__bright_foreground_disabled_holo_light"
-		app:selectedColor="@color/foreground_grey"
+		app:indicatorColor="@color/indicator_accent"
         />
     
     <android.support.v4.view.ViewPager

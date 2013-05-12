@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
@@ -23,6 +22,7 @@ import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -55,7 +55,7 @@ import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener,
 																		LoginDialogFragment.IDialogCallback, IModelActivity,
-																		IConnectionStatusListener, IProgressUI {
+																		IConnectionStatusListener, IProgressUI, SlidingMenu.OnOpenListener {
 	
 	private static final String THIS = MainActivity.class.getSimpleName();
 	
@@ -64,13 +64,15 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private boolean keepModel = false;
 	private boolean progressCircle = false;
 //	private Fragment currentFragment;
-	private int lastTab = 0;
+	private int currentTab;
 	private String[] nav;
 	private ArrayList<FragmentHandler<?>> tabs;
 
 	private FragmentHandler<GameMapFragment> mapFragmentHandler;
 	
 	private Login deferredLogin;
+
+	private SlidingMenu sm;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -83,21 +85,17 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 //		populateTabList(ab);
 		
 		// Recover Last State
-		int tabIndex;
-		boolean loggedIn;
 		if (savedInstanceState != null) {
-			tabIndex = savedInstanceState.getInt("tabIndex", 0);
-			loggedIn = savedInstanceState.getBoolean("loggedIn", false);
+			currentTab = savedInstanceState.getInt(Std.TAB, 0);
 		} else {
-			tabIndex = 0;
-			loggedIn = false;
+			currentTab = 0;
 		}
 		
 		// Ray's INIT
 		PushInit.ensureRegistration(this);
 		model = (Model) getLastCustomNonConfigurationInstance();
 		if (model == null)
-			model = Model.getInstance(getApplicationContext(), loggedIn);
+			model = Model.getInstance(getApplicationContext());
 		model.addListener(this);
 		keepModel = false;
 		
@@ -107,7 +105,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		initFragments();
 		
 //		ab.setSelectedNavigationItem(tabIndex);
-		onSwitchTab(0, 0);
+		onSwitchTab(currentTab, 0);
 		
 		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			initNFC();
@@ -135,12 +133,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		setBehindContentView(R.layout.dashboard_main);
 		
 		// Settings for SideBar
-		SlidingMenu sm = getSlidingMenu();
+		sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
 		sm.setShadowDrawable(R.drawable.defaultshadow);
+		sm.setIndicatorDrawable(R.drawable.arrow);
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
 		sm.setBehindScrollScale(0);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
+		sm.setOnOpenListener(this);
 		
 		// Populate SideBar
 		nav = getResources().getStringArray(R.array.dashboard_entries);
@@ -236,6 +236,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		setSupportProgressBarIndeterminateVisibility(false);
 		onConnectionStatusChange(model.getConnectionStatus());
+		
+//		ListView v = (ListView) findViewById(R.id.dashboard_list);
+//		refreshSlidingIndicator(v.getChildAt(0));
 	}
 	
 	/**
@@ -243,12 +246,26 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 */
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-		if (lastTab != pos)
+		if (currentTab != pos)
 		{
 //			getSupportActionBar().setSelectedNavigationItem(pos);
 			onSwitchTab(pos, id);
+			refreshSlidingIndicator(view);
 		}
 		getSlidingMenu().showContent();
+	}
+	
+	@Override
+	public void onOpen() {
+		refreshSlidingIndicator(currentTab);
+	}
+	
+	private void refreshSlidingIndicator(int pos) {
+		refreshSlidingIndicator(((ListView)findViewById(R.id.dashboard_list)).getChildAt(pos));
+	}
+	
+	private void refreshSlidingIndicator(View view) {
+		sm.setIndicatorTop(view.getTop() + getResources().getDimensionPixelOffset(R.dimen.dash_indicator_offset));
 	}
 	
 	/**
@@ -267,7 +284,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 0://Overview
 			break;
 		case 1://Map
-			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera
+			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera [done internally with animation]
 			GoogleMapOptions gmo = new GoogleMapOptions().camera(new CameraPosition(model.getMap().getMapLocation(), model.getMap().getZoomLevel(), 0, 0));
 			b.putParcelable("MapOptions", gmo);
 			mapFragmentHandler.setArguments(b);
@@ -290,20 +307,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			;
 		ft.commit();
 		
-		lastTab = pos;
+		currentTab = pos;
 		return true;
 	}
 	
-	
-	
-//	@Override
-//	public void onBackPressed() {
-//		
-////		if (getSlidingMenu().isMenuShowing())
-//			super.onBackPressed(); //TODO: Either put Fragments on Backstack or close when in SlidingMenu and Back is pressed
-////		else
-////			getSlidingMenu().showMenu();
-//	}
 	
 	@Override
 	protected void onResume() {
@@ -321,8 +328,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putInt("tabIndex", getSupportActionBar().getSelectedNavigationIndex());
-		outState.putBoolean("loggedIn", model.isConnected());
+		outState.putInt(Std.TAB, currentTab);
 	}
 	
 	@Override
@@ -376,7 +382,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		Bundle b = new Bundle();
 		b.putParcelable(Std.LOGIN, login);
 		d.setArguments(b);
-		d.show(getSupportFragmentManager(), "loginDialog");
+		d.show(getSupportFragmentManager(), Std.LOGIN_DIALOG);
 	}
 	
 	/**

@@ -48,4 +48,6 @@ public class Std {
 	public static final String START_TIME = "start_time";
 	public static final String CONNECTED = "connected";
 	public static final int GCM_NOTIFICATION = 1;
+	
+	public static final String LOGIN_DIALOG = "loginDialog";
 }

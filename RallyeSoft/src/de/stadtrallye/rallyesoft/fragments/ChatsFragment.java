@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
 import com.viewpagerindicator.TitlePageIndicator;
 
 import de.stadtrallye.rallyesoft.R;
@@ -37,7 +39,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	
 	private Model model;
 	private ViewPager pager;
-	private TitlePageIndicator indicator;
+//	private TitlePageIndicator indicator;
+	private PagerSlidingTabStrip indicator;
 	private ChatFragmentAdapter fragmentAdapter;
 	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
@@ -71,9 +74,10 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		v = inflater.inflate(R.layout.chat_fragment, container, false);
 
         pager = (ViewPager)v.findViewById(R.id.pager);
-        pager.setPageMargin(5);
+        pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 
-        indicator = (TitlePageIndicator)v.findViewById(R.id.indicator);
+//        indicator = (TitlePageIndicator)v.findViewById(R.id.indicator);
+        indicator = (PagerSlidingTabStrip)v.findViewById(R.id.indicator);
         
         pager.setAdapter(fragmentAdapter);
         
@@ -81,6 +85,15 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		return v;
 	}
+	
+//	<com.viewpagerindicator.TitlePageIndicator
+//  	android:id="@+id/indicator"
+//  	android:padding="10dip"
+//  	android:layout_height="wrap_content"
+//  	android:layout_width="match_parent"
+//		android:textColor="@color/abs__bright_foreground_disabled_holo_light"
+//		app:selectedColor="@color/foreground_grey"
+//  />
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -98,7 +111,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		super.onStart();
 		
 		onConnectionStatusChange(model.getConnectionStatus());
-		indicator.setCurrentItem(currentTab);
+//		indicator.setCurrentItem(currentTab);
+//		pager.setCurrentItem(currentTab);
 		
 		model.addListener(this);
 	}
@@ -165,8 +179,13 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		if (newStatus == ConnectionStatus.Connected) {
 			chatrooms = model.getChatrooms();
 			fill();
+			refreshMenuItem.setVisible(true);
+			pictureMenuItem.setVisible(true);
 		} else {
+			chatrooms = null;
 			clear();
+			refreshMenuItem.setVisible(false);
+			pictureMenuItem.setVisible(false);
 		}
 	}
 	
@@ -178,13 +197,13 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	public void fill() {
 		fragmentAdapter.enable = true;
 		fragmentAdapter.notifyDataSetChanged();
-		indicator.invalidate();
+		indicator.notifyDataSetChanged();
 	}
 	
 	public void clear() {
 		fragmentAdapter.enable = false;
 		fragmentAdapter.notifyDataSetChanged();
-		indicator.invalidate();
+		indicator.notifyDataSetChanged();
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
@@ -248,7 +267,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-			return (enable)? chatrooms.get(pos).getName() : null;
+			return (enable)? chatrooms.get(pos).getName() : "";
 		}
 
 	}

@@ -77,11 +77,11 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	 * @param loggedIn login state to assume until checked
 	 * @return
 	 */
-	public static Model getInstance(Context context, boolean loggedIn) {
+	public static Model getInstance(Context context) {
 		if (model != null) {
 			return model.reuse();
 		} else {
-			return model = new Model(context, getDefaultPreferences(context), loggedIn);
+			return model = new Model(context, getDefaultPreferences(context));
 		}
 	}
 	
@@ -109,7 +109,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		db = helper.getWritableDatabase();
 	}
 	
-	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
+	private Model(Context context, SharedPreferences pref) {
 		this.pref = pref;
 		this.context = context;
 		
@@ -260,7 +260,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	private void checkStatusResult(RequestExecutor<String, ?> r) {
 		if (r.isSuccessful()) {
 			currentLogin.validated();
-			chatrooms = Chatroom.getChatrooms(this);//TODO: recover only if empty (in case checkStatus will be uses if already logged in?)
+			chatrooms = Chatroom.getChatrooms(this);
 			refreshServerConfig();
 			ConnectionStatus state = (r.getResponseCode() >= 200 && r.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
 			save().saveConnectionStatus(state).commit();
@@ -278,7 +278,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		}
 	}
 	
-	private void serverConfigResult(RequestExecutor<ServerConfig, ?> r) {//TODO synchronize
+	private void serverConfigResult(RequestExecutor<ServerConfig, ?> r) {
 		if (r.isSuccessful()) {
 			try {
 				serverConfig = r.getResult();
@@ -432,7 +432,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				pref.getInt(Std.ROUND_TIME, 0),
 				pref.getInt(Std.START_TIME, 0));
 		
-		serverConfig = (s.isComplete())? s : null;//TODO: null?
+		serverConfig = (s.isComplete())? s : null;
 	}
 	
 	private void restoreLogin() {

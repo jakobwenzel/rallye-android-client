@@ -30,6 +30,8 @@ public class CustomViewBehind extends ViewGroup {
 	private int mWidthOffset;
 	private CanvasTransformer mTransformer;
 	private boolean mChildrenEnabled;
+	
+	private Drawable mIndicatorDrawable;
 
 	public CustomViewBehind(Context context) {
 		this(context, null);
@@ -338,6 +340,36 @@ public class CustomViewBehind extends ViewGroup {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * 
+	 * @author Ray
+	 * @param d
+	 */
+	public void setIndicatorDrawable(Drawable d) {
+		mIndicatorDrawable = d;
+		invalidate();
+	}
+	
+	public int indicatorTop;
+	
+	public void drawIndicator(View content, Canvas canvas) {
+		if (mIndicatorDrawable == null)
+			return;
+		
+		int width = mIndicatorDrawable.getIntrinsicWidth();
+		int height = mIndicatorDrawable.getIntrinsicHeight();
+		
+		int left = 0;
+		if (mMode == SlidingMenu.LEFT) {
+			left = content.getLeft() - width;
+		} else if (mMode == SlidingMenu.RIGHT) {
+			left = content.getRight();
+		}
+		
+		mIndicatorDrawable.setBounds(left, indicatorTop, left + width, indicatorTop + height);
+		mIndicatorDrawable.draw(canvas);
 	}
 
 	public void drawShadow(View content, Canvas canvas) {

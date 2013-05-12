@@ -53,7 +53,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w(THIS, extras.get("t").toString());
 		
 		if ("100".equals(extras.getString("t"))) { //TODO: discuss definition of int
-			Model model = Model.getInstance(getApplicationContext(), true);
+			Model model = Model.getInstance(getApplicationContext());
 			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
 			if (r != null) {
 				r.refresh(); //TODO: specialize...
@@ -80,7 +80,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w("GCMIntentService", "Unregistered GCM!");
 //		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
-		Model.getInstance(getApplicationContext(), false).logout();
+		Model.getInstance(getApplicationContext()).logout();
 	}
 
 }
