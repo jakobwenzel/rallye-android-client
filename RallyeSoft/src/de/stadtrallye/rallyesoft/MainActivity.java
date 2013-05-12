@@ -136,7 +136,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
 		sm.setShadowDrawable(R.drawable.defaultshadow);
-		sm.setIndicatorDrawable(R.drawable.arrow);
+//		sm.setIndicatorDrawable(R.drawable.arrow);
+		sm.setSelectorEnabled(true);
+		sm.setSelectorDrawable(R.drawable.arrow);
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
 		sm.setBehindScrollScale(0);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
@@ -236,9 +238,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		setSupportProgressBarIndeterminateVisibility(false);
 		onConnectionStatusChange(model.getConnectionStatus());
-		
-//		ListView v = (ListView) findViewById(R.id.dashboard_list);
-//		refreshSlidingIndicator(v.getChildAt(0));
 	}
 	
 	/**
@@ -250,22 +249,18 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		{
 //			getSupportActionBar().setSelectedNavigationItem(pos);
 			onSwitchTab(pos, id);
-			refreshSlidingIndicator(view);
+			sm.setSelectedView(view);
 		}
 		getSlidingMenu().showContent();
 	}
 	
 	@Override
 	public void onOpen() {
-		refreshSlidingIndicator(currentTab);
+		sm.setSelectedView(getSelectedView(currentTab));
 	}
 	
-	private void refreshSlidingIndicator(int pos) {
-		refreshSlidingIndicator(((ListView)findViewById(R.id.dashboard_list)).getChildAt(pos));
-	}
-	
-	private void refreshSlidingIndicator(View view) {
-		sm.setIndicatorTop(view.getTop() + getResources().getDimensionPixelOffset(R.dimen.dash_indicator_offset));
+	private View getSelectedView(int pos) {
+		return ((ListView)findViewById(R.id.dashboard_list)).getChildAt(pos);
 	}
 	
 	/**
@@ -355,12 +350,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case android.R.id.home:
 			toggle();
 			break;
-//		case R.id.menu_foto:
-//			Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-////		    Uri fileUri =
-////		    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
-//		    startActivityForResult(intent, 100);
-//		    break;
 		case R.id.menu_login:
 			showLoginDialog(model.getLogin());
 			break;
