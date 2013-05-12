@@ -6,28 +6,26 @@ import de.stadtrallye.rallyesoft.model.structures.Login;
 
 public interface IModel {
 	
-	public enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying, Unknown };
+	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying, Unknown };
 	
-	public List<? extends IChatroom> getChatrooms();
-	public IChatroom getChatroom(int id);
+	List<? extends IChatroom> getChatrooms();
+	IChatroom getChatroom(int id);
+	IMap getMap();
+	Login getLogin();
 	
-	public void login(Login login);
-	public void logout();
-	public void checkLoginStatus();
+	void login(Login login);
+	void logout();
+	void checkLoginStatus();
 	
-	public boolean isConnected();
-//	public String getServer();
-//	public int getGroupId();
-	public Login getLogin();
+	void addListener(IConnectionStatusListener l);
+	void removeListener(IConnectionStatusListener l);
 	
-	public void addListener(IConnectionStatusListener l);
-	public void removeListener(IConnectionStatusListener l);
-	public void addListener(IMapListener l);
-	public void removeListener(IMapListener l);
-	public ConnectionStatus getConnectionStatus();
+	ConnectionStatus getConnectionStatus();
+	boolean isDisconnected();
+	boolean isConnectionChanging();
+	boolean isConnected();
 	
-	public void onDestroy();
-	public void onStop();
-	public boolean isDisconnected();
 	
+	void onDestroy();
+	void onStop();
 }

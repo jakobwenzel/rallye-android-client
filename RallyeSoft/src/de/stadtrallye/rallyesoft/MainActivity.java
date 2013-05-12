@@ -35,8 +35,8 @@ import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
-import com.slidingmenu.lib.SlidingMenu;
-import com.slidingmenu.lib.app.SlidingFragmentActivity;
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
+import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
 import de.stadtrallye.rallyesoft.UIComm.IProgressUI;
@@ -45,6 +45,7 @@ import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
 import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
+import de.stadtrallye.rallyesoft.fragments.TurnFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
@@ -64,6 +65,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private boolean progressCircle = false;
 //	private Fragment currentFragment;
 	private int lastTab = 0;
+	private String[] nav;
 	private ArrayList<FragmentHandler<?>> tabs;
 
 	private FragmentHandler<GameMapFragment> mapFragmentHandler;
@@ -78,7 +80,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		initSlidingMenu();
 		
-		populateTabList(ab);
+//		populateTabList(ab);
 		
 		// Recover Last State
 		int tabIndex;
@@ -104,7 +106,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		initFragments();
 		
-		ab.setSelectedNavigationItem(tabIndex);
+//		ab.setSelectedNavigationItem(tabIndex);
+		onSwitchTab(0, 0);
 		
 		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			initNFC();
@@ -123,7 +126,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
-		ab.setDisplayShowTitleEnabled(false);
+		ab.setDisplayShowTitleEnabled(true);
         
         return ab;
 	}
@@ -140,28 +143,30 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
 		// Populate SideBar
+		nav = getResources().getStringArray(R.array.dashboard_entries);
+		
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
-        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, R.layout.dashboard_item, android.R.id.text1, getResources().getStringArray(R.array.dashboard_entries));
+        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, R.layout.dashboard_item, android.R.id.text1, nav);
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(this);
 	}
 	
-	private void populateTabList(ActionBar ab) {
-		// Populate tabs
-		Context context = ab.getThemedContext();
-		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
-        list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
-        
-		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-        ab.setListNavigationCallbacks(list, this);
-	}
+//	private void populateTabList(ActionBar ab) {
+//		// Populate tabs
+//		Context context = ab.getThemedContext();
+//		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
+//        list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
+//        
+//		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+//        ab.setListNavigationCallbacks(list, this);
+//	}
 	
 	private void initFragments() {
 		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
 		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
 		tabs.add(mapFragmentHandler = new FragmentHandler<GameMapFragment>("map", GameMapFragment.class));
-		tabs.add(null);
+		tabs.add(new FragmentHandler<TurnFragment>("turn", TurnFragment.class));
 		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class));
 	}
 	
@@ -240,7 +245,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 		if (lastTab != pos)
 		{
-			getSupportActionBar().setSelectedNavigationItem(pos);
+//			getSupportActionBar().setSelectedNavigationItem(pos);
+			onSwitchTab(pos, id);
 		}
 		getSlidingMenu().showContent();
 	}
@@ -255,16 +261,18 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	private boolean onSwitchTab(int pos, long id) {
 		
+		setTitle(nav[pos]);
+		
 		switch (pos) {
 		case 0://Overview
 			break;
 		case 1://Map
-			Bundle b = new Bundle();
-			GoogleMapOptions gmo = new GoogleMapOptions().camera(new CameraPosition(model.getMapLocation(), 13, 0, 0));
+			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera
+			GoogleMapOptions gmo = new GoogleMapOptions().camera(new CameraPosition(model.getMap().getMapLocation(), model.getMap().getZoomLevel(), 0, 0));
 			b.putParcelable("MapOptions", gmo);
 			mapFragmentHandler.setArguments(b);
 			break;
-//		case 2://Next Play
+		case 2://Next Play
 		case 3://Chat
 			break;
 		default:
@@ -278,7 +286,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ft
 			.replace(android.R.id.content, tab.getFragment(), tab.getTag())
 //			.addToBackStack(null)
-//			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
 			;
 		ft.commit();
 		

@@ -13,9 +13,10 @@ import android.util.Log;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.Tasks;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Chatrooms;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Chats;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Messages;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Chatrooms;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Chats;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Messages;
 import de.stadtrallye.rallyesoft.model.comm.Paths;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
@@ -24,20 +25,19 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	
 	// statics
-	private static final String CLASS = Chatroom.class.getSimpleName();
-	private static final ErrorHandling err = new ErrorHandling(CLASS);
+	final private static String CLASS = Chatroom.class.getSimpleName();
+	final private String THIS;
+	final private static ErrorHandling err = new ErrorHandling(CLASS);
 	
 	enum Tasks { CHAT_REFRESH, CHAT_POST };
 	
 	// members
-	private Model model;
-	private int id;
-	private String name;
+	final private Model model;
+	final private int id;
+	final private String name;
 	private int lastUpdate = 0;
 	private int lastId = 0;
 //	private long pendingLastTime = 0;
-	
-	private final String THIS;
 	
 	private ChatStatus status;
 	
@@ -52,7 +52,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
 		//TODO: currently Chatrooms can only ever belong to 1 group, and will not be shown, even if another group has rights to access
-		Cursor c = model.getDb().query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().group, null, null, null, null);
+		Cursor c = model.db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().group, null, null, null, null);
 		
 		while (c.moveToNext()) {
 			out.add(new Chatroom(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), model));
@@ -91,7 +91,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	 * Method will not overwrite / update existing entries, so if the Server is changed, the table needs to be cleared!
 	 */
 	public void writeToDb() {
-		SQLiteDatabase db = model.getDb();
+		SQLiteDatabase db = model.db;
 		
 		Cursor answer = db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_NAME}, Chatrooms.KEY_ID+"="+id, null, null, null, null);
 		if (answer.getCount() < 1) {//TODO: check for different names? ensure consistency
@@ -104,6 +104,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			insert.put(Chatrooms.KEY_LAST_ID, lastId);
 			db.insert(Chatrooms.TABLE, null, insert);
 		}
+		answer.close();
 	}
 	
 	// Implementation
@@ -155,32 +156,16 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		}
 	}
 	
-	private static String strStr(String... strings) {
-		StringBuilder b = new StringBuilder();
-		
-		int l = strings.length-1;
-		for (int i=0; i<=l; i++) {
-			b.append(strings[i]);
-			if (i < l)
-				b.append(", ");
-		}
-		
-		return b.toString();
-	}
-	
-	private static final String CHATS_COLS = strStr(Chats.KEY_ID, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.FOREIGN_MSG, Chats.KEY_PICTURE, Chats.FOREIGN_ROOM);
-	private static final String MSG_COLS = strStr(Messages.KEY_ID, Messages.KEY_MSG);
-	
 	private void chatUpdate(final List<ChatEntry> entries) {
-		SQLiteDatabase db = model.getDb();
+		SQLiteDatabase db = model.db;
 		
 //		removeRedundantChats(entries, db);
 		
 		
 		SQLiteStatement s = db.compileStatement("INSERT INTO "+ Chats.TABLE +
-				" ("+ CHATS_COLS +") VALUES (?, ?, "+ model.getLogin().group +", ?, ?, ?, "+ id +")");
+				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, "+ model.getLogin().group +", ?, ?, ?, "+ id +")");
 		SQLiteStatement t = db.compileStatement("INSERT INTO "+ Messages.TABLE +
-				" ("+ MSG_COLS +") VALUES (null, ?)");
+				" ("+ DatabaseHelper.strStr(Messages.COLS) +") VALUES (null, ?)");
 		SQLiteStatement u = db.compileStatement("SELECT COUNT(*) FROM "+ Chats.TABLE +" WHERE "+ Chats.KEY_ID +"=?");
 		
 		int msgId = -1, chatId = -1;
@@ -301,7 +286,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	@Override
 	public List<ChatEntry> getAllChats() {
 		
-		Cursor c = model.getDb().query(Chats.TABLE+" AS c LEFT JOIN "+Messages.TABLE+" AS m USING ("+Chats.FOREIGN_MSG+")",
+		Cursor c = model.db.query(Chats.TABLE+" AS c LEFT JOIN "+Messages.TABLE+" AS m USING ("+Chats.FOREIGN_MSG+")",
 				new String[]{Chats.KEY_ID, Messages.KEY_MSG, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.KEY_PICTURE},
 				Chatrooms.KEY_ID+"="+id,
 				null, null, null, Chats.KEY_TIME);
@@ -311,6 +296,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		while (c.moveToNext()) {
 			out.add(new ChatEntry(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), sqlToBool(c.getInt(4)), c.getInt(5)));
 		}
+		c.close();
 		
 		return out;
 	}
@@ -320,7 +306,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		public PictureGallery(int initialPictureID) {
 			this.pictures = new ArrayList<Integer>();
 			
-			Cursor c = model.getDb().query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE+" <> 0 AND "+Chats.FOREIGN_ROOM+" = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+			Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE+" <> 0 AND "+Chats.FOREIGN_ROOM+" = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
 			
 			int picId, i = 0;
 			while (c.moveToNext()) {
@@ -331,6 +317,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 				}
 				i++;
 			}
+			c.close();
 		}
 		
 		@Override

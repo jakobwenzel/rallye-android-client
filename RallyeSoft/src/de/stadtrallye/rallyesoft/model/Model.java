@@ -3,7 +3,6 @@ package de.stadtrallye.rallyesoft.model;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,21 +19,17 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
-import com.google.android.gms.maps.model.LatLng;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseOpenHelper.Groups;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.comm.RequestFactory;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
-import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Login;
-import de.stadtrallye.rallyesoft.model.structures.MapEdge;
-import de.stadtrallye.rallyesoft.model.structures.MapNode;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 
 /**
@@ -44,7 +39,7 @@ import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
  * @author Ray
  *
  */
-public class Model extends Binder implements IModel, LoginExecutor.Callback, RequestExecutor.Callback<Model.Tasks>, MapUpdateExecutor.Callback {
+public class Model extends Binder implements IModel, LoginExecutor.Callback, RequestExecutor.Callback<Model.Tasks> {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
@@ -62,19 +57,19 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	final private Context context;
 	
 	private Login currentLogin;
-	private ServerConfig serverConfig;
+	ServerConfig serverConfig;
 	
 	private ConnectionStatus status = ConnectionStatus.Unknown; //TODO: add network state
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
-	final ArrayList<IMapListener> mapListeners = new ArrayList<IMapListener>();
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	final RequestFactory factory;
-	final ExecutorService exec;
+	ExecutorService exec;
 	
 	private List<Chatroom> chatrooms;
+	final private Map map;
 	
-	private SQLiteDatabase db;
+	SQLiteDatabase db;
 	
 	/**
 	 * Model can now be kept through Configuration Changes
@@ -83,34 +78,44 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	 * @return
 	 */
 	public static Model getInstance(Context context, boolean loggedIn) {
-		if (model != null)
-			return model.ensureConnections();
-		else
+		if (model != null) {
+			return model.reuse();
+		} else {
 			return model = new Model(context, getDefaultPreferences(context), loggedIn);
-	}
-	
-	/**
-	 * Make sure we have a valid DatabaseConnection
-	 * @return Model instance for convenience
-	 */
-	private Model ensureConnections() {
-		if (db == null)
-			db = new DatabaseOpenHelper(context).getWritableDatabase();
-		return model;
+		}
 	}
 	
 	private static SharedPreferences getDefaultPreferences(Context context) {
 		return context.getSharedPreferences(Std.CONFIG_MAIN, Context.MODE_PRIVATE);
 	}
 	
+	private Model reuse() {
+		if (!model.db.isOpen()) {
+			initDatabase();
+		}
+		if (model.exec.isShutdown()) {
+			initExecutor();
+		}
+		
+		return this;
+	}
+	
+	private void initExecutor() {
+		exec = Executors.newCachedThreadPool();
+	}
+	
+	private void initDatabase() {
+		SQLiteOpenHelper helper = new DatabaseHelper(context);
+		db = helper.getWritableDatabase();
+	}
+	
 	private Model(Context context, SharedPreferences pref, boolean loggedIn) {
 		this.pref = pref;
 		this.context = context;
 		
-		SQLiteOpenHelper helper = new DatabaseOpenHelper(context);
-		db = helper.getWritableDatabase();
+		initDatabase();
 		
-		exec = Executors.newCachedThreadPool();
+		initExecutor();
 		
 		restoreLogin();
 		
@@ -146,6 +151,8 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			Log.w(THIS, "No usable Login-Data found -> stay offline");
 			setConnectionStatus(ConnectionStatus.Disconnected);
 		}
+		
+		map = new Map(this);
 	}
 	
 	/**
@@ -160,11 +167,6 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		else
 			return true;
 	}
-	
-	SQLiteDatabase getDb() {
-		return db;
-	}
-	
 	
 	@Override
 	public void logout() {
@@ -267,31 +269,6 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			setConnectionStatus(ConnectionStatus.Disconnected);
 	}
 	
-	//TODO: always precache / refresh on mapNeeded??
-	public void getMapNodes() {
-		if (!isConnected()) {
-			err.notLoggedIn();
-			return;
-		}
-		try {
-			exec.execute(new MapUpdateExecutor(factory.mapNodesRequest(), factory.mapEdgesRequest(), this));
-		} catch (HttpRequestException e) {
-			err.requestException(e);
-		}
-	}
-	
-	@Override
-	public void mapUpdateResult(MapUpdateExecutor r) {
-		if (r.isSuccessful()) {
-			try {
-				notifyMapUpdate(r.getNodes(), r.getEdges());
-			} catch (Exception e) {
-				err.asyncTaskResponseError(e);
-			}
-		} else
-			err.asyncTaskResponseError(r.getException());
-	}
-	
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
@@ -312,6 +289,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		}
 	}
 	
+	@Override
 	public boolean isConnectionChanging() {
 		return status == ConnectionStatus.Connecting || status == ConnectionStatus.Disconnecting;
 	}
@@ -365,8 +343,9 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		return null;
 	}
 	
-	public LatLng getMapLocation() {
-		return serverConfig.location;
+	@Override
+	public IMap getMap() {
+		return map;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -499,27 +478,6 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		exec.shutdownNow();
 		
 		db.close();
-	}
-	
-	@Override
-	public void addListener(IMapListener l) {
-		mapListeners.add(l);
-	}
-	
-	@Override
-	public void removeListener(IMapListener l) {
-		mapListeners.remove(l);
-	}
-
-	private void notifyMapUpdate(final Map<Integer, MapNode> nodes, final List<MapEdge> edges) {
-		uiHandler.post(new Runnable(){
-			@Override
-			public void run() {
-				for(IMapListener l: mapListeners) {
-					l.mapUpdate(nodes, edges);
-				}
-			}
-		});
 	}
 	
 	@Override

@@ -34,5 +34,6 @@
     <string name="invalid">Ungültig</string>
     <string name="share_barcode">Share Barcode</string>
     <string name="scan_barcode">Scan Barcode</string>
+    <string name="center">Zentrieren</string>
 
 </resources>

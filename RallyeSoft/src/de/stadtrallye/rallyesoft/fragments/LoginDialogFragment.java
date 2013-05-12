@@ -101,11 +101,12 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	}
 	
 	@Override
-	 public void onDestroyView() {
-	     if (getDialog() != null && getRetainInstance())
-	         getDialog().setDismissMessage(null);
-//	     	getDialog().setOnDismissListener(null);
-	         super.onDestroyView();
+	public void onDestroyView() {
+		if (getDialog() != null && getRetainInstance()) {
+			getDialog().setDismissMessage(null);
+			getDialog().setOnDismissListener(null);
+		}
+		super.onDestroyView();
 	 }
 	
 	@Override

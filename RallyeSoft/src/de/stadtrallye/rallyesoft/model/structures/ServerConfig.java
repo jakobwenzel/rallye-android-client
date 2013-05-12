@@ -13,6 +13,7 @@ public class ServerConfig {
 	
 	final public String name;
 	final public LatLng location;
+	final public float zoomLevel = 13;
 	final public int rounds;
 	final public int roundTime;
 	final public int startTime;

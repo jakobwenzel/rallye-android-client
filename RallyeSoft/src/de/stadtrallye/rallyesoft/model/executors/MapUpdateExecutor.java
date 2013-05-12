@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 import de.stadtrallye.rallyesoft.model.comm.Request;
-import de.stadtrallye.rallyesoft.model.structures.MapEdge;
-import de.stadtrallye.rallyesoft.model.structures.MapNode;
+import de.stadtrallye.rallyesoft.model.structures.Edge;
+import de.stadtrallye.rallyesoft.model.structures.Node;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 
-public class MapUpdateExecutor extends MyRunnable<Map<Integer, MapNode>> {
+public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 	
-	private Map<Integer, MapNode> nodes;
-	private List<MapEdge> edges;
+	private Map<Integer, Node> nodes;
+	private List<Edge> edges;
 	private Callback model;
 	private Request edgeRequest;
 	private Request nodeRequest;
@@ -24,39 +24,39 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, MapNode>> {
 	}
 
 	@Override
-	protected Map<Integer, MapNode> tryRun() throws Exception {
+	protected Map<Integer, Node> tryRun() throws Exception {
 
-		RequestExecutor<Map<Integer, MapNode>, Void> nodeExecutor = new RequestExecutor<Map<Integer, MapNode>, Void>(nodeRequest, new MapConverter(), null, null);
+		RequestExecutor<Map<Integer, Node>, Void> nodeExecutor = new RequestExecutor<Map<Integer, Node>, Void>(nodeRequest, new MapConverter(), null, null);
 		nodes = nodeExecutor.tryRun();
 		
-		RequestExecutor<List<MapEdge>, Void> edgeExecutor = new JSONArrayRequestExecutor<MapEdge, Void>(edgeRequest, new MapEdge.EdgeConverter(nodes), null, null);
+		RequestExecutor<List<Edge>, Void> edgeExecutor = new JSONArrayRequestExecutor<Edge, Void>(edgeRequest, new Edge.EdgeConverter(nodes), null, null);
 		edges = edgeExecutor.tryRun();
 		
 		return nodes;
 	}
 	
-	public List<MapEdge> getEdges() {
+	public List<Edge> getEdges() {
 		return edges;
 	}
 	
-	public Map<Integer, MapNode> getNodes() {
+	public Map<Integer, Node> getNodes() {
 		return res;
 	}
 	
 	public interface Callback {
-		void mapUpdateResult(MapUpdateExecutor r);
+		void updateMapResult(MapUpdateExecutor r);
 	}
 
 	@Override
 	protected void callback() {
-		model.mapUpdateResult(this);
+		model.updateMapResult(this);
 	}
 	
-	public static class MapConverter implements IConverter<String, Map<Integer, MapNode>> {
+	public static class MapConverter implements IConverter<String, Map<Integer, Node>> {
 		
 		@Override
-		public Map<Integer, MapNode> convert(String input) {
-			return JSONArray.getInstance(new MapNode.NodeConverter(), input).toMap(new MapNode.IndexGetter());
+		public Map<Integer, Node> convert(String input) {
+			return JSONArray.getInstance(new Node.NodeConverter(), input).toMap(new Node.IndexGetter());
 		}
 	}
 
