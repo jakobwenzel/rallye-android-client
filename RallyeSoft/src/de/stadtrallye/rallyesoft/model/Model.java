@@ -24,9 +24,9 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.comm.RequestFactory;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Login;
@@ -432,7 +432,13 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				pref.getInt(Std.ROUND_TIME, 0),
 				pref.getInt(Std.START_TIME, 0));
 		
-		serverConfig = (s.isComplete())? s : null;
+		if (s.isComplete()) {
+			serverConfig = s;
+			Log.i(THIS, "Server Config recovered");
+		} else {
+			serverConfig = null;
+			Log.e(THIS, "Server Config corrupted");
+		}
 	}
 	
 	private void restoreLogin() {
@@ -442,11 +448,23 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				pref.getString(Std.PASSWORD, null),
 				pref.getLong(Std.LAST_LOGIN, 0));
 		
-		currentLogin = (l.isComplete())? l : null;
+		if (l.isComplete()) {
+			currentLogin = l;
+			Log.i(THIS, "Login recovered");
+		} else {
+			currentLogin = null;
+			Log.e(THIS, "Login corrupted");
+		}
 	}
 	
 	private void restoreConnectionStatus() {
-		status = (pref.getBoolean(Std.CONNECTED, false))? ConnectionStatus.Connected : ConnectionStatus.Unknown;
+		if (pref.getBoolean(Std.CONNECTED, false)) {
+			status = ConnectionStatus.Connected;
+			Log.i(THIS, "Status: Connected recovered");
+		} else {
+			status = ConnectionStatus.Unknown;
+			Log.i(THIS, "Status: Unkown recovered");
+		}
 	}
 	
 	private Login getDefaultLogin() {

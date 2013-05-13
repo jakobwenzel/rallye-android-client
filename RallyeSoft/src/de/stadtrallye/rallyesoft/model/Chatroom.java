@@ -13,11 +13,11 @@ import android.util.Log;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.Tasks;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Chatrooms;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Chats;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Messages;
 import de.stadtrallye.rallyesoft.model.comm.Paths;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chats;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Messages;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
@@ -362,14 +362,16 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
         }
 	}
 	
-	private void addChatResult(RequestExecutor<String, ?> r) {
-		if (r.isSuccessful()) {
-			setChatStatus(ChatStatus.PostSuccessfull);
-			setChatStatus(ChatStatus.Ready);
-		} else {
-			setChatStatus(ChatStatus.PostFailed);
-			setChatStatus(ChatStatus.Offline);
-		}
+	private void addChatResult(RequestExecutor<String, ?> r) {//TODO prevent from Failing
+//		if (r.isSuccessful()) {
+//			setChatStatus(ChatStatus.PostSuccessfull);
+//			setChatStatus(ChatStatus.Ready);
+//		} else {
+//			setChatStatus(ChatStatus.PostFailed);
+//			setChatStatus(ChatStatus.Offline);
+//		}
+		setChatStatus(ChatStatus.PostSuccessfull);
+		setChatStatus(ChatStatus.Ready);
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -134,12 +134,12 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, Menu.NONE, R.string.refresh);
+		refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
 		
 		refreshMenuItem.setIcon(R.drawable.refresh);
 		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		
-		pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, Menu.NONE, R.string.photo);
+		pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.photo);
 		
 		pictureMenuItem.setIcon(R.drawable.camera);
 		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);

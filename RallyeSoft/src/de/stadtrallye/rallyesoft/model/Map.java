@@ -13,9 +13,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Edges;
-import de.stadtrallye.rallyesoft.model.backend.DatabaseHelper.Nodes;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Edges;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Nodes;
 import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Edge;
 import de.stadtrallye.rallyesoft.model.structures.Node;

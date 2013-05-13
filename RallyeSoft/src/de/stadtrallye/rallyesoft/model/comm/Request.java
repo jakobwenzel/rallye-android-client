@@ -92,6 +92,8 @@ public class Request {
 		
 		if (code >= 200 && code < 300) {
 			reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			if (DEBUG)
+				Log.d(THIS, "Content-Length: "+ conn.getContentLength());
 		} else {
 			throw new HttpRequestException(code, conn.getResponseMessage(), url, null);
 		}

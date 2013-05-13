@@ -50,6 +50,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
+		
 	}
 	
 	@Override

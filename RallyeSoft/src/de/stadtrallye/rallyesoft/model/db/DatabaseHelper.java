@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.model.backend;
+package de.stadtrallye.rallyesoft.model.db;
 
 import android.annotation.TargetApi;
 import android.content.Context;
