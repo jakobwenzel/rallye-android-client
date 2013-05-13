@@ -16,6 +16,7 @@ public interface IModel {
 	void login(Login login);
 	void logout();
 	void checkLoginStatus();
+	void groupList();
 	
 	void addListener(IConnectionStatusListener l);
 	void removeListener(IConnectionStatusListener l);

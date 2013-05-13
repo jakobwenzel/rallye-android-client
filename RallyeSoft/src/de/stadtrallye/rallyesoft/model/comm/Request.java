@@ -28,7 +28,6 @@ public class Request {
 	private Mime mime;
 	private byte[] post;
 	private String msg;
-	private ResponseType resp;
 	
 	
 	public enum Mime { JSON
@@ -39,18 +38,9 @@ public class Request {
 			}
 		}
 	};
-	@Deprecated public enum ResponseType { jsArray, jsObject, String, StringList	};
 	
 	public Request(URL url) {
 		this.url = url;
-	}
-	
-	public void setResponseType(ResponseType resp) {
-		this.resp = resp;
-	}
-	
-	public ResponseType getResponseType() {
-		return resp;
 	}
 	
 	public Request putPost(byte[] post, Mime mime) {
@@ -75,6 +65,8 @@ public class Request {
 	private int prepareConnection() throws IOException, HttpRequestException {
 		if (DEBUG)
 			Log.i(THIS, "Connecting to: "+url.toString());
+		
+		
 		
 		conn =  (HttpURLConnection) url.openConnection();
 		if (post != null) {

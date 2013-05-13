@@ -47,7 +47,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	final private static boolean DEBUG = false;
 	
 	
-	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG };
+	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST };
 	
 	
 	private static Model model; // Singleton Pattern
@@ -127,7 +127,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				
 			URL url = new URL(currentLogin.server);
 			factory.setBaseURL(url);
-			factory.setID(GCMRegistrar.getRegistrationId(context));
+			factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
 			
 			
 			restoreServerConfig();
@@ -209,7 +209,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			setConnectionStatus(ConnectionStatus.Connecting);
 		}
 			try {
-				factory.setID(GCMRegistrar.getRegistrationId(context));
+				factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
 				factory.setBaseURL(new URL(login.server));
 				
 				LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);
@@ -289,6 +289,26 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		}
 	}
 	
+	public void groupList() {
+		if (!isConnected()) {
+			err.notLoggedIn();
+			return;
+		}
+		
+		try {
+//			factory.setAuth(currentLogin);
+			
+			Log.d(THIS, "testing auth");
+			exec.execute(new RequestExecutor<String, Tasks>(factory.groupListRequest(),null, this, Tasks.GROUP_LIST));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+		}
+	}
+	
+	private void groupListResult(RequestExecutor<String, ?> r) {
+		Log.i(THIS, r.getResult());
+	}
+	
 	@Override
 	public boolean isConnectionChanging() {
 		return status == ConnectionStatus.Connecting || status == ConnectionStatus.Disconnecting;
@@ -361,6 +381,9 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		case LOGOUT:
 			logoutResult((RequestExecutor<String, Tasks>) r);
 			break;
+		case GROUP_LIST:
+			groupListResult((RequestExecutor<String, ?>) r);
+			break;
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
@@ -385,13 +408,14 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			edit.putString(Std.PASSWORD, currentLogin.password);
 			edit.putLong(Std.LAST_LOGIN, currentLogin.getLastValidated());
 			edit.putString(Std.USER+Std.NAME, currentLogin.name);
+			edit.putInt(Std.USER_ID, currentLogin.getId());
 			return this;
 		}
 		
 		public Saver saveChatrooms() {
 			ContentValues insert = new ContentValues();
 			insert.put(Groups.KEY_ID, currentLogin.group);
-			//TODO: put Name
+			//TODO: put Name [need to get name]
 			db.insert(Groups.TABLE, null, insert);
 			
 			for (Chatroom c: chatrooms) {
@@ -446,6 +470,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				pref.getInt(Std.GROUP, 0),
 				pref.getString(Std.USER+Std.NAME, null),
 				pref.getString(Std.PASSWORD, null),
+				pref.getInt(Std.USER_ID, Login.NO_ID),
 				pref.getLong(Std.LAST_LOGIN, 0));
 		
 		if (l.isComplete()) {

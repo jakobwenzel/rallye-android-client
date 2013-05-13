@@ -50,4 +50,5 @@ public class Std {
 	public static final int GCM_NOTIFICATION = 1;
 	
 	public static final String LOGIN_DIALOG = "loginDialog";
+	public static final String USER_ID = "user_id";
 }

@@ -11,6 +11,7 @@ public final class Paths {
 	public static final String CHAT_POST = "chat/add";
 	public static final String CONFIG = "system/config";
 	public static final String PICS = "pic/get/";
+	public static final String GROUP_LIST = "groups";
 	
 	/**
 	 * return relative path to a picture

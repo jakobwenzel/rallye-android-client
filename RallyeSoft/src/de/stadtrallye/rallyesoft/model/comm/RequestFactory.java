@@ -1,6 +1,8 @@
 package de.stadtrallye.rallyesoft.model.comm;
 
+import java.net.Authenticator;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 
 import org.json.JSONException;
@@ -17,7 +19,7 @@ public class RequestFactory {
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 
 	private URL base;
-	private String id;
+	private String devId;
 	private String idName;
 	
 	public RequestFactory(URL baseURL, String idName) {
@@ -29,12 +31,21 @@ public class RequestFactory {
 		base = baseURL;
 	}
 	
-	public void setID(String id) {
-		this.id = id;
+	public void setDeviceID(String id) {
+		this.devId = id;
 	}
 	
-	private JSONObject getIdJsonObject() throws JSONException {
-		return new JSONObject().put(idName, id);
+	public void setAuth(final Login login) {
+		Authenticator.setDefault(new Authenticator() {
+			@Override
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(login.getId() +"@"+ login.group, login.password.toCharArray());
+			}
+		});
+	}
+	
+	private JSONObject getDevIdJsonObject() throws JSONException {
+		return new JSONObject().put(idName, devId);
 	}
 	
 	private URL getURL(String path) throws HttpRequestException {
@@ -50,7 +61,7 @@ public class RequestFactory {
 		Request r = new Request(url);
 		
 		try {
-			JSONObject post = getIdJsonObject()
+			JSONObject post = getDevIdJsonObject()
 				.put(Std.GROUPID, login.group)
 				.put(Std.PASSWORD, login.password);
 			r.putPost(post);
@@ -65,7 +76,7 @@ public class RequestFactory {
 		Request r = new Request(url);
 		
 		try {
-			r.putPost(getIdJsonObject());
+			r.putPost(getDevIdJsonObject());
 			return r;
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
@@ -77,7 +88,7 @@ public class RequestFactory {
 		Request r = new Request(url);
 		
 		try {
-			r.putPost(getIdJsonObject());
+			r.putPost(getDevIdJsonObject());
 			return r;
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
@@ -89,7 +100,7 @@ public class RequestFactory {
 		Request r = new Request(url);
 		
 		try {
-			r.putPost(getIdJsonObject()
+			r.putPost(getDevIdJsonObject()
 				.put(Std.CHATROOM, chatroom)
 				.put(Std.TIMESTAMP, (lastTime == 0)? JSONObject.NULL : lastTime));
 			return r;
@@ -117,7 +128,7 @@ public class RequestFactory {
 		Request r = new Request(url);
 		
 		try {
-			r.putPost(getIdJsonObject()
+			r.putPost(getDevIdJsonObject()
 				.put(Std.CHATROOM, chatroom)
 				.put(Std.MSG, (msg.length()>0)? msg : JSONObject.NULL)
 				.put(Std.PIC, (pictureID > 0)? pictureID : JSONObject.NULL));
@@ -125,6 +136,13 @@ public class RequestFactory {
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
 		}
+	}
+	
+	public Request groupListRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.GROUP_LIST);
+		Request r = new Request(url);
+		
+		return r;
 	}
 
 	public Request serverConfigRequest() throws HttpRequestException {

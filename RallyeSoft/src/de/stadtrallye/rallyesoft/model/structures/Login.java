@@ -14,8 +14,11 @@ public class Login implements Parcelable {
 	private static final int version = 1; 
 
 	public enum State {Unknown, Validated, Invalidated};
+	public static final int NO_ID = -1;
+	
 	private State valid;
 	private long lastValidated;
+	private int id = NO_ID;
 	
 	final public String server;
 	final public int group;
@@ -23,16 +26,25 @@ public class Login implements Parcelable {
 	final public String name;
 	
 	public Login(String server, int group, String name, String password) {
-		this(server, group, name, password, 0);
+		this(server, group, name, password, NO_ID, 0);
 	}
 	
-	public Login(String server, int group, String name, String password, long lastValidated) {
+	public Login(String server, int group, String name, String password, int id, long lastValidated) {
 		this.server = server;
 		this.group = group;
 		this.password = password;
 		this.name = name;
+		this.id = id;
 		this.lastValidated = lastValidated;
 		this.valid = (lastValidated > 0)? State.Validated : State.Unknown;
+	}
+	
+	public void assignId(int id) {
+		this.id = id;
+	}
+	
+	public int getId() {
+		return id;
 	}
 	
 	public long getLastValidated() {
@@ -56,7 +68,7 @@ public class Login implements Parcelable {
 		this.valid = State.Validated;
 	}
 	
-	public void invalidated() {
+	public void invalidate() {
 		this.valid = State.Invalidated;
 		this.lastValidated = -this.lastValidated;
 	}
@@ -148,6 +160,7 @@ public class Login implements Parcelable {
 		d.writeInt(group);
 		d.writeString(name);
 		d.writeString(password);
+		d.writeInt(id);
 		d.writeLong(lastValidated);
 	}
 	
@@ -160,7 +173,7 @@ public class Login implements Parcelable {
 		
 		@Override
 		public Login createFromParcel(Parcel s) {
-			return new Login(s.readString(), s.readInt(), s.readString(), s.readString(), s.readLong());
+			return new Login(s.readString(), s.readInt(), s.readString(), s.readString(), s.readInt(), s.readLong());
 		}
 	};
 }
