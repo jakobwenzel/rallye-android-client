@@ -7,10 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
 
 public class OverviewFragment extends Fragment implements IConnectionStatusListener {
 	

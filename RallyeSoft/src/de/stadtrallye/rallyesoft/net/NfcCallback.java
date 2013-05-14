@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.model.comm;
+package de.stadtrallye.rallyesoft.net;
 
 import java.nio.charset.Charset;
 

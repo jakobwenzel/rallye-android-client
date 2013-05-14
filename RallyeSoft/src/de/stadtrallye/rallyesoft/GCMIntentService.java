@@ -14,7 +14,7 @@ import com.google.android.gcm.GCMRegistrar;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.model.comm.PushInit;
+import de.stadtrallye.rallyesoft.net.PushInit;
 
 public class GCMIntentService extends GCMBaseIntentService {
 	

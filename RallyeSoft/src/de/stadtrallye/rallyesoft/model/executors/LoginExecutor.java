@@ -9,8 +9,8 @@ import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
 import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.model.comm.Request;
 import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.net.Request;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
 

@@ -22,7 +22,6 @@ import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -33,13 +32,12 @@ import com.actionbarsherlock.view.Window;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
-import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
-import de.stadtrallye.rallyesoft.UIComm.IProgressUI;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
@@ -49,13 +47,15 @@ import de.stadtrallye.rallyesoft.fragments.TurnFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.model.comm.NfcCallback;
-import de.stadtrallye.rallyesoft.model.comm.PushInit;
 import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.net.NfcCallback;
+import de.stadtrallye.rallyesoft.net.PushInit;
+import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
+import de.stadtrallye.rallyesoft.uiadapter.IProgressUI;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener,
 																		LoginDialogFragment.IDialogCallback, IModelActivity,
-																		IConnectionStatusListener, IProgressUI, SlidingMenu.OnOpenListener {
+																		IConnectionStatusListener, IProgressUI {
 	
 	private static final String THIS = MainActivity.class.getSimpleName();
 	
@@ -78,11 +78,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		ActionBar ab = initFrame();
+		initFrame();
 		
 		initSlidingMenu();
-		
-//		populateTabList(ab);
 		
 		// Recover Last State
 		if (savedInstanceState != null) {
@@ -99,20 +97,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		model.addListener(this);
 		keepModel = false;
 		
-        //Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
 		forceOverflowMenu();
 		
 		initFragments();
-		
-//		ab.setSelectedNavigationItem(tabIndex);
-		onSwitchTab(currentTab, 0);
 		
 		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			initNFC();
 		}
 		
-		//DEBUG
-//		ChatsFragment.enableDebugLogging();
 	}
 	
 	private ActionBar initFrame() {
@@ -142,34 +134,24 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
 		sm.setBehindScrollScale(0);
 		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
-		sm.setOnOpenListener(this);
 		
 		// Populate SideBar
 		nav = getResources().getStringArray(R.array.dashboard_entries);
 		
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
+      //TODO: own Adapter to disable elements if offline/highlight current element and set the SlidingMenu selector as soon as the first View has been instantiated
         ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, R.layout.dashboard_item, android.R.id.text1, nav);
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(this);
 	}
 	
-//	private void populateTabList(ActionBar ab) {
-//		// Populate tabs
-//		Context context = ab.getThemedContext();
-//		ArrayAdapter<CharSequence> list = ArrayAdapter.createFromResource(context, R.array.tabs, R.layout.sherlock_spinner_item);
-//        list.setDropDownViewResource(R.layout.sherlock_spinner_dropdown_item);
-//        
-//		ab.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-//        ab.setListNavigationCallbacks(list, this);
-//	}
-	
 	private void initFragments() {
 		//Create FragmentHandlers
 		tabs = new ArrayList<FragmentHandler<?>>();
-		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class));
-		tabs.add(mapFragmentHandler = new FragmentHandler<GameMapFragment>("map", GameMapFragment.class));
-		tabs.add(new FragmentHandler<TurnFragment>("turn", TurnFragment.class));
-		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class));
+		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class, false));
+		tabs.add(mapFragmentHandler = new FragmentHandler<GameMapFragment>("map", GameMapFragment.class, false));
+		tabs.add(new FragmentHandler<TurnFragment>("turn", TurnFragment.class, false));
+		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class, true));
 	}
 	
 	@TargetApi(14)
@@ -180,6 +162,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		}
 	}
 	
+	/**
+	 * Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
+	 */
 	private void forceOverflowMenu() {
 	     try {
 	        ViewConfiguration config = ViewConfiguration.get(this);
@@ -201,13 +186,15 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 */
 	private class FragmentHandler<T extends Fragment> {
 		
-		protected String tag;
-		protected Class<T> clz;
+		private String tag;
+		private Class<T> clz;
 		private Bundle arg;
+		final private boolean requiresOnline;
 
-		public FragmentHandler(String tag, Class<T> clz) {
+		public FragmentHandler(String tag, Class<T> clz, boolean requiresOnline) {
 			this.tag = tag;
 			this.clz = clz;
+			this.requiresOnline = requiresOnline;
 		}
 		
 		public void setArguments(Bundle arg) {
@@ -238,6 +225,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		setSupportProgressBarIndeterminateVisibility(false);
 		onConnectionStatusChange(model.getConnectionStatus());
+		
+		onSwitchTab(currentTab, 0);
+		sm.setSelectedView(getSelectedView(currentTab));
 	}
 	
 	/**
@@ -249,18 +239,22 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		{
 //			getSupportActionBar().setSelectedNavigationItem(pos);
 			onSwitchTab(pos, id);
-			sm.setSelectedView(view);
 		}
 		getSlidingMenu().showContent();
 	}
 	
-	@Override
-	public void onOpen() {
-		sm.setSelectedView(getSelectedView(currentTab));
+	private View getSelectedView(int pos) {
+		View v = ((ListView)findViewById(R.id.dashboard_list)).getChildAt(pos);
+		Log.d(THIS, "SlidingSelector on "+ v);
+		return v;
 	}
 	
-	private View getSelectedView(int pos) {
-		return ((ListView)findViewById(R.id.dashboard_list)).getChildAt(pos);
+	private boolean isOnlineTab() {
+		return tabs.get(currentTab).requiresOnline; 
+	}
+	
+	private void switchTabFallback() {
+		onSwitchTab(currentTab = 0, 0);
 	}
 	
 	/**
@@ -280,11 +274,16 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			break;
 		case 1://Map
 			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera [done internally with animation]
-			GoogleMapOptions gmo = new GoogleMapOptions().camera(new CameraPosition(model.getMap().getMapLocation(), model.getMap().getZoomLevel(), 0, 0));
+			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
+			LatLng loc = model.getMap().getMapLocation();
+			if (loc != null) {
+				gmo.camera(new CameraPosition(model.getMap().getMapLocation(), model.getMap().getZoomLevel(), 0, 0));
+			}
 			b.putParcelable("MapOptions", gmo);
 			mapFragmentHandler.setArguments(b);
 			break;
 		case 2://Next Play
+			break;
 		case 3://Chat
 			break;
 		default:
@@ -292,8 +291,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			return false;
 		}
 		
-		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		FragmentHandler<?> tab = tabs.get(pos);
+		
+		if (tab.requiresOnline && !model.isConnected()) {
+			Toast.makeText(getApplicationContext(), "Connect to a Server first!", Toast.LENGTH_SHORT).show();//TODO: R.string
+			return true;
+		}
+		
+		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		
 		ft
 			.replace(android.R.id.content, tab.getFragment(), tab.getTag())
@@ -303,6 +308,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ft.commit();
 		
 		currentTab = pos;
+		sm.setSelectedView(getSelectedView(pos));
 		return true;
 	}
 	
@@ -461,6 +467,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		ActionBar ab = getSupportActionBar();
 		switch (status) {//TODO: No Network on UI
 		case Disconnecting:
+			if (isOnlineTab()) {
+				switchTabFallback();
+			}
 		case Connecting:
 			activateProgressAnimation();
 			break;

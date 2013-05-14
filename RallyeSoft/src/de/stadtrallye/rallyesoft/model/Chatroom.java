@@ -13,7 +13,6 @@ import android.util.Log;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.Tasks;
-import de.stadtrallye.rallyesoft.model.comm.Paths;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chats;
@@ -21,6 +20,7 @@ import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Messages;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.net.Paths;
 
 public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	

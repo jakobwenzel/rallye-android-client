@@ -3,9 +3,9 @@ package de.stadtrallye.rallyesoft.model.executors;
 import java.util.List;
 import java.util.Map;
 
-import de.stadtrallye.rallyesoft.model.comm.Request;
 import de.stadtrallye.rallyesoft.model.structures.Edge;
 import de.stadtrallye.rallyesoft.model.structures.Node;
+import de.stadtrallye.rallyesoft.net.Request;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 

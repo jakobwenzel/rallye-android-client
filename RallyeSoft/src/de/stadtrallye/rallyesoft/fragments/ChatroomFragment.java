@@ -31,14 +31,14 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
-import de.stadtrallye.rallyesoft.UIComm.IProgressUI;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
+import de.stadtrallye.rallyesoft.uiadapter.IProgressUI;
 
 /**
  * One Chatroom, with input methods

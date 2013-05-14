@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.UIComm;
+package de.stadtrallye.rallyesoft.uiadapter;
 
 public interface IProgressUI {
 

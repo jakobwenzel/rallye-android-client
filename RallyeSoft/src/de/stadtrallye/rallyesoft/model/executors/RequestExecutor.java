@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.model.executors;
 
-import de.stadtrallye.rallyesoft.model.comm.Request;
+import de.stadtrallye.rallyesoft.net.Request;
 import de.stadtrallye.rallyesoft.util.IConverter;
 
 public class RequestExecutor<T, ID> extends MyRunnable<T> {

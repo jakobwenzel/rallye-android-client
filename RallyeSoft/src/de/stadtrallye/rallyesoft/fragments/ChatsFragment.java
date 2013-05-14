@@ -20,12 +20,12 @@ import com.actionbarsherlock.view.MenuItem;
 import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
@@ -42,8 +42,6 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private ChatFragmentAdapter fragmentAdapter;
 	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
-	private MenuItem refreshMenuItem;
-	private MenuItem pictureMenuItem;
 	
 	
 	public ChatsFragment() {
@@ -74,12 +72,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
         pager = (ViewPager)v.findViewById(R.id.pager);
         pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 
-//        indicator = (TitlePageIndicator)v.findViewById(R.id.indicator);
         indicator = (PagerSlidingTabStrip)v.findViewById(R.id.indicator);
-        
-        pager.setAdapter(fragmentAdapter);
-        
-        indicator.setViewPager(pager);
 		
 		return v;
 	}
@@ -108,9 +101,12 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	public void onStart() {
 		super.onStart();
 		
-		onConnectionStatusChange(model.getConnectionStatus());
-//		indicator.setCurrentItem(currentTab);
-//		pager.setCurrentItem(currentTab);
+		
+		chatrooms = model.getChatrooms();
+
+		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
+		pager.setCurrentItem(currentTab);
 		
 		model.addListener(this);
 	}
@@ -130,17 +126,15 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		outState.putInt(Std.TAB, pager.getCurrentItem());
 	}
 	
-//	private static final int REFRESH_ID = -199;
-	
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
+		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
 		
 		refreshMenuItem.setIcon(R.drawable.refresh);
 		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		
-		pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.photo);
-		
+		MenuItem pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.photo);
+
 		pictureMenuItem.setIcon(R.drawable.camera);
 		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 	}
@@ -172,19 +166,9 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		}
 	}
 
-	@Override
+	@Override//TODO: needed?
 	public void onConnectionStatusChange(ConnectionStatus newStatus) {
-		if (newStatus == ConnectionStatus.Connected) {
-			chatrooms = model.getChatrooms();
-			fill();
-			refreshMenuItem.setVisible(true);
-			pictureMenuItem.setVisible(true);
-		} else {
-			chatrooms = null;
-			clear();
-			refreshMenuItem.setVisible(false);
-			pictureMenuItem.setVisible(false);
-		}
+		
 	}
 	
 	@Override
@@ -192,21 +176,9 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		onConnectionStatusChange(lastStatus);
 	}
 	
-	public void fill() {
-		fragmentAdapter.enable = true;
-		fragmentAdapter.notifyDataSetChanged();
-		indicator.notifyDataSetChanged();
-	}
-	
-	public void clear() {
-		fragmentAdapter.enable = false;
-		fragmentAdapter.notifyDataSetChanged();
-		indicator.notifyDataSetChanged();
-	}
-	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
 
-		private boolean enable = false;
+		private boolean enable = true;
 		
 		public ChatFragmentAdapter(FragmentManager fm) {
 			super(fm);

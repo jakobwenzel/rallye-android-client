@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
@@ -22,12 +23,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.UIComm.IModelActivity;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IMapListener;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.Edge;
 import de.stadtrallye.rallyesoft.model.structures.Node;
+import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
 
 public class GameMapFragment extends SherlockMapFragment implements IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
 	
@@ -107,7 +108,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 			map.updateMap();
 			return true;
 		case R.id.center_menu:
-			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+			if (gameBounds != null) {
+				gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+			} else {
+				Toast.makeText(getActivity(), "No Nodes to center on!", Toast.LENGTH_SHORT).show();//TODO: R.string
+			}
 			return true;
 		default:
 			Log.d(THIS, "No hit on menu item "+ item);
@@ -135,6 +140,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 	public void mapUpdate(Map<Integer, Node> nodes, List<Edge> edges) {
 		
 		Builder bounds = LatLngBounds.builder();
+		boolean hasBounds = false;
 		
 		for (Node n: nodes.values()) {
 			Marker m = gmap.addMarker(new MarkerOptions()
@@ -142,11 +148,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 								.title(n.name)
 								.snippet(n.description));
 			
+			hasBounds = true;
 			bounds.include(n.position);
 			markers.put(m, n);
 		}
 		
-		gameBounds = bounds.build();
 		
 		for (Edge e: edges) {
 			gmap.addPolyline(new PolylineOptions()
@@ -154,7 +160,10 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 							.color(getColor(e.type)));
 		}
 		
-		gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+		if (hasBounds) {
+			gameBounds = bounds.build();
+			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+		}
 	}
 
 	@Override

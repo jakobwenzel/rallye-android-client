@@ -24,13 +24,13 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
-import de.stadtrallye.rallyesoft.model.comm.RequestFactory;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
+import de.stadtrallye.rallyesoft.net.RequestFactory;
 
 /**
  * My Model
@@ -232,7 +232,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			save().saveChatrooms().saveLogin().saveConnectionStatus(ConnectionStatus.Connected).commit();
 			
 			refreshServerConfig();
-			setConnectionStatus(ConnectionStatus.Connected);
+			map.updateMap();
 		} else {
 			connectionFailure(r.getException(), ConnectionStatus.Disconnected);
 		}
@@ -283,6 +283,8 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			try {
 				serverConfig = r.getResult();
 				save().saveServerConfig().commit();
+				if (status == ConnectionStatus.Connecting)
+					setConnectionStatus(ConnectionStatus.Connected);
 			} catch (Exception e) {
 				err.asyncTaskResponseError(e);
 			}

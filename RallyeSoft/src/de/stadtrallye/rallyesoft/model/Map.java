@@ -155,12 +155,12 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 	
 	@Override
 	public LatLng getMapLocation() {
-		return model.serverConfig.location;
+		return (model.serverConfig != null)? model.serverConfig.location : null;
 	}
 	
 	@Override
 	public float getZoomLevel() {
-		return model.serverConfig.zoomLevel;
+		return (model.serverConfig != null)? model.serverConfig.zoomLevel : 0;
 	}
 
 }
