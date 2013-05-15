@@ -24,6 +24,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IMapListener;
 import de.stadtrallye.rallyesoft.model.IModel;
@@ -45,7 +46,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 	private LatLngBounds gameBounds;
 	private MenuItem centerMenuItem;
 	
-	private CameraPosition savedCamera;
+	private LatLngBounds currentBounds;
 	
 	
 	@Override
@@ -54,6 +55,10 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
+		
+		if (savedInstanceState != null) {
+			currentBounds = savedInstanceState.getParcelable(Std.MAP_BOUNDS);
+		}
 		
 	}
 	
@@ -113,7 +118,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 			return true;
 		case R.id.center_menu:
 			if (gameBounds != null) {
-				gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+				setCurrentBounds(gameBounds);
 			} else {
 				Toast.makeText(getActivity(), "No Nodes to center on!", Toast.LENGTH_SHORT).show();//TODO: R.string
 			}
@@ -166,12 +171,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		if (hasBounds) {
 			gameBounds = bounds.build();
-		}
-		
-		if (savedCamera!=null) {
-			gmap.animateCamera(CameraUpdateFactory.newCameraPosition(savedCamera));
-		} else if (hasBounds) {
-			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+			if (currentBounds == null) {
+				setCurrentBounds(gameBounds);
+			} else {
+				setCurrentBounds(currentBounds);
+			}
 		}
 	}
 
@@ -199,10 +203,15 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		}
 		marker.setVisible(true);
 		
-		gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), PADDING));
+		setCurrentBounds(bounds.build());
 		marker.showInfoWindow();
 		
 		return true;
+	}
+	
+	private void setCurrentBounds(LatLngBounds bounds) {
+		currentBounds = bounds;
+		gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
 	}
 
 	@Override
@@ -217,6 +226,6 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
-		savedCamera = gmap.getCameraPosition();
+		outState.putParcelable(Std.MAP_BOUNDS, currentBounds);
 	}
 }

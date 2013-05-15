@@ -51,4 +51,5 @@ public class Std {
 	
 	public static final String LOGIN_DIALOG = "loginDialog";
 	public static final String USER_ID = "user_id";
+	public static final String MAP_BOUNDS = "map_bounds";
 }
