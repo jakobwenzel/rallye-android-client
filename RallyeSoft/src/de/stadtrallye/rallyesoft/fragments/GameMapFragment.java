@@ -15,6 +15,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.LatLngBounds.Builder;
@@ -44,6 +45,8 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 	private LatLngBounds gameBounds;
 	private MenuItem centerMenuItem;
 	
+	private CameraPosition savedCamera;
+	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -61,6 +64,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
 			map = model.getMap();
+			
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
@@ -162,6 +166,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		if (hasBounds) {
 			gameBounds = bounds.build();
+		}
+		
+		if (savedCamera!=null) {
+			gmap.animateCamera(CameraUpdateFactory.newCameraPosition(savedCamera));
+		} else if (hasBounds) {
 			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
 		}
 	}
@@ -202,5 +211,12 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		for (Marker m: markers.keySet()) {
 			m.setVisible(true);
 		}
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+
+		savedCamera = gmap.getCameraPosition();
 	}
 }
