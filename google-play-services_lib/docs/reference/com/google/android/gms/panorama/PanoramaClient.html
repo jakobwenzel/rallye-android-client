@@ -377,6 +377,8 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/package-summary.html">com.google.android.gms</a></li>
     <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/appstate/package-summary.html">com.google.android.gms.appstate</a></li>
+    <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/auth/package-summary.html">com.google.android.gms.auth</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/common/package-summary.html">com.google.android.gms.common</a></li>
@@ -384,6 +386,20 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
   <a href="../../../../../../reference/com/google/android/gms/common/data/package-summary.html">com.google.android.gms.common.data</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/common/images/package-summary.html">com.google.android.gms.common.images</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/package-summary.html">com.google.android.gms.games</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/achievement/package-summary.html">com.google.android.gms.games.achievement</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/leaderboard/package-summary.html">com.google.android.gms.games.leaderboard</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/multiplayer/package-summary.html">com.google.android.gms.games.multiplayer</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/multiplayer/realtime/package-summary.html">com.google.android.gms.games.multiplayer.realtime</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/gcm/package-summary.html">com.google.android.gms.gcm</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/location/package-summary.html">com.google.android.gms.location</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/maps/package-summary.html">com.google.android.gms.maps</a></li>
     <li class="api apilevel-">
@@ -544,7 +560,7 @@ Summary:
 
 
   
-    extends <a href="http://developer.android.com/reference/java/lang/Object.html">Object</a><br/>
+    extends Object<br/>
   
   
   
@@ -569,7 +585,7 @@ Summary:
 
     <tr>
          	
-        <td colspan="2" class="jd-inheritance-class-cell"><a href="http://developer.android.com/reference/java/lang/Object.html">java.lang.Object</a></td>
+        <td colspan="2" class="jd-inheritance-class-cell">java.lang.Object</td>
     </tr>
     
 
@@ -597,7 +613,7 @@ Summary:
 
  Use the PanoramaClient after the asynchronous <code><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#connect()">connect()</a></code> method
  has been called and your listener's
- <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected()">onConnected()</a></code>
+ <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected(android.os.Bundle)">onConnected(Bundle)</a></code>
  method is called.
  <p>
  When your app is done using PanoramaClient, call <code><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#disconnect()">disconnect()</a></code>,
@@ -605,9 +621,9 @@ Summary:
  delivered.
  <p>
  You should instantiate this object in your Activity's
- <code><a href="../../../../../../http://developer.android.com/reference/android/app/Activity.html#onCreate(android.os.Bundle)">onCreate(Bundle)</a></code> method and then call <code><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#connect()">connect()</a></code> in
- <code><a href="../../../../../../http://developer.android.com/reference/android/app/Activity.html#onStart()">onStart()</a></code> and <code><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#disconnect()">disconnect()</a></code> in
- <code><a href="../../../../../../http://developer.android.com/reference/android/app/Activity.html#onStop()">onStop()</a></code>, regardless of the state.
+ <code><a href="../../../../../../reference/android/app/Activity.html#onCreate(android.os.Bundle)">onCreate(Bundle)</a></code> method and then call <code><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#connect()">connect()</a></code> in
+ <code><a href="../../../../../../reference/android/app/Activity.html#onStart()">onStart()</a></code> and <code><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#disconnect()">disconnect()</a></code> in
+ <code><a href="../../../../../../reference/android/app/Activity.html#onStop()">onStop()</a></code>, regardless of the state.
 </p>
 
 
@@ -694,7 +710,7 @@ Summary:
             </nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
-        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#PanoramaClient(android.content.Context, com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks, com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener)">PanoramaClient</a></span>(<a href="http://developer.android.com/reference/android/content/Context.html">Context</a> context, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html">GooglePlayServicesClient.ConnectionCallbacks</a> connectionCallbacks, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.OnConnectionFailedListener.html">GooglePlayServicesClient.OnConnectionFailedListener</a> connectionFailedListener)</nobr>
+        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#PanoramaClient(android.content.Context, com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks, com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener)">PanoramaClient</a></span>(Context context, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html">GooglePlayServicesClient.ConnectionCallbacks</a> connectionCallbacks, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.OnConnectionFailedListener.html">GooglePlayServicesClient.OnConnectionFailedListener</a> connectionFailedListener)</nobr>
         
         <div class="jd-descrdiv">Creates a panorama client.</div>
   
@@ -780,6 +796,24 @@ Summary:
             boolean</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
+        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#isConnecting()">isConnecting</a></span>()</nobr>
+        
+        <div class="jd-descrdiv">Checks if the client is attempting to connect to the service.</div>
+  
+  </td></tr>
+
+
+	 
+    <tr class="alt-color api apilevel-" >
+        <td class="jd-typecol"><nobr>
+            
+            
+            
+            
+            
+            boolean</nobr>
+        </td>
+        <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#isConnectionCallbacksRegistered(com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks)">isConnectionCallbacksRegistered</a></span>(<a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html">GooglePlayServicesClient.ConnectionCallbacks</a> listener)</nobr>
         
         <div class="jd-descrdiv">Returns true if the specified listener is currently registered to
@@ -789,7 +823,7 @@ Summary:
 
 
 	 
-    <tr class="alt-color api apilevel-" >
+    <tr class=" api apilevel-" >
         <td class="jd-typecol"><nobr>
             
             
@@ -808,24 +842,6 @@ Summary:
 
 
 	 
-    <tr class=" api apilevel-" >
-        <td class="jd-typecol"><nobr>
-            
-            
-            
-            
-            
-            void</nobr>
-        </td>
-        <td class="jd-linkcol" width="100%"><nobr>
-        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#loadPanoramaInfo(com.google.android.gms.panorama.PanoramaClient.OnPanoramaInfoLoadedListener, android.net.Uri)">loadPanoramaInfo</a></span>(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, <a href="http://developer.android.com/reference/android/net/Uri.html">Uri</a> uri)</nobr>
-        
-        <div class="jd-descrdiv">Loads information about a panorama.</div>
-  
-  </td></tr>
-
-
-	 
     <tr class="alt-color api apilevel-" >
         <td class="jd-typecol"><nobr>
             
@@ -836,7 +852,25 @@ Summary:
             void</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
-        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#loadPanoramaInfoAndGrantAccess(com.google.android.gms.panorama.PanoramaClient.OnPanoramaInfoLoadedListener, android.net.Uri)">loadPanoramaInfoAndGrantAccess</a></span>(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, <a href="http://developer.android.com/reference/android/net/Uri.html">Uri</a> uri)</nobr>
+        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#loadPanoramaInfo(com.google.android.gms.panorama.PanoramaClient.OnPanoramaInfoLoadedListener, android.net.Uri)">loadPanoramaInfo</a></span>(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, Uri uri)</nobr>
+        
+        <div class="jd-descrdiv">Loads information about a panorama.</div>
+  
+  </td></tr>
+
+
+	 
+    <tr class=" api apilevel-" >
+        <td class="jd-typecol"><nobr>
+            
+            
+            
+            
+            
+            void</nobr>
+        </td>
+        <td class="jd-linkcol" width="100%"><nobr>
+        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.html#loadPanoramaInfoAndGrantAccess(com.google.android.gms.panorama.PanoramaClient.OnPanoramaInfoLoadedListener, android.net.Uri)">loadPanoramaInfoAndGrantAccess</a></span>(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, Uri uri)</nobr>
         
         <div class="jd-descrdiv">Loads information about a panorama from a content provider.</div>
   
@@ -844,7 +878,7 @@ Summary:
 
 
 	 
-    <tr class=" api apilevel-" >
+    <tr class="alt-color api apilevel-" >
         <td class="jd-typecol"><nobr>
             
             
@@ -862,7 +896,7 @@ Summary:
 
 
 	 
-    <tr class="alt-color api apilevel-" >
+    <tr class=" api apilevel-" >
         <td class="jd-typecol"><nobr>
             
             
@@ -881,7 +915,7 @@ Summary:
 
 
 	 
-    <tr class=" api apilevel-" >
+    <tr class="alt-color api apilevel-" >
         <td class="jd-typecol"><nobr>
             
             
@@ -899,7 +933,7 @@ Summary:
 
 
 	 
-    <tr class="alt-color api apilevel-" >
+    <tr class=" api apilevel-" >
         <td class="jd-typecol"><nobr>
             
             
@@ -939,7 +973,7 @@ Summary:
           class="jd-expando-trigger-img" /></a>
 From class
 
-  <a href="http://developer.android.com/reference/java/lang/Object.html">java.lang.Object</a>
+  java.lang.Object
 
 <div id="inherited-methods-java.lang.Object">
   <div id="inherited-methods-java.lang.Object-list"
@@ -958,7 +992,7 @@ From class
             
             
             
-            <a href="http://developer.android.com/reference/java/lang/Object.html">Object</a></nobr>
+            Object</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad">clone</span>()</nobr>
@@ -977,7 +1011,7 @@ From class
             boolean</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
-        <span class="sympad">equals</span>(<a href="http://developer.android.com/reference/java/lang/Object.html">Object</a> arg0)</nobr>
+        <span class="sympad">equals</span>(Object arg0)</nobr>
         
   </td></tr>
 
@@ -1006,7 +1040,7 @@ From class
             final
             
             
-            <a href="http://developer.android.com/reference/java/lang/Class.html">Class</a>&lt;?&gt;</nobr>
+            Class&lt;?&gt;</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad">getClass</span>()</nobr>
@@ -1070,7 +1104,7 @@ From class
             
             
             
-            <a href="http://developer.android.com/reference/java/lang/String.html">String</a></nobr>
+            String</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad">toString</span>()</nobr>
@@ -1218,6 +1252,24 @@ From interface
             boolean</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
+        <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.html#isConnecting()">isConnecting</a></span>()</nobr>
+        
+        <div class="jd-descrdiv">Checks if the client is attempting to connect to the service.</div>
+  
+  </td></tr>
+
+
+	 
+    <tr class="alt-color api apilevel-" >
+        <td class="jd-typecol"><nobr>
+            abstract
+            
+            
+            
+            
+            boolean</nobr>
+        </td>
+        <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.html#isConnectionCallbacksRegistered(com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks)">isConnectionCallbacksRegistered</a></span>(<a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html">GooglePlayServicesClient.ConnectionCallbacks</a> listener)</nobr>
         
         <div class="jd-descrdiv">Returns true if the specified listener is currently registered to
@@ -1227,7 +1279,7 @@ From interface
 
 
 	 
-    <tr class="alt-color api apilevel-" >
+    <tr class=" api apilevel-" >
         <td class="jd-typecol"><nobr>
             abstract
             
@@ -1246,7 +1298,7 @@ From interface
 
 
 	 
-    <tr class=" api apilevel-" >
+    <tr class="alt-color api apilevel-" >
         <td class="jd-typecol"><nobr>
             abstract
             
@@ -1264,7 +1316,7 @@ From interface
 
 
 	 
-    <tr class="alt-color api apilevel-" >
+    <tr class=" api apilevel-" >
         <td class="jd-typecol"><nobr>
             abstract
             
@@ -1283,7 +1335,7 @@ From interface
 
 
 	 
-    <tr class=" api apilevel-" >
+    <tr class="alt-color api apilevel-" >
         <td class="jd-typecol"><nobr>
             abstract
             
@@ -1301,7 +1353,7 @@ From interface
 
 
 	 
-    <tr class="alt-color api apilevel-" >
+    <tr class=" api apilevel-" >
         <td class="jd-typecol"><nobr>
             abstract
             
@@ -1371,7 +1423,7 @@ From interface
         
       </span>
       <span class="sympad">PanoramaClient</span>
-      <span class="normal">(<a href="http://developer.android.com/reference/android/content/Context.html">Context</a> context, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html">GooglePlayServicesClient.ConnectionCallbacks</a> connectionCallbacks, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.OnConnectionFailedListener.html">GooglePlayServicesClient.OnConnectionFailedListener</a> connectionFailedListener)</span>
+      <span class="normal">(Context context, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html">GooglePlayServicesClient.ConnectionCallbacks</a> connectionCallbacks, <a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.OnConnectionFailedListener.html">GooglePlayServicesClient.OnConnectionFailedListener</a> connectionFailedListener)</span>
     </h4>
       <div class="api-level">
         <div></div>
@@ -1446,8 +1498,8 @@ From interface
       
   <div class="jd-tagdata jd-tagdescr"><p>Connects the client to Google Play services. This method returns immediately, and connects to
  the service in the background. If the connection is successful,
- <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected()">onConnected()</a></code> is called. On a failure,
- <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.OnConnectionFailedListener.html#onConnectionFailed(com.google.android.gms.common.ConnectionResult)">onConnectionFailed(ConnectionResult)</a></code> is called.
+ <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected(android.os.Bundle)">onConnected(Bundle)</a></code> is called. On a
+ failure, <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.OnConnectionFailedListener.html#onConnectionFailed(com.google.android.gms.common.ConnectionResult)">onConnectionFailed(ConnectionResult)</a></code> is called.
 </p></div>
 
     </div>
@@ -1513,6 +1565,40 @@ From interface
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Returns</h5>
       <ul class="nolist"><li>true If the client is connected to the service.
+</li></ul>
+  </div>
+
+    </div>
+</div>
+
+
+<A NAME="isConnecting()"></A>
+
+<div class="jd-details api apilevel-"> 
+    <h4 class="jd-details-title">
+      <span class="normal">
+        public 
+         
+         
+         
+         
+        boolean
+      </span>
+      <span class="sympad">isConnecting</span>
+      <span class="normal">()</span>
+    </h4>
+      <div class="api-level">
+        <div></div>
+        
+  
+
+      </div>
+    <div class="jd-details-descr">
+      
+  <div class="jd-tagdata jd-tagdescr"><p>Checks if the client is attempting to connect to the service.</p></div>
+  <div class="jd-tagdata">
+      <h5 class="jd-tagtitle">Returns</h5>
+      <ul class="nolist"><li>true If the client is attempting to connect to the service.
 </li></ul>
   </div>
 
@@ -1621,7 +1707,7 @@ From interface
         void
       </span>
       <span class="sympad">loadPanoramaInfo</span>
-      <span class="normal">(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, <a href="http://developer.android.com/reference/android/net/Uri.html">Uri</a> uri)</span>
+      <span class="normal">(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, Uri uri)</span>
     </h4>
       <div class="api-level">
         <div></div>
@@ -1665,7 +1751,7 @@ From interface
         void
       </span>
       <span class="sympad">loadPanoramaInfoAndGrantAccess</span>
-      <span class="normal">(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, <a href="http://developer.android.com/reference/android/net/Uri.html">Uri</a> uri)</span>
+      <span class="normal">(<a href="../../../../../../reference/com/google/android/gms/panorama/PanoramaClient.OnPanoramaInfoLoadedListener.html">PanoramaClient.OnPanoramaInfoLoadedListener</a> listener, Uri uri)</span>
     </h4>
       <div class="api-level">
         <div></div>
@@ -1678,7 +1764,7 @@ From interface
   <div class="jd-tagdata jd-tagdescr"><p>Loads information about a panorama from a content provider. This method will also explicitly
  grant and revoke access to the URI while the load is happening so images in content providers
  may be inspected without giving permission to an entire content provider. The returned viewer
- intent will also have the <code><a href="../../../../../../http://developer.android.com/reference/android/content/Intent.html#FLAG_GRANT_READ_URI_PERMISSION">FLAG_GRANT_READ_URI_PERMISSION</a></code> set so the viewer has
+ intent will also have the <code><a href="../../../../../../reference/android/content/Intent.html#FLAG_GRANT_READ_URI_PERMISSION">FLAG_GRANT_READ_URI_PERMISSION</a></code> set so the viewer has
  access.</p></div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Parameters</h5>
@@ -1723,13 +1809,13 @@ From interface
     <div class="jd-details-descr">
       
   <div class="jd-tagdata jd-tagdescr"><p>Registers a listener to receive connection events from this <code>GooglePlayServicesClient</code>.
- If we are already connected, the listener's <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected()">onConnected()</a></code> method
+ If we are already connected, the listener's <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected(android.os.Bundle)">onConnected(Bundle)</a></code> method
  will be called immediately.  Applications should balance calls to this method with calls to
  <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.html#unregisterConnectionCallbacks(com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks)">unregisterConnectionCallbacks(ConnectionCallbacks)</a></code> to avoid leaking resources.
  <p>
  If the specified listener is already registered to receive connection events, this
  method will not add a duplicate entry for the same listener, but <strong>will</strong>
- still call the listener's <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected()">onConnected()</a></code> method if currently
+ still call the listener's <code><a href="../../../../../../reference/com/google/android/gms/common/GooglePlayServicesClient.ConnectionCallbacks.html#onConnected(android.os.Bundle)">onConnected(Bundle)</a></code> method if currently
  connected.
  <p>
  Note that the order of messages received here may not be stable, so clients should not rely
@@ -1909,7 +1995,7 @@ From interface
   </div>
   <div id="build_info">
     
-    Android &nbsp;r &mdash; 12 Mar 2013  3:07
+    Android &nbsp;r &mdash; 12 May 2013  3:45
 
   </div>
 

@@ -123,12 +123,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	private void initSlidingMenu() {
 		setBehindContentView(R.layout.dashboard_main);
+//		setSlidingActionBarEnabled(false);
 		
 		// Settings for SideBar
 		sm = getSlidingMenu();
 		sm.setShadowWidthRes(R.dimen.shadow_width);
 		sm.setShadowDrawable(R.drawable.defaultshadow);
-//		sm.setIndicatorDrawable(R.drawable.arrow);
 		sm.setSelectorEnabled(true);
 		sm.setSelectorDrawable(R.drawable.arrow);
 		sm.setBehindWidthRes(R.dimen.slidingmenu_width);

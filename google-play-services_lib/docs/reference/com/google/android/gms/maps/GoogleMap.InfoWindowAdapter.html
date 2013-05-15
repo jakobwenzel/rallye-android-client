@@ -377,6 +377,8 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/package-summary.html">com.google.android.gms</a></li>
     <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/appstate/package-summary.html">com.google.android.gms.appstate</a></li>
+    <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/auth/package-summary.html">com.google.android.gms.auth</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/common/package-summary.html">com.google.android.gms.common</a></li>
@@ -384,6 +386,20 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
   <a href="../../../../../../reference/com/google/android/gms/common/data/package-summary.html">com.google.android.gms.common.data</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/common/images/package-summary.html">com.google.android.gms.common.images</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/package-summary.html">com.google.android.gms.games</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/achievement/package-summary.html">com.google.android.gms.games.achievement</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/leaderboard/package-summary.html">com.google.android.gms.games.leaderboard</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/multiplayer/package-summary.html">com.google.android.gms.games.multiplayer</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/multiplayer/realtime/package-summary.html">com.google.android.gms.games.multiplayer.realtime</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/gcm/package-summary.html">com.google.android.gms.gcm</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/location/package-summary.html">com.google.android.gms.location</a></li>
     <li class="selected api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/maps/package-summary.html">com.google.android.gms.maps</a></li>
     <li class="api apilevel-">
@@ -552,7 +568,7 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
 
 
 <h2>Class Overview</h2>
-<p itemprop="articleBody">Provides views for customized rendering of info-windows.
+<p itemprop="articleBody">Provides views for customized rendering of info windows.
  <p>
  Methods on this provider are called when it is time to show an info window for a marker,
  regardless of the cause (either a user gesture or a programmatic call to
@@ -560,11 +576,19 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
  this provider may choose to reuse views, or it may choose to create new views on each method
  invocation.
  <p>
- When constructing an info-window, methods in this class are called in a defined order. To
- replace the default info-window, override <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoWindow(com.google.android.gms.maps.model.Marker)">getInfoWindow(Marker)</a></code> with your custom rendering.
- To replace just the info-window contents, inside the default info-window frame (the callout
- bubble), leave the default implementation of <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoWindow(com.google.android.gms.maps.model.Marker)">getInfoWindow(Marker)</a></code> in place and override
- <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">getInfoContents(Marker)</a></code> instead.
+ When constructing an info window, methods in this class are called in a defined order. To
+ replace the default info window, override <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoWindow(com.google.android.gms.maps.model.Marker)">getInfoWindow(Marker)</a></code> with your custom rendering
+ and return <code>null</code> for <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">getInfoContents(Marker)</a></code>. To replace only the info window
+ contents inside the default info window frame (the callout bubble), return <code>null</code> in
+ <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoWindow(com.google.android.gms.maps.model.Marker)">getInfoWindow(Marker)</a></code> and override <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">getInfoContents(Marker)</a></code> instead.
+
+ <p>
+ <h3>Developer Guide</h3>
+ <p>
+ For more information, read the <a
+ href="https://developers.google.com/maps/documentation/android/marker#info_windows">
+ Info Windows</a>
+ developer guide.
 </p>
 
 
@@ -632,12 +656,12 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
             
             
             
-            <a href="http://developer.android.com/reference/android/view/View.html">View</a></nobr>
+            View</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">getInfoContents</a></span>(<a href="../../../../../../reference/com/google/android/gms/maps/model/Marker.html">Marker</a> marker)</nobr>
         
-        <div class="jd-descrdiv">Provides custom contents for the default info-window frame of a marker.</div>
+        <div class="jd-descrdiv">Provides custom contents for the default info window frame of a marker.</div>
   
   </td></tr>
 
@@ -650,12 +674,12 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
             
             
             
-            <a href="http://developer.android.com/reference/android/view/View.html">View</a></nobr>
+            View</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoWindow(com.google.android.gms.maps.model.Marker)">getInfoWindow</a></span>(<a href="../../../../../../reference/com/google/android/gms/maps/model/Marker.html">Marker</a> marker)</nobr>
         
-        <div class="jd-descrdiv">Provides a custom info-window for a marker.</div>
+        <div class="jd-descrdiv">Provides a custom info window for a marker.</div>
   
   </td></tr>
 
@@ -718,7 +742,7 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
          
         abstract 
          
-        <a href="http://developer.android.com/reference/android/view/View.html">View</a>
+        View
       </span>
       <span class="sympad">getInfoContents</span>
       <span class="normal">(<a href="../../../../../../reference/com/google/android/gms/maps/model/Marker.html">Marker</a> marker)</span>
@@ -731,11 +755,11 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
       </div>
     <div class="jd-details-descr">
       
-  <div class="jd-tagdata jd-tagdescr"><p>Provides custom contents for the default info-window frame of a marker. This method is
+  <div class="jd-tagdata jd-tagdescr"><p>Provides custom contents for the default info window frame of a marker. This method is
  only called if <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoWindow(com.google.android.gms.maps.model.Marker)">getInfoWindow(Marker)</a></code> first returns <code>null</code>. If this method returns
- a view, it will be placed inside the default info-window frame. If you change this view
+ a view, it will be placed inside the default info window frame. If you change this view
  after this method is called, those changes will not necessarily be reflected in the
- rendered info-window. If this method returns <code>null</code>, the default rendering will be
+ rendered info window. If this method returns <code>null</code>, the default rendering will be
  used instead.</p></div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Parameters</h5>
@@ -767,7 +791,7 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
          
         abstract 
          
-        <a href="http://developer.android.com/reference/android/view/View.html">View</a>
+        View
       </span>
       <span class="sympad">getInfoWindow</span>
       <span class="normal">(<a href="../../../../../../reference/com/google/android/gms/maps/model/Marker.html">Marker</a> marker)</span>
@@ -780,10 +804,10 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
       </div>
     <div class="jd-details-descr">
       
-  <div class="jd-tagdata jd-tagdescr"><p>Provides a custom info-window for a marker. If this method returns a view, it is used for
- the entire info-window. If you change this view after this method is called, those
- changes will not necessarily be reflected in the rendered info-window. If this method
- returns <code>null</code> , the default info-window frame will be used, with contents provided
+  <div class="jd-tagdata jd-tagdescr"><p>Provides a custom info window for a marker. If this method returns a view, it is used for
+ the entire info window. If you change this view after this method is called, those
+ changes will not necessarily be reflected in the rendered info window. If this method
+ returns <code>null</code> , the default info window frame will be used, with contents provided
  by <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">getInfoContents(Marker)</a></code>.</p></div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Parameters</h5>
@@ -796,8 +820,8 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
   </div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Returns</h5>
-      <ul class="nolist"><li>A custom info-window for <code>marker</code>, or <code>null</code> to use the default
-         info-window frame with <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">custom contents</a></code>.
+      <ul class="nolist"><li>A custom info window for <code>marker</code>, or <code>null</code> to use the default
+         info window frame with <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html#getInfoContents(com.google.android.gms.maps.model.Marker)">custom contents</a></code>.
 </li></ul>
   </div>
 
@@ -827,7 +851,7 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
   </div>
   <div id="build_info">
     
-    Android &nbsp;r &mdash; 12 Mar 2013  3:07
+    Android &nbsp;r &mdash; 12 May 2013  3:45
 
   </div>
 

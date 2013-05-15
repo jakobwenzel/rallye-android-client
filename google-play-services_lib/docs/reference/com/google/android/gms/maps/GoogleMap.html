@@ -377,6 +377,8 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/package-summary.html">com.google.android.gms</a></li>
     <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/appstate/package-summary.html">com.google.android.gms.appstate</a></li>
+    <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/auth/package-summary.html">com.google.android.gms.auth</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/common/package-summary.html">com.google.android.gms.common</a></li>
@@ -384,6 +386,20 @@ onkeyup="return search_changed(event, false, '../../../../../../')" />
   <a href="../../../../../../reference/com/google/android/gms/common/data/package-summary.html">com.google.android.gms.common.data</a></li>
     <li class="api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/common/images/package-summary.html">com.google.android.gms.common.images</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/package-summary.html">com.google.android.gms.games</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/achievement/package-summary.html">com.google.android.gms.games.achievement</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/leaderboard/package-summary.html">com.google.android.gms.games.leaderboard</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/multiplayer/package-summary.html">com.google.android.gms.games.multiplayer</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/games/multiplayer/realtime/package-summary.html">com.google.android.gms.games.multiplayer.realtime</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/gcm/package-summary.html">com.google.android.gms.gcm</a></li>
+    <li class="api apilevel-">
+  <a href="../../../../../../reference/com/google/android/gms/location/package-summary.html">com.google.android.gms.location</a></li>
     <li class="selected api apilevel-">
   <a href="../../../../../../reference/com/google/android/gms/maps/package-summary.html">com.google.android.gms.maps</a></li>
     <li class="api apilevel-">
@@ -556,7 +572,7 @@ Summary:
 
 
   
-    extends <a href="http://developer.android.com/reference/java/lang/Object.html">Object</a><br/>
+    extends Object<br/>
   
   
   
@@ -576,7 +592,7 @@ Summary:
 
     <tr>
          	
-        <td colspan="2" class="jd-inheritance-class-cell"><a href="http://developer.android.com/reference/java/lang/Object.html">java.lang.Object</a></td>
+        <td colspan="2" class="jd-inheritance-class-cell">java.lang.Object</td>
     </tr>
     
 
@@ -605,7 +621,7 @@ Summary:
  rather, you must obtain one from the <code>getMap()</code> method on a <code><a href="../../../../../../reference/com/google/android/gms/maps/MapFragment.html">MapFragment</a></code> or
  <code><a href="../../../../../../reference/com/google/android/gms/maps/MapView.html">MapView</a></code> that you have added to your application.
  <p>
- Note: Similar to a <code><a href="../../../../../../http://developer.android.com/reference/android/view/View.html">View</a></code> object, a <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.html">GoogleMap</a></code> can only be read
+ Note: Similar to a <code><a href="../../../../../../reference/android/view/View.html">View</a></code> object, a <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.html">GoogleMap</a></code> can only be read
  and modified from the main thread. Calling <code><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.html">GoogleMap</a></code> methods from another thread will
  result in an exception.
  <p>
@@ -669,7 +685,7 @@ Summary:
         
         interface</nobr></td>
       <td class="jd-linkcol"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.InfoWindowAdapter.html">GoogleMap.InfoWindowAdapter</a></td>
-      <td class="jd-descrcol" width="100%">Provides views for customized rendering of info-windows.&nbsp;</td>
+      <td class="jd-descrcol" width="100%">Provides views for customized rendering of info windows.&nbsp;</td>
     </tr>
     
     
@@ -753,8 +769,15 @@ Summary:
         
         interface</nobr></td>
       <td class="jd-linkcol"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.OnMyLocationChangeListener.html">GoogleMap.OnMyLocationChangeListener</a></td>
-      <td class="jd-descrcol" width="100%">Callback interface for when the My Location dot/chevron (which signifies the user's location)
- changes location.&nbsp;</td>
+      <td class="jd-descrcol" width="100%"><em>
+      This interface is deprecated.
+    use <code><a href="../../../../../../reference/com/google/android/gms/location/LocationClient.html">LocationClient</a></code> instead.
+ LocationClient provides improved location finding and power usage and is used by the
+ "My Location" blue dot. See the MyLocationDemoActivity in the sample applications folder
+ for example example code, or the
+ <a href="https://developers.google.com/maps/documentation/android/map/location">
+ Location Developer Guide</a>.
+</em>&nbsp;</td>
     </tr>
     
     
@@ -1012,7 +1035,7 @@ Summary:
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.html#clear()">clear</a></span>()</nobr>
         
-        <div class="jd-descrdiv">Removes all markers, overlays, and polylines from the map.</div>
+        <div class="jd-descrdiv">Removes all markers, polylines, polygons, overlays, etc from the map.</div>
   
   </td></tr>
 
@@ -1097,13 +1120,20 @@ Summary:
             final
             
             
-            <a href="http://developer.android.com/reference/android/location/Location.html">Location</a></nobr>
+            Location</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.html#getMyLocation()">getMyLocation</a></span>()</nobr>
         
-        <div class="jd-descrdiv">Returns the currently displayed user location, or <code>null</code> if there is no location data
- available.</div>
+        <div class="jd-descrdiv"><em>
+      This method is deprecated.
+    use <code><a href="../../../../../../reference/com/google/android/gms/location/LocationClient.html">LocationClient</a></code> instead.
+ LocationClient provides improved location finding and power usage and is used by the
+ "My Location" blue dot. See the MyLocationDemoActivity in the sample applications folder
+ for example example code, or the
+ <a href="https://developers.google.com/maps/documentation/android/map/location">
+ Location Developer Guide</a>.
+</em></div>
   
   </td></tr>
 
@@ -1428,7 +1458,15 @@ Summary:
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad"><a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.html#setOnMyLocationChangeListener(com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener)">setOnMyLocationChangeListener</a></span>(<a href="../../../../../../reference/com/google/android/gms/maps/GoogleMap.OnMyLocationChangeListener.html">GoogleMap.OnMyLocationChangeListener</a> listener)</nobr>
         
-        <div class="jd-descrdiv">Sets a callback that's invoked when the my location dot changes location.</div>
+        <div class="jd-descrdiv"><em>
+      This method is deprecated.
+    use <code><a href="../../../../../../reference/com/google/android/gms/location/LocationClient.html">LocationClient</a></code> instead.
+ LocationClient provides improved location finding and power usage and is used by the
+ "My Location" blue dot. See the MyLocationDemoActivity in the sample applications folder
+ for example example code, or the
+ <a href="https://developers.google.com/maps/documentation/android/map/location">
+ Location Developer Guide</a>.
+</em></div>
   
   </td></tr>
 
@@ -1492,7 +1530,7 @@ Summary:
           class="jd-expando-trigger-img" /></a>
 From class
 
-  <a href="http://developer.android.com/reference/java/lang/Object.html">java.lang.Object</a>
+  java.lang.Object
 
 <div id="inherited-methods-java.lang.Object">
   <div id="inherited-methods-java.lang.Object-list"
@@ -1511,7 +1549,7 @@ From class
             
             
             
-            <a href="http://developer.android.com/reference/java/lang/Object.html">Object</a></nobr>
+            Object</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad">clone</span>()</nobr>
@@ -1530,7 +1568,7 @@ From class
             boolean</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
-        <span class="sympad">equals</span>(<a href="http://developer.android.com/reference/java/lang/Object.html">Object</a> arg0)</nobr>
+        <span class="sympad">equals</span>(Object arg0)</nobr>
         
   </td></tr>
 
@@ -1559,7 +1597,7 @@ From class
             final
             
             
-            <a href="http://developer.android.com/reference/java/lang/Class.html">Class</a>&lt;?&gt;</nobr>
+            Class&lt;?&gt;</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad">getClass</span>()</nobr>
@@ -1623,7 +1661,7 @@ From class
             
             
             
-            <a href="http://developer.android.com/reference/java/lang/String.html">String</a></nobr>
+            String</nobr>
         </td>
         <td class="jd-linkcol" width="100%"><nobr>
         <span class="sympad">toString</span>()</nobr>
@@ -2009,7 +2047,7 @@ From class
       <h5 class="jd-tagtitle">Throws</h5>
       <table class="jd-tagtable">  
         <tr>
-            <th><a href="http://developer.android.com/reference/java/lang/IllegalArgumentException.html">IllegalArgumentException</a></td>
+            <th>IllegalArgumentException</td>
             <td>if either the image or the position is unspecified in the
              options.
 </td>
@@ -2189,7 +2227,7 @@ From class
           <th>options</td>
           <td>A tile-overlay options object that defines how to render the overlay. Options
             must have a <code><a href="../../../../../../reference/com/google/android/gms/maps/model/TileProvider.html">TileProvider</a></code>
-            specified, otherwise an <code><a href="../../../../../../http://developer.android.com/reference/java/lang/IllegalArgumentException.html">IllegalArgumentException</a></code> will be thrown.</td>
+            specified, otherwise an <code><a href="../../../../../../reference/java/lang/IllegalArgumentException.html">IllegalArgumentException</a></code> will be thrown.</td>
         </tr>
       </table>
   </div>
@@ -2201,7 +2239,7 @@ From class
       <h5 class="jd-tagtitle">Throws</h5>
       <table class="jd-tagtable">  
         <tr>
-            <th><a href="http://developer.android.com/reference/java/lang/IllegalArgumentException.html">IllegalArgumentException</a></td>
+            <th>IllegalArgumentException</td>
             <td>if the <code><a href="../../../../../../reference/com/google/android/gms/maps/model/TileProvider.html">TileProvider</a></code> is unspecified in the options.
 </td>
         </tr>
@@ -2246,7 +2284,7 @@ From class
         <tr>
           <th>durationMs</td>
           <td>The duration of the animation in milliseconds. This must be strictly
-            positive, otherwise an <code><a href="../../../../../../http://developer.android.com/reference/java/lang/IllegalArgumentException.html">IllegalArgumentException</a></code> will be thrown.
+            positive, otherwise an <code><a href="../../../../../../reference/java/lang/IllegalArgumentException.html">IllegalArgumentException</a></code> will be thrown.
 </td>
         </tr>
         <tr>
@@ -2382,7 +2420,7 @@ From class
       </div>
     <div class="jd-details-descr">
       
-  <div class="jd-tagdata jd-tagdescr"><p>Removes all markers, overlays, and polylines from the map. </p></div>
+  <div class="jd-tagdata jd-tagdescr"><p>Removes all markers, polylines, polygons, overlays, etc from the map. </p></div>
 
     </div>
 </div>
@@ -2541,7 +2579,7 @@ From class
         final 
          
          
-        <a href="http://developer.android.com/reference/android/location/Location.html">Location</a>
+        Location
       </span>
       <span class="sympad">getMyLocation</span>
       <span class="normal">()</span>
@@ -2553,19 +2591,28 @@ From class
 
       </div>
     <div class="jd-details-descr">
-      
+      <p>
+  <p class="caution"><strong>
+      This method is deprecated.</strong><br/>
+    use <code><a href="../../../../../../reference/com/google/android/gms/location/LocationClient.html">LocationClient</a></code> instead.
+ LocationClient provides improved location finding and power usage and is used by the
+ "My Location" blue dot. See the MyLocationDemoActivity in the sample applications folder
+ for example example code, or the
+ <a href="https://developers.google.com/maps/documentation/android/map/location">
+ Location Developer Guide</a>.
+
+  </p>
   <div class="jd-tagdata jd-tagdescr"><p>Returns the currently displayed user location, or <code>null</code> if there is no location data
  available.</p></div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Returns</h5>
-      <ul class="nolist"><li>The currently displayed <code><a href="../../../../../../http://developer.android.com/reference/android/location/Location.html">user location</a></code>.
-</li></ul>
+      <ul class="nolist"><li>The currently displayed <code><a href="../../../../../../reference/android/location/Location.html">user location</a></code>.</li></ul>
   </div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Throws</h5>
       <table class="jd-tagtable">  
         <tr>
-            <th><a href="http://developer.android.com/reference/java/lang/IllegalStateException.html">IllegalStateException</a></td>
+            <th>IllegalStateException</td>
             <td>if the my-location layer is not enabled.</td>
         </tr>
       </table>
@@ -3275,15 +3322,24 @@ From class
 
       </div>
     <div class="jd-details-descr">
-      
+      <p>
+  <p class="caution"><strong>
+      This method is deprecated.</strong><br/>
+    use <code><a href="../../../../../../reference/com/google/android/gms/location/LocationClient.html">LocationClient</a></code> instead.
+ LocationClient provides improved location finding and power usage and is used by the
+ "My Location" blue dot. See the MyLocationDemoActivity in the sample applications folder
+ for example example code, or the
+ <a href="https://developers.google.com/maps/documentation/android/map/location">
+ Location Developer Guide</a>.
+
+  </p>
   <div class="jd-tagdata jd-tagdescr"><p>Sets a callback that's invoked when the my location dot changes location.</p></div>
   <div class="jd-tagdata">
       <h5 class="jd-tagtitle">Parameters</h5>
       <table class="jd-tagtable">
         <tr>
           <th>listener</td>
-          <td>The callback that's invoked when the my location dot changes.
-</td>
+          <td>The callback that's invoked when the my location dot changes.</td>
         </tr>
       </table>
   </div>
@@ -3374,7 +3430,7 @@ From class
   </div>
   <div id="build_info">
     
-    Android &nbsp;r &mdash; 12 Mar 2013  3:07
+    Android &nbsp;r &mdash; 12 May 2013  3:45
 
   </div>
 
