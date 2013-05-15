@@ -15,7 +15,6 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.LatLngBounds.Builder;
@@ -57,7 +56,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		setHasOptionsMenu(true);
 		
 		if (savedInstanceState != null) {
-			currentBounds = savedInstanceState.getParcelable(Std.MAP_BOUNDS);
+			try {
+				currentBounds = savedInstanceState.getParcelable(Std.MAP_BOUNDS);
+			} catch (Exception e) {
+				Log.e(THIS, "No Parcel for currentBounds");
+			}
 		}
 		
 	}

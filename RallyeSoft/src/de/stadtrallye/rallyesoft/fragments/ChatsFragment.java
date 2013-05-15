@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,8 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
+import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -42,6 +45,7 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	private ChatFragmentAdapter fragmentAdapter;
 	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
+	private SlidingMenu slidingMenu;
 	
 	
 	public ChatsFragment() {
@@ -92,8 +96,9 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 		
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
+			slidingMenu = ((SlidingFragmentActivity) getActivity()).getSlidingMenu();
 		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
+			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and extend SlidingFragmentActivity");
 		}
 	}
 	
@@ -101,11 +106,12 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	public void onStart() {
 		super.onStart();
 		
-		
 		chatrooms = model.getChatrooms();
 
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
+		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
+		
 		pager.setCurrentItem(currentTab);
 		
 		model.addListener(this);
@@ -114,6 +120,8 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	@Override
 	public void onStop() {
 		super.onStop();
+		
+		slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
 		model.removeListener(this);
 		currentTab = pager.getCurrentItem();
@@ -240,5 +248,32 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 			return (enable)? chatrooms.get(pos).getName() : "";
 		}
 
+	}
+	
+	private class SlidingMenuHelper implements OnPageChangeListener {
+		
+		private SlidingMenu slidingMenu;
+
+		public SlidingMenuHelper(SlidingMenu slidingMenu) {
+			this.slidingMenu = slidingMenu;
+		}
+		
+		@Override
+		public void onPageScrollStateChanged(int arg0) { }
+
+		@Override
+		public void onPageScrolled(int arg0, float arg1, int arg2) { }
+
+		@Override
+		public void onPageSelected(int position) {
+			switch (position) {
+			case 0:
+				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+				break;
+			default:
+				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
+				break;
+			}
+		}
 	}
 }
