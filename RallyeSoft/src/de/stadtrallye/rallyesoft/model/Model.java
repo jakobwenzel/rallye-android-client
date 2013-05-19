@@ -20,6 +20,8 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
@@ -28,8 +30,6 @@ import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
-import de.stadtrallye.rallyesoft.model.structures.Login;
-import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.net.RequestFactory;
 
 /**

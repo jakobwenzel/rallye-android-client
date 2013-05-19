@@ -1,6 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
-import com.google.android.gms.maps.model.LatLng;
+import de.rallye.model.structures.LatLng;
 
 public interface IMap {
 	void updateMap();

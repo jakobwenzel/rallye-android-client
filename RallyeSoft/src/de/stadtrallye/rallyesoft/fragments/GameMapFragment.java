@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.LatLngBounds.Builder;
@@ -22,19 +24,23 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import de.rallye.model.structures.Edge;
+import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IMapListener;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.structures.Edge;
-import de.stadtrallye.rallyesoft.model.structures.Node;
+import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
 import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
 
-public class GameMapFragment extends SherlockMapFragment implements IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
+public class GameMapFragment extends SherlockMapFragment implements IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
-	private static final int PADDING = 100;
+	private static final int PADDING = 200;
+	
+	private enum Zoom { ToGame, ToBounds, ZoomCustom };
+	private Zoom zoom;
 	
 	private GoogleMap gmap;
 	private IModel model;
@@ -56,10 +62,14 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		setHasOptionsMenu(true);
 		
 		if (savedInstanceState != null) {
-			try {
-				currentBounds = savedInstanceState.getParcelable(Std.MAP_BOUNDS);
-			} catch (Exception e) {
-				Log.e(THIS, "No Parcel for currentBounds");
+			zoom = (Zoom) savedInstanceState.getSerializable(Std.ZOOM);
+			
+			if (zoom == Zoom.ToBounds) {
+				try {
+					currentBounds = savedInstanceState.getParcelable(Std.MAP_BOUNDS);
+				} catch (Exception e) {
+					Log.e(THIS, "No Parcel for currentBounds");
+				}
 			}
 		}
 		
@@ -87,11 +97,16 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 			gmap.setMyLocationEnabled(true);
 			gmap.setOnMarkerClickListener(this);
 			gmap.setOnMapClickListener(this);
+			gmap.setOnCameraChangeListener(this);
 		}
-
+		
+		if (zoom == null) {
+			map.provideMap();
+		}
+		
+//		zoomMap();//TODO: we need to detect user interaction with the map to correctly assume custom zoom before re-zooming after rotations
+		
 		map.addListener(this);
-		map.provideMap();
-
 	}
 	
 	
@@ -100,6 +115,24 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		super.onStop();
 		
 		map.removeListener(this);
+	}
+	
+	private void zoomMap() {
+		if (zoom == null) {
+			Log.e(THIS, "zoom is null");
+			return;
+		}
+		
+		switch (zoom) {
+		case ToBounds:
+			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(currentBounds, PADDING));
+			break;
+		case ToGame:
+			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+			break;
+		case ZoomCustom:
+			break;
+		}
 	}
 	
 	@Override
@@ -121,7 +154,8 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 			return true;
 		case R.id.center_menu:
 			if (gameBounds != null) {
-				setCurrentBounds(gameBounds);
+				zoom = Zoom.ToGame;
+				zoomMap();
 			} else {
 				Toast.makeText(getActivity(), "No Nodes to center on!", Toast.LENGTH_SHORT).show();//TODO: R.string
 			}
@@ -149,36 +183,37 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 
 
 	@Override
-	public void mapUpdate(Map<Integer, Node> nodes, List<Edge> edges) {
+	public void mapUpdate(Map<Integer, ? extends Node> nodes, List<? extends Edge> edges) {
 		
 		Builder bounds = LatLngBounds.builder();
 		boolean hasBounds = false;
 		
 		for (Node n: nodes.values()) {
 			Marker m = gmap.addMarker(new MarkerOptions()
-								.position(n.position)
+								.position(LatLngAdapter.toGms(n.position))
 								.title(n.name)
 								.snippet(n.description));
 			
 			hasBounds = true;
-			bounds.include(n.position);
+			bounds.include(LatLngAdapter.toGms(n.position));
 			markers.put(m, n);
 		}
 		
 		
 		for (Edge e: edges) {
 			gmap.addPolyline(new PolylineOptions()
-							.add(e.a.position, e.b.position)
+							.add(LatLngAdapter.toGms(e.a.position), LatLngAdapter.toGms(e.b.position))
 							.color(getColor(e.type)));
 		}
 		
 		if (hasBounds) {
 			gameBounds = bounds.build();
-			if (currentBounds == null) {
-				setCurrentBounds(gameBounds);
-			} else {
-				setCurrentBounds(currentBounds);
+			
+			if (zoom == null) {
+				zoom = Zoom.ToGame;
 			}
+			
+			zoomMap();
 		}
 	}
 
@@ -190,12 +225,12 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		Builder bounds = LatLngBounds.builder();
 		ArrayList<Node> targets = new ArrayList<Node>();
 		
-		bounds.include(source.position);
+		bounds.include(LatLngAdapter.toGms(source.position));
 		
 		for (Edge e: source.getEdges()) {
 			target = e.getOtherNode(source);
 			targets.add(target);
-			bounds.include(target.position);
+			bounds.include(LatLngAdapter.toGms(target.position));
 		}
 		Log.i(THIS, "found "+ targets.size() +" targets/edges");
 		
@@ -206,15 +241,17 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		}
 		marker.setVisible(true);
 		
-		setCurrentBounds(bounds.build());
+		zoom = Zoom.ToBounds;
+		currentBounds = bounds.build();
+		zoomMap();
 		marker.showInfoWindow();
 		
 		return true;
 	}
 	
-	private void setCurrentBounds(LatLngBounds bounds) {
-		currentBounds = bounds;
-		gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, PADDING));
+	@Override
+	public void onCameraChange(CameraPosition arg0) {
+		
 	}
 
 	@Override
@@ -229,6 +266,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
+		outState.putSerializable(Std.ZOOM, zoom);
 		outState.putParcelable(Std.MAP_BOUNDS, currentBounds);
 	}
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import de.stadtrallye.rallyesoft.model.structures.Login;
 
+
 public interface IModel {
 	
 	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying, Unknown };

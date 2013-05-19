@@ -1,46 +1,21 @@
 package de.stadtrallye.rallyesoft.model.structures;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
-public class Node {
-	final public int ID;
-	final public String name;
-	final public LatLng position;
-	final public String description;
-	final private ArrayList<Edge> edges = new ArrayList<Edge>();
+public class Node extends de.rallye.model.structures.Node {
 
 	public Node(int ID, String name, double lat, double lon, String description) {
-		this.ID = ID;
-		this.name = name;
-		this.description = description;
-		this.position = new LatLng(lat, lon);
-	}
-	
-	public void addEdge(Edge edge) {
-		edges.add(edge);
-	}
-	
-	public List<Edge> getEdges() {
-		return edges;
+		super(ID, name, lat, lon, description);
 	}
 	
 	
-	@Override
-	public String toString() {
-		return name +" ( "+position.latitude+" , "+position.longitude+" )";
-	}
-
-
 	public static List<Node> translateJSON(String js) {
 		return JSONArray.toList(new NodeConverter(), js);
 	}
@@ -67,4 +42,5 @@ public class Node {
 		}
 		
 	}
+
 }

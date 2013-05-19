@@ -47,6 +47,7 @@ import de.stadtrallye.rallyesoft.fragments.TurnFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
@@ -275,9 +276,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 1://Map
 			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera [done internally with animation]
 			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
-			LatLng loc = model.getMap().getMapLocation();
+			LatLng loc = LatLngAdapter.toGms(model.getMap().getMapLocation());
 			if (loc != null) {
-				gmo.camera(new CameraPosition(model.getMap().getMapLocation(), model.getMap().getZoomLevel(), 0, 0));
+				gmo.camera(new CameraPosition(loc, model.getMap().getZoomLevel(), 0, 0));
 			}
 			b.putParcelable("MapOptions", gmo);
 			mapFragmentHandler.setArguments(b);

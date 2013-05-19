@@ -5,41 +5,12 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import de.stadtrallye.rallyesoft.util.StringedJSONObjectConverter;
 
-public class ServerConfig {
+public class ServerConfig extends de.rallye.model.structures.ServerConfig {
 	
-	final public String name;
-	final public LatLng location;
-	final public float zoomLevel = 13;
-	final public int rounds;
-	final public int roundTime;
-	final public int startTime;
-	
-	public ServerConfig(String name, double lat, double lon, int rounds, int roundTime, int startTime) {
-		this.name = name;
-		this.location = new LatLng(lat, lon);
-		this.rounds = rounds;
-		this.roundTime = roundTime;
-		this.startTime = startTime;
-	}
-	
-	@Override
-	public String toString() {
-		StringBuilder s = new StringBuilder();
-		
-		s.append("Game : ").append(name).append('\n')
-		.append("Location: ").append(location.toString()).append('\n')
-		.append("Round: ").append(rounds).append(" RoundTime: ").append(roundTime).append('\n')
-		.append("Start: ").append(startTime);
-		
-		return s.toString();
-	}
-	
-	public boolean isComplete() {
-		return name != null;
+	public ServerConfig(String name, double lat, double lon, int rounds,int roundTime, int startTime) {
+		super(name, lat, lon, rounds, roundTime, startTime);
 	}
 
 	public static class ServerConfigConverter extends StringedJSONObjectConverter<ServerConfig> {
@@ -55,19 +26,4 @@ public class ServerConfig {
 					o.getInt("gameStartTime"));
 		}
 	}
-	
-//			gameType:String: type of the game (possible types are: stadtRallye, scotlandYard
-//			gameName:String: name of the game
-//			locLat:Double: center Location of the map - Latitude
-//			locLon:Double: center Location of the map - Longitude
-//			tickets:array[
-	//			bike:int: number of tickets of type "bike"
-	//			foot:int: number of tickets of type "foot"
-	//			tram:int: number of tickets of type "tram"
-	//			bus:int: number of tickets of type "bus"
-//			]
-//			rounds:int: rounds to play in this game
-//			roundTime:int: time between rounds in minutes
-//			gameStartTime:timestamp: timestamp where the first round starts
-//			freeStartPoint:boolean: true if the group can choose the startpoint, otherwise false
 }

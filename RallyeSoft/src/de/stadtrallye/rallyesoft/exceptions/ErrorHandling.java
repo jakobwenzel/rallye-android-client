@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 
 import android.util.Log;
 

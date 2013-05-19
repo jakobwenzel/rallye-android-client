@@ -7,30 +7,14 @@ import org.json.JSONObject;
 
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
-public class Edge {
-
-	public enum Type { Foot, Bike, Bus, Tram };
-	
-	final public Node a;
-	final public Node b;
-	final public Type type;
+public class Edge extends de.rallye.model.structures.Edge {
 
 	public Edge(Node a, Node b, Type type) {
-		this.a = a;
-		this.b = b;
-		this.type = type;
-		
-		a.addEdge(this);
-		b.addEdge(this);
+		super(a,b,type);
 	}
 	
 	public Edge(Node a, Node b, String type) {
-		this(a, b, Edge.getType(type));
-	}
-	
-	@Override
-	public String toString() {
-		return a +" - "+ b +" : "+ type;
+		super(a, b, Edge.getType(type));
 	}
 	
 	private static Type getType(String type) {
@@ -54,12 +38,8 @@ public class Edge {
 			return new Edge(
 					nodes.get(o.getInt("nodeA")),
 					nodes.get(o.getInt("nodeB")),
-					getType(o.getString("type")));
+					Edge.getType(o.getString("type")));
 		}
 		
-	}
-
-	public Node getOtherNode(Node node) {
-		return (a==node)? b : a;
 	}
 }
