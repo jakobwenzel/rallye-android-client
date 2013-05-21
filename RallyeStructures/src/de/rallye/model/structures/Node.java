@@ -3,20 +3,20 @@ package de.rallye.model.structures;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * 
  * @author Ramon
  * @version 1.1
  */
-@XmlRootElement
 public class Node {
 	final public int ID;
 	final public String name;
 	final public LatLng position;
 	final public String description;
-	final private ArrayList<Edge> edges = new ArrayList<Edge>();
+	
+	@JsonIgnore final private ArrayList<LinkedEdge> edges = new ArrayList<LinkedEdge>();
 
 	public Node(int ID, String name, double lat, double lon, String description) {
 		this.ID = ID;
@@ -25,11 +25,21 @@ public class Node {
 		this.position = new LatLng(lat, lon);
 	}
 	
-	public void addEdge(Edge edge) {
+//	/**
+//	 * JAXB
+//	 */
+//	@Deprecated
+//	public Node() {
+//		ID = 0;
+//		name = description = null;
+//		position = null;
+//	}
+	
+	public void addEdge(LinkedEdge edge) {
 		edges.add(edge);
 	}
 	
-	public List<Edge> getEdges() {
+	public List<LinkedEdge> getEdges() {
 		return edges;
 	}
 	

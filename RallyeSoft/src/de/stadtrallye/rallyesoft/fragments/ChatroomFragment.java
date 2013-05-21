@@ -25,6 +25,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.actionbarsherlock.app.SherlockFragment;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -45,8 +46,12 @@ import de.stadtrallye.rallyesoft.uiadapter.IProgressUI;
  * @author Ramon
  *
  */
-public class ChatroomFragment extends BaseFragment implements IChatListener, OnClickListener {
+public class ChatroomFragment extends SherlockFragment implements IChatListener, OnClickListener {
 
+	private static final String THIS = ChatroomFragment.class.getSimpleName();
+	private static final boolean DEBUG = false;
+	
+	
 	private Model model;
 	private int[] lastPos = null; //[0] = line, [1] = px
 	private IChatroom chatroom;
@@ -58,17 +63,7 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	private Button send;
 	private EditText text;
 	private ProgressBar loading;
-	
-	/**
-	 * Only for DEBUG purposes
-	 */
-	public ChatroomFragment() {
-		
-		THIS = ChatroomFragment.class.getSimpleName();
-		
-		if (DEBUG)
-			Log.v(THIS, "Instantiated "+ this.toString());
-	}
+
 	
 	/**
 	 * retain savedInstanceState for when creating the list (ScrollState)
@@ -86,11 +81,12 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.chat_list, container, false);
-		list = (ListView)v.findViewById(R.id.chat_list);
-		text = (EditText) v.findViewById(R.id.edit_new_message);
+		list = (ListView) v.findViewById(R.id.chat_list);
 		send = (Button) v.findViewById(R.id.button_send);
-		send.setOnClickListener(this);
+		text = (EditText) v.findViewById(R.id.edit_new_message);
 		loading = (ProgressBar) v.findViewById(R.id.loading);
+		
+		send.setOnClickListener(this);
 		return v;
 	}
 	
@@ -154,18 +150,6 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 		chatroom.refresh();// TODO: do not refresh on UI Lifecycle!
 	}
 	
-//	@Override
-//	public void onResume() {
-//		super.onResume();
-//		
-//	}
-	
-//	@Override
-//	public void onPause() {
-//		super.onPause();
-//		
-//	}
-	
 	@Override
 	public void onStop() {
 		super.onStop();
@@ -204,13 +188,12 @@ public class ChatroomFragment extends BaseFragment implements IChatListener, OnC
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		
-//		saveScrollState();
+		saveScrollState();
 		
 		if (DEBUG)
 			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
 		
 		outState.putSerializable(Std.LAST_POS, lastPos);
-//		outState.putInt(Std.CHATROOM, chatroom.getID());//Arguments are already saved
 	}
 	
 	/**

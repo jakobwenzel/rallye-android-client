@@ -64,7 +64,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private Model model;
 	private boolean keepModel = false;
 	private boolean progressCircle = false;
-//	private Fragment currentFragment;
 	private int currentTab;
 	private String[] nav;
 	private ArrayList<FragmentHandler<?>> tabs;

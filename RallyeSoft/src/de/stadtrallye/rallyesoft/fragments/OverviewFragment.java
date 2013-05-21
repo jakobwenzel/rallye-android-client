@@ -1,7 +1,8 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import com.actionbarsherlock.app.SherlockFragment;
+
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,7 @@ import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
 
-public class OverviewFragment extends Fragment implements IConnectionStatusListener {
+public class OverviewFragment extends SherlockFragment implements IConnectionStatusListener {
 	
 	@SuppressWarnings("unused")
 	private static final String THIS = OverviewFragment.class.getSimpleName();
@@ -42,7 +43,6 @@ public class OverviewFragment extends Fragment implements IConnectionStatusListe
 	public void onStart() {
 		super.onStart();
 
-		connectionStatus = (TextView) getView().findViewById(R.id.server_status);
 		onConnectionStatusChange(model.getConnectionStatus());
 		model.addListener(this);
 		
@@ -56,7 +56,9 @@ public class OverviewFragment extends Fragment implements IConnectionStatusListe
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.overview_fragment, container, false);
+		View v = inflater.inflate(R.layout.overview_fragment, container, false);
+		connectionStatus = (TextView) v.findViewById(R.id.server_status);
+		return v;
 	}
 
 	@Override

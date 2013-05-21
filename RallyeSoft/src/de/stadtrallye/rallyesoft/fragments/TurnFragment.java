@@ -20,9 +20,7 @@ public class TurnFragment extends SherlockFragment implements IConnectionStatusL
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.log_fragment, container, false);
-		
-		list = (ListView)v.findViewById(R.id.log_list);
-		
+		list = (ListView) v.findViewById(R.id.log_list);
 		return v;
 	}
 	

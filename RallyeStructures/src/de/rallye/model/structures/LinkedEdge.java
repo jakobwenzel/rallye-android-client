@@ -1,29 +1,36 @@
 package de.rallye.model.structures;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * 
  * @author Ramon
  * @version 1.0
  */
-@XmlRootElement
-public class Edge {
-
-	public enum Type { Foot, Bike, Bus, Tram };
+public class LinkedEdge extends PrimitiveEdge {
 	
 	final public Node a;
 	final public Node b;
-	final public Type type;
 
-	public Edge(Node a, Node b, Type type) {
+	public LinkedEdge(Node a, Node b, PrimitiveEdge.Type type) {
+		super(a.ID, b.ID, type);
+		
 		this.a = a;
 		this.b = b;
-		this.type = type;
 		
 		a.addEdge(this);
 		b.addEdge(this);
 	}
+	
+	public LinkedEdge(Node a, Node b, String type) {
+		this(a,b, getType(type));
+	}
+	
+//	/**
+//	 * JAXB
+//	 */
+//	@Deprecated
+//	public LinkedEdge() {
+//		a = b = null;
+//	}
 	
 	@Override
 	public String toString() {

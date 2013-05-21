@@ -24,8 +24,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import de.rallye.model.structures.Edge;
+import de.rallye.model.structures.LinkedEdge;
 import de.rallye.model.structures.Node;
+import de.rallye.model.structures.PrimitiveEdge;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
@@ -37,7 +38,6 @@ import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
 public class GameMapFragment extends SherlockMapFragment implements IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
-	private static final int PADDING = 200;
 	
 	private enum Zoom { ToGame, ToBounds, ZoomCustom };
 	private Zoom zoom;
@@ -123,12 +123,14 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 			return;
 		}
 		
+		int padding = getResources().getDimensionPixelOffset(R.dimen.map_center_padding);
+		
 		switch (zoom) {
 		case ToBounds:
-			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(currentBounds, PADDING));
+			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(currentBounds, padding));
 			break;
 		case ToGame:
-			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, PADDING));
+			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(gameBounds, padding));
 			break;
 		case ZoomCustom:
 			break;
@@ -166,7 +168,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		}
 	}
 	
-	public static int getColor(Edge.Type t) {
+	public static int getColor(PrimitiveEdge.Type t) {
 		switch (t) {
 		case Bike:
 			return 0xbb00ff00;
@@ -183,7 +185,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 
 
 	@Override
-	public void mapUpdate(Map<Integer, ? extends Node> nodes, List<? extends Edge> edges) {
+	public void mapUpdate(Map<Integer, ? extends Node> nodes, List<? extends LinkedEdge> edges) {
 		
 		Builder bounds = LatLngBounds.builder();
 		boolean hasBounds = false;
@@ -200,7 +202,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		}
 		
 		
-		for (Edge e: edges) {
+		for (LinkedEdge e: edges) {
 			gmap.addPolyline(new PolylineOptions()
 							.add(LatLngAdapter.toGms(e.a.position), LatLngAdapter.toGms(e.b.position))
 							.color(getColor(e.type)));
@@ -227,7 +229,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		bounds.include(LatLngAdapter.toGms(source.position));
 		
-		for (Edge e: source.getEdges()) {
+		for (LinkedEdge e: source.getEdges()) {
 			target = e.getOtherNode(source);
 			targets.add(target);
 			bounds.include(LatLngAdapter.toGms(target.position));

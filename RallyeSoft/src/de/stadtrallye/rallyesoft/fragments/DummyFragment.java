@@ -1,21 +1,14 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import com.actionbarsherlock.app.SherlockFragment;
+
 import de.stadtrallye.rallyesoft.common.Std;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class DummyFragment extends BaseFragment {
-	
-	public DummyFragment() {
-		
-		THIS = DummyFragment.class.getSimpleName();
-		
-		if (DEBUG)
-			Log.v(THIS, "Instantiated "+ this.toString());
-	}
+public class DummyFragment extends SherlockFragment {
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

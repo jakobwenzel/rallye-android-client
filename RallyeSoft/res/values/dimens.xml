@@ -7,5 +7,6 @@
     <dimen name="dash_menu_height">35sp</dimen>
     <dimen name="pager_margin">15dp</dimen>
     <dimen name="dash_indicator_offset">15dp</dimen>
+    <dimen name="map_center_padding">50dp</dimen>
     
 </resources>

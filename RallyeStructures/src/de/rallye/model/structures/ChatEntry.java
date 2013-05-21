@@ -1,13 +1,10 @@
 package de.rallye.model.structures;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * 
  * @author Ramon
  * @version 1.0
  */
-@XmlRootElement
 public class ChatEntry {
 	
 	public final int chatID;
@@ -50,8 +47,6 @@ public class ChatEntry {
 			return false;
 		return true;
 	}
-
-
 
 	@Override
 	public String toString() {

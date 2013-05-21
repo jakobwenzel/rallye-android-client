@@ -1,8 +1,5 @@
 package de.rallye.model.structures;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class Group {
 	
 	public final int ID;
@@ -14,5 +11,14 @@ public class Group {
 		this.name = name;
 		this.description = description;
 	}
+	
+//	/**
+//	 * JAXB
+//	 */
+//	@Deprecated
+//	public Group() {
+//		ID = 0;
+//		name = description = null;
+//	}
 
 }

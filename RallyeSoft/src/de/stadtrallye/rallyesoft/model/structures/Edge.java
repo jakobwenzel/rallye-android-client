@@ -7,22 +7,14 @@ import org.json.JSONObject;
 
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
-public class Edge extends de.rallye.model.structures.Edge {
+public class Edge extends de.rallye.model.structures.LinkedEdge {
 
 	public Edge(Node a, Node b, Type type) {
 		super(a,b,type);
 	}
 	
 	public Edge(Node a, Node b, String type) {
-		super(a, b, Edge.getType(type));
-	}
-	
-	private static Type getType(String type) {
-		for (Type t: Type.values()) {
-			if (t.toString().equalsIgnoreCase(type))
-				return t;
-		}
-		return null;
+		super(a,b,type);
 	}
 	
 	public static class EdgeConverter extends JSONConverter<Edge> {
@@ -38,7 +30,7 @@ public class Edge extends de.rallye.model.structures.Edge {
 			return new Edge(
 					nodes.get(o.getInt("nodeA")),
 					nodes.get(o.getInt("nodeB")),
-					Edge.getType(o.getString("type")));
+					getType(o.getString("type")));
 		}
 		
 	}

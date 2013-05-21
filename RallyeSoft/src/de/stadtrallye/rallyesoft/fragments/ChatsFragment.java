@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
@@ -36,25 +37,18 @@ import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
  * @author Ramon
  *
  */
-public class ChatsFragment extends BaseFragment implements IConnectionStatusListener {
+public class ChatsFragment extends SherlockFragment implements IConnectionStatusListener {
+	
+	private static final String THIS = ChatsFragment.class.getSimpleName();
 	
 	private Model model;
 	private ViewPager pager;
-//	private TitlePageIndicator indicator;
 	private PagerSlidingTabStrip indicator;
 	private ChatFragmentAdapter fragmentAdapter;
 	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
 	private SlidingMenu slidingMenu;
 	
-	
-	public ChatsFragment() {
-		
-		THIS = ChatsFragment.class.getSimpleName();
-		
-		if (DEBUG)
-			Log.v(THIS, "Instantiated "+ this.toString());
-	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -70,13 +64,11 @@ public class ChatsFragment extends BaseFragment implements IConnectionStatusList
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v;
-		v = inflater.inflate(R.layout.chat_fragment, container, false);
-
-        pager = (ViewPager)v.findViewById(R.id.pager);
-        pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
-
-        indicator = (PagerSlidingTabStrip)v.findViewById(R.id.indicator);
+		View v = inflater.inflate(R.layout.chat_fragment, container, false);
+		
+		pager = (ViewPager) v.findViewById(R.id.pager);
+		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
+		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
 		
 		return v;
 	}
