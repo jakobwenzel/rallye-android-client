@@ -7,14 +7,14 @@ public class ServerConfig {
 	final public float zoomLevel = 13;
 	final public int rounds;
 	final public int roundTime;
-	final public int startTime;
+	final public long startTime;
 	
-	public ServerConfig(String name, double lat, double lon, int rounds, int roundTime, int startTime) {
+	public ServerConfig(String name, double lat, double lon, int rounds, int roundTime, long l) {
 		this.name = name;
 		this.location = new LatLng(lat, lon);
 		this.rounds = rounds;
 		this.roundTime = roundTime;
-		this.startTime = startTime;
+		this.startTime = l;
 	}
 	
 	@Override
