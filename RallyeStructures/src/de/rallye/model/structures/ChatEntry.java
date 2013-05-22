@@ -8,17 +8,17 @@ package de.rallye.model.structures;
 public class ChatEntry {
 	
 	public final int chatID;
-	public final int senderID;
-	public final int timestamp;
+	public final int groupID;
+	public final long timestamp;
 	public final String message;
 	public final int pictureID;
-	public final boolean self;
+	public final int userID;
 
-	public ChatEntry(int chatID, String message, int timestamp, int senderID, boolean self, int pictureID) {
+	public ChatEntry(int chatID, String message, long timestamp, int groupID, int userID, int pictureID) {
 		this.message = message;
 		this.timestamp = timestamp;
-		this.senderID = senderID;
-		this.self = self;
+		this.groupID = groupID;
+		this.userID = userID;
 		this.pictureID = pictureID;
 		this.chatID = chatID;
 	}
@@ -39,9 +39,9 @@ public class ChatEntry {
 			return false;
 		if (pictureID != other.pictureID)
 			return false;
-		if (self != other.self)
+		if (userID != other.userID)
 			return false;
-		if (senderID != other.senderID)
+		if (groupID != other.groupID)
 			return false;
 		if (timestamp != other.timestamp)
 			return false;
@@ -50,6 +50,6 @@ public class ChatEntry {
 
 	@Override
 	public String toString() {
-		return message +"|"+timestamp+"|"+senderID+"|"+self+"|"+pictureID;
+		return message +"|"+timestamp+"|"+userID+"@"+groupID+"|"+pictureID;
 	}
 }
