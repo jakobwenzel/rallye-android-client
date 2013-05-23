@@ -25,16 +25,6 @@ public class Node {
 		this.position = new LatLng(lat, lon);
 	}
 	
-//	/**
-//	 * JAXB
-//	 */
-//	@Deprecated
-//	public Node() {
-//		ID = 0;
-//		name = description = null;
-//		position = null;
-//	}
-	
 	public void addEdge(LinkedEdge edge) {
 		edges.add(edge);
 	}

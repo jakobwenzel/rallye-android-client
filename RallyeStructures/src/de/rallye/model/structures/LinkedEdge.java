@@ -24,14 +24,6 @@ public class LinkedEdge extends PrimitiveEdge {
 		this(a,b, getType(type));
 	}
 	
-//	/**
-//	 * JAXB
-//	 */
-//	@Deprecated
-//	public LinkedEdge() {
-//		a = b = null;
-//	}
-	
 	@Override
 	public String toString() {
 		return a +" - "+ b +" : "+ type;

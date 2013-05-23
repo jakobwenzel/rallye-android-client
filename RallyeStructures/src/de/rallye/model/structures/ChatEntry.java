@@ -5,26 +5,31 @@ package de.rallye.model.structures;
  * @author Ramon
  * @version 1.0
  */
-public class ChatEntry {
+public class ChatEntry extends SimpleChatEntry {
 	
 	public final int chatID;
 	public final int groupID;
 	public final long timestamp;
-	public final String message;
-	public final int pictureID;
 	public final int userID;
 
-	public ChatEntry(int chatID, String message, long timestamp, int groupID, int userID, int pictureID) {
-		this.message = message;
+	/**
+	 * Complete Entry as it should reside in the database
+	 * @param chatID
+	 * @param timestamp
+	 * @param groupID
+	 * @param userID
+	 */
+	public ChatEntry(int chatID, String message, long timestamp, int groupID, int userID, Integer pictureID) {
+		super(message, pictureID);
+		
 		this.timestamp = timestamp;
 		this.groupID = groupID;
 		this.userID = userID;
-		this.pictureID = pictureID;
 		this.chatID = chatID;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(Object obj) {//TODO; use chatID only, since it is unique
 		if (this == obj)
 			return true;
 		if (obj == null)

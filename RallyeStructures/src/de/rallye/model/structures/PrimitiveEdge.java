@@ -26,15 +26,6 @@ public class PrimitiveEdge {
 		return null;
 	}
 	
-//	/**
-//	 * JAXB
-//	 */
-//	@Deprecated
-//	public PrimitiveEdge() {
-//		nodeA = nodeB = 0;
-//		type = null;
-//	}
-	
 	@Override
 	public String toString() {
 		return nodeA +" - "+ nodeB +" : "+ type;
