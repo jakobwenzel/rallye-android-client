@@ -20,6 +20,7 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.Login;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -168,6 +169,11 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			return true;
 	}
 	
+	private void setLogin(Login login) {
+		currentLogin = login;
+		ChatEntry.setMe(login.user, login.group);
+	}
+	
 	@Override
 	public void logout() {
 		if (currentLogin == null || !isConnected()) {
@@ -227,7 +233,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		if (r.isSuccessful()) {
 			chatrooms = r.getResult();
 			
-			currentLogin = r.getLogin();
+			setLogin(r.getLogin());
 			
 			save().saveChatrooms().saveLogin().saveConnectionStatus(ConnectionStatus.Connected).commit();
 			
@@ -439,7 +445,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			edit.putString(Std.SERVER+Std.NAME, serverConfig.name);
 			edit.putInt(Std.ROUNDS, serverConfig.rounds);
 			edit.putInt(Std.ROUND_TIME, serverConfig.roundTime);
-			edit.putInt(Std.START_TIME, serverConfig.startTime);
+			edit.putLong(Std.START_TIME, serverConfig.startTime);
 			return this;
 		}
 		
@@ -476,7 +482,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				pref.getLong(Std.LAST_LOGIN, 0));
 		
 		if (l.isComplete()) {
-			currentLogin = l;
+			setLogin(l);
 			Log.i(THIS, "Login recovered");
 		} else {
 			currentLogin = null;

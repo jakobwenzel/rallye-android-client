@@ -35,7 +35,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	final private Model model;
 	final private int id;
 	final private String name;
-	private int lastUpdate = 0;
+	private long lastUpdate = 0;
 	private int lastId = 0;
 //	private long pendingLastTime = 0;
 	
@@ -197,7 +197,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 					
 					s.bindLong(1, c.chatID);
 					s.bindLong(2, c.timestamp); //Timestamp
-					s.bindLong(3, c.self? 1 : 0); // self (0=false, 1=true)
+					s.bindLong(3, c.userID);
 					if (c.message != null)
 						s.bindLong(4, msgId); //Message ID
 					else
@@ -287,14 +287,14 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	public List<ChatEntry> getAllChats() {
 		
 		Cursor c = model.db.query(Chats.TABLE+" AS c LEFT JOIN "+Messages.TABLE+" AS m USING ("+Chats.FOREIGN_MSG+")",
-				new String[]{Chats.KEY_ID, Messages.KEY_MSG, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.KEY_PICTURE},
+				new String[]{Chats.KEY_ID, Messages.KEY_MSG, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.FOREIGN_USER, Chats.KEY_PICTURE},
 				Chatrooms.KEY_ID+"="+id,
 				null, null, null, Chats.KEY_TIME);
 		
 		ArrayList<ChatEntry> out = new ArrayList<ChatEntry>();
 		
 		while (c.moveToNext()) {
-			out.add(new ChatEntry(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), sqlToBool(c.getInt(4)), c.getInt(5)));
+			out.add(new ChatEntry(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), c.getInt(4), c.getInt(5)));
 		}
 		c.close();
 		

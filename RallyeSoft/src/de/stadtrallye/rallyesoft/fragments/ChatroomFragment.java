@@ -250,7 +250,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 			
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate((o.self)? R.layout.chat_item_right : R.layout.chat_item_left, null);
+                v = vi.inflate((o.isMe())? R.layout.chat_item_right : R.layout.chat_item_left, null);
                 
                 mem = new ViewMem();
                 
@@ -266,7 +266,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
             }
             
             if (o != null) {
-                mem.sender.setText("Sender: "+ o.senderID);
+                mem.sender.setText("Sender: "+ o.userID);
                 mem.msg.setText(o.message);
                 mem.time.setText(converter.format(new Date(o.timestamp * 1000L)));
                 

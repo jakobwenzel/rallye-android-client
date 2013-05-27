@@ -9,10 +9,26 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
-public class ChatEntry extends de.rallye.model.structures.ChatEntry{
+public class ChatEntry extends de.rallye.model.structures.ChatEntry {
 	
-	public ChatEntry(int chatID, String message, int timestamp, int senderID, boolean self, int pictureID) {
-		super(chatID, message, timestamp, senderID, self, pictureID);
+	private static int me;
+	private static int myGroup;
+
+	public ChatEntry(int chatID, String message, long timestamp, int groupID, int userID, Integer pictureID) {
+		super(chatID, message, timestamp, groupID, userID, pictureID);
+	}
+	
+	public static void setMe(int userID, int groupID) {
+		ChatEntry.me = userID;
+		ChatEntry.myGroup = groupID;
+	}
+	
+	public boolean isMe() {
+		return me == userID;
+	}
+	
+	public boolean isGroup() {
+		return myGroup == groupID;
 	}
 
 	public static ArrayList<ChatEntry> translateJSON(String js) {
@@ -27,8 +43,8 @@ public class ChatEntry extends de.rallye.model.structures.ChatEntry{
 							o.getString("message"),
 							o.getInt("timestamp"),
 							o.getInt("groupID"),
-							o.getBoolean("self"),
-							(o.isNull("picture"))? 0 : o.getInt("picture"));
+							o.getInt("userID"),
+							o.getInt("pictureID"));
 		}
 	}
 }

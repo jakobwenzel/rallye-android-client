@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 13;
+	private static final int DATABASE_VERSION = 14;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 	
 	public static final class Groups {
@@ -40,7 +40,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		public static final String TABLE = "chats";
 		public static final String KEY_ID = "chatID";
 		public static final String KEY_TIME = "timestamp";
-		public static final String KEY_SELF = "self";
+		public static final String FOREIGN_USER = "userID";
 		public static final String KEY_PICTURE = "pictureID";
 		public static final String FOREIGN_GROUP = Groups.KEY_ID;
 		public static final String FOREIGN_MSG = Messages.KEY_ID;
@@ -50,11 +50,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				  KEY_ID +" INTEGER PRIMARY KEY, "+
 				  KEY_TIME +" TIMESTAMP NOT NULL, "+
 				  Groups.KEY_ID +" INTEGER NOT NULL REFERENCES "+ Groups.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
-				  KEY_SELF +" BOOLEAN NOT NULL DEFAULT false, "+
+				  FOREIGN_USER +" INTEGER NOT NULL, "+
 				  Messages.KEY_ID +" INTEGER DEFAULT NULL REFERENCES "+ Messages.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
 				  KEY_PICTURE +" INTEGER, "+
 				  Chatrooms.KEY_ID +" INTEGER NOT NULL REFERENCES "+ Chatrooms.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE)";
-		public static final String[] COLS = new String[]{ Chats.KEY_ID, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.KEY_SELF, Chats.FOREIGN_MSG, Chats.KEY_PICTURE, Chats.FOREIGN_ROOM };
+		public static final String[] COLS = new String[]{ Chats.KEY_ID, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.FOREIGN_USER, Chats.FOREIGN_MSG, Chats.KEY_PICTURE, Chats.FOREIGN_ROOM };
 	}
 	
     public static final class Messages {
