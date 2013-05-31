@@ -21,6 +21,8 @@ public class Request {
 	private static final boolean DEBUG = true;
 	private static final String THIS = Request.class.getSimpleName();
 	
+	public enum RequestType { GET, POST, PUT, DELETE };
+	
 	private URL url;
 	private HttpURLConnection conn;
 	private BufferedReader reader;
@@ -28,6 +30,7 @@ public class Request {
 	private Mime mime;
 	private byte[] post;
 	private String msg;
+	private RequestType requestType;
 	
 	
 	public enum Mime { JSON
@@ -40,7 +43,12 @@ public class Request {
 	};
 	
 	public Request(URL url) {
+		this(url, RequestType.GET);
+	}
+	
+	public Request(URL url, RequestType requestType) {
 		this.url = url;
+		this.requestType = requestType;
 	}
 	
 	public Request putPost(byte[] post, Mime mime) {
@@ -50,6 +58,9 @@ public class Request {
 		return this;
 	}
 
+	public void setRequestType(RequestType requestType) {
+		this.requestType = requestType;
+	}
 	
 	public Request putPost(JSONObject json) {
 		return putPost(json.toString().getBytes(), Mime.JSON);
@@ -69,6 +80,8 @@ public class Request {
 		
 		
 		conn =  (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod(requestType.toString());
+		
 		if (post != null) {
 			if (DEBUG) {
 				Log.i(THIS, "Posting: "+ new String(post));
@@ -138,11 +151,11 @@ public class Request {
 		return code;
 	}
 	
-	public JSONObject executeJSONObject() throws JSONException, HttpRequestException {
-		return new JSONObject(execute());
+	public <T> T executeJSONObject(JSONConverter<T> converter) throws JSONException, HttpRequestException {
+		return converter.convert(new JSONObject(execute()));
 	}
 	
-	public <T> JSONArray<T> executeJSONArray(JSONConverter<T> converter) throws JSONException, HttpRequestException {
-		return new JSONArray<T>(converter, execute());
+	public <T> List<T> executeJSONArray(JSONConverter<T> converter) throws JSONException, HttpRequestException {
+		return new JSONArray<T>(converter, execute()).toList();
 	}
 }

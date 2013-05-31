@@ -37,9 +37,10 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
-import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
-import de.stadtrallye.rallyesoft.uiadapter.IProgressUI;
+import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.uimodel.ChatAdapter;
+import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 
 /**
  * One Chatroom, with input methods
@@ -52,7 +53,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 	private static final boolean DEBUG = false;
 	
 	
-	private Model model;
+	private IModel model;
 	private int[] lastPos = null; //[0] = line, [1] = px
 	private IChatroom chatroom;
 	
@@ -105,21 +106,18 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
 		
-		Bundle b = getArguments();
-		int rid = -1;
-		if (b != null)
-			rid = b.getInt(Std.CHATROOM, -1);
-//		if (savedInstanceState != null && rid == -1) {
-//			rid = savedInstanceState.getInt(Std.CHATROOM, -1);
-//		}
+		Bundle args = getArguments();
+		int roomId = -1;
+		if (args != null)
+			roomId = args.getInt(Std.CHATROOM, -1);
 		
-		chatroom = model.getChatroom(rid);
+		chatroom = model.getChatroom(roomId);
 		
 		if (chatroom == null) {
 			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
 		
-		chatAdapter = new ChatAdapter(getActivity(), chatroom.getAllChats());
+		chatAdapter = new ChatAdapter(getActivity(), model.getUser(), chatroom);
         list.setAdapter(chatAdapter);
         
         restoreScrollState();
@@ -147,7 +145,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 		super.onStart();
 		
 		chatroom.addListener(this);
-		chatroom.refresh();// TODO: do not refresh on UI Lifecycle!
+		chatroom.provideChats();
 	}
 	
 	@Override
@@ -196,119 +194,14 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 		outState.putSerializable(Std.LAST_POS, lastPos);
 	}
 	
-	/**
-	 * Wraps around ChatEntry List
-	 * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $Chatentry.self
-	 * @author Ramon
-	 *
-	 */
-	private class ChatAdapter extends ArrayAdapter<ChatEntry> {
-
-		private List<ChatEntry> entries;
-		private ImageLoader loader;
-		private DateFormat converter;
-		
-		private class ViewMem {
-			public ImageView img;
-			public TextView msg;
-			public TextView sender;
-			public TextView time;
-		}
-		
-		
-		public ChatAdapter(Context context, List<ChatEntry> entries) {
-			super(context, R.layout.chat_item_left, entries);
-			this.entries = entries;
-			
-			loader = ImageLoader.getInstance();
-			DisplayImageOptions disp = new DisplayImageOptions.Builder()
-				.cacheOnDisc()
-				.cacheInMemory() // Still unlimited Chache on Disk
-				.showStubImage(R.drawable.stub_image)
-				.build();
-			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getContext())
-//				.enableLogging()
-				.defaultDisplayImageOptions(disp)
-				.build();
-            loader.init(config);
-            
-            converter = SimpleDateFormat.getDateTimeInstance();
-		}
-		
-		
-		public ChatEntry getChatEntry(int pos) {
-			return entries.get(pos);
-		}
-
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			View v = convertView;
-			final ChatEntry o = entries.get(position);
-			
-			ViewMem mem;
-			
-            if (v == null) {
-                LayoutInflater vi = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                v = vi.inflate((o.isMe())? R.layout.chat_item_right : R.layout.chat_item_left, null);
-                
-                mem = new ViewMem();
-                
-                mem.img = (ImageView) v.findViewById(R.id.sender_img);
-                mem.sender = (TextView) v.findViewById(R.id.msg_sender);
-                mem.msg = (TextView) v.findViewById(R.id.msg);
-                mem.time = (TextView) v.findViewById(R.id.time_sent);
-                
-                v.setTag(mem);
-                
-            } else {
-            	mem = (ViewMem) v.getTag();
-            }
-            
-            if (o != null) {
-                mem.sender.setText("Sender: "+ o.userID);
-                mem.msg.setText(o.message);
-                mem.time.setText(converter.format(new Date(o.timestamp * 1000L)));
-                
-                // ImageLoader jar
-                // ImageLoader must apparently be called for _EVERY_ entry
-                // When called with null or "" as URL, will display empty pciture / default resource
-                // Otherwise ImageLoader will not be stable and start swapping images
-                if (o.pictureID > 0) {
-                	loader.displayImage(chatroom.getUrlFromImageId(o.pictureID, 't'), mem.img);
-                } else {
-                	loader.displayImage(null, mem.img);
-                }
-                
-//                Log.v("ChatAdapter", "["+o.timestamp+"] '"+ o.message +"' (pic:"+ o.pictureID +")");
-            }
-            
-            return v;
-		}
-		
-		public boolean hasPicture(int pos) {
-			return entries.get(pos).pictureID != 0;
-		}
+	@Override
+	public void chatUpdate(List<ChatEntry> chats) {
+		chatAdapter.updateChats(chats);
 	}
-	
 
 	@Override
-	public void addedChats(List<ChatEntry> entries) {
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
-        	addChatsApi11(entries);
-        else
-        	addChatsApi1(entries);
-	}
-	
-	public void addChatsApi1(List<ChatEntry> l) {
-		for (ChatEntry c: l) {
-			chatAdapter.add(c);
-		}
-	}
-	
-	@TargetApi(11)
-	public void addChatsApi11(List<ChatEntry> l) {
-		chatAdapter.addAll(l);
+	public void addedChats(List<ChatEntry> chats) {
+		chatAdapter.addChats(chats);
 	}
 	
 	@Override
@@ -331,12 +224,12 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 			send.setVisibility(View.GONE);
 			loading.setVisibility(View.VISIBLE);
 			break;
-		case PostSuccessfull:
-			text.getText().clear();
-		case PostFailed:
-			send.setVisibility(View.VISIBLE);
-			loading.setVisibility(View.GONE);
-			break;
+//		case PostSuccessfull:
+//			text.getText().clear();
+//		case PostFailed:
+//			send.setVisibility(View.VISIBLE);
+//			loading.setVisibility(View.GONE);
+//			break;
 		}
 	}
 	

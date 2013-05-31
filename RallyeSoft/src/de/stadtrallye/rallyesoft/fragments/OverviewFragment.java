@@ -11,7 +11,7 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 
 public class OverviewFragment extends SherlockFragment implements IConnectionStatusListener {
 	

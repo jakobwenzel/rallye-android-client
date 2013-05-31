@@ -10,7 +10,7 @@ import android.widget.EditText;
 import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 
@@ -18,7 +18,7 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	
 	
 	public interface IDialogCallback {
-		public void onDialogPositiveClick(LoginDialogFragment dialog, Login login);
+		public void onDialogPositiveClick(LoginDialogFragment dialog, ServerLogin login);
 	    public void onDialogNegativeClick(LoginDialogFragment dialog);
 	}
 	
@@ -28,7 +28,7 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 	private EditText name;
 	private EditText pw;
 	private IDialogCallback ui;
-	private Login login;
+	private ServerLogin login;
 	
 	
 	@Override
@@ -37,7 +37,7 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 		
 		setRetainInstance(true);
 		
-		login = (Login) getArguments().getParcelable(Std.LOGIN);
+		login = (ServerLogin) getArguments().getParcelable(Std.LOGIN);
 	}
 	
 	@Override
@@ -80,7 +80,7 @@ public class LoginDialogFragment extends SherlockDialogFragment {
 				})
         		.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
         			public void onClick(DialogInterface dialog, int id) {
-        				Login l = new Login(server.getText().toString(), Integer.parseInt(group.getText().toString()), name.getText().toString(), pw.getText().toString());
+        				ServerLogin l = new ServerLogin(server.getText().toString(), Integer.parseInt(group.getText().toString()), name.getText().toString(), pw.getText().toString());
         				
         				ui.onDialogPositiveClick(LoginDialogFragment.this, l);
         			}
@@ -121,8 +121,8 @@ public class LoginDialogFragment extends SherlockDialogFragment {
         pw = (EditText) dialog.findViewById(R.id.password);
         
 		server.setText(login.server);
-		group.setText(Integer.toString(login.group));
+		group.setText(Integer.toString(login.groupID));
 		name.setText(login.name);
-		pw.setText(login.password);
+		pw.setText(login.groupPassword);
 	}
 }

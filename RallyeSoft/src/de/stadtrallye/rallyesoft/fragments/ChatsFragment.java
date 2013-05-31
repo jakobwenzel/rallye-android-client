@@ -29,7 +29,7 @@ import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
@@ -72,15 +72,6 @@ public class ChatsFragment extends SherlockFragment implements IConnectionStatus
 		
 		return v;
 	}
-	
-//	<com.viewpagerindicator.TitlePageIndicator
-//  	android:id="@+id/indicator"
-//  	android:padding="10dip"
-//  	android:layout_height="wrap_content"
-//  	android:layout_width="match_parent"
-//		android:textColor="@color/abs__bright_foreground_disabled_holo_light"
-//		app:selectedColor="@color/foreground_grey"
-//  />
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {

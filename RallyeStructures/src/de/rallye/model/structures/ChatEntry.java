@@ -7,6 +7,11 @@ package de.rallye.model.structures;
  */
 public class ChatEntry extends SimpleChatEntry {
 	
+	public static final String CHAT_ID = "chatID";
+	public static final String TIMESTAMP = "timestamp";
+	public static final String GROUP_ID = "groupID";
+	public static final String USER_ID = "userID";
+	
 	public final int chatID;
 	public final int groupID;
 	public final long timestamp;

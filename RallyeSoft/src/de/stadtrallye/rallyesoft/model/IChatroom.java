@@ -1,12 +1,8 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.util.List;
-
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-
 public interface IChatroom {
 	
-	enum ChatStatus { Offline, Ready, Refreshing, Posting, PostSuccessfull, PostFailed };
+	enum ChatStatus { Ready, Refreshing, Posting, Offline };
 	
 	int getID();
 	String getName();
@@ -18,11 +14,11 @@ public interface IChatroom {
 	void removeListener(IChatListener l);
 	ChatStatus getChatStatus();
 	
-	List<ChatEntry> getAllChats();
+	void provideChats();
 	void addChat(String msg);
 	
-	String getUrlFromImageId(int pictureID, char size);
 	IPictureGallery getPictureGallery(int initialPictureId);
+	String getUrlFromImageId(int pictureID, char size);
 	
 	void onDestroy();
 	void onStop();

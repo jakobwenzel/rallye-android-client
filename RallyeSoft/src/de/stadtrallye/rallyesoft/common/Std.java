@@ -30,7 +30,7 @@ public class Std {
 	
 	public final static String GCM = "gcm";
 	public final static String TIMESTAMP = "timestamp";
-	public final static String GROUPID = "groupID";
+	public final static String GROUP_ID = "groupID";
 	public static final String MSG = "mess";
 	public static final String PIC = "pic";
 	public static final String NAME = "name";

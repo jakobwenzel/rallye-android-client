@@ -37,7 +37,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	final private String name;
 	private long lastUpdate = 0;
 	private int lastId = 0;
-//	private long pendingLastTime = 0;
 	
 	private ChatStatus status;
 	
@@ -52,7 +51,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
 		//TODO: currently Chatrooms can only ever belong to 1 group, and will not be shown, even if another group has rights to access
-		Cursor c = model.db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().group, null, null, null, null);
+		Cursor c = model.db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().groupID, null, null, null, null);
 		
 		while (c.moveToNext()) {
 			out.add(new Chatroom(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), model));
@@ -99,7 +98,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			ContentValues insert = new ContentValues();
 			insert.put(Chatrooms.KEY_ID, id);
 			insert.put(Chatrooms.KEY_NAME, name);
-			insert.put(Chatrooms.FOREIGN_GROUP, model.getLogin().group);
+			insert.put(Chatrooms.FOREIGN_GROUP, model.getLogin().groupID);
 			insert.put(Chatrooms.KEY_LAST_UPDATE, 0);
 			insert.put(Chatrooms.KEY_LAST_ID, lastId);
 			db.insert(Chatrooms.TABLE, null, insert);
@@ -125,15 +124,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			return;
 		}
 		
-//		long now = System.currentTimeMillis();
-//		Log.i(THIS, "Refreshing: pending:"+ pendingLastTime +" now:"+ now);
-		
 		try {
-//			if (pendingLastTime != 0) {
-//				Log.w(THIS, "Already refreshing Chat");
-//				return;
-//			}
-//			pendingLastTime = now;
 			setChatStatus(ChatStatus.Refreshing);
 			
 			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, Tasks>(model.factory.chatRefreshRequest(id, lastUpdate), new ChatEntry.ChatConverter(), this, Tasks.CHAT_REFRESH));
@@ -156,14 +147,14 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		}
 	}
 	
-	private void chatUpdate(final List<ChatEntry> entries) {
+	private void chatUpdate(List<ChatEntry> entries) {
 		SQLiteDatabase db = model.db;
 		
 //		removeRedundantChats(entries, db);
 		
 		
 		SQLiteStatement s = db.compileStatement("INSERT INTO "+ Chats.TABLE +
-				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, "+ model.getLogin().group +", ?, ?, ?, "+ id +")");
+				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, "+ model.getLogin().groupID +", ?, ?, ?, "+ id +")");
 		SQLiteStatement t = db.compileStatement("INSERT INTO "+ Messages.TABLE +
 				" ("+ DatabaseHelper.strStr(Messages.COLS) +") VALUES (null, ?)");
 		SQLiteStatement u = db.compileStatement("SELECT COUNT(*) FROM "+ Chats.TABLE +" WHERE "+ Chats.KEY_ID +"=?");
@@ -240,14 +231,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		
 		Log.i(THIS, "Received "+ entries.size() +" new Chats in Chatroom "+ this.id +" (since "+ this.lastUpdate +")  (eliminated "+ eliminated +")");
 		
-		model.uiHandler.post(new Runnable(){
-			@Override
-			public void run() {
-				for(IChatListener l: listeners) {
-					l.addedChats(entries);
-				}
-			}
-		});
+		notifyChatChange(entries);
 	}
 
 	private void setChatStatus(final ChatStatus newStatus) {
@@ -279,12 +263,38 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		listeners.remove(l);
 	}
 	
-	private boolean sqlToBool(int in) {
-		return (in > 0)? true : false;
+//	private boolean sqlToBool(int in) {
+//		return (in > 0)? true : false;
+//	}
+	
+	@Override
+	public void provideChats() {
+		notifyChatUpdate(getAllChats());
+	}
+	
+	private void notifyChatUpdate(final List<ChatEntry> entries) {
+		model.uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for(IChatListener l: listeners) {
+					l.chatUpdate(entries);
+				}
+			}
+		});
+	}
+	
+	private void notifyChatChange(final List<ChatEntry> entries) {
+		model.uiHandler.post(new Runnable(){
+			@Override
+			public void run() {
+				for(IChatListener l: listeners) {
+					l.addedChats(entries);
+				}
+			}
+		});
 	}
 
-	@Override
-	public List<ChatEntry> getAllChats() {
+	private List<ChatEntry> getAllChats() {
 		
 		Cursor c = model.db.query(Chats.TABLE+" AS c LEFT JOIN "+Messages.TABLE+" AS m USING ("+Chats.FOREIGN_MSG+")",
 				new String[]{Chats.KEY_ID, Messages.KEY_MSG, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.FOREIGN_USER, Chats.KEY_PICTURE},
@@ -322,9 +332,15 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		
 		@Override
 		public String getPictureUrl(int pos) {
-			return Chatroom.this.getUrlFromImageId(this.pictures.get(pos), size.toChar());
+			return getUrlFromImageId(this.pictures.get(pos), size.toChar());
 		}
 		
+	}
+	
+	@Override
+	public String getUrlFromImageId(int pictureID, char size) {
+		String res = model.getLogin().server + Paths.getPic(pictureID, size);
+		return res;
 	}
 	
 	/**
@@ -335,14 +351,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		return new PictureGallery(initialPictureId);
 	}
 	
-	@Override
-	public String getUrlFromImageId(int pictureID, char size) {
-		String res = model.getLogin().server + Paths.getPic(pictureID, size);
-//		Log.v(THIS, res);
-		return res;
-	}
-	
-	@Override
+	@Override//TODO
 	public void saveCurrentState(int lastRead) {
 		
 	}
@@ -363,15 +372,12 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	}
 	
 	private void addChatResult(RequestExecutor<String, ?> r) {//TODO prevent from Failing
-//		if (r.isSuccessful()) {
-//			setChatStatus(ChatStatus.PostSuccessfull);
-//			setChatStatus(ChatStatus.Ready);
-//		} else {
-//			setChatStatus(ChatStatus.PostFailed);
-//			setChatStatus(ChatStatus.Offline);
-//		}
-		setChatStatus(ChatStatus.PostSuccessfull);
-		setChatStatus(ChatStatus.Ready);
+		if (r.isSuccessful()) {
+			notifyChatChange(null);//TODO
+			setChatStatus(ChatStatus.Ready);
+		} else {
+			setChatStatus(ChatStatus.Offline);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

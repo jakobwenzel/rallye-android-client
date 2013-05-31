@@ -2,19 +2,21 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.List;
 
-import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.GroupUser;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 
 public interface IModel {
 	
-	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying, Unknown };
+	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying };
 	
 	List<? extends IChatroom> getChatrooms();
 	IChatroom getChatroom(int id);
 	IMap getMap();
-	Login getLogin();
+	ServerLogin getLogin();
+	GroupUser getUser();
 	
-	void login(Login login);
+	void login(ServerLogin login);
 	void logout();
 	void checkLoginStatus();
 	void groupList();

@@ -20,8 +20,9 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.GroupUser;
+import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
@@ -57,10 +58,11 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	final private SharedPreferences pref;
 	final private Context context;
 	
-	private Login currentLogin;
+	private ServerLogin currentLogin;
+	private RallyeAuth rallyeAuth;
 	ServerConfig serverConfig;
 	
-	private ConnectionStatus status = ConnectionStatus.Unknown; //TODO: add network state
+	private ConnectionStatus status; //TODO: add network state
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
@@ -144,10 +146,6 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				Log.e(THIS, "ServerConfig could not be restored");
 				refreshServerConfig();
 			}
-			if (status == ConnectionStatus.Unknown) {
-				Log.e(THIS, "ConnectionStatus previously not connected");
-				checkLoginStatus();
-			}
 		} catch (Exception e) {
 			Log.w(THIS, "No usable Login-Data found -> stay offline");
 			setConnectionStatus(ConnectionStatus.Disconnected);
@@ -162,16 +160,11 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	 * @return
 	 */
 	private boolean isDbSynchronized() {//TODO: precise check
-		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.group, null, null, null, null);
+		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.groupID, null, null, null, null);
 		if (c.getCount() != 1)
 			return false;
 		else
 			return true;
-	}
-	
-	private void setLogin(Login login) {
-		currentLogin = login;
-		ChatEntry.setMe(login.user, login.group);
 	}
 	
 	@Override
@@ -193,11 +186,12 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	private void logoutResult(RequestExecutor<String, ?> r) {
+		factory.setUserAuth(null);
 		setConnectionStatus(ConnectionStatus.Disconnected);
 	}
 	
 	@Override
-	public void login(Login login) {
+	public void login(ServerLogin login) {
 		synchronized (this) {
 			if (!isDisconnected()) {
 				if (isConnected()) {
@@ -218,7 +212,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
 				factory.setBaseURL(new URL(login.server));
 				
-				LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);
+				LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);//TODO: simple login, no retry
 				exec.execute(rex);
 			
 			} catch (Exception e) {
@@ -231,10 +225,11 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	@Override
 	public void loginResult(LoginExecutor r) {
 		if (r.isSuccessful()) {
-			chatrooms = r.getResult();
+			rallyeAuth = r.getResult();
+			currentLogin = r.getLogin();
+			chatrooms = r.getChatrooms();
 			
-			setLogin(r.getLogin());
-			
+			setConnectionStatus(ConnectionStatus.Connected);
 			save().saveChatrooms().saveLogin().saveConnectionStatus(ConnectionStatus.Connected).commit();
 			
 			refreshServerConfig();
@@ -307,7 +302,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 //			factory.setAuth(currentLogin);
 			
 			Log.d(THIS, "testing auth");
-			exec.execute(new RequestExecutor<String, Tasks>(factory.groupListRequest(),null, this, Tasks.GROUP_LIST));
+			exec.execute(new RequestExecutor<String, Tasks>(factory.availableGroupsRequest(),null, this, Tasks.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -333,7 +328,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	@Override
-	public Login getLogin() {
+	public ServerLogin getLogin() {
 		return (currentLogin != null)? currentLogin : getDefaultLogin();
 	}
 	
@@ -412,17 +407,23 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		
 		public Saver saveLogin() {
 			edit.putString(Std.SERVER, currentLogin.server);
-			edit.putInt(Std.GROUP, currentLogin.group);
-			edit.putString(Std.PASSWORD, currentLogin.password);
+			edit.putInt(Std.GROUP_ID, currentLogin.groupID);
+			edit.putString(Std.GROUP+Std.PASSWORD, currentLogin.groupPassword);
 			edit.putLong(Std.LAST_LOGIN, currentLogin.getLastValidated());
 			edit.putString(Std.USER+Std.NAME, currentLogin.name);
-			edit.putInt(Std.USER_ID, currentLogin.getId());
+			return this;
+		}
+		
+		public Saver saveAuth() {
+			edit.putInt(Std.USER_ID, rallyeAuth.userID);
+			edit.putString(Std.USER+Std.PASSWORD, rallyeAuth.password);
+			
 			return this;
 		}
 		
 		public Saver saveChatrooms() {
 			ContentValues insert = new ContentValues();
-			insert.put(Groups.KEY_ID, currentLogin.group);
+			insert.put(Groups.KEY_ID, currentLogin.groupID);
 			//TODO: put Name [need to get name]
 			db.insert(Groups.TABLE, null, insert);
 			
@@ -474,16 +475,24 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	private void restoreLogin() {
-		Login l = new Login(pref.getString(Std.SERVER, null),
-				pref.getInt(Std.GROUP, 0),
+		ServerLogin l = new ServerLogin(pref.getString(Std.SERVER, null),
+				pref.getInt(Std.GROUP_ID, 0),
 				pref.getString(Std.USER+Std.NAME, null),
-				pref.getString(Std.PASSWORD, null),
-				pref.getInt(Std.USER_ID, Login.NO_ID),
+				pref.getString(Std.GROUP+Std.PASSWORD, null),
 				pref.getLong(Std.LAST_LOGIN, 0));
 		
+		
+		RallyeAuth a = new RallyeAuth(pref.getInt(Std.USER_ID, 0),
+									pref.getString(Std.USER+Std.PASSWORD, null),
+									l);
+		
 		if (l.isComplete()) {
-			setLogin(l);
+			currentLogin = l;
 			Log.i(THIS, "Login recovered");
+			if (a.password != null) {
+				rallyeAuth = a;
+				Log.i(THIS, "Auth recovered");
+			}
 		} else {
 			currentLogin = null;
 			Log.e(THIS, "Login corrupted");
@@ -495,16 +504,21 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			status = ConnectionStatus.Connected;
 			Log.i(THIS, "Status: Connected recovered");
 		} else {
-			status = ConnectionStatus.Unknown;
+			status = ConnectionStatus.Disconnected;
 			Log.i(THIS, "Status: Unkown recovered");
 		}
 	}
 	
-	private Login getDefaultLogin() {
-		return new Login(Std.DefaultLogin.SERVER,
+	private ServerLogin getDefaultLogin() {
+		return new ServerLogin(Std.DefaultLogin.SERVER,
 				Std.DefaultLogin.GROUP,
 				Std.DefaultLogin.NAME,
 				Std.DefaultLogin.PASSWORD);
+	}
+	
+	@Override
+	public GroupUser getUser() {
+		return new GroupUser(rallyeAuth.userID, currentLogin.groupID);
 	}
 	
 	

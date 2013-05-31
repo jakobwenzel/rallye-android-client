@@ -3,48 +3,38 @@ package de.stadtrallye.rallyesoft.model.structures;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.common.Std;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-public class Login implements Parcelable {
+public class ServerLogin implements Parcelable {
 	
-	private static final String THIS = Login.class.getSimpleName();
+	private static final String THIS = ServerLogin.class.getSimpleName();
 	private static final int version = 1; 
 
 	public enum State {Unknown, Validated, Invalidated};
-	public static final int NO_ID = -1;
 	
 	private State valid;
 	private long lastValidated;
-	private int id = NO_ID;
 	
 	final public String server;
-	final public int group;
-	final public String password;
+	final public int groupID;
+	final public String groupPassword;
 	final public String name;
 	
-	public Login(String server, int group, String name, String password) {
-		this(server, group, name, password, NO_ID, 0);
+	public ServerLogin(String server, int group, String name, String password) {
+		this(server, group, name, password, 0);
 	}
 	
-	public Login(String server, int group, String name, String password, int id, long lastValidated) {
+	public ServerLogin(String server, int group, String name, String groupPassword, long lastValidated) {
 		this.server = server;
-		this.group = group;
-		this.password = password;
+		this.groupID = group;
+		this.groupPassword = groupPassword;
 		this.name = name;
-		this.id = id;
 		this.lastValidated = lastValidated;
 		this.valid = (lastValidated > 0)? State.Validated : State.Unknown;
-	}
-	
-	public void assignId(int id) {
-		this.id = id;
-	}
-	
-	public int getId() {
-		return id;
 	}
 	
 	public long getLastValidated() {
@@ -74,7 +64,7 @@ public class Login implements Parcelable {
 	}
 	
 	public boolean isComplete() {
-		return hasServer() && password != null && hasName();
+		return hasServer() && groupPassword != null && hasName();
 	}
 	
 	public boolean hasServer() {
@@ -87,7 +77,7 @@ public class Login implements Parcelable {
 	
 	@Override
 	public String toString() {
-		return "Server: "+ server +"| "+name+ "@" +group+ " pw: " +password;
+		return "Server: "+ server +"| "+name+ "@" +groupID+ " pw: " +groupPassword;
 	}
 
 	@Override
@@ -98,13 +88,13 @@ public class Login implements Parcelable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Login other = (Login) obj;
-		if (group != other.group)
+		ServerLogin other = (ServerLogin) obj;
+		if (groupID != other.groupID)
 			return false;
-		if (password == null) {
-			if (other.password != null)
+		if (groupPassword == null) {
+			if (other.groupPassword != null)
 				return false;
-		} else if (!password.equals(other.password))
+		} else if (!groupPassword.equals(other.groupPassword))
 			return false;
 		if (name == null) {
 			if (other.name != null)
@@ -124,15 +114,15 @@ public class Login implements Parcelable {
 		try {
 			js.put(Std.VERSION, version)
 				.put(Std.SERVER, server)
-				.put(Std.GROUP, group)
-				.put(Std.PASSWORD, password);
+				.put(Std.GROUP, groupID)
+				.put(Std.PASSWORD, groupPassword);
 		} catch (JSONException e) {
 			Log.e(THIS, "JSON Generation Failed!", e);
 		}
 		return js.toString();
 	}
 	
-	public static Login fromJSON(String json) {
+	public static ServerLogin fromJSON(String json) {
 		JSONObject js;
 		try {
 			js = new JSONObject(json);
@@ -141,7 +131,7 @@ public class Login implements Parcelable {
 				return null;
 			}
 			
-			return new Login(js.getString(Std.SERVER), js.getInt(Std.GROUP), null, js.getString(Std.PASSWORD));
+			return new ServerLogin(js.getString(Std.SERVER), js.getInt(Std.GROUP), null, js.getString(Std.PASSWORD));
 		} catch (JSONException e) {
 			Log.e(THIS, "JSON invalid!", e);
 			return null;
@@ -154,26 +144,28 @@ public class Login implements Parcelable {
 		return 0;
 	}
 
+	/**
+	 * exclude user, because it is not needed in LoginDialog
+	 */
 	@Override
 	public void writeToParcel(Parcel d, int flags) {
 		d.writeString(server);
-		d.writeInt(group);
+		d.writeInt(groupID);
 		d.writeString(name);
-		d.writeString(password);
-		d.writeInt(id);
+		d.writeString(groupPassword);
 		d.writeLong(lastValidated);
 	}
 	
-	public static final Parcelable.Creator<Login> CREATOR = new Creator<Login>() {
+	public static final Parcelable.Creator<ServerLogin> CREATOR = new Creator<ServerLogin>() {
 		
 		@Override
-		public Login[] newArray(int size) {
-			return new Login[size];
+		public ServerLogin[] newArray(int size) {
+			return new ServerLogin[size];
 		}
 		
 		@Override
-		public Login createFromParcel(Parcel s) {
-			return new Login(s.readString(), s.readInt(), s.readString(), s.readString(), s.readInt(), s.readLong());
+		public ServerLogin createFromParcel(Parcel s) {
+			return new ServerLogin(s.readString(), s.readInt(), s.readString(), s.readString(), s.readLong());
 		}
 	};
 }

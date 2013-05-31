@@ -2,6 +2,9 @@ package de.rallye.model.structures;
 
 public class SimpleChatEntry {
 	
+	public static final String MESSAGE = "message";
+	public static final String PICTURE_ID = "pictureID";
+	
 	public final String message;
 	public final Integer pictureID;
 	

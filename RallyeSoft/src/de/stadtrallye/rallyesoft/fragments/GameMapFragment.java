@@ -33,7 +33,7 @@ import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IMapListener;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
-import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 
 public class GameMapFragment extends SherlockMapFragment implements IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	

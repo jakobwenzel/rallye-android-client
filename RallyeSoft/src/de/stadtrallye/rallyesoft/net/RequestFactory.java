@@ -8,10 +8,15 @@ import java.net.URL;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
+import de.rallye.model.structures.SimpleChatEntry;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
+import de.stadtrallye.rallyesoft.net.Request.RequestType;
 
 public class RequestFactory {
 	
@@ -21,10 +26,13 @@ public class RequestFactory {
 	private URL base;
 	private String devId;
 	private String idName;
+	private RallyeAuth rallyeAuth;
+	private ServerLogin login;
 	
 	public RequestFactory(URL baseURL, String idName) {
 		base = baseURL;
 		this.idName = idName;
+		setAuth();
 	}
 	
 	public void setBaseURL(URL baseURL) {
@@ -35,11 +43,20 @@ public class RequestFactory {
 		this.devId = id;
 	}
 	
-	public void setAuth(final Login login) {
+	public void setUserAuth(final RallyeAuth rallyeAuth) {
+		this.rallyeAuth = rallyeAuth;
+	}
+	
+	private void setAuth() {
 		Authenticator.setDefault(new Authenticator() {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(login.getId() +"@"+ login.group, login.password.toCharArray());
+				if (rallyeAuth != null) {
+					return new PasswordAuthentication(rallyeAuth.getHttpUser(), rallyeAuth.getPassword());
+				} else {
+					Log.i(THIS, "Switching to NewUserAuthentication");
+					return new PasswordAuthentication(String.valueOf(login.groupID), login.groupPassword.toCharArray());
+				}
 			}
 		});
 	}
@@ -56,14 +73,22 @@ public class RequestFactory {
 		}
 	}
 	
-	public Request loginRequest(Login login) throws HttpRequestException {
-		final URL url = getURL(Paths.REGISTER);
+	public Request availableGroupsRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.GROUPS);
 		Request r = new Request(url);
 		
+		return r;
+	}
+	
+	public Request loginRequest(ServerLogin login) throws HttpRequestException {
+		this.login = login;
+		
+		final URL url = getURL(Paths.GROUPS+"/"+login.groupID);
+		Request r = new Request(url, RequestType.PUT);
+		
 		try {
-			JSONObject post = getDevIdJsonObject()
-				.put(Std.GROUPID, login.group)
-				.put(Std.PASSWORD, login.password);
+			JSONObject post = new JSONObject()
+				.put(Std.NAME, login.name);
 			r.putPost(post);
 			return r;
 		} catch (JSONException e) {
@@ -72,41 +97,31 @@ public class RequestFactory {
 	}
 	
 	public Request logoutRequest() throws HttpRequestException {
-		final URL url = getURL(Paths.UNREGISTER);
-		Request r = new Request(url);
+		final URL url = getURL(Paths.GROUPS+"/"+rallyeAuth.getGroupID()+"/"+rallyeAuth.userID);
+		Request r = new Request(url, RequestType.DELETE);
 		
-		try {
-			r.putPost(getDevIdJsonObject());
-			return r;
-		} catch (JSONException e) {
-			throw err.JSONDuringRequestCreationError(e, url);
-		}
+		return r;
 	}
 	
 	public Request serverStatusRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.STATUS);
 		Request r = new Request(url);
 		
-		try {
-			r.putPost(getDevIdJsonObject());
-			return r;
-		} catch (JSONException e) {
-			throw err.JSONDuringRequestCreationError(e, url);
-		}
+		return r;
+	}
+	
+	public Request availableChatroomsRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.CHATS);
+		Request r = new Request(url);
+		
+		return r;
 	}
 	
 	public Request chatRefreshRequest(int chatroom, long lastTime) throws HttpRequestException {
-		final URL url = getURL(Paths.CHAT_READ);
+		final URL url = getURL(Paths.CHATS+"/"+chatroom+"/since/"+lastTime);
 		Request r = new Request(url);
 		
-		try {
-			r.putPost(getDevIdJsonObject()
-				.put(Std.CHATROOM, chatroom)
-				.put(Std.TIMESTAMP, (lastTime == 0)? JSONObject.NULL : lastTime));
-			return r;
-		} catch (JSONException e) {
-			throw err.JSONDuringRequestCreationError(e, url);
-		}
+		return r;
 	}
 
 	public Request mapNodesRequest() throws HttpRequestException {
@@ -124,25 +139,17 @@ public class RequestFactory {
 	}
 
 	public Request chatPostRequest(int chatroom, String msg, int pictureID) throws HttpRequestException {
-		final URL url = getURL(Paths.CHAT_POST);
+		final URL url = getURL(Paths.CHATS+"/"+chatroom);
 		Request r = new Request(url);
 		
 		try {
-			r.putPost(getDevIdJsonObject()
-				.put(Std.CHATROOM, chatroom)
-				.put(Std.MSG, (msg.length()>0)? msg : JSONObject.NULL)
-				.put(Std.PIC, (pictureID > 0)? pictureID : JSONObject.NULL));
+			r.putPost(new JSONObject()
+				.put(SimpleChatEntry.MESSAGE, msg)
+				.put(SimpleChatEntry.PICTURE_ID, (pictureID > 0)? pictureID : JSONObject.NULL));
 			return r;
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
 		}
-	}
-	
-	public Request groupListRequest() throws HttpRequestException {
-		final URL url = getURL(Paths.GROUP_LIST);
-		Request r = new Request(url);
-		
-		return r;
 	}
 
 	public Request serverConfigRequest() throws HttpRequestException {

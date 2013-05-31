@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 
-import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 
 import android.util.Log;
@@ -39,7 +39,7 @@ public class ErrorHandling {
 		Log.e(where, "Aborting, still logged in!");
 	}
 	
-	public void loginInvalid(Login login) {
+	public void loginInvalid(ServerLogin login) {
 		Log.e(where, "Invalid login: "+ login);
 	}
 

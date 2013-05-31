@@ -1,6 +1,9 @@
 package de.rallye.model.structures;
 
 public class LatLng {
+	
+	public static final String LAT = "latitude";
+	public static final String LNG = "longitude";
 
 	public final double latitude;
 	public final double longitude;

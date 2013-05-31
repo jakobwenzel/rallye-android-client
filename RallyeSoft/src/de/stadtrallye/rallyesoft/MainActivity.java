@@ -48,11 +48,11 @@ import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
-import de.stadtrallye.rallyesoft.model.structures.Login;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
-import de.stadtrallye.rallyesoft.uiadapter.IModelActivity;
-import de.stadtrallye.rallyesoft.uiadapter.IProgressUI;
+import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 
 public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener,
 																		LoginDialogFragment.IDialogCallback, IModelActivity,
@@ -70,7 +70,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 
 	private FragmentHandler<GameMapFragment> mapFragmentHandler;
 	
-	private Login deferredLogin;
+	private ServerLogin deferredLogin;
 
 	private SlidingMenu sm;
 	
@@ -372,7 +372,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		return true;
 	}
 	
-	private void showLoginDialog(Login login) {
+	private void showLoginDialog(ServerLogin login) {
 		DialogFragment d = new LoginDialogFragment();
 		Bundle b = new Bundle();
 		b.putParcelable(Std.LOGIN, login);
@@ -413,7 +413,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 			if (scanResult == null) return;
 			
-			deferredLogin = Login.fromJSON(scanResult.getContents());
+			deferredLogin = ServerLogin.fromJSON(scanResult.getContents());
 			
 		} else if(requestCode == Std.PICK_IMAGE && data != null && data.getData() != null){
 	        Uri uri = data.getData();
@@ -449,7 +449,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		// record 0 contains the MIME type, record 1 is the AAR, if present
 		if (Std.APP_MIME.equals(new String(msg.getRecords()[0].getPayload()))) {
 			if (model.isDisconnected()) {
-				showLoginDialog(Login.fromJSON(new String(msg.getRecords()[2].getPayload())));
+				showLoginDialog(ServerLogin.fromJSON(new String(msg.getRecords()[2].getPayload())));
 			} else {
 				Toast.makeText(this, "Logout first!", Toast.LENGTH_LONG).show();
 			}
@@ -473,7 +473,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case Connecting:
 			activateProgressAnimation();
 			break;
-		case Unknown:
 		case Disconnected:
 		case Connected:
 		default:
@@ -504,7 +503,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 * LoginDialogFragment.IDialogCallback
 	 */
 	@Override
-	public void onDialogPositiveClick(LoginDialogFragment dialog, Login login) {
+	public void onDialogPositiveClick(LoginDialogFragment dialog, ServerLogin login) {
 		if (login.isComplete())
 			model.login(login);
 		else {
