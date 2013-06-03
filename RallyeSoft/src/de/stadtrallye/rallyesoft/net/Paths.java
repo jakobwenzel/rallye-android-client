@@ -17,6 +17,6 @@ public final class Paths {
 	 * @return
 	 */
 	public static final String getPic(int picId, char picSize) {
-		return PICS + picId +"/"+ picSize;
+		return PICS +"/"+ picId +"/"+ picSize;
 	}
 }

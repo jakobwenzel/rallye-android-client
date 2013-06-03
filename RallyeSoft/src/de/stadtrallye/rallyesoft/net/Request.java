@@ -69,14 +69,13 @@ public class Request {
 	private void writePost() throws IOException {
 		conn.setDoOutput(true);
 		conn.addRequestProperty("Content-Type", mime.toString());
-		conn.setFixedLengthStreamingMode(post.length);
+//		conn.setFixedLengthStreamingMode(post.length);
 		conn.getOutputStream().write(post);
 	}
 	
 	private int prepareConnection() throws IOException, HttpRequestException {
 		if (DEBUG)
 			Log.i(THIS, "Connecting to: "+url.toString());
-		
 		
 		
 		conn =  (HttpURLConnection) url.openConnection();

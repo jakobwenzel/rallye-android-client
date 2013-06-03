@@ -87,7 +87,7 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 					" ("+ DatabaseHelper.strStr(Edges.COLS) +") VALUES (?, ?, ?)");
 			
 			for (Node n: nodes.values()) {
-				nodeIn.bindLong(1, n.ID);
+				nodeIn.bindLong(1, n.nodeID);
 				nodeIn.bindString(2, n.name);
 				nodeIn.bindDouble(3, n.position.latitude);
 				nodeIn.bindDouble(4, n.position.longitude);
@@ -96,8 +96,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 			}
 			
 			for (Edge m: edges) {
-				edgeIn.bindLong(1, m.a.ID);
-				edgeIn.bindLong(2, m.b.ID);
+				edgeIn.bindLong(1, m.a.nodeID);
+				edgeIn.bindLong(2, m.b.nodeID);
 				edgeIn.bindString(3, m.type.toString());
 				edgeIn.executeInsert();
 			}

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -21,6 +24,7 @@ import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.net.Paths;
+import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	
@@ -79,6 +83,23 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		this.model = model;
 		
 		THIS = CLASS +" "+ id;
+	}
+	
+	public static class ChatroomConverter extends JSONConverter<Chatroom> {
+		
+		private Model model;
+
+		public ChatroomConverter(Model model) {
+			this.model = model;
+		}
+		
+		@Override
+		public Chatroom doConvert(JSONObject o) throws JSONException {
+			int i = o.getInt(de.rallye.model.structures.Chatroom.CHATROOM_ID);
+			String name = o.getString(de.rallye.model.structures.Chatroom.NAME);
+			
+			return new Chatroom(i, name, model);
+		}
 	}
 	
 	/**

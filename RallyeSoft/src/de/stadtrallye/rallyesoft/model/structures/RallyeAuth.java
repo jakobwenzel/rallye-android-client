@@ -4,7 +4,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.rallye.model.structures.UserAuth;
-import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class RallyeAuth extends UserAuth {

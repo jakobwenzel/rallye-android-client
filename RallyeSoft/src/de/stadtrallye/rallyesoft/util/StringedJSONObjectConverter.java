@@ -3,16 +3,20 @@ package de.stadtrallye.rallyesoft.util;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public abstract class StringedJSONObjectConverter<T> implements IConverter<String, T> {
+public class StringedJSONObjectConverter<T> implements IConverter<String, T> {
 
+	private JSONConverter<T> converter;
+
+	public StringedJSONObjectConverter(JSONConverter<T> converter) {
+		this.converter = converter;
+	}
+	
 	@Override
 	public T convert(String input) {
 		try {
-			return doConvert(new JSONObject(input));
-		} catch (JSONException e) { 
-			return null;
+			return converter.convert(new JSONObject(input));
+		} catch (JSONException e) {
+			return converter.fallback();
 		}
 	}
-	
-	public abstract T doConvert(JSONObject o) throws JSONException;
 }

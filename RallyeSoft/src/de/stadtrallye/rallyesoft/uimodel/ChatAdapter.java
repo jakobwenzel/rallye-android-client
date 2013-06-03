@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.uimodel;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -31,7 +32,7 @@ import de.stadtrallye.rallyesoft.model.structures.GroupUser;
  */
 public class ChatAdapter extends BaseAdapter {
 
-	private List<ChatEntry> chats;
+	private List<ChatEntry> chats = new ArrayList<ChatEntry>();
 	private ImageLoader loader;
 	private DateFormat converter;
 	private GroupUser user;

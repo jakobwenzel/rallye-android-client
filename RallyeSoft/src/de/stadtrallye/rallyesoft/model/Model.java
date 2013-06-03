@@ -30,6 +30,8 @@ import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
+import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
+import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.net.RequestFactory;
@@ -41,7 +43,7 @@ import de.stadtrallye.rallyesoft.net.RequestFactory;
  * @author Ray
  *
  */
-public class Model extends Binder implements IModel, LoginExecutor.Callback, RequestExecutor.Callback<Model.Tasks> {
+public class Model extends Binder implements IModel, RequestExecutor.Callback<Model.Tasks> {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
@@ -49,7 +51,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	final private static boolean DEBUG = false;
 	
 	
-	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST };
+	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, AVAILABLE_CHATROOMS };
 	
 	
 	private static Model model; // Singleton Pattern
@@ -131,6 +133,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			URL url = new URL(currentLogin.server);
 			factory.setBaseURL(url);
 			factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
+			factory.setUserAuth(rallyeAuth);
 			
 			
 			restoreServerConfig();
@@ -147,7 +150,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				refreshServerConfig();
 			}
 		} catch (Exception e) {
-			Log.w(THIS, "No usable Login-Data found -> stay offline");
+			Log.w(THIS, "No usable Login-Data found -> stay offline", e);
 			setConnectionStatus(ConnectionStatus.Disconnected);
 		}
 		
@@ -186,6 +189,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	}
 	
 	private void logoutResult(RequestExecutor<String, ?> r) {
+		rallyeAuth = null;
 		factory.setUserAuth(null);
 		setConnectionStatus(ConnectionStatus.Disconnected);
 	}
@@ -208,30 +212,30 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			
 			setConnectionStatus(ConnectionStatus.Connecting);
 		}
-			try {
-				factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
-				factory.setBaseURL(new URL(login.server));
-				
-				LoginExecutor rex = new LoginExecutor(factory.loginRequest(login), factory.logoutRequest(), login, this);//TODO: simple login, no retry
-				exec.execute(rex);
+		
+		try {
+			factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
+			factory.setBaseURL(new URL(login.server));
 			
-			} catch (Exception e) {
-				err.requestException(e);
-				connectionFailure(e, ConnectionStatus.Disconnected);
-			}
+			exec.execute(new LoginExecutor<Tasks>(factory.loginRequest(login), login, this, Tasks.LOGIN));
+		
+		} catch (Exception e) {
+			err.requestException(e);
+			connectionFailure(e, ConnectionStatus.Disconnected);
+		}
 		
 	}
 	
-	@Override
-	public void loginResult(LoginExecutor r) {
+	public void loginResult(LoginExecutor<?> r) {
 		if (r.isSuccessful()) {
+			
 			rallyeAuth = r.getResult();
+			factory.setUserAuth(rallyeAuth);
 			currentLogin = r.getLogin();
-			chatrooms = r.getChatrooms();
 			
-			setConnectionStatus(ConnectionStatus.Connected);
-			save().saveChatrooms().saveLogin().saveConnectionStatus(ConnectionStatus.Connected).commit();
+			save().saveLogin().saveAuth().commit();
 			
+			getAvailableChatrooms();
 			refreshServerConfig();
 			map.updateMap();
 		} else {
@@ -273,7 +277,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
-			exec.execute(new RequestExecutor<ServerConfig, Tasks>(factory.serverConfigRequest(), new ServerConfig.ServerConfigConverter(), this, Tasks.CONFIG));
+			exec.execute(new JSONObjectRequestExecutor<ServerConfig, Tasks>(factory.serverConfigRequest(), new ServerConfig.ServerConfigConverter(), this, Tasks.CONFIG));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -281,15 +285,41 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	
 	private void serverConfigResult(RequestExecutor<ServerConfig, ?> r) {
 		if (r.isSuccessful()) {
-			try {
 				serverConfig = r.getResult();
 				save().saveServerConfig().commit();
-				if (status == ConnectionStatus.Connecting)
-					setConnectionStatus(ConnectionStatus.Connected);
-			} catch (Exception e) {
-				err.asyncTaskResponseError(e);
-			}
+				
+				checkConnectionComplete();
+		} else {
+			err.asyncTaskResponseError(r.getException());
 		}
+	}
+	
+	private void getAvailableChatrooms() {
+		try {
+			Log.d(THIS, "getting available chatrooms");
+			exec.execute(new JSONArrayRequestExecutor<Chatroom, Tasks>(factory.availableChatroomsRequest(), new Chatroom.ChatroomConverter(this), this, Tasks.AVAILABLE_CHATROOMS));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+		}
+	}
+	
+	private void availableChatroomsResult(RequestExecutor<List<Chatroom>, ?> r) {
+		if (r.isSuccessful()) {
+				chatrooms = r.getResult();
+				save().saveChatrooms().commit();
+
+				checkConnectionComplete();
+		} else {
+			err.asyncTaskResponseError(r.getException());
+		}
+	}
+	
+	private void checkConnectionComplete() {
+		if (status == ConnectionStatus.Connecting && chatrooms != null && chatrooms.size() > 0 && serverConfig != null) {
+			setConnectionStatus(ConnectionStatus.Connected);
+			save().saveConnectionStatus(status).commit();
+		}
+			
 	}
 	
 	public void groupList() {
@@ -299,9 +329,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 		}
 		
 		try {
-//			factory.setAuth(currentLogin);
 			
-			Log.d(THIS, "testing auth");
 			exec.execute(new RequestExecutor<String, Tasks>(factory.availableGroupsRequest(),null, this, Tasks.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -347,6 +375,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 	 * 
 	 * Will iterate through all chatrooms until found or null
 	 */
+	@Override
 	public IChatroom getChatroom(int id) {
 		if (status != ConnectionStatus.Connected)
 			return null;
@@ -386,6 +415,12 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 			break;
 		case GROUP_LIST:
 			groupListResult((RequestExecutor<String, ?>) r);
+			break;
+		case AVAILABLE_CHATROOMS:
+			availableChatroomsResult((RequestExecutor<List<Chatroom>, ?>) r);
+			break;
+		case LOGIN:
+			loginResult((LoginExecutor<?>) r);
 			break;
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
@@ -463,7 +498,7 @@ public class Model extends Binder implements IModel, LoginExecutor.Callback, Req
 				pref.getLong(Std.LONGITUDE, 0)/1000000f,
 				pref.getInt(Std.ROUNDS, 0),
 				pref.getInt(Std.ROUND_TIME, 0),
-				pref.getInt(Std.START_TIME, 0));
+				pref.getLong(Std.START_TIME, 0));
 		
 		if (s.isComplete()) {
 			serverConfig = s;

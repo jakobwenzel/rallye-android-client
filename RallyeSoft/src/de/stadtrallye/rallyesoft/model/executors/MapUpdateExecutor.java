@@ -25,12 +25,10 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 
 	@Override
 	protected Map<Integer, Node> tryRun() throws Exception {
-
-		RequestExecutor<Map<Integer, Node>, Void> nodeExecutor = new RequestExecutor<Map<Integer, Node>, Void>(nodeRequest, new MapConverter(), null, null);
-		nodes = nodeExecutor.tryRun();
 		
-		RequestExecutor<List<Edge>, Void> edgeExecutor = new JSONArrayRequestExecutor<Edge, Void>(edgeRequest, new Edge.EdgeConverter(nodes), null, null);
-		edges = edgeExecutor.tryRun();
+		nodes = new MapConverter().convert(nodeRequest.execute());
+		
+		edges = edgeRequest.executeJSONArray(new Edge.EdgeConverter(nodes));
 		
 		return nodes;
 	}

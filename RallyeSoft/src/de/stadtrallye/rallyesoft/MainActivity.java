@@ -275,9 +275,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 1://Map
 			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera [done internally with animation]
 			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
-			LatLng loc = LatLngAdapter.toGms(model.getMap().getMapLocation());
+			de.rallye.model.structures.LatLng loc = model.getMap().getMapLocation();
 			if (loc != null) {
-				gmo.camera(new CameraPosition(loc, model.getMap().getZoomLevel(), 0, 0));
+				gmo.camera(new CameraPosition(LatLngAdapter.toGms(loc), model.getMap().getZoomLevel(), 0, 0));
 			}
 			b.putParcelable("MapOptions", gmo);
 			mapFragmentHandler.setArguments(b);

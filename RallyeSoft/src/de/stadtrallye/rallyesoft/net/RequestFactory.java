@@ -18,7 +18,7 @@ import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Request.RequestType;
 
-public class RequestFactory {
+public class RequestFactory implements IAuthManager {
 	
 	private static final String THIS = RequestFactory.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
@@ -43,7 +43,8 @@ public class RequestFactory {
 		this.devId = id;
 	}
 	
-	public void setUserAuth(final RallyeAuth rallyeAuth) {
+	@Override
+	public void setUserAuth(RallyeAuth rallyeAuth) {
 		this.rallyeAuth = rallyeAuth;
 	}
 	
@@ -51,11 +52,14 @@ public class RequestFactory {
 		Authenticator.setDefault(new Authenticator() {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
-				if (rallyeAuth != null) {
+				String realm = getRequestingPrompt();
+				if (realm.equals("RallyeAuth")) {
 					return new PasswordAuthentication(rallyeAuth.getHttpUser(), rallyeAuth.getPassword());
-				} else {
+				} else if (realm.equals("RallyeNewUser")) {
 					Log.i(THIS, "Switching to NewUserAuthentication");
 					return new PasswordAuthentication(String.valueOf(login.groupID), login.groupPassword.toCharArray());
+				} else {
+					return null;
 				}
 			}
 		});

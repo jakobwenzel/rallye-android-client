@@ -5,6 +5,7 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import de.rallye.model.structures.LatLng;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
@@ -24,12 +25,14 @@ public class Node extends de.rallye.model.structures.Node {
 		
 		@Override
 		public Node doConvert(JSONObject o) throws JSONException {
+			JSONObject p = o.getJSONObject(Node.POSITION);
+			
 			return new Node(
-					o.getInt("nodeID"),
-					o.getString("name"),
-					o.getDouble("lat"),
-					o.getDouble("lon"),
-					o.getString("description"));
+					o.getInt(Node.NODE_ID),
+					o.getString(Node.NAME),
+					p.getDouble(LatLng.LAT),
+					p.getDouble(LatLng.LNG),
+					o.getString(Node.DESCRIPTION));
 		}
 		
 	}
@@ -38,7 +41,7 @@ public class Node extends de.rallye.model.structures.Node {
 
 		@Override
 		public Integer convert(Node input) {
-			return input.ID;
+			return input.nodeID;
 		}
 		
 	}

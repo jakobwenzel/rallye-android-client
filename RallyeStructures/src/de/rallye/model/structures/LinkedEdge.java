@@ -11,7 +11,7 @@ public class LinkedEdge extends PrimitiveEdge {
 	final public Node b;
 
 	public LinkedEdge(Node a, Node b, PrimitiveEdge.Type type) {
-		super(a.ID, b.ID, type);
+		super(a.nodeID, b.nodeID, type);
 		
 		this.a = a;
 		this.b = b;

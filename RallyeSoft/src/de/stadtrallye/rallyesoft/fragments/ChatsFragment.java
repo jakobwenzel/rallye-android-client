@@ -37,7 +37,7 @@ import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
  * @author Ramon
  *
  */
-public class ChatsFragment extends SherlockFragment implements IConnectionStatusListener {
+public class ChatsFragment extends SherlockFragment {
 	
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 	
@@ -97,7 +97,6 @@ public class ChatsFragment extends SherlockFragment implements IConnectionStatus
 		
 		pager.setCurrentItem(currentTab);
 		
-		model.addListener(this);
 	}
 	
 	@Override
@@ -106,7 +105,6 @@ public class ChatsFragment extends SherlockFragment implements IConnectionStatus
 		
 		slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
-		model.removeListener(this);
 		currentTab = pager.getCurrentItem();
 	}
 	
@@ -155,16 +153,6 @@ public class ChatsFragment extends SherlockFragment implements IConnectionStatus
 			Log.d(THIS, "No hit on menu item "+ item);
 			return false;
 		}
-	}
-
-	@Override//TODO: needed?
-	public void onConnectionStatusChange(ConnectionStatus newStatus) {
-		
-	}
-	
-	@Override
-	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
-		onConnectionStatusChange(lastStatus);
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {

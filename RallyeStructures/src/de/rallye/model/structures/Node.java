@@ -11,7 +11,13 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @version 1.1
  */
 public class Node {
-	final public int ID;
+	
+	public static final String NODE_ID = "nodeID";
+	public static final String NAME = "name";
+	public static final String POSITION = "position";
+	public static final String DESCRIPTION = "description";
+	
+	final public int nodeID;
 	final public String name;
 	final public LatLng position;
 	final public String description;
@@ -19,7 +25,7 @@ public class Node {
 	@JsonIgnore final private ArrayList<LinkedEdge> edges = new ArrayList<LinkedEdge>();
 
 	public Node(int ID, String name, double lat, double lon, String description) {
-		this.ID = ID;
+		this.nodeID = ID;
 		this.name = name;
 		this.description = description;
 		this.position = new LatLng(lat, lon);

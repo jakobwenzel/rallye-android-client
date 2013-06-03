@@ -2,6 +2,13 @@ package de.rallye.model.structures;
 
 public class ServerConfig {
 	
+	public static final String NAME = "name";
+	public static final String LOCATION = "location";
+	public static final String ZOOM_LEVEL = "zoomLevel";
+	public static final String ROUNDS = "rounds";
+	public static final String ROUND_TIME = "roundTime";
+	public static final String START_TIME = "startTime";
+	
 	final public String name;
 	final public LatLng location;
 	final public float zoomLevel = 13;
@@ -9,12 +16,12 @@ public class ServerConfig {
 	final public int roundTime;
 	final public long startTime;
 	
-	public ServerConfig(String name, double lat, double lon, int rounds, int roundTime, long l) {
+	public ServerConfig(String name, double lat, double lon, int rounds, int roundTime, long startTime) {
 		this.name = name;
 		this.location = new LatLng(lat, lon);
 		this.rounds = rounds;
 		this.roundTime = roundTime;
-		this.startTime = l;
+		this.startTime = startTime;
 	}
 	
 	@Override
