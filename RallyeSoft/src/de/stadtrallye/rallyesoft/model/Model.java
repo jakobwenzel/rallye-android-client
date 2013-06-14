@@ -16,6 +16,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
@@ -124,6 +125,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		restoreLogin();
 		
+		Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
 		factory = new RequestFactory(null, Std.GCM);
 		
 		try {
@@ -132,7 +134,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 				
 			URL url = new URL(currentLogin.server);
 			factory.setBaseURL(url);
-			factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
+			factory.setPushID(GCMRegistrar.getRegistrationId(context));
 			factory.setUserAuth(rallyeAuth);
 			
 			
@@ -214,7 +216,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		try {
-			factory.setDeviceID(GCMRegistrar.getRegistrationId(context));
+			factory.setPushID(GCMRegistrar.getRegistrationId(context));
 			factory.setBaseURL(new URL(login.server));
 			
 			exec.execute(new LoginExecutor<Tasks>(factory.loginRequest(login), login, this, Tasks.LOGIN));

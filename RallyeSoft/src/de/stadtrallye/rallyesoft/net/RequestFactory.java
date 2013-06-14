@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
+import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.SimpleChatEntry;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
@@ -25,13 +26,14 @@ public class RequestFactory implements IAuthManager {
 
 	private URL base;
 	private String devId;
-	private String idName;
+	private String pushId;
+//	private String idName;
 	private RallyeAuth rallyeAuth;
 	private ServerLogin login;
 	
-	public RequestFactory(URL baseURL, String idName) {
+	public RequestFactory(URL baseURL, String devId) {
 		base = baseURL;
-		this.idName = idName;
+		this.devId = devId;
 		setAuth();
 	}
 	
@@ -39,8 +41,8 @@ public class RequestFactory implements IAuthManager {
 		base = baseURL;
 	}
 	
-	public void setDeviceID(String id) {
-		this.devId = id;
+	public void setPushID(String id) {
+		this.pushId = id;
 	}
 	
 	@Override
@@ -63,10 +65,6 @@ public class RequestFactory implements IAuthManager {
 				}
 			}
 		});
-	}
-	
-	private JSONObject getDevIdJsonObject() throws JSONException {
-		return new JSONObject().put(idName, devId);
 	}
 	
 	private URL getURL(String path) throws HttpRequestException {
@@ -92,7 +90,10 @@ public class RequestFactory implements IAuthManager {
 		
 		try {
 			JSONObject post = new JSONObject()
-				.put(Std.NAME, login.name);
+				.put(LoginInfo.NAME, login.name)
+				.put(LoginInfo.UNIQUE_ID, devId)
+				.put(LoginInfo.PUSH_MODE, "gcm")
+				.put(LoginInfo.PUSH_ID, pushId);
 			r.putPost(post);
 			return r;
 		} catch (JSONException e) {
