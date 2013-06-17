@@ -108,7 +108,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	 * In order to write the information, the Groups must be written to the DB already
 	 * Currently trying refresh() will fail if writeToDb() has not been called at least once on this DB
 	 * 
-	 * Method will not overwrite / update existing entries, so if the Server is changed, the table needs to be cleared!
+	 * Method will not overwrite / update existing entries, so if the Server has changed, the table needs to be cleared!
 	 */
 	public void writeToDb() {
 		SQLiteDatabase db = model.db;

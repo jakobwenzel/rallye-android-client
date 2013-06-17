@@ -125,8 +125,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		restoreLogin();
 		
-		Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-		factory = new RequestFactory(null, Std.GCM);
+		String uniqueID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+		factory = new RequestFactory(null, uniqueID);
 		
 		try {
 			if (currentLogin == null || !currentLogin.isComplete() || !isDbSynchronized())
@@ -340,6 +340,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private void groupListResult(RequestExecutor<String, ?> r) {
 		Log.i(THIS, r.getResult());
+	}
+	
+	public URL getPictureUploadURL(String hash) {
+		return factory.getPictureUploadURL(hash);
 	}
 	
 	@Override

@@ -53,4 +53,5 @@ public class Std {
 	public static final String USER_ID = "user_id";
 	public static final String MAP_BOUNDS = "map_bounds";
 	public static final String ZOOM = "zoom";
+	public static final String HASH = "hash";
 }

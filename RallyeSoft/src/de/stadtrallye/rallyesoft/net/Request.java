@@ -83,7 +83,7 @@ public class Request {
 		
 		if (post != null) {
 			if (DEBUG) {
-				Log.i(THIS, "Posting: "+ new String(post));
+				Log.i(THIS, requestType.toString() +": "+ new String(post));
 			}
 			
 			writePost();

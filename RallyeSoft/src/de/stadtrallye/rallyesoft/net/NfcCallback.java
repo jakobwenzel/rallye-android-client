@@ -5,12 +5,14 @@ import java.nio.charset.Charset;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter.CreateNdefMessageCallback;
 import android.nfc.NfcEvent;
 
+@TargetApi(14)
 public class NfcCallback implements CreateNdefMessageCallback {
 	
 	private IModel model;

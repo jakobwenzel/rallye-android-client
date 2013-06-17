@@ -145,7 +145,7 @@ public class RequestFactory implements IAuthManager {
 
 	public Request chatPostRequest(int chatroom, String msg, int pictureID) throws HttpRequestException {
 		final URL url = getURL(Paths.CHATS+"/"+chatroom);
-		Request r = new Request(url);
+		Request r = new Request(url, RequestType.POST);
 		
 		try {
 			r.putPost(new JSONObject()
@@ -161,5 +161,14 @@ public class RequestFactory implements IAuthManager {
 		final URL url = getURL(Paths.CONFIG);
 		Request r = new Request(url);
 		return r;
+	}
+	
+	public URL getPictureUploadURL(String hash) {
+		try {
+			return getURL(Paths.PICS+"/"+hash);
+		} catch (HttpRequestException e) {
+			Log.e(THIS, "URL", e);
+			return null;
+		}
 	}
 }

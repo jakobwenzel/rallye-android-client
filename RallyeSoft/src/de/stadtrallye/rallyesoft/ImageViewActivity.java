@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ProgressBar;
@@ -102,12 +103,12 @@ public class ImageViewActivity extends SherlockActivity {
 		}
 		
 		@Override
-		public void destroyItem(View container, int position, Object object) {
-			((ViewPager) container).removeView((View) object);
+		public void destroyItem(ViewGroup container, int position, Object object) {
+			container.removeView((View) object);
 		}
 		
 		@Override
-		public Object instantiateItem(View view, int position) {
+		public Object instantiateItem(ViewGroup view, int position) {
 			final View imageLayout = inflater.inflate(R.layout.item_pager_image, null);
 			final ImageView imageView = (ImageView) imageLayout.findViewById(R.id.image);
 			final ProgressBar spinner = (ProgressBar) imageLayout.findViewById(R.id.loading);

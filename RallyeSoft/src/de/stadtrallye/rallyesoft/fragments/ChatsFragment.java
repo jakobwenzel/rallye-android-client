@@ -3,6 +3,7 @@ package de.stadtrallye.rallyesoft.fragments;
 import java.util.List;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -141,8 +142,8 @@ public class ChatsFragment extends SherlockFragment {
 
 			Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 			
-//			Uri out = getOutputMediaFileUri(null); // create a file to save the image
-//		    takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, out); // set the image file name
+//			Uri out = model.getImageCaptureFile(); // create a file to save the image
+//		    takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, out); // set the image file name //Use default location
 
 			Intent chooserIntent = Intent.createChooser(pickIntent, getString(R.string.select_take_picture));
 			chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePhotoIntent});

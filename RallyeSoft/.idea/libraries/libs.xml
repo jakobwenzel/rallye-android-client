@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="libs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/gcm.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/rallye-structures.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/universal-image-loader-1.7.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

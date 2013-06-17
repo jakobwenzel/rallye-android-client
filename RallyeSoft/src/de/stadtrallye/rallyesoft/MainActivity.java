@@ -419,7 +419,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	        Uri uri = data.getData();
 
 	        if (uri != null) {
-	            //User had pick an image.
+	            //User has picked an image.
 	            Cursor cursor = getContentResolver().query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
 	            cursor.moveToFirst();
 
