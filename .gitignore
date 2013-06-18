@@ -4,3 +4,4 @@ proguard
 gen
 .settings
 out
+.idea
