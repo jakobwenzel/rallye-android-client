@@ -3,4 +3,4 @@ bin
 proguard
 gen
 .settings
-nbandroid/RallyeStructures
+out
