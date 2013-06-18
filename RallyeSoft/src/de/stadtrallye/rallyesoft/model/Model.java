@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,6 +20,7 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
 import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
@@ -29,7 +29,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
@@ -52,7 +52,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	final private static boolean DEBUG = false;
 	
 	
-	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, AVAILABLE_CHATROOMS };
+	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, AVAILABLE_CHATROOMS }
 	
 	
 	private static Model model; // Singleton Pattern
@@ -80,8 +80,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	/**
 	 * Model can now be kept through Configuration Changes
 	 * @param context needed for Database, Preferences, GCMid (and Res-Strings for default_login [not lang-specific]) => give ApplicationContext
-	 * @param loggedIn login state to assume until checked
-	 * @return
+	 * @return Singleton Model
 	 */
 	public static Model getInstance(Context context) {
 		if (model != null) {
@@ -111,8 +110,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	private void initDatabase() {
-		SQLiteOpenHelper helper = new DatabaseHelper(context);
-		db = helper.getWritableDatabase();
+
+		db = new DatabaseHelper(context).getWritableDatabase();
 	}
 	
 	private Model(Context context, SharedPreferences pref) {
@@ -120,7 +119,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		this.context = context;
 		
 		initDatabase();
-		
+
+        Log.w(THIS, "ID, name, groupID, lastUpdate, lastID");
+        Cursor c = db.query(false , Chatrooms.TABLE, null, null, null, null, null, null, null);
+        while(c.moveToNext()) {
+            Log.w(THIS, c.getInt(0)+","+c.getString(1)+","+c.getInt(2)+","+c.getLong(3)+","+c.getInt(4));
+        }
+
 		initExecutor();
 		
 		restoreLogin();
@@ -162,14 +167,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	/**
 	 * Checks if DB contains at least one group
 	 * (Means we have been logged in before)
-	 * @return
 	 */
 	private boolean isDbSynchronized() {//TODO: precise check
 		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.groupID, null, null, null, null);
-		if (c.getCount() != 1)
-			return false;
-		else
-			return true;
+		return 1 != c.getCount();
 	}
 	
 	@Override

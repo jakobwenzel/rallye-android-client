@@ -153,7 +153,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	/**
 	 * Supported since Api 16
-	 * @param db
+	 * @param db Database
 	 */
 	@TargetApi(16)
 	private void enableForeignKeysApi16(SQLiteDatabase db) {
@@ -162,7 +162,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	/**
 	 * Supported since SQLite shipped with Api 8
-	 * @param db
+	 * @param db Database
 	 */
 	private void enableForeignKeysApi8(SQLiteDatabase db) {
 		db.execSQL("PRAGMA foreign_keys=ON;");

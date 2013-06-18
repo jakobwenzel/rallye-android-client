@@ -33,9 +33,9 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	final private String THIS;
 	final private static ErrorHandling err = new ErrorHandling(CLASS);
 	
-	enum Tasks { CHAT_REFRESH, CHAT_POST };
-	
-	// members
+	enum Tasks { CHAT_REFRESH, CHAT_POST }
+
+    // members
 	final private Model model;
 	final private int id;
 	final private String name;
@@ -45,26 +45,24 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	private ChatStatus status;
 	
 	private ArrayList<IChatListener> listeners = new ArrayList<IChatListener>();
-	
-	/**
-	 * Get Chatrooms from Database
-	 * Requires: Previously logged in with identical login
-	 * @param model
-	 * @return
-	 */
+
+    /**
+     * Requires: Previously logged in with identical login
+     * @return all available Chatrooms
+     */
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
 		//TODO: currently Chatrooms can only ever belong to 1 group, and will not be shown, even if another group has rights to access
 		Cursor c = model.db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().groupID, null, null, null, null);
 		
 		while (c.moveToNext()) {
-			out.add(new Chatroom(c.getInt(0), c.getString(1), c.getInt(2), c.getInt(3), model));
+			out.add(new Chatroom(c.getInt(0), c.getString(1), c.getLong(2), c.getInt(3), model));
 		}
 		
 		return out;
 	}
 	
-	private Chatroom(int id, String name, int lastTime, int lastId, Model model) {
+	private Chatroom(int id, String name, long lastTime, int lastId, Model model) {
 		this(id, name, model);
 		this.lastUpdate = lastTime;
 		this.lastId = lastId;
@@ -75,7 +73,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	 * @param id ChatroomID
 	 * @param name Name of the Chatroom
 	 * @param model needed for access to current group, DB, etc.
-	 * @param writeDb wether to ensure that this Chatroom is in the DB
 	 */
 	public Chatroom(int id, String name, Model model) {
 		this.id = id;
@@ -180,7 +177,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 				" ("+ DatabaseHelper.strStr(Messages.COLS) +") VALUES (null, ?)");
 		SQLiteStatement u = db.compileStatement("SELECT COUNT(*) FROM "+ Chats.TABLE +" WHERE "+ Chats.KEY_ID +"=?");
 		
-		int msgId = -1, chatId = -1;
+		int msgId = -1, chatId;
 		int eliminated = 0;
 		
 		db.beginTransaction();
@@ -189,7 +186,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			for (Iterator<ChatEntry> i = entries.iterator(); i.hasNext();) {
 				c = i.next();
 				
-				if (c.chatID <= lastId && true) {
+				if (c.chatID <= lastId) {
 					u.bindLong(1, c.chatID);
 					if (u.simpleQueryForLong() > 0) {
 						eliminated++;
@@ -360,8 +357,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	
 	@Override
 	public String getUrlFromImageId(int pictureID, char size) {
-		String res = model.getLogin().server + Paths.getPic(pictureID, size);
-		return res;
+        return model.getLogin().server + Paths.getPic(pictureID, size);
 	}
 	
 	/**
