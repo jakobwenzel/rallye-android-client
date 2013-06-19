@@ -39,4 +39,21 @@ public class ServerConfig {
 	public boolean isComplete() {
 		return name != null;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		ServerConfig that = (ServerConfig) o;
+
+		if (roundTime != that.roundTime) return false;
+		if (rounds != that.rounds) return false;
+		if (startTime != that.startTime) return false;
+		if (Float.compare(that.zoomLevel, zoomLevel) != 0) return false;
+		if (!location.equals(that.location)) return false;
+		if (!name.equals(that.name)) return false;
+
+		return true;
+	}
 }

@@ -177,7 +177,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	        e.printStackTrace();
 	    }
 	}
-	
+
 	/**
 	 * Envelops a Fragment, reuses a already existing Fragment otherwise instantiates a new one
 	 * @author Ramon
@@ -185,7 +185,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 * @param <T> Fragment Type to envelop
 	 */
 	private class FragmentHandler<T extends Fragment> {
-		
+
 		private String tag;
 		private Class<T> clz;
 		private Bundle arg;
@@ -196,24 +196,24 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			this.clz = clz;
 			this.requiresOnline = requiresOnline;
 		}
-		
+
 		public void setArguments(Bundle arg) {
 			this.arg = arg;
 		}
-		
+
 		public Fragment getFragment() {
 			Fragment f = getSupportFragmentManager().findFragmentByTag(tag);
-			
+
 			if (f == null) {
 				if (arg == null)
 					f = Fragment.instantiate(MainActivity.this, clz.getName());
 				else
 					f = Fragment.instantiate(MainActivity.this, clz.getName(), arg);
 			}
-			
+
 			return f;
 		}
-		
+
 		public String getTag() {
 			return tag;
 		}
@@ -357,7 +357,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			toggle();
 			break;
 		case R.id.menu_login:
-			showLoginDialog(model.getLogin());
+//			showLoginDialog(model.getLogin());
+			Intent intent = new Intent(this, ConnectionAssistant.class);
+			startActivity(intent);
 			break;
 		case R.id.menu_logout:
 			model.logout();
@@ -524,7 +526,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	public Model getModel() {
 		return model;
 	}
-	
+
 	/**
 	 * IProgressUI
 	 */
@@ -533,7 +535,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		progressCircle = true;
 		setSupportProgressBarIndeterminateVisibility(true);
 	}
-	
+
 	/**
 	 * IProgressUI
 	 */

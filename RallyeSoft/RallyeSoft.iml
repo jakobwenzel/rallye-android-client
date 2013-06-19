@@ -23,6 +23,7 @@
     <orderEntry type="library" name="RallyeLibs" level="project" />
     <orderEntry type="module" module-name="PagerSlidingTabStrip" />
     <orderEntry type="module" module-name="RallyeStructures" />
+    <orderEntry type="module" module-name="SherlockActionBar" />
   </component>
 </module>
 

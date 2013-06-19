@@ -35,5 +35,12 @@
     <string name="share_barcode">Share Barcode</string>
     <string name="scan_barcode">Scan Barcode</string>
     <string name="center">Zentrieren</string>
+	<string name="next">Weiter</string>
+	<string name="back">Zurück</string>
+	<string name="connection_assistant">Verbindungs-Assistent</string>
+	<string name="invalid_url">Ungültige Addresse</string>
+	<string name="invalid_server">Kein Server erreichbar</string>
+	<string name="invalid_login">Ungültiger Login</string>
+	<string name="finish">Beenden</string>
 
 </resources>

@@ -1,12 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -23,6 +17,12 @@ import com.google.android.gms.maps.model.LatLngBounds.Builder;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import de.rallye.model.structures.LinkedEdge;
 import de.rallye.model.structures.Node;

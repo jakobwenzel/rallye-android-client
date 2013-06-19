@@ -6,7 +6,9 @@ package de.stadtrallye.rallyesoft.common;
  *
  */
 public class Std {
-	
+
+	public static final String STEP = "step";
+
 	public static class DefaultLogin {
 		public static final String SERVER = "http://hajoschja.de:10101/StadtRallye/";
 		public static final int GROUP = 3;

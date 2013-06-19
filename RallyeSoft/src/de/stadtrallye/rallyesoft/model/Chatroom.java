@@ -32,7 +32,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	final private static String CLASS = Chatroom.class.getSimpleName();
 	final private String THIS;
 	final private static ErrorHandling err = new ErrorHandling(CLASS);
-	
+
 	enum Tasks { CHAT_REFRESH, CHAT_POST }
 
     // members
@@ -47,19 +47,36 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	private ArrayList<IChatListener> listeners = new ArrayList<IChatListener>();
 
     /**
-     * Requires: Previously logged in with identical login
+     *
      * @return all available Chatrooms
      */
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<Chatroom>();
-		//TODO: currently Chatrooms can only ever belong to 1 group, and will not be shown, even if another group has rights to access
-		Cursor c = model.db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, Chatrooms.FOREIGN_GROUP+"="+model.getLogin().groupID, null, null, null, null);
+
+		Cursor c = model.db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_UPDATE, Chatrooms.KEY_LAST_ID}, null, null, null, null, null);
 		
 		while (c.moveToNext()) {
-			out.add(new Chatroom(c.getInt(0), c.getString(1), c.getLong(2), c.getInt(3), model));
+			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), c.getLong(2), c.getInt(3), model);
+			room.refresh();
+			out.add(room);
 		}
 		
 		return out;
+	}
+
+	static void saveChatrooms(Model model, List<Chatroom> chatrooms) {
+		SQLiteDatabase db = model.db;
+
+		db.delete(Chatrooms.TABLE, null, null);
+
+		for (Chatroom c: chatrooms) {
+			ContentValues insert = new ContentValues();
+			insert.put(Chatrooms.KEY_ID, c.id);
+			insert.put(Chatrooms.KEY_NAME, c.name);
+			insert.put(Chatrooms.KEY_LAST_UPDATE, c.lastUpdate);
+			insert.put(Chatrooms.KEY_LAST_ID, c.lastId);
+			db.insert(Chatrooms.TABLE, null, insert);
+		}
 	}
 	
 	private Chatroom(int id, String name, long lastTime, int lastId, Model model) {
@@ -81,7 +98,19 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		
 		THIS = CLASS +" "+ id;
 	}
-	
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Chatroom chatroom = (Chatroom) o;
+
+		if (id != chatroom.id) return false;
+
+		return true;
+	}
+
 	public static class ChatroomConverter extends JSONConverter<Chatroom> {
 		
 		private Model model;
@@ -97,31 +126,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			
 			return new Chatroom(i, name, model);
 		}
-	}
-	
-	/**
-	 * Writes the "header" to DB
-	 * Only the Chatroom information is written, not the Chats themselves (they will be written automatically on change)
-	 * In order to write the information, the Groups must be written to the DB already
-	 * Currently trying refresh() will fail if writeToDb() has not been called at least once on this DB
-	 * 
-	 * Method will not overwrite / update existing entries, so if the Server has changed, the table needs to be cleared!
-	 */
-	public void writeToDb() {
-		SQLiteDatabase db = model.db;
-		
-		Cursor answer = db.query(Chatrooms.TABLE, new String[]{Chatrooms.KEY_NAME}, Chatrooms.KEY_ID+"="+id, null, null, null, null);
-		if (answer.getCount() < 1) {//TODO: check for different names? ensure consistency
-		
-			ContentValues insert = new ContentValues();
-			insert.put(Chatrooms.KEY_ID, id);
-			insert.put(Chatrooms.KEY_NAME, name);
-			insert.put(Chatrooms.FOREIGN_GROUP, model.getLogin().groupID);
-			insert.put(Chatrooms.KEY_LAST_UPDATE, 0);
-			insert.put(Chatrooms.KEY_LAST_ID, lastId);
-			db.insert(Chatrooms.TABLE, null, insert);
-		}
-		answer.close();
 	}
 	
 	// Implementation

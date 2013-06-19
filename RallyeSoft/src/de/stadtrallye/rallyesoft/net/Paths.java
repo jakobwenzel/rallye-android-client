@@ -9,6 +9,7 @@ public final class Paths {
 	public static final String MAP_EDGES = "map/edges";
 	public static final String CONFIG = "system/config";
 	public static final String PICS = "pics";
+	public static final String AVATAR = "avatar";
 	
 	/**
 	 * return relative path to a picture
@@ -18,5 +19,9 @@ public final class Paths {
 	 */
 	public static final String getPic(int picId, char picSize) {
 		return PICS +"/"+ picId +"/"+ picSize;
+	}
+
+	public static final String getAvatar(int groupID) {
+		return GROUPS +"/"+ groupID +"/"+ AVATAR;
 	}
 }

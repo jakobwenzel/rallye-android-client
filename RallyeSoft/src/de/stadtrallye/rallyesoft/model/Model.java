@@ -1,16 +1,15 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Binder;
 import android.os.Handler;
@@ -20,6 +19,7 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
 import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
@@ -29,12 +29,11 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
+import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.net.RequestFactory;
 
 /**
@@ -50,8 +49,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
-	
-	
+
 	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, AVAILABLE_CHATROOMS }
 	
 	
@@ -67,6 +65,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private ConnectionStatus status; //TODO: add network state
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
+	private IAvailableGroupsCallback availableGroupsCallback;
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	final RequestFactory factory;
@@ -120,11 +119,11 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		initDatabase();
 
-        Log.w(THIS, "ID, name, groupID, lastUpdate, lastID");
-        Cursor c = db.query(false , Chatrooms.TABLE, null, null, null, null, null, null, null);
-        while(c.moveToNext()) {
-            Log.w(THIS, c.getInt(0)+","+c.getString(1)+","+c.getInt(2)+","+c.getLong(3)+","+c.getInt(4));
-        }
+//        Log.w(THIS, "ID, name, groupID, lastUpdate, lastID");
+//        Cursor c = db.query(false , Chatrooms.TABLE, null, null, null, null, null, null, null);
+//        while(c.moveToNext()) {
+//            Log.w(THIS, c.getInt(0)+","+c.getString(1)+","+c.getInt(2)+","+c.getLong(3)+","+c.getInt(4));
+//        }
 
 		initExecutor();
 		
@@ -134,7 +133,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		factory = new RequestFactory(null, uniqueID);
 		
 		try {
-			if (currentLogin == null || !currentLogin.isComplete() || !isDbSynchronized())
+			if (currentLogin == null || !currentLogin.isComplete())
 				throw new LoginFailedException();
 				
 			URL url = new URL(currentLogin.server);
@@ -162,15 +161,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		map = new Map(this);
-	}
-	
-	/**
-	 * Checks if DB contains at least one group
-	 * (Means we have been logged in before)
-	 */
-	private boolean isDbSynchronized() {//TODO: precise check
-		Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_NAME}, Groups.KEY_ID+"="+currentLogin.groupID, null, null, null, null);
-		return 1 != c.getCount();
+
+        checkConfiguration();
 	}
 	
 	@Override
@@ -247,25 +239,20 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	/**
-	 * Start async check if the server accepts us
-	 */
+	 * Start checking for configuration changes
+     */
 	@Override
-	public void checkLoginStatus() {
-		if (isConnectionChanging()) {
-			err.concurrentConnectionChange("Status");
+	public void checkConfiguration() {
+		if (!isConnected()) {
+			err.notLoggedIn();
 			return;
 		}
-		
-		setConnectionStatus(ConnectionStatus.Connecting);
-		
-		try {
-			exec.execute(new RequestExecutor<String, Tasks>(factory.serverStatusRequest(), null, this, Tasks.CHECK_SERVER));
-		} catch (HttpRequestException e) {
-			err.requestException(e);
-		}
+
+        getAvailableChatrooms();
+        refreshServerConfig();
 	}
 	
-	private void checkStatusResult(RequestExecutor<String, ?> r) {
+	private void checkConfigResult(RequestExecutor<String, ?> r) {
 		if (r.isSuccessful()) {
 			currentLogin.validated();
 			chatrooms = Chatroom.getChatrooms(this);
@@ -288,9 +275,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private void serverConfigResult(RequestExecutor<ServerConfig, ?> r) {
 		if (r.isSuccessful()) {
-				serverConfig = r.getResult();
-				save().saveServerConfig().commit();
-				
+				ServerConfig serverConfig = r.getResult();
+
+				if (!serverConfig.equals(this.serverConfig)) {
+					this.serverConfig = serverConfig;
+					save().saveServerConfig().commit();
+				}
+
 				checkConnectionComplete();
 		} else {
 			err.asyncTaskResponseError(r.getException());
@@ -308,8 +299,12 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private void availableChatroomsResult(RequestExecutor<List<Chatroom>, ?> r) {
 		if (r.isSuccessful()) {
-				chatrooms = r.getResult();
-				save().saveChatrooms().commit();
+				List<Chatroom> chatrooms = r.getResult();
+
+                if (!chatrooms.equals(this.chatrooms)) {
+                    this.chatrooms = chatrooms;
+            	    save().saveChatrooms().commit();
+                }
 
 				checkConnectionComplete();
 		} else {
@@ -324,23 +319,36 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 			
 	}
-	
-	public void groupList() {
+
+	@Override
+	public void getAvailableGroups(IAvailableGroupsCallback callback, String server) {
 		if (!isConnected()) {
-			err.notLoggedIn();
-			return;
+			try {
+				factory.setBaseURL(new URL(server));
+			} catch (MalformedURLException e) {
+				Log.e(THIS, "Invalid URL");
+			}
 		}
 		
 		try {
-			
-			exec.execute(new RequestExecutor<String, Tasks>(factory.availableGroupsRequest(),null, this, Tasks.GROUP_LIST));
+			availableGroupsCallback = callback;
+			exec.execute(new JSONArrayRequestExecutor<Group, Tasks>(factory.availableGroupsRequest(), new Group.GroupConverter(), this, Tasks.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
 	}
 	
-	private void groupListResult(RequestExecutor<String, ?> r) {
-		Log.i(THIS, r.getResult());
+	private void availableGroupsResult(RequestExecutor<List<Group>, ?> r) {
+		final List<Group> groups = r.getResult();
+
+		if (availableGroupsCallback != null)
+			uiHandler.post(new Runnable(){
+				@Override
+				public void run() {
+					availableGroupsCallback.availableGroups(groups);
+					availableGroupsCallback = null;
+				}
+			});
 	}
 	
 	public URL getPictureUploadURL(String hash) {
@@ -406,13 +414,18 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	public IMap getMap() {
 		return map;
 	}
+
+	@Override
+	public String getAvatarURL(int groupID) {
+		return currentLogin.server + Paths.getAvatar(groupID);
+	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void executorResult(RequestExecutor<?, Tasks> r, Tasks callbackId) {
 		switch (callbackId) {
 		case CHECK_SERVER:
-			checkStatusResult((RequestExecutor<String, Tasks>) r);
+			checkConfigResult((RequestExecutor<String, Tasks>) r);
 			break;
 		case CONFIG:
 			serverConfigResult((RequestExecutor<ServerConfig, ?>) r);
@@ -421,7 +434,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			logoutResult((RequestExecutor<String, Tasks>) r);
 			break;
 		case GROUP_LIST:
-			groupListResult((RequestExecutor<String, ?>) r);
+			availableGroupsResult((RequestExecutor<List<Group>, ?>) r);
 			break;
 		case AVAILABLE_CHATROOMS:
 			availableChatroomsResult((RequestExecutor<List<Chatroom>, ?>) r);
@@ -464,14 +477,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		public Saver saveChatrooms() {
-			ContentValues insert = new ContentValues();
-			insert.put(Groups.KEY_ID, currentLogin.groupID);
-			//TODO: put Name [need to get name]
-			db.insert(Groups.TABLE, null, insert);
-			
-			for (Chatroom c: chatrooms) {
-				c.writeToDb();
-			}
+			Chatroom.saveChatrooms(Model.this, chatrooms);
 			
 			return this;
 		}
@@ -547,7 +553,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			Log.i(THIS, "Status: Connected recovered");
 		} else {
 			status = ConnectionStatus.Disconnected;
-			Log.i(THIS, "Status: Unkown recovered");
+			Log.i(THIS, "Status: Disconnected recovered");
 		}
 	}
 	

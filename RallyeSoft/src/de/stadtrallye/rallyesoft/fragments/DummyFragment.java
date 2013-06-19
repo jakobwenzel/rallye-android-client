@@ -1,12 +1,13 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import com.actionbarsherlock.app.SherlockFragment;
-
-import de.stadtrallye.rallyesoft.common.Std;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.actionbarsherlock.app.SherlockFragment;
+
+import de.stadtrallye.rallyesoft.common.Std;
 
 public class DummyFragment extends SherlockFragment {
 	

@@ -1,9 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import java.util.List;
-
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -24,17 +21,16 @@ import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
+import java.util.List;
+
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
-import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
-import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
- * If not logged in will use {@link DummyAdapter} instead of {@link ChatAdapter} to display special tab
  * @author Ramon
  *
  */
@@ -42,7 +38,7 @@ public class ChatsFragment extends SherlockFragment {
 	
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 	
-	private Model model;
+	private IModel model;
 	private ViewPager pager;
 	private PagerSlidingTabStrip indicator;
 	private ChatFragmentAdapter fragmentAdapter;

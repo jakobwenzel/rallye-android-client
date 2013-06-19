@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 14;
+	private static final int DATABASE_VERSION = 15;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 	
 	public static final class Groups {
@@ -26,12 +26,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		public static final String KEY_NAME = "name";
 		public static final String KEY_LAST_UPDATE = "lastUpdate";
 		public static final String KEY_LAST_ID = "lastID";
-		public static final String FOREIGN_GROUP = Groups.KEY_ID;
 		public static final String CREATE =
 				"CREATE TABLE "+ TABLE +" ("+
 					KEY_ID +" INTEGER PRIMARY KEY, "+
 					KEY_NAME +" VARCHAR(50) NOT NULL, "+
-					Groups.KEY_ID +" INTEGER NOT NULL REFERENCES "+ Groups.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
 					KEY_LAST_UPDATE +" TIMESTAMP, "+
 					KEY_LAST_ID +" INTEGER)";
 	}

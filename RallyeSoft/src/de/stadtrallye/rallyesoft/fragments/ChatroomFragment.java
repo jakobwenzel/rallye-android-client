@@ -1,7 +1,5 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import java.util.List;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -19,7 +17,8 @@ import android.widget.ProgressBar;
 
 import com.actionbarsherlock.app.SherlockFragment;
 
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import java.util.List;
+
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -27,6 +26,7 @@ import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
 import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
@@ -75,8 +75,9 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 		send = (Button) v.findViewById(R.id.button_send);
 		text = (EditText) v.findViewById(R.id.edit_new_message);
 		loading = (ProgressBar) v.findViewById(R.id.loading);
-		
+
 		send.setOnClickListener(this);
+
 		return v;
 	}
 	
@@ -221,7 +222,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 //			break;
 		}
 	}
-	
+
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();

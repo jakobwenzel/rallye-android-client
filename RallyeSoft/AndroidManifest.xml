@@ -61,6 +61,13 @@
 			</intent-filter>
         </activity>
 
+		<activity android:name=".ConnectionAssistant"
+				  android:parentActivityName=".MainActivity">
+			<meta-data
+					android:name="android.support.PARENT_ACTIVITY"
+					android:value="de.stadtrallye.rallyesoft.MainActivity" />
+		</activity>
+
         <receiver
             android:name="com.google.android.gcm.GCMBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >

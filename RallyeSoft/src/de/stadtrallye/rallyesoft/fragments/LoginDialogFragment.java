@@ -10,9 +10,9 @@ import android.widget.EditText;
 import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 public class LoginDialogFragment extends SherlockDialogFragment {
 	

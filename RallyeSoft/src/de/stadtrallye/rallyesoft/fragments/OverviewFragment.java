@@ -1,16 +1,17 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import com.actionbarsherlock.app.SherlockFragment;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.actionbarsherlock.app.SherlockFragment;
+
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
-import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 
 public class OverviewFragment extends SherlockFragment implements IConnectionStatusListener {
@@ -18,7 +19,7 @@ public class OverviewFragment extends SherlockFragment implements IConnectionSta
 	@SuppressWarnings("unused")
 	private static final String THIS = OverviewFragment.class.getSimpleName();
 	
-	private Model model;
+	private IModel model;
 	private TextView connectionStatus;
 
 	@Override
