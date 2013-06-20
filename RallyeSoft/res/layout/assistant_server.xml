@@ -32,7 +32,7 @@
 	<Button
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="@string/test"
+			android:text="@string/server_info"
 			android:id="@+id/test"
 			android:layout_alignParentStart="false"
 			android:layout_alignParentEnd="false"
