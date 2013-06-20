@@ -1,13 +1,22 @@
 package de.stadtrallye.rallyesoft;
 
+import android.content.Intent;
+import android.nfc.NdefMessage;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
+import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.util.ArrayList;
 
@@ -30,6 +39,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 
 	private ArrayList<FragmentHandler<?>> steps;
 	private int step = 1;
+	private boolean fastForward = false;
 
 	private String server;
 	private int groupID;
@@ -52,6 +62,10 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 
 		if (savedInstanceState != null) {
 			step = savedInstanceState.getInt(Std.STEP);
+			server = savedInstanceState.getString(Std.SERVER);
+			pass = savedInstanceState.getString(Std.PASSWORD);
+			groupID = savedInstanceState.getInt(Std.GROUP_ID);
+			name = savedInstanceState.getString(Std.NAME);
 		}
 
 		model = Model.getInstance(getApplicationContext());
@@ -62,6 +76,20 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		steps.add(new FragmentHandler<AssistantGroupsFragment>("groups", AssistantGroupsFragment.class));
 		steps.add(new FragmentHandler<AssistantAuthFragment>("auth", AssistantAuthFragment.class));
 		steps.add(new FragmentHandler<AssistantCompleteFragment>("complete", AssistantCompleteFragment.class));
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				finish();
+				return true;
+			case R.id.scan_qr_login:
+				IntentIntegrator zx = new IntentIntegrator(this);
+				zx.initiateScan(IntentIntegrator.QR_CODE_TYPES);
+				return true;
+		}
+		return false;
 	}
 
 	/**
@@ -104,12 +132,27 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuItem scan_qr = menu.add(Menu.NONE, R.id.scan_qr_login, 10, R.string.scan_barcode);
+		scan_qr.setIcon(R.drawable.scan_qr);
+		scan_qr.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
+		return true;
+	}
+
+	@Override
 	protected void onStart() {
 		super.onStart();
 
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		FragmentHandler<?> f = steps.get(step-1);
 		ft.replace(R.id.fragments, f.getFragment(), f.getTag()).commit();
+
+		if (fastForward) {
+			while (step < steps.size()-1) {
+				next();
+			}
+		}
 	}
 
 	@Override
@@ -117,6 +160,57 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		super.onSaveInstanceState(outState);
 
 		outState.putInt(Std.STEP, step);
+		outState.putString(Std.SERVER, server);
+		outState.putString(Std.PASSWORD, pass);
+		outState.putString(Std.NAME, name);
+		outState.putInt(Std.GROUP_ID, groupID);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
+			processNfcIntent(getIntent());
+		}
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		setIntent(intent);
+	}
+
+	private void setServerLoginJSON(String login) {
+		ServerLogin l = null;
+		try {
+			l = ServerLogin.fromJSON(login);
+
+			server = l.server;
+			groupID = l.groupID;
+			pass = l.groupPassword;
+
+			fastForward = true;
+		} catch (Exception e) {
+			Toast.makeText(this, e.toString(), Toast.LENGTH_LONG);
+		}
+	}
+
+	private void processNfcIntent(Intent intent) {
+		Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+		// only one message sent during the beam
+		NdefMessage msg = (NdefMessage) rawMsgs[0];
+
+		setServerLoginJSON(new String(msg.getRecords()[0].getPayload()));
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == IntentIntegrator.REQUEST_CODE) {
+			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+			if (scanResult == null) return;
+
+			setServerLoginJSON(scanResult.getContents());
+		}
 	}
 
 	@Override
@@ -137,10 +231,21 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	}
 
 	@Override
+	public int getGroup() {
+		return groupID;
+	}
+
+	@Override
+	public String getPass() {
+		return pass;
+	}
+
+	@Override
 	public void next() {
 		if (step < steps.size()) {
 			FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 			FragmentHandler<?> f = steps.get(step);
+
 			ft.replace(R.id.fragments, f.getFragment(), f.getTag()).addToBackStack(null).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
 			step++;
 		}
@@ -152,10 +257,6 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		step--;
 	}
 
-	@Override
-	public void finish() {
-		super.finish();
-	}
 
 	/**
 	 * IModelActivity

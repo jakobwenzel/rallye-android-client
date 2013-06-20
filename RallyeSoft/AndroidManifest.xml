@@ -54,18 +54,19 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
+        </activity>
+
+		<activity android:name=".ConnectionAssistant"
+				  android:parentActivityName=".MainActivity"
+				  android:theme="@style/Theme.Sherlock.Light.DarkActionBar">
+			<meta-data
+					android:name="android.support.PARENT_ACTIVITY"
+					android:value="de.stadtrallye.rallyesoft.MainActivity" />
+			<intent-filter>
 				<action android:name="android.nfc.action.NDEF_DISCOVERED"/>
 				<category android:name="android.intent.category.DEFAULT"/>
 				<data android:mimeType="application/de.stadtrallye.rallyesoft" />
 			</intent-filter>
-        </activity>
-
-		<activity android:name=".ConnectionAssistant"
-				  android:parentActivityName=".MainActivity">
-			<meta-data
-					android:name="android.support.PARENT_ACTIVITY"
-					android:value="de.stadtrallye.rallyesoft.MainActivity" />
 		</activity>
 
         <receiver
@@ -88,7 +89,7 @@
             android:name=".ImageViewActivity"
             android:label="@string/title_activity_image_view"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.Sherlock" >
+            android:theme="@style/Theme.Sherlock">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="de.stadtrallye.rallyesoft.MainActivity" />

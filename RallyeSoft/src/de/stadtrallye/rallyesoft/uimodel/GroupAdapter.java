@@ -46,6 +46,7 @@ public class GroupAdapter extends BaseAdapter {
 		loader = ImageLoader.getInstance();
 		DisplayImageOptions disp = new DisplayImageOptions.Builder()
 				.showStubImage(R.drawable.stub_image)
+				.cacheInMemory()
 				.build();
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
 				.defaultDisplayImageOptions(disp)

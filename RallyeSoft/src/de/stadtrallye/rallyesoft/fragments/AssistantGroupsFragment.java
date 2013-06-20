@@ -1,9 +1,11 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -53,7 +55,32 @@ public class AssistantGroupsFragment extends SherlockFragment implements IModel.
 			throw new ClassCastException(getActivity().toString() + " must implement IConnectionAssistant");
 		}
 
-		assistant.getModel().getAvailableGroups(this, assistant.getServer());
+		if (groupAdapter == null) {
+			assistant.getModel().getAvailableGroups(this, assistant.getServer());
+		} else {
+			initList();
+			restoreChoice();
+		}
+	}
+
+	private void restoreChoice() {
+		int g = assistant.getGroup();
+		if (g > 0) {
+			list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+			list.setItemChecked(g-1, true);
+		}
+	}
+
+	private void initList() {
+		list.setAdapter(groupAdapter);
+
+		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				assistant.setGroup((int) id);
+				assistant.next();
+			}
+		});
 	}
 
 	@Override
@@ -62,15 +89,9 @@ public class AssistantGroupsFragment extends SherlockFragment implements IModel.
 
 			groupAdapter = new GroupAdapter(getActivity(), groups, assistant.getModel());
 
-			list.setAdapter(groupAdapter);
+			initList();
 
-			list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-				@Override
-				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					assistant.setGroup((int) id);
-					assistant.next();
-				}
-			});
+			restoreChoice();
 		} else {
 			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
 			assistant.back();

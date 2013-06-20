@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -64,6 +65,16 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 			assistant = (IConnectionAssistant) getActivity();
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IConnectionAssistant");
+		}
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+
+		String s = assistant.getPass();
+		if (s != null) {
+			pass.setText(s);
 		}
 	}
 

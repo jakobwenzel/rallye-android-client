@@ -171,4 +171,10 @@ public class RequestFactory implements IAuthManager {
 			return null;
 		}
 	}
+
+	public Request serverInfoRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.INFO);
+		Request r = new Request(url);
+		return r;
+	}
 }

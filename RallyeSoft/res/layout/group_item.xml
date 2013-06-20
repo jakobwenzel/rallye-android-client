@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<de.stadtrallye.rallyesoft.widget.CheckableRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 				android:id="@+id/group_row"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content">
@@ -31,4 +31,4 @@
 			android:textColor="@color/abs__bright_foreground_disabled_holo_light"
 			android:textStyle="bold"/>
 
-</RelativeLayout>
+</de.stadtrallye.rallyesoft.widget.CheckableRelativeLayout>

@@ -23,6 +23,7 @@ import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
 import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
+import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -50,7 +51,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, AVAILABLE_CHATROOMS }
+	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, AVAILABLE_CHATROOMS }
 	
 	
 	private static Model model; // Singleton Pattern
@@ -66,6 +67,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private ConnectionStatus status; //TODO: add network state
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
 	private IAvailableGroupsCallback availableGroupsCallback;
+	private IServerInfoCallback serverInfoCallback;
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	final RequestFactory factory;
@@ -252,18 +254,6 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
         refreshServerConfig();
 	}
 	
-	private void checkConfigResult(RequestExecutor<String, ?> r) {
-		if (r.isSuccessful()) {
-			currentLogin.validated();
-			chatrooms = Chatroom.getChatrooms(this);
-			refreshServerConfig();
-			ConnectionStatus state = (r.getResponseCode() >= 200 && r.getResponseCode() < 300)? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
-			save().saveConnectionStatus(state).commit();
-			setConnectionStatus(state);
-		} else
-			setConnectionStatus(ConnectionStatus.Disconnected);
-	}
-	
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
@@ -350,6 +340,37 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 				}
 			});
 	}
+
+	@Override
+	public void getServerInfo(IServerInfoCallback callback, String server) {
+		if (!isConnected()) {
+			try {
+				factory.setBaseURL(new URL(server));
+			} catch (MalformedURLException e) {
+				Log.e(THIS, "Invalid URL");
+			}
+		}
+
+		try {
+			serverInfoCallback = callback;
+			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new ServerInfo.Converter(), this, Tasks.SERVER_INFO));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+		}
+	}
+
+	private void serverInfoResult(RequestExecutor<ServerInfo, ?> r) {
+		final ServerInfo info = r.getResult();
+
+		if (serverInfoCallback != null)
+			uiHandler.post(new Runnable(){
+				@Override
+				public void run() {
+					serverInfoCallback.serverInfo(info);
+					serverInfoCallback = null;
+				}
+			});
+	}
 	
 	public URL getPictureUploadURL(String hash) {
 		return factory.getPictureUploadURL(hash);
@@ -424,9 +445,6 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@Override
 	public void executorResult(RequestExecutor<?, Tasks> r, Tasks callbackId) {
 		switch (callbackId) {
-		case CHECK_SERVER:
-			checkConfigResult((RequestExecutor<String, Tasks>) r);
-			break;
 		case CONFIG:
 			serverConfigResult((RequestExecutor<ServerConfig, ?>) r);
 			break;
@@ -442,10 +460,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		case LOGIN:
 			loginResult((LoginExecutor<?>) r);
 			break;
+		case SERVER_INFO:
+			serverInfoResult((RequestExecutor<ServerInfo, ?>) r);
+			break;
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
-		
+
 		}
 	}
 	

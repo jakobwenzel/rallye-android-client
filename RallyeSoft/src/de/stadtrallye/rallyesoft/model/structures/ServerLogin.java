@@ -5,6 +5,8 @@ import org.json.JSONObject;
 
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -12,7 +14,12 @@ import android.util.Log;
 public class ServerLogin implements Parcelable {
 	
 	private static final String THIS = ServerLogin.class.getSimpleName();
-	private static final int version = 1; 
+	private static final int version = 2;
+
+	public static final String SERVER = "server";
+	public static final String GROUP_ID = "groupID";
+	public static final String GROUP_PASSWORD = "groupPassword";
+	public static final String VERSION = "version";
 
 	public enum State {Unknown, Validated, Invalidated};
 	
@@ -112,29 +119,27 @@ public class ServerLogin implements Parcelable {
 	public String toJSON() {
 		JSONObject js = new JSONObject();
 		try {
-			js.put(Std.VERSION, version)
-				.put(Std.SERVER, server)
-				.put(Std.GROUP, groupID)
-				.put(Std.PASSWORD, groupPassword);
+			js.put(VERSION, version)
+				.put(SERVER, server)
+				.put(GROUP_ID, groupID)
+				.put(GROUP_PASSWORD, groupPassword);
 		} catch (JSONException e) {
 			Log.e(THIS, "JSON Generation Failed!", e);
 		}
 		return js.toString();
 	}
 	
-	public static ServerLogin fromJSON(String json) {
+	public static ServerLogin fromJSON(String json) throws Exception {
 		JSONObject js;
 		try {
 			js = new JSONObject(json);
-			if (js.getInt(Std.VERSION) != version) {
-				Log.e(THIS, "Incompatible Versions of Login!");
-				return null;
+			if (js.getInt(VERSION) != version) {
+				throw new Exception("Incompatible Versions of Login!");
 			}
 			
-			return new ServerLogin(js.getString(Std.SERVER), js.getInt(Std.GROUP), null, js.getString(Std.PASSWORD));
+			return new ServerLogin(js.getString(SERVER), js.getInt(GROUP_ID), null, js.getString(GROUP_PASSWORD));
 		} catch (JSONException e) {
-			Log.e(THIS, "JSON invalid!", e);
-			return null;
+			throw new Exception("Invalid JSON", e);
 		}
 	}
 

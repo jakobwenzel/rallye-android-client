@@ -316,14 +316,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
-		if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())) {
-            processNfcIntent(getIntent());
-        }
-		if (deferredLogin != null) {
-			showLoginDialog(deferredLogin);
-			deferredLogin = null;
-		}
 	}
 	
 	@Override
@@ -411,13 +403,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == IntentIntegrator.REQUEST_CODE) {
-			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-			if (scanResult == null) return;
-			
-			deferredLogin = ServerLogin.fromJSON(scanResult.getContents());
-			
-		} else if(requestCode == Std.PICK_IMAGE && data != null && data.getData() != null){
+		if(requestCode == Std.PICK_IMAGE && data != null && data.getData() != null){
 	        Uri uri = data.getData();
 
 	        if (uri != null) {
@@ -437,28 +423,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		
 	    super.onActivityResult(requestCode, resultCode, data);
-	}
-	
-	@Override
-	protected void onNewIntent(Intent intent) {
-		setIntent(intent);
-	}
-	
-	private void processNfcIntent(Intent intent) {
-		Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-		// only one message sent during the beam
-		NdefMessage msg = (NdefMessage) rawMsgs[0];
-		// record 0 contains the MIME type, record 1 is the AAR, if present
-		if (Std.APP_MIME.equals(new String(msg.getRecords()[0].getPayload()))) {
-			if (model.isDisconnected()) {
-				showLoginDialog(ServerLogin.fromJSON(new String(msg.getRecords()[2].getPayload())));
-			} else {
-				Toast.makeText(this, "Logout first!", Toast.LENGTH_LONG).show();
-			}
-		} else {
-			Toast.makeText(this, "Unknown NFC Beam received", Toast.LENGTH_LONG).show();
-		}
-		
 	}
 	
 	/**

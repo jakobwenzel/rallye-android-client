@@ -3,4 +3,5 @@
     <item name="refresh_menu" type="id"/>
     <item name="picture_menu" type="id"/>
     <item name="center_menu" type="id"/>
+	<item name="scan_qr_login" type="id"/>
 </resources>

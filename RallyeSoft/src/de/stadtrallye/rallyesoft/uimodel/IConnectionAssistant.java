@@ -19,4 +19,8 @@ public interface IConnectionAssistant extends IProgressUI, IModelActivity {
 	void finish();
 
 	ServerLogin getLogin();
+
+	int getGroup();
+
+	String getPass();
 }

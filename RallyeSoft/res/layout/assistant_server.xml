@@ -1,22 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-			  android:orientation="vertical"
-			  android:layout_width="match_parent"
-			  android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:padding="16dp">
+
+	<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/assistant_choose_server"
+			android:id="@+id/textView"
+			android:layout_gravity="left|center_vertical"/>
 
 	<EditText
 			android:id="@+id/server"
 			android:inputType="textUri"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_marginTop="16dp"
-			android:layout_marginLeft="16dp"
-			android:layout_marginRight="16dp"
-			android:layout_marginBottom="4dp"
 			android:hint="@string/server"
 			android:layout_gravity="center_vertical"
-			android:imeOptions="actionNext"/>
+			android:imeOptions="actionNext"
+			android:layout_marginTop="16dp"
+			android:layout_alignParentEnd="false"
+			android:layout_alignParentStart="false"
+			android:layout_below="@+id/textView"
+			android:layout_alignParentRight="true"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentTop="false"
+			android:layout_alignParentBottom="false"/>
+
+	<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/test"
+			android:id="@+id/test"
+			android:layout_alignParentStart="false"
+			android:layout_alignParentEnd="false"
+			android:layout_alignParentTop="false"
+			android:layout_below="@+id/server"
+			android:layout_alignParentLeft="false"
+			android:layout_alignParentBottom="false"
+			android:layout_alignParentRight="false"
+			android:layout_marginTop="16dp"
+			android:layout_toLeftOf="@+id/next"
+			android:layout_marginRight="16dp"/>
 
 	<Button
 			android:layout_width="wrap_content"
@@ -24,6 +51,39 @@
 			android:text="@string/next"
 			android:id="@+id/next"
 			android:layout_gravity="right"
-			android:layout_margin="16dp"/>
+			android:layout_marginTop="16dp"
+			android:layout_alignParentEnd="false"
+			android:layout_below="@+id/server"
+			android:layout_alignParentLeft="false"
+			android:layout_alignParentRight="true"/>
 
-</LinearLayout>
+	<ImageView
+			android:layout_width="64dp"
+			android:layout_height="64dp"
+			android:id="@+id/server_image"
+			android:layout_gravity="left|center_vertical"
+			android:layout_below="@+id/next"
+			android:layout_marginTop="16dp"/>
+
+	<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:id="@+id/server_name"
+			android:layout_alignParentEnd="false"
+			android:layout_alignParentStart="false"
+			android:layout_alignParentRight="true"
+			android:layout_toRightOf="@+id/server_image"
+			android:layout_marginLeft="16dp"
+			android:gravity="center_vertical"
+			android:layout_alignTop="@+id/server_image"
+			android:layout_alignBottom="@+id/server_image"/>
+
+	<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/server_desc"
+			android:layout_marginTop="16dp"
+			android:layout_below="@+id/server_image"/>
+
+</RelativeLayout>

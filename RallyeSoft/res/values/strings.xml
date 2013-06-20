@@ -42,5 +42,7 @@
 	<string name="invalid_server">Kein Server erreichbar</string>
 	<string name="invalid_login">Ungültiger Login</string>
 	<string name="finish">Beenden</string>
+	<string name="assistant_choose_server">Bitte einen Rallye-Server angeben</string>
+	<string name="test">Testen</string>
 
 </resources>

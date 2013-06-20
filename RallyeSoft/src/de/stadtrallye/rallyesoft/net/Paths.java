@@ -10,7 +10,9 @@ public final class Paths {
 	public static final String CONFIG = "system/config";
 	public static final String PICS = "pics";
 	public static final String AVATAR = "avatar";
-	
+	public static final String INFO = "system/info";
+	public static final Object SERVER_PICTURE = "system/picture";
+
 	/**
 	 * return relative path to a picture
 	 * @param picId

@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.List;
 
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
@@ -13,6 +14,10 @@ public interface IModel {
 
 	interface IAvailableGroupsCallback {
 		void availableGroups(List<Group> groups);
+	}
+
+	interface IServerInfoCallback {
+		void serverInfo(ServerInfo info);
 	}
 	
 	List<? extends IChatroom> getChatrooms();
@@ -32,6 +37,8 @@ public interface IModel {
 	
 	ConnectionStatus getConnectionStatus();
 	boolean isDisconnected();
+
+	void getServerInfo(IServerInfoCallback callback, String server);
 
 	boolean isConnectionChanging();
 	boolean isConnected();
