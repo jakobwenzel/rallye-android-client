@@ -43,6 +43,10 @@
 	<string name="invalid_login">Ungültiger Login</string>
 	<string name="finish">Beenden</string>
 	<string name="assistant_choose_server">Bitte einen Rallye-Server angeben</string>
-	<string name="server_info">Server Info</string><string name="assistant_choose_name">Username für diesen Server</string><string name="assistant_group_password">Passwort zur gewählten Gruppe</string>
+	<string name="server_info">Server Info</string>
+	<string name="assistant_choose_name">Username für diesen Server</string>
+	<string name="assistant_group_password">Passwort zur gewählten Gruppe</string>
+	<string name="invalid_username">Ungültiger / leerer / zu kurzer Username</string>
+	<string name="invalid_password">Ungültiges / leeres / zu kurzes Passwort</string>
 
 </resources>

@@ -82,12 +82,13 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 	public void onClick(View v) {
 		String n = name.getText().toString(), p = pass.getText().toString();
 
-		if (n != null && n.length() >= 3 && pass != null && pass.length() > 3) {
-
+		if (n == null || n.length() < 3) {
+			Toast.makeText(getActivity(), R.string.invalid_username, Toast.LENGTH_SHORT).show();
+		} else if (pass == null || pass.length() <= 3){
+			Toast.makeText(getActivity(), R.string.invalid_password, Toast.LENGTH_SHORT).show();
+		} else {
 			assistant.setNameAndPass(n, p);
 			assistant.next();
-		} else {
-			Toast.makeText(getActivity(), R.string.invalid_login, Toast.LENGTH_SHORT).show();
 		}
 	}
 }
