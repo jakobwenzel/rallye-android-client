@@ -48,5 +48,6 @@
 	<string name="assistant_group_password">Passwort zur gewählten Gruppe</string>
 	<string name="invalid_username">Ungültiger / leerer / zu kurzer Username</string>
 	<string name="invalid_password">Ungültiges / leeres / zu kurzes Passwort</string>
+    <string name="uploading">Hochladen</string>
 
 </resources>

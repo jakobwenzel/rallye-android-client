@@ -2,9 +2,9 @@ package de.stadtrallye.rallyesoft.model;
 
 import java.util.List;
 
-import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
+import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 

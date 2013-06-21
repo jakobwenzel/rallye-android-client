@@ -21,6 +21,7 @@ import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.R;
@@ -93,7 +94,6 @@ public class ChatsFragment extends SherlockFragment {
 		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
 		
 		pager.setCurrentItem(currentTab);
-		
 	}
 	
 	@Override

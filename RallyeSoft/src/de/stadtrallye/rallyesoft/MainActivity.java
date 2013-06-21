@@ -418,6 +418,12 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	            Log.i(THIS, "Picture taken/selected: "+ imageFilePath);
 	            
 	            cursor.close();
+
+				Intent intent = new Intent(this, UploadService.class);
+				intent.putExtra(Std.PIC, imageFilePath);
+				String hash = String.valueOf(imageFilePath.hashCode());//TODO: use hash
+				intent.putExtra(Std.HASH, hash);
+				startService(intent);
 	        }
 	    }
 		

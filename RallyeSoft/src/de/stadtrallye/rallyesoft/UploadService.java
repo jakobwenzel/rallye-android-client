@@ -1,12 +1,18 @@
 package de.stadtrallye.rallyesoft;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Model;
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -19,6 +25,8 @@ public class UploadService extends IntentService {
 
 	private Model model;
 	private NotificationManager notes;
+	private String uploading;
+	private String picture;
 
 	public UploadService() {
 		super("RallyePictureUpload");
@@ -31,37 +39,54 @@ public class UploadService extends IntentService {
 		super.onCreate();
 		
 		notes = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		uploading = getString(R.string.uploading);
 	}
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		String pic = intent.getStringExtra(Std.PIC);
+		picture = intent.getStringExtra(Std.PIC);
 		String hash = intent.getStringExtra(Std.HASH);
-		
-		URL url = model.getPictureUploadURL(hash);
-		try {
+
+        long size = 0, current = 0;
+
+        try {
+            size = new File(picture).length();
+            FileInputStream fIn = getApplicationContext().openFileInput(picture);
+
+			URL url = model.getPictureUploadURL(hash);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod("PUT");
 			con.setDoOutput(true);
-			
-			con.getOutputStream();
-			
+
+			OutputStream out = con.getOutputStream();
+
+			byte[] buffer = new byte[100];
+			int count = 1;
+			while (count > 0) {
+				count = fIn.read(buffer);
+				out.write(buffer);
+				current += count;
+
+				notify((int) size, (int) current);
+			}
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-//		NotificationCompat.BigTextStyle big = new NotificationCompat.BigTextStyle(
-//			new NotificationCompat.Builder(this)
-//				.setSmallIcon(android.R.drawable.stat_notify_chat)
-//				.setContentTitle("New GCM Message")
-//				.setContentText(extras.toString())
-//				.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0)))
-//			.bigText(extras.toString());
-//		
-//		notes.notify(":GCM Mesage", Std.GCM_NOTIFICATION, big.build());
 	}
 
+	private void notify(int max, int current) {
 
+		Notification note = new NotificationCompat.Builder(this)
+				.setSmallIcon(R.drawable.upload)
+				.setContentTitle(uploading + "...")
+				.setContentText(uploading + ":  " + picture)
+				.setProgress(max, current, false)
+				.build();
+
+		notes.notify(":uploader", R.id.uploader, note);
+	}
 }
