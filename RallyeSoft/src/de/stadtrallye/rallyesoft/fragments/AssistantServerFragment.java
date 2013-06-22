@@ -20,10 +20,10 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
