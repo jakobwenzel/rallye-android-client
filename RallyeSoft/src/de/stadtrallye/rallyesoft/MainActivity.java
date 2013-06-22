@@ -269,7 +269,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		case 0://Overview
 			break;
 		case 1://Map
-			Bundle b = new Bundle();//TODO: LatLngBounds for initial Camera [done internally with animation]
+			Bundle b = new Bundle();
 			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
 			de.rallye.model.structures.LatLng loc = model.getMap().getMapLocation();
 			if (loc != null) {
@@ -290,7 +290,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		FragmentHandler<?> tab = tabs.get(pos);
 		
 		if (tab.requiresOnline && !model.isConnected()) {
-			Toast.makeText(getApplicationContext(), "Connect to a Server first!", Toast.LENGTH_SHORT).show();//TODO: R.string
+			Toast.makeText(getApplicationContext(), getString(R.string.need_connection), Toast.LENGTH_SHORT).show();
 			return true;
 		}
 		
@@ -433,7 +433,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public void onConnectionStatusChange(ConnectionStatus status) {
 		ActionBar ab = getSupportActionBar();
-		switch (status) {//TODO: No Network on UI
+		switch (status) {//TODO: Add "No Network" status to UI (requires Model to have a "No Network" status)
 		case Disconnecting:
 			if (isOnlineTab()) {
 				switchTabFallback();

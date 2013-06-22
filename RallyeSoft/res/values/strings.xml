@@ -50,5 +50,6 @@
 	<string name="invalid_password">Ungültiges / leeres / zu kurzes Passwort</string>
     <string name="uploading">Hochladen</string>
 	<string name="upload_complete">Hochgeladen</string>
+	<string name="need_connection">Diese Funktion benötigt eine Verbindung zu einem Server</string>
 
 </resources>
