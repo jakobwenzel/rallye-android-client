@@ -142,7 +142,11 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 
 	@Override
 	public void serverInfo(ServerInfo info) {
-		srv_name.setText(info.name);
-		srv_desc.setText(info.description);
+		if (info == null) {
+			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
+		} else {
+			srv_name.setText(info.name);
+			srv_desc.setText(info.description);
+		}
 	}
 }
