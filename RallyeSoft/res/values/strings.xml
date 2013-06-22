@@ -49,5 +49,6 @@
 	<string name="invalid_username">Ungültiger / leerer / zu kurzer Username</string>
 	<string name="invalid_password">Ungültiges / leeres / zu kurzes Passwort</string>
     <string name="uploading">Hochladen</string>
+	<string name="upload_complete">Hochgeladen</string>
 
 </resources>

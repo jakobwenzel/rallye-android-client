@@ -11,6 +11,8 @@ import java.net.URL;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.net.Request;
+
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -20,12 +22,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+import android.widget.Toast;
 
 public class UploadService extends IntentService {
 
+	private static final String THIS = UploadService.class.getSimpleName();
+
+	private static final String NOTE_TAG = ":uploader";
+
 	private Model model;
 	private NotificationManager notes;
-	private String uploading;
 	private String picture;
 
 	public UploadService() {
@@ -39,36 +46,52 @@ public class UploadService extends IntentService {
 		super.onCreate();
 		
 		notes = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-		uploading = getString(R.string.uploading);
 	}
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		picture = intent.getStringExtra(Std.PIC);
 		String hash = intent.getStringExtra(Std.HASH);
+		String mime = intent.getStringExtra(Std.MIME);
 
         long size = 0, current = 0;
 
         try {
-            size = new File(picture).length();
-            FileInputStream fIn = getApplicationContext().openFileInput(picture);
+			File f = new File(picture);
+            size = f.length();
+            FileInputStream fIn = new FileInputStream(f);
 
 			URL url = model.getPictureUploadURL(hash);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod("PUT");
+			con.setRequestMethod(Request.RequestType.PUT.toString());
+			con.setRequestProperty(Std.CONTENT_TYPE, mime);
 			con.setDoOutput(true);
+
+			NotificationCompat.Builder note = new NotificationCompat.Builder(this)
+					.setSmallIcon(R.drawable.upload)
+					.setContentTitle(getString(R.string.uploading) + "...")
+					.setContentText(picture);
 
 			OutputStream out = con.getOutputStream();
 
-			byte[] buffer = new byte[100];
+			byte[] buffer = new byte[10000];
 			int count = 1;
 			while (count > 0) {
 				count = fIn.read(buffer);
 				out.write(buffer);
 				current += count;
 
-				notify((int) size, (int) current);
+				notes.notify(NOTE_TAG, R.id.uploader, note.setProgress((int) size / 1000, (int) current / 1000, false).build());
 			}
+
+			notes.notify(NOTE_TAG, R.id.uploader, note.setProgress(0,0,false).setContentTitle(getString(R.string.upload_complete)).build());
+			out.close();
+			int code = con.getResponseCode();
+			if (code >= 300) {
+				Log.e(THIS, code + ": " + con.getResponseMessage());
+			} else
+				Log.i(THIS, picture +" successfully uploaded ("+size+" bytes)");
+			con.disconnect();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (ProtocolException e) {
@@ -76,17 +99,5 @@ public class UploadService extends IntentService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private void notify(int max, int current) {
-
-		Notification note = new NotificationCompat.Builder(this)
-				.setSmallIcon(R.drawable.upload)
-				.setContentTitle(uploading + "...")
-				.setContentText(uploading + ":  " + picture)
-				.setProgress(max, current, false)
-				.build();
-
-		notes.notify(":uploader", R.id.uploader, note);
 	}
 }

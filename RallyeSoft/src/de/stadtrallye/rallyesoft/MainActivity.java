@@ -9,10 +9,8 @@ import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -32,9 +30,7 @@ import com.actionbarsherlock.view.Window;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
@@ -403,7 +399,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(requestCode == Std.PICK_IMAGE && data != null && data.getData() != null){
+		if(data != null){
 	        Uri uri = data.getData();
 
 	        if (uri != null) {
@@ -413,14 +409,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 
 	            //Link to the image
 	            final String imageFilePath = cursor.getString(0);
-	            
-	            Toast.makeText(getApplicationContext(), getResources().getString(R.string.picture_taken), Toast.LENGTH_SHORT).show();
+
 	            Log.i(THIS, "Picture taken/selected: "+ imageFilePath);
 	            
 	            cursor.close();
 
 				Intent intent = new Intent(this, UploadService.class);
 				intent.putExtra(Std.PIC, imageFilePath);
+				intent.putExtra(Std.MIME, "image/jpeg");
 				String hash = String.valueOf(imageFilePath.hashCode());//TODO: use hash
 				intent.putExtra(Std.HASH, hash);
 				startService(intent);

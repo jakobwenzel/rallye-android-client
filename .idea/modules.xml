@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/PagerSlidingTabStrip/PagerSlidingTabStrip.iml" filepath="$PROJECT_DIR$/PagerSlidingTabStrip/PagerSlidingTabStrip.iml" />
       <module fileurl="file://$PROJECT_DIR$/RallyeSoft/RallyeSoft.iml" filepath="$PROJECT_DIR$/RallyeSoft/RallyeSoft.iml" />
-      <module fileurl="file://$PROJECT_DIR$/RallyeStructures/RallyeStructures.iml" filepath="$PROJECT_DIR$/RallyeStructures/RallyeStructures.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common/RallyeStructures/RallyeStructures.iml" filepath="$PROJECT_DIR$/common/RallyeStructures/RallyeStructures.iml" />
       <module fileurl="file://$PROJECT_DIR$/SherlockActionBar/SherlockActionBar.iml" filepath="$PROJECT_DIR$/SherlockActionBar/SherlockActionBar.iml" />
       <module fileurl="file://$PROJECT_DIR$/SlidingMenu/SlidingMenu.iml" filepath="$PROJECT_DIR$/SlidingMenu/SlidingMenu.iml" />
       <module fileurl="file://$PROJECT_DIR$/ViewPagerIndicator/ViewPagerIndicator.iml" filepath="$PROJECT_DIR$/ViewPagerIndicator/ViewPagerIndicator.iml" />

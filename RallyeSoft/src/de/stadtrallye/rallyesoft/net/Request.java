@@ -12,6 +12,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
+
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
@@ -68,7 +70,7 @@ public class Request {
 	
 	private void writePost() throws IOException {
 		conn.setDoOutput(true);
-		conn.addRequestProperty("Content-Type", mime.toString());
+		conn.addRequestProperty(Std.CONTENT_TYPE, mime.toString());
 //		conn.setFixedLengthStreamingMode(post.length);
 		conn.getOutputStream().write(post);
 	}

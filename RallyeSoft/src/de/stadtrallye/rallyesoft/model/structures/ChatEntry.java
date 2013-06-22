@@ -3,7 +3,6 @@ package de.stadtrallye.rallyesoft.model.structures;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class ChatEntry extends de.rallye.model.structures.ChatEntry {

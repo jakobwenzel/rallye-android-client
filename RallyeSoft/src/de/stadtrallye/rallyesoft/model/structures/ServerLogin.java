@@ -3,10 +3,6 @@ package de.stadtrallye.rallyesoft.model.structures;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.rallye.model.structures.UserAuth;
-import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;

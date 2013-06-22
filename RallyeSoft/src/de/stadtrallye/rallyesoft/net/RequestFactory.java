@@ -12,7 +12,6 @@ import android.util.Log;
 
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.SimpleChatEntry;
-import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;

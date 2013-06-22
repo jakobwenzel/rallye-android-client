@@ -8,6 +8,8 @@ package de.stadtrallye.rallyesoft.common;
 public class Std {
 
 	public static final String STEP = "step";
+	public static final String MIME = "mime";
+	public static final String CONTENT_TYPE = "Content-Type";
 
 	public static class DefaultLogin {
 		public static final String SERVER = "http://hajoschja.de:10101/StadtRallye/";
