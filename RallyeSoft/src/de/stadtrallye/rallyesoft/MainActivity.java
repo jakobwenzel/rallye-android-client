@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -37,27 +36,25 @@ import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
-import de.stadtrallye.rallyesoft.fragments.LoginDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.fragments.TurnFragment;
+import de.stadtrallye.rallyesoft.fragments.WelcomeFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 
-public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener,
-																		LoginDialogFragment.IDialogCallback, IModelActivity,
+public class MainActivity extends SlidingFragmentActivity implements  ActionBar.OnNavigationListener, AdapterView.OnItemClickListener, IModelActivity,
 																		IConnectionStatusListener, IProgressUI {
 	
 	private static final String THIS = MainActivity.class.getSimpleName();
-	
-	public PushInit push;
-	private Model model;
+
+	private IModel model;
 	private boolean keepModel = false;
 	private boolean progressCircle = false;
 	private int currentTab;
@@ -65,11 +62,10 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	private ArrayList<FragmentHandler<?>> tabs;
 
 	private FragmentHandler<GameMapFragment> mapFragmentHandler;
-	
-	private ServerLogin deferredLogin;
 
 	private SlidingMenu sm;
-	
+	private boolean forceRefreshFragments;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -77,21 +73,21 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		initFrame();
 		
 		initSlidingMenu();
-		
-		// Recover Last State
-		if (savedInstanceState != null) {
-			currentTab = savedInstanceState.getInt(Std.TAB, 0);
-		} else {
-			currentTab = 0;
-		}
-		
+
 		// Ray's INIT
 		PushInit.ensureRegistration(this);
 		model = (Model) getLastCustomNonConfigurationInstance();
 		if (model == null)
-			model = Model.getInstance(getApplicationContext());
+			model = Model.getModel(getApplicationContext());
 		model.addListener(this);
 		keepModel = false;
+		
+		// Recover Last State
+		if (savedInstanceState != null) {
+			currentTab = savedInstanceState.getInt(Std.TAB, 1);
+		} else {
+			currentTab = (model.isEmpty())? 0 : 1;
+		}
 		
 		forceOverflowMenu();
 		
@@ -104,7 +100,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	}
 	
 	private ActionBar initFrame() {
-		// Titel und Inhalt
+		// Title and Content
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		    
 		setTitle(R.string.title_main);
@@ -136,18 +132,19 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
         ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
       //TODO: own Adapter to disable elements if offline/highlight current element and set the SlidingMenu selector as soon as the first View has been instantiated
-        ArrayAdapter<String> dashAdapter = new ArrayAdapter<String>(this, R.layout.dashboard_item, android.R.id.text1, nav);
+        ArrayAdapter<String> dashAdapter = new ArrayAdapter<>(this, R.layout.dashboard_item, android.R.id.text1, nav);
         dashboard.setAdapter(dashAdapter);
         dashboard.setOnItemClickListener(this);
 	}
 	
 	private void initFragments() {
 		//Create FragmentHandlers
-		tabs = new ArrayList<FragmentHandler<?>>();
-		tabs.add(new FragmentHandler<OverviewFragment>("overview", OverviewFragment.class, false));
-		tabs.add(mapFragmentHandler = new FragmentHandler<GameMapFragment>("map", GameMapFragment.class, false));
-		tabs.add(new FragmentHandler<TurnFragment>("turn", TurnFragment.class, false));
-		tabs.add(new FragmentHandler<ChatsFragment>("chat", ChatsFragment.class, true));
+		tabs = new ArrayList<>();
+		tabs.add(new FragmentHandler<>("welcome", WelcomeFragment.class, false));
+		tabs.add(new FragmentHandler<>("overview", OverviewFragment.class, false));
+		tabs.add(mapFragmentHandler = new FragmentHandler<>("map", GameMapFragment.class, false));
+		tabs.add(new FragmentHandler<>("turn", TurnFragment.class, false));
+		tabs.add(new FragmentHandler<>("chat", ChatsFragment.class, true));
 	}
 	
 	@TargetApi(14)
@@ -182,8 +179,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	 */
 	private class FragmentHandler<T extends Fragment> {
 
-		private String tag;
-		private Class<T> clz;
+		private final String tag;
+		private final Class<T> clz;
 		private Bundle arg;
 		final private boolean requiresOnline;
 
@@ -221,8 +218,15 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		setSupportProgressBarIndeterminateVisibility(false);
 		onConnectionStatusChange(model.getConnectionStatus());
-		
-		onSwitchTab(currentTab, 0);
+
+		if (forceRefreshFragments) {
+			switchTab(0);
+			currentTab = 1;
+			forceRefreshFragments = false;
+		}
+
+		switchTab(currentTab);
+
 		sm.setSelectedView(getSelectedView(currentTab));
 	}
 	
@@ -234,7 +238,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		if (currentTab != pos)
 		{
 //			getSupportActionBar().setSelectedNavigationItem(pos);
-			onSwitchTab(pos, id);
+			switchTab(pos);
 		}
 		getSlidingMenu().showContent();
 	}
@@ -250,25 +254,21 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	}
 	
 	private void switchTabFallback() {
-		onSwitchTab(currentTab = 0, 0);
+		switchTab(currentTab = 1);
 	}
-	
+
 	/**
 	 * ActionBar.OnNavigationListener
 	 */
 	@Override
 	public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-		return onSwitchTab(itemPosition, itemId);
+		return switchTab(itemPosition);
 	}
 	
-	private boolean onSwitchTab(int pos, long id) {
-		
-		setTitle(nav[pos]);
+	private boolean switchTab(int pos) {
 		
 		switch (pos) {
-		case 0://Overview
-			break;
-		case 1://Map
+		case 2://Map
 			Bundle b = new Bundle();
 			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
 			de.rallye.model.structures.LatLng loc = model.getMap().getMapLocation();
@@ -278,14 +278,14 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			b.putParcelable("MapOptions", gmo);
 			mapFragmentHandler.setArguments(b);
 			break;
-		case 2://Next Play
-			break;
-		case 3://Chat
-			break;
 		default:
-			Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
-			return false;
+			if (pos < 0 || pos > 4) {
+				Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
+				return false;
+			}
 		}
+
+		setTitle(nav[pos]);
 		
 		FragmentHandler<?> tab = tabs.get(pos);
 		
@@ -308,12 +308,6 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		return true;
 	}
 	
-	
-	@Override
-	protected void onResume() {
-		super.onResume();
-	}
-	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -331,7 +325,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		boolean act = model.isConnected();
-		menu.findItem(R.id.menu_login).setEnabled(!act);
+//		menu.findItem(R.id.menu_login).setEnabled(!act);
 		menu.findItem(R.id.menu_logout).setEnabled(act);
 		menu.findItem(R.id.menu_share_barcode).setEnabled(act);
 		
@@ -345,9 +339,8 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			toggle();
 			break;
 		case R.id.menu_login:
-//			showLoginDialog(model.getLogin());
 			Intent intent = new Intent(this, ConnectionAssistant.class);
-			startActivity(intent);
+			startActivityForResult(intent, ConnectionAssistant.REQUEST_CODE);
 			break;
 		case R.id.menu_logout:
 			model.logout();
@@ -362,17 +355,9 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		return true;
 	}
 	
-	private void showLoginDialog(ServerLogin login) {
-		DialogFragment d = new LoginDialogFragment();
-		Bundle b = new Bundle();
-		b.putParcelable(Std.LOGIN, login);
-		d.setArguments(b);
-		d.show(getSupportFragmentManager(), Std.LOGIN_DIALOG);
-	}
-	
 	/**
-	 * Called if we e.g. Rotate the App
-	 * We are saving the Model
+	 * Called if e.g. the App is rotated
+	 * => save the model
 	 */
 	@Override
 	public Object onRetainCustomNonConfigurationInstance() {
@@ -389,7 +374,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		
 		model.removeListener(this);
 		
-		if (!keepModel)
+		if (!keepModel) // Only destroy the model if we do not need it again after the configuration change
 			model.onDestroy();
 		
 		GCMRegistrar.onDestroy(this);
@@ -399,30 +384,40 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(data != null){
+		if (requestCode == ConnectionAssistant.REQUEST_CODE) {
+			if (resultCode > 0) {
+				model.removeListener(this);
+				model = Model.getModel(getApplicationContext());
+				model.addListener(this);
+				forceRefreshFragments = true;
+			}
+		} else if(data != null){
 	        Uri uri = data.getData();
 
 	        if (uri != null) {
-	            //User has picked an image.
-	            Cursor cursor = getContentResolver().query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
-	            cursor.moveToFirst();
+				try {
+					//User has picked an image.
+					Cursor cursor = getContentResolver().query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
+					cursor.moveToFirst();
 
-	            //Link to the image
-	            final String imageFilePath = cursor.getString(0);
+					//Link to the image
+					final String imageFilePath = cursor.getString(0);
 
-	            Log.i(THIS, "Picture taken/selected: "+ imageFilePath);
-	            
-	            cursor.close();
+					Log.i(THIS, "Picture taken/selected: "+ imageFilePath);
 
-				Intent intent = new Intent(this, UploadService.class);
-				intent.putExtra(Std.PIC, imageFilePath);
-				intent.putExtra(Std.MIME, "image/jpeg");
-				String hash = String.valueOf(imageFilePath.hashCode());//TODO: use hash
-				intent.putExtra(Std.HASH, hash);
-				startService(intent);
+					cursor.close();
+
+					Intent intent = new Intent(this, UploadService.class);
+					intent.putExtra(Std.PIC, imageFilePath);
+					intent.putExtra(Std.MIME, "image/jpeg");
+					String hash = String.valueOf(imageFilePath.hashCode());//TODO: use hash
+					intent.putExtra(Std.HASH, hash);
+					startService(intent);
+				} catch (Exception e) {
+					Log.e(THIS, "Failed to select Picture", e);
+				}
 	        }
 	    }
-		
 		
 	    super.onActivityResult(requestCode, resultCode, data);
 	}
@@ -462,34 +457,16 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 	
 	@Override
 	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
-		Toast.makeText(this, "Login Failed!", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, getString(R.string.connection_failure), Toast.LENGTH_SHORT).show();
 		
 		onConnectionStatusChange(lastStatus);
-	}
-	
-	/**
-	 * LoginDialogFragment.IDialogCallback
-	 */
-	@Override
-	public void onDialogPositiveClick(LoginDialogFragment dialog, ServerLogin login) {
-		if (login.isComplete())
-			model.login(login);
-		else {
-			Toast.makeText(this, getString(R.string.invalid), Toast.LENGTH_SHORT).show();
-			showLoginDialog(login);
-		}
-	}
-
-	@Override
-	public void onDialogNegativeClick(LoginDialogFragment dialog) {
-		
 	}
 	
 	/**
 	 * IModelActivity
 	 */
 	@Override
-	public Model getModel() {
+	public IModel getModel() {
 		return model;
 	}
 

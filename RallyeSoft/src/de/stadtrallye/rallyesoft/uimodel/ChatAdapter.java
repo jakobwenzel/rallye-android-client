@@ -18,8 +18,10 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
+import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
@@ -38,7 +40,7 @@ public class ChatAdapter extends BaseAdapter {
 	private GroupUser user;
 	private Context context;
 	private LayoutInflater inflator;
-	private IChatroom chatroom;
+	private IModel model;
 	
 	private class ViewMem {
 		public ImageView img;
@@ -48,10 +50,10 @@ public class ChatAdapter extends BaseAdapter {
 	}
 	
 	
-	public ChatAdapter(Context context, GroupUser user, IChatroom chatroom) {
+	public ChatAdapter(Context context, IModel model) {
 		this.context = context;
-		this.user = user;
-		this.chatroom = chatroom;
+		this.user = model.getUser();
+		this.model = model;
 		
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		
@@ -78,12 +80,12 @@ public class ChatAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View v = convertView;
-		final ChatEntry o = chats.get(position);
+		final ChatEntry chatEntry = chats.get(position);
 		
 		ViewMem mem;
 		
         if (v == null) {
-            Sender s = o.getSender(user);
+            Sender s = chatEntry.getSender(user);
             
             v = inflator.inflate((s == Sender.Me)? R.layout.chat_item_right : R.layout.chat_item_left, null);
             
@@ -100,17 +102,17 @@ public class ChatAdapter extends BaseAdapter {
         	mem = (ViewMem) v.getTag();
         }
         
-        if (o != null) {
-            mem.sender.setText("Sender: "+ o.userID);
-            mem.msg.setText(o.message);
-            mem.time.setText(converter.format(new Date(o.timestamp * 1000L)));
+        if (chatEntry != null) {
+            mem.sender.setText("Sender: "+ chatEntry.userID);
+            mem.msg.setText(chatEntry.message);
+            mem.time.setText(converter.format(new Date(chatEntry.timestamp * 1000L)));
             
             // ImageLoader jar
             // ImageLoader must apparently be called for _EVERY_ entry
-            // When called with null or "" as URL, will display empty pciture / default resource
+            // When called with null or "" as URL, will display empty picture / default resource
             // Otherwise ImageLoader will not be stable and start swapping images
-            if (o.pictureID > 0) {
-            	loader.displayImage(chatroom.getUrlFromImageId(o.pictureID, 't'), mem.img);
+            if (chatEntry.pictureID > 0) {
+            	loader.displayImage(model.getUrlFromImageId(chatEntry.pictureID, PictureSize.Thumbnail), mem.img);
             } else {
             	loader.displayImage(null, mem.img);
             }

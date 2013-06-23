@@ -23,7 +23,7 @@ public class Request {
 	private static final boolean DEBUG = true;
 	private static final String THIS = Request.class.getSimpleName();
 	
-	public enum RequestType { GET, POST, PUT, DELETE };
+	public enum RequestType { GET, POST, PUT, DELETE }
 	
 	private URL url;
 	private HttpURLConnection conn;
@@ -42,7 +42,7 @@ public class Request {
 				return "application/JSON";
 			}
 		}
-	};
+	}
 	
 	public Request(URL url) {
 		this(url, RequestType.GET);
@@ -92,6 +92,7 @@ public class Request {
 		}
 		
 		code = conn.getResponseCode();
+		msg = conn.getResponseMessage();
 		
 		if (DEBUG)
 			Log.d(THIS, "Received Response Code: "+code);
@@ -118,9 +119,7 @@ public class Request {
 		try {
 			prepareConnection();
 			
-			String res = reader.readLine();
-			
-			return res;
+			return reader.readLine();
 		} catch (IOException e) {
 			Log.e(THIS, "Request Failed ("+url.toString()+")", e);
 			throw new HttpRequestException(code, msg, url, e);
@@ -133,7 +132,7 @@ public class Request {
 		try {
 			prepareConnection();
 			
-			List<String> res = new ArrayList<String>();
+			List<String> res = new ArrayList<>();
 			String line;
 			
 			while((line = reader.readLine()) != null) {

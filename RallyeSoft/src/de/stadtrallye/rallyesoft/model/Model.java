@@ -3,6 +3,7 @@ package de.stadtrallye.rallyesoft.model;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,10 +20,11 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import de.rallye.model.structures.PictureSize;
+import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
-import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
 import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
@@ -32,7 +34,6 @@ import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
-import de.stadtrallye.rallyesoft.model.executors.LoginExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.net.RequestFactory;
@@ -57,11 +58,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private static Model model; // Singleton Pattern
 
 	
-	final private SharedPreferences pref;
+	private SharedPreferences pref;
 	final private Context context;
 	
 	private ServerLogin currentLogin;
-	private RallyeAuth rallyeAuth;
 	ServerConfig serverConfig;
 	
 	private ConnectionStatus status; //TODO: add network state
@@ -79,27 +79,54 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	SQLiteDatabase db;
 	
 	/**
-	 * Model can now be kept through Configuration Changes
-	 * @param context needed for Database, Preferences, GCMid (and Res-Strings for default_login [not lang-specific]) => give ApplicationContext
-	 * @return Singleton Model
+	 * If possible restore a Model from RAM or Settings
+	 * @param context needed for Database, Preferences, GCMid => give ApplicationContext to avoid leaking contexts during configuration changes
+	 * @return existing Model or one restored from settings
 	 */
-	public static Model getInstance(Context context) {
+	public static IModel getModel(Context context) {
 		if (model != null) {
 			return model.reuse();
 		} else {
 			return model = new Model(context, getDefaultPreferences(context));
 		}
 	}
+
+	public static IModel createEmptyModel(Context context) {
+		return new Model(context, null);
+	}
+
+	public static void switchToNew(IModel newModel) {
+		if (!(newModel instanceof Model))
+			return;
+
+		model.logout();
+		model.onDestroy();
+
+		Model.model = (Model) newModel;
+
+		model.saveModel();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return !currentLogin.hasServer();
+	}
 	
 	private static SharedPreferences getDefaultPreferences(Context context) {
 		return context.getSharedPreferences(Std.CONFIG_MAIN, Context.MODE_PRIVATE);
 	}
-	
+
+	/**
+	 * Ensure that this Model has a working DB Connection and Executor (if for some reason the model was destroyed, but the context (and static model with it) survived)
+	 * @return for convenience
+	 */
 	private Model reuse() {
 		if (!model.db.isOpen()) {
+			Log.w(THIS, "Resusing old Model: reopening DB");
 			initDatabase();
 		}
 		if (model.exec.isShutdown()) {
+			Log.w(THIS, "Resusing old Model: restarting Executor");
 			initExecutor();
 		}
 		
@@ -121,47 +148,37 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		initDatabase();
 
-//        Log.w(THIS, "ID, name, groupID, lastUpdate, lastID");
-//        Cursor c = db.query(false , Chatrooms.TABLE, null, null, null, null, null, null, null);
-//        while(c.moveToNext()) {
-//            Log.w(THIS, c.getInt(0)+","+c.getString(1)+","+c.getInt(2)+","+c.getLong(3)+","+c.getInt(4));
-//        }
-
 		initExecutor();
-		
-		restoreLogin();
-		
-		String uniqueID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-		factory = new RequestFactory(null, uniqueID);
-		
+
 		try {
-			if (currentLogin == null || !currentLogin.isComplete())
-				throw new LoginFailedException();
-				
-			URL url = new URL(currentLogin.server);
-			factory.setBaseURL(url);
-			factory.setPushID(GCMRegistrar.getRegistrationId(context));
-			factory.setUserAuth(rallyeAuth);
-			
-			
-			restoreServerConfig();
-			restoreConnectionStatus();
-			
-			try {
-				chatrooms = Chatroom.getChatrooms(this);
-			} catch (Exception e) {
-				Log.e(THIS, "Chatrooms could not be restored");
+
+			if (pref != null) {
+				restoreLogin();
+				restoreServerConfig();
+				restoreConnectionStatus();
+			} else {
+				currentLogin = new ServerLogin();
+				setConnectionStatus(ConnectionStatus.Disconnected);
 			}
-			
-			if (serverConfig == null) {
-				Log.e(THIS, "ServerConfig could not be restored");
-				refreshServerConfig();
-			}
+
 		} catch (Exception e) {
 			Log.w(THIS, "No usable Login-Data found -> stay offline", e);
 			setConnectionStatus(ConnectionStatus.Disconnected);
 		}
-		
+
+		String uniqueID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+		factory = new RequestFactory(currentLogin, uniqueID);
+		factory.setPushID(GCMRegistrar.getRegistrationId(context));
+
+		if (isConnected()) {
+			try {
+				chatrooms = Chatroom.getChatrooms(this);
+			} catch (Exception e) {
+				Log.e(THIS, "Chatrooms could not be restored");
+				throw e;
+			}
+		}
+
 		map = new Map(this);
 
         checkConfiguration();
@@ -171,12 +188,12 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	public void logout() {
 		if (currentLogin == null || !isConnected()) {
 			Exception e = err.logoutInvalid();
-			connectionFailure(e, ConnectionStatus.Disconnected);
 			return;
 		}
 		
 		setConnectionStatus(ConnectionStatus.Disconnecting);
-		save().saveConnectionStatus(ConnectionStatus.Disconnected).commit();
+		if (pref != null)
+			save().saveConnectionStatus().commit();
 		
 		try {
 			exec.execute(new RequestExecutor<String, Tasks>(factory.logoutRequest(), null, this, Tasks.LOGOUT));
@@ -186,35 +203,41 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	private void logoutResult(RequestExecutor<String, ?> r) {
-		rallyeAuth = null;
-		factory.setUserAuth(null);
+		currentLogin.setUserAuth(null);
 		setConnectionStatus(ConnectionStatus.Disconnected);
+	}
+
+	@Override
+	public String setServer(String server) throws MalformedURLException {
+		if (!server.endsWith("/"))
+			server = server +"/";
+
+		this.currentLogin.setServer(new URL(server));
+		return server;
 	}
 	
 	@Override
-	public void login(ServerLogin login) {
+	public void login(String username, int groupID, String groupPassword) {
 		synchronized (this) {
 			if (!isDisconnected()) {
 				if (isConnected()) {
 					err.loggedIn();
 				} else if (isConnectionChanging()) {
 					err.concurrentConnectionChange("Login");
-				} else if (!login.isComplete()) {
-					err.loginInvalid(login);
 				}
 				return;
-			} else if (login.equals(currentLogin)) {
-				login = currentLogin;
 			}//Sanity
 			
 			setConnectionStatus(ConnectionStatus.Connecting);
+			currentLogin.setName(username);
+			currentLogin.setGroupID(groupID);
+			currentLogin.setGroupPassword(groupPassword);
 		}
 		
 		try {
-			factory.setPushID(GCMRegistrar.getRegistrationId(context));
-			factory.setBaseURL(new URL(login.server));
+			factory.setPushID(GCMRegistrar.getRegistrationId(context));//TODO: necessary?
 			
-			exec.execute(new LoginExecutor<Tasks>(factory.loginRequest(login), login, this, Tasks.LOGIN));
+			exec.execute(new JSONObjectRequestExecutor<>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, Tasks.LOGIN));
 		
 		} catch (Exception e) {
 			err.requestException(e);
@@ -223,14 +246,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 	}
 	
-	public void loginResult(LoginExecutor<?> r) {
+	public void loginResult(RequestExecutor<UserAuth, ?> r) {
 		if (r.isSuccessful()) {
 			
-			rallyeAuth = r.getResult();
-			factory.setUserAuth(rallyeAuth);
-			currentLogin = r.getLogin();
-			
-			save().saveLogin().saveAuth().commit();
+			currentLogin.setUserAuth(r.getResult());
 			
 			getAvailableChatrooms();
 			refreshServerConfig();
@@ -269,7 +288,6 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
 				if (!serverConfig.equals(this.serverConfig)) {
 					this.serverConfig = serverConfig;
-					save().saveServerConfig().commit();
 				}
 
 				checkConnectionComplete();
@@ -293,7 +311,6 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
                 if (!chatrooms.equals(this.chatrooms)) {
                     this.chatrooms = chatrooms;
-            	    save().saveChatrooms().commit();
                 }
 
 				checkConnectionComplete();
@@ -305,19 +322,16 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private void checkConnectionComplete() {
 		if (status == ConnectionStatus.Connecting && chatrooms != null && chatrooms.size() > 0 && serverConfig != null) {
 			setConnectionStatus(ConnectionStatus.Connected);
-			save().saveConnectionStatus(status).commit();
 		}
 			
 	}
 
 	@Override
-	public void getAvailableGroups(IAvailableGroupsCallback callback, String server) {
-		if (!isConnected()) {
-			try {
-				factory.setBaseURL(new URL(server));
-			} catch (MalformedURLException e) {
-				Log.e(THIS, "Invalid URL");
-			}
+	public void getAvailableGroups(IAvailableGroupsCallback callback) {
+		if (!currentLogin.hasServer()) {
+			err.serverNotSet();
+			callback.availableGroups(null);
+			return;
 		}
 		
 		try {
@@ -342,13 +356,11 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 
 	@Override
-	public void getServerInfo(IServerInfoCallback callback, String server) {
-		if (!isConnected()) {
-			try {
-				factory.setBaseURL(new URL(server));
-			} catch (MalformedURLException e) {
-				Log.e(THIS, "Invalid URL");
-			}
+	public void getServerInfo(IServerInfoCallback callback) {
+		if (!currentLogin.hasServer()) {
+			err.serverNotSet();
+			callback.serverInfo(null);
+			return;
 		}
 
 		try {
@@ -371,7 +383,16 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 				}
 			});
 	}
-	
+
+	@Override
+	public void saveModel() {
+		if (pref == null)
+			pref = getDefaultPreferences(context);
+
+		save().saveLogin().saveServerConfig().saveChatrooms().saveConnectionStatus().commit();
+	}
+
+	@Override
 	public URL getPictureUploadURL(String hash) {
 		return factory.getPictureUploadURL(hash);
 	}
@@ -393,23 +414,28 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	@Override
 	public ServerLogin getLogin() {
-		return (currentLogin != null)? currentLogin : getDefaultLogin();
+		return currentLogin;
 	}
-	
+
+	@Override
+	public GroupUser getUser() {
+		return new GroupUser(currentLogin.getUserID(), currentLogin.getGroupID());
+	}
+
 	/**
-	 * 
-	 * WARNING: do not change List
+	 * Get the chatrooms available to the current user
+	 * @return Unmodifiable List
 	 */
 	@Override
 	public List<? extends IChatroom> getChatrooms() {
-		return chatrooms;
+		return Collections.unmodifiableList(chatrooms);
 	}
-	
-	
+
+
 	/**
-	 * Returns IChatroom with id
-	 * 
-	 * Will iterate through all chatrooms until found or null
+	 *
+	 * @param id the official server side chatroomID
+	 * @return Model of that specific chatroom / null if it does not exist, user has no access
 	 */
 	@Override
 	public IChatroom getChatroom(int id) {
@@ -438,7 +464,17 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
 	@Override
 	public String getAvatarURL(int groupID) {
-		return currentLogin.server + Paths.getAvatar(groupID);
+		return currentLogin.getServer().toString() + Paths.getAvatar(groupID);
+	}
+
+	@Override
+	public String getServerPictureURL() {
+		return currentLogin.getServer().toString() + Paths.SERVER_PICTURE;
+	}
+
+	@Override
+	public String getUrlFromImageId(int pictureID, PictureSize size) {
+		return currentLogin.getServer().toString() + Paths.getPic(pictureID, size);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -458,7 +494,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			availableChatroomsResult((RequestExecutor<List<Chatroom>, ?>) r);
 			break;
 		case LOGIN:
-			loginResult((LoginExecutor<?>) r);
+			loginResult((RequestExecutor<UserAuth, ?>) r);
 			break;
 		case SERVER_INFO:
 			serverInfoResult((RequestExecutor<ServerInfo, ?>) r);
@@ -482,18 +518,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		public Saver saveLogin() {
-			edit.putString(Std.SERVER, currentLogin.server);
-			edit.putInt(Std.GROUP_ID, currentLogin.groupID);
-			edit.putString(Std.GROUP+Std.PASSWORD, currentLogin.groupPassword);
+			edit.putString(Std.SERVER, currentLogin.getServer().toString());
+			edit.putInt(Std.GROUP_ID, currentLogin.getGroupID());
+			edit.putString(Std.GROUP+Std.PASSWORD, currentLogin.getGroupPassword());
 			edit.putLong(Std.LAST_LOGIN, currentLogin.getLastValidated());
-			edit.putString(Std.USER+Std.NAME, currentLogin.name);
-			return this;
-		}
-		
-		public Saver saveAuth() {
-			edit.putInt(Std.USER_ID, rallyeAuth.userID);
-			edit.putString(Std.USER+Std.PASSWORD, rallyeAuth.password);
-			
+			edit.putString(Std.USER+Std.NAME, currentLogin.getName());
+			edit.putInt(Std.USER_ID, currentLogin.getUserID());
+			edit.putString(Std.USER+Std.PASSWORD, currentLogin.getUserPassword());
 			return this;
 		}
 		
@@ -503,8 +534,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			return this;
 		}
 		
-		public Saver saveConnectionStatus(ConnectionStatus conn) {
-			edit.putBoolean(Std.CONNECTED, conn == ConnectionStatus.Connected);
+		public Saver saveConnectionStatus() {
+			edit.putBoolean(Std.CONNECTED, status == ConnectionStatus.Connected);
 			
 			return this;
 		}
@@ -544,27 +575,22 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	private void restoreLogin() {
-		ServerLogin l = new ServerLogin(pref.getString(Std.SERVER, null),
-				pref.getInt(Std.GROUP_ID, 0),
-				pref.getString(Std.USER+Std.NAME, null),
-				pref.getString(Std.GROUP+Std.PASSWORD, null),
-				pref.getLong(Std.LAST_LOGIN, 0));
-		
-		
-		RallyeAuth a = new RallyeAuth(pref.getInt(Std.USER_ID, 0),
-									pref.getString(Std.USER+Std.PASSWORD, null),
-									l);
-		
-		if (l.isComplete()) {
-			currentLogin = l;
+		UserAuth auth = new UserAuth(pref.getInt(Std.USER_ID, 0), pref.getString(Std.USER+Std.PASSWORD, null));
+		if (auth.password == null)
+			auth = null;
+
+		try {
+			currentLogin = new ServerLogin(pref.getString(Std.SERVER, null),
+					pref.getInt(Std.GROUP_ID, 0),
+					pref.getString(Std.USER+Std.NAME, null),
+					pref.getString(Std.GROUP+Std.PASSWORD, null),
+					pref.getLong(Std.LAST_LOGIN, 0),
+					auth);
 			Log.i(THIS, "Login recovered");
-			if (a.password != null) {
-				rallyeAuth = a;
-				Log.i(THIS, "Auth recovered");
-			}
-		} else {
-			currentLogin = null;
-			Log.e(THIS, "Login corrupted");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			Log.i(THIS, "Login corrupted");
+			currentLogin = new ServerLogin();
 		}
 	}
 	
@@ -577,41 +603,18 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			Log.i(THIS, "Status: Disconnected recovered");
 		}
 	}
-	
-	private ServerLogin getDefaultLogin() {
-		return new ServerLogin(Std.DefaultLogin.SERVER,
-				Std.DefaultLogin.GROUP,
-				Std.DefaultLogin.NAME,
-				Std.DefaultLogin.PASSWORD);
-	}
-	
-	@Override
-	public GroupUser getUser() {
-		return new GroupUser(rallyeAuth.userID, currentLogin.groupID);
-	}
-	
-	
-	@Override
-	public void onStop() {
-		for (Chatroom c: chatrooms) {
-			c.onStop();
-		}
-	}
+
 	
 	/**
-	 * Kill all AsyncTasks still running
+	 * shutdown Executor (prevent it from accepting new Tasks but complete all previously accepted ones)
 	 */
 	@Override
 	public void onDestroy() {
 		Log.i(THIS, "Destroying Model...");
 		
-		for (Chatroom c: chatrooms) {
-			c.onDestroy();
-		}
-		
-		exec.shutdownNow();
-		
 		db.close();
+
+		exec.shutdown();
 	}
 	
 	@Override

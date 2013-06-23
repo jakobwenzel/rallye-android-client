@@ -7,7 +7,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-public class ServerLogin implements Parcelable {
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import de.rallye.model.structures.UserAuth;
+import de.stadtrallye.rallyesoft.util.JSONConverter;
+
+public class ServerLogin {
 	
 	private static final String THIS = ServerLogin.class.getSimpleName();
 	private static final int version = 2;
@@ -22,22 +28,72 @@ public class ServerLogin implements Parcelable {
 	private State valid;
 	private long lastValidated;
 	
-	final public String server;
-	final public int groupID;
-	final public String groupPassword;
-	final public String name;
+	private URL server;
+	private int groupID;
+	private String groupPassword;
+	private String name;
+	private UserAuth userAuth;
 	
-	public ServerLogin(String server, int group, String name, String password) {
-		this(server, group, name, password, 0);
+	public ServerLogin() {
+		this.valid = State.Unknown;
 	}
 	
-	public ServerLogin(String server, int group, String name, String groupPassword, long lastValidated) {
-		this.server = server;
+	public ServerLogin(String server, int group, String name, String groupPassword, long lastValidated, UserAuth userAuth) throws MalformedURLException {
+		this.server = new URL(server);
 		this.groupID = group;
-		this.groupPassword = groupPassword;
-		this.name = name;
+		this.setGroupPassword(groupPassword);
+		this.setName(name);
 		this.lastValidated = lastValidated;
 		this.valid = (lastValidated > 0)? State.Validated : State.Unknown;
+		this.userAuth = userAuth;
+	}
+
+	public void setServer(URL server) {
+		this.server = server;
+	}
+
+	public URL getServer() {
+		return server;
+	}
+
+	public void setGroupID(int groupID) {
+		this.groupID = groupID;
+	}
+
+	public int getGroupID() {
+		return groupID;
+	}
+
+	public String getGroupPassword() {
+		return groupPassword;
+	}
+
+	public void setGroupPassword(String groupPassword) {
+		this.groupPassword = groupPassword;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setUserAuth(UserAuth userAuth) {
+		this.userAuth = userAuth;
+	}
+
+	public int getUserID() {
+		return userAuth.userID;
+	}
+
+	public String getHttpUser() {
+		return userAuth.getHttpUser(groupID);
+	}
+
+	public String getUserPassword() {
+		return userAuth.password;
 	}
 	
 	public long getLastValidated() {
@@ -67,20 +123,20 @@ public class ServerLogin implements Parcelable {
 	}
 	
 	public boolean isComplete() {
-		return hasServer() && groupPassword != null && hasName();
+		return hasServer() && groupPassword != null && hasName() && userAuth != null;
 	}
 	
 	public boolean hasServer() {
-		return server != null && server.length() > 3;
+		return server != null;
 	}
 	
 	public boolean hasName() {
-		return name != null && name.length() >= 3;
+		return getName() != null && name.length() >= 3;
 	}
 	
 	@Override
 	public String toString() {
-		return "Server: "+ server +"| "+name+ "@" +groupID+ " pw: " +groupPassword;
+		return "Server: "+ server +"| "+ name + "@" +groupID+ " pw: " + groupPassword;
 	}
 
 	@Override
@@ -94,15 +150,15 @@ public class ServerLogin implements Parcelable {
 		ServerLogin other = (ServerLogin) obj;
 		if (groupID != other.groupID)
 			return false;
-		if (groupPassword == null) {
-			if (other.groupPassword != null)
+		if (getGroupPassword() == null) {
+			if (other.getGroupPassword() != null)
 				return false;
-		} else if (!groupPassword.equals(other.groupPassword))
+		} else if (!getGroupPassword().equals(other.getGroupPassword()))
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		if (getName() == null) {
+			if (other.getName() != null)
 				return false;
-		} else if (!name.equals(other.name))
+		} else if (!getName().equals(other.getName()))
 			return false;
 		if (server == null) {
 			if (other.server != null)
@@ -118,7 +174,7 @@ public class ServerLogin implements Parcelable {
 			js.put(VERSION, version)
 				.put(SERVER, server)
 				.put(GROUP_ID, groupID)
-				.put(GROUP_PASSWORD, groupPassword);
+				.put(GROUP_PASSWORD, getGroupPassword());
 		} catch (JSONException e) {
 			Log.e(THIS, "JSON Generation Failed!", e);
 		}
@@ -133,40 +189,52 @@ public class ServerLogin implements Parcelable {
 				throw new Exception("Incompatible Versions of Login!");
 			}
 			
-			return new ServerLogin(js.getString(SERVER), js.getInt(GROUP_ID), null, js.getString(GROUP_PASSWORD));
+			return new ServerLogin(js.getString(SERVER), js.getInt(GROUP_ID), null, js.getString(GROUP_PASSWORD), 0, null);
 		} catch (JSONException e) {
 			throw new Exception("Invalid JSON", e);
 		}
 	}
 
-	///Parcelable
-	@Override
-	public int describeContents() {
-		return 0;
-	}
+//	///Parcelable
+//	@Override
+//	public int describeContents() {
+//		return 0;
+//	}
+//
+//	/**
+//	 * exclude user, because it is not needed in LoginDialog
+//	 */
+//	@Override
+//	public void writeToParcel(Parcel d, int flags) {
+//		d.writeString(server.toString());
+//		d.writeInt(groupID);
+//		d.writeString(getName());
+//		d.writeString(getGroupPassword());
+//		d.writeLong(lastValidated);
+//	}
+//
+//	public static final Parcelable.Creator<ServerLogin> CREATOR = new Creator<ServerLogin>() {
+//
+//		@Override
+//		public ServerLogin[] newArray(int size) {
+//			return new ServerLogin[size];
+//		}
+//
+//		@Override
+//		public ServerLogin createFromParcel(Parcel s) {
+//			try {
+//				return new ServerLogin(s.readString(), s.readInt(), s.readString(), s.readString(), s.readLong());
+//			} catch (MalformedURLException e) {
+//				throw new RuntimeException(e);
+//			}
+//		}
+//	};
 
-	/**
-	 * exclude user, because it is not needed in LoginDialog
-	 */
-	@Override
-	public void writeToParcel(Parcel d, int flags) {
-		d.writeString(server);
-		d.writeInt(groupID);
-		d.writeString(name);
-		d.writeString(groupPassword);
-		d.writeLong(lastValidated);
+	public static class AuthConverter extends JSONConverter<UserAuth> {
+
+		@Override
+		public UserAuth doConvert(JSONObject o) throws JSONException {
+			return new UserAuth(o.getInt(UserAuth.USER_ID), o.getString(UserAuth.PASSWORD));
+		}
 	}
-	
-	public static final Parcelable.Creator<ServerLogin> CREATOR = new Creator<ServerLogin>() {
-		
-		@Override
-		public ServerLogin[] newArray(int size) {
-			return new ServerLogin[size];
-		}
-		
-		@Override
-		public ServerLogin createFromParcel(Parcel s) {
-			return new ServerLogin(s.readString(), s.readInt(), s.readString(), s.readString(), s.readLong());
-		}
-	};
 }

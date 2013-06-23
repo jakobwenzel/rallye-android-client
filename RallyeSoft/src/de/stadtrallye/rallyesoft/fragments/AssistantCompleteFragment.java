@@ -36,6 +36,14 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 
 		next.setOnClickListener(this);
 
+		Button cancel = (Button) v.findViewById(R.id.cancel);
+		cancel.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				assistant.finish(false);
+			}
+		});
+
 		return v;
 	}
 
@@ -52,12 +60,21 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 		IModel model = assistant.getModel();
 
 		model.addListener(this);
-		model.login(assistant.getLogin());
+		assistant.login();
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+
+		if (assistant.getModel() != null)
+			assistant.getModel().removeListener(this);
 	}
 
 	@Override
 	public void onClick(View v) {
-		assistant.finish();
+		assistant.getModel().removeListener(this);
+		assistant.finish(true);
 	}
 
 	@Override

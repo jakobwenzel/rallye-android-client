@@ -32,7 +32,7 @@
 	<Button
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="@string/server_info"
+			android:text="@string/test_server"
 			android:id="@+id/test"
 			android:layout_alignParentStart="false"
 			android:layout_alignParentEnd="false"
@@ -40,30 +40,17 @@
 			android:layout_below="@+id/server"
 			android:layout_alignParentLeft="false"
 			android:layout_alignParentBottom="false"
-			android:layout_alignParentRight="false"
+			android:layout_alignParentRight="true"
 			android:layout_marginTop="16dp"
-			android:layout_toLeftOf="@+id/next"
-			android:layout_marginRight="16dp"/>
-
-	<Button
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/next"
-			android:id="@+id/next"
-			android:layout_gravity="right"
-			android:layout_marginTop="16dp"
-			android:layout_alignParentEnd="false"
-			android:layout_below="@+id/server"
-			android:layout_alignParentLeft="false"
-			android:layout_alignParentRight="true"/>
+			/>
 
 	<ImageView
 			android:layout_width="64dp"
 			android:layout_height="64dp"
 			android:id="@+id/server_image"
 			android:layout_gravity="left|center_vertical"
-			android:layout_below="@+id/next"
-			android:layout_marginTop="16dp"/>
+			android:layout_below="@+id/test"
+			android:layout_marginTop="32dp"/>
 
 	<TextView
 			android:layout_width="match_parent"
@@ -85,5 +72,18 @@
 			android:id="@+id/server_desc"
 			android:layout_marginTop="16dp"
 			android:layout_below="@+id/server_image"/>
+
+	<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/next"
+			android:id="@+id/next"
+			android:layout_gravity="right"
+			android:layout_marginTop="16dp"
+			android:layout_alignParentEnd="false"
+			android:layout_below="@+id/server_desc"
+			android:layout_alignParentLeft="false"
+			android:layout_alignParentRight="true"
+			android:visibility="gone"/>
 
 </RelativeLayout>

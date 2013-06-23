@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft.net;
 
+import de.rallye.model.structures.PictureSize;
+
 public final class Paths {
 
 	public static final String GROUPS = "groups";
@@ -15,12 +17,12 @@ public final class Paths {
 
 	/**
 	 * return relative path to a picture
-	 * @param picId
-	 * @param picSize t, m, l
+	 * @param picId PictureID
+	 * @param size approximate Size of the requested Picture
 	 * @return
 	 */
-	public static final String getPic(int picId, char picSize) {
-		return PICS +"/"+ picId +"/"+ picSize;
+	public static final String getPic(int picId, PictureSize size) {
+		return PICS +"/"+ picId +"/"+ size.toShortString();
 	}
 
 	public static final String getAvatar(int groupID) {

@@ -1,8 +1,10 @@
 package de.stadtrallye.rallyesoft.model;
 
+import de.rallye.model.structures.PictureSize;
+
 public interface IChatroom {
 	
-	enum ChatStatus { Ready, Refreshing, Posting, Offline };
+	enum ChatStatus { Ready, Refreshing, Posting, Offline }
 	
 	int getID();
 	String getName();
@@ -18,8 +20,4 @@ public interface IChatroom {
 	void addChat(String msg);
 	
 	IPictureGallery getPictureGallery(int initialPictureId);
-	String getUrlFromImageId(int pictureID, char size);
-	
-	void onDestroy();
-	void onStop();
 }

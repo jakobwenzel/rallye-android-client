@@ -107,7 +107,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
 		
-		chatAdapter = new ChatAdapter(getActivity(), model.getUser(), chatroom);
+		chatAdapter = new ChatAdapter(getActivity(), model);
         list.setAdapter(chatAdapter);
         
         restoreScrollState();

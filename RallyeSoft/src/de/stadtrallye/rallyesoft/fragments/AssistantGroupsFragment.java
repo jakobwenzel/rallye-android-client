@@ -56,7 +56,7 @@ public class AssistantGroupsFragment extends SherlockFragment implements IModel.
 		}
 
 		if (groupAdapter == null) {
-			assistant.getModel().getAvailableGroups(this, assistant.getServer());
+			assistant.getModel().getAvailableGroups(this);
 		} else {
 			initList();
 			restoreChoice();

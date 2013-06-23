@@ -87,4 +87,8 @@ public class ErrorHandling {
 		e.printStackTrace();
 		Log.e(where,"fallback: "+ fallbackState);
 	}
+
+	public void serverNotSet() {
+		Log.e(where, "Server was not set");
+	}
 }

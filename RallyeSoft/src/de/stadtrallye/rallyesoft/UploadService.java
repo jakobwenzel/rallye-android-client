@@ -10,20 +10,15 @@ import java.net.ProtocolException;
 import java.net.URL;
 
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.Request;
 
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Intent;
-import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 public class UploadService extends IntentService {
 
@@ -31,14 +26,13 @@ public class UploadService extends IntentService {
 
 	private static final String NOTE_TAG = ":uploader";
 
-	private Model model;
+	private IModel model;
 	private NotificationManager notes;
-	private String picture;
 
 	public UploadService() {
 		super("RallyePictureUpload");
 		
-		this.model = Model.getInstance(this);
+		this.model = Model.getModel(this);
 	}
 	
 	@Override
@@ -50,11 +44,11 @@ public class UploadService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		picture = intent.getStringExtra(Std.PIC);
+		String picture = intent.getStringExtra(Std.PIC);
 		String hash = intent.getStringExtra(Std.HASH);
 		String mime = intent.getStringExtra(Std.MIME);
 
-        long size = 0, current = 0;
+        long size, current = 0;
 
         try {
 			File f = new File(picture);

@@ -38,6 +38,7 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 	private ImageView srv_image;
 	private TextView srv_name;
 	private TextView srv_desc;
+	private Button next;
 	private ImageLoader loader;
 
 	@Override
@@ -52,19 +53,21 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 		View v = inflater.inflate(R.layout.assistant_server, container, false);
 		server = (EditText) v.findViewById(R.id.server);
 
-		Button next = (Button) v.findViewById(R.id.next);
+		next = (Button) v.findViewById(R.id.next);
 		next.setOnClickListener(this);
 
-		Button test = (Button) v.findViewById(R.id.test);
+		final Button test = (Button) v.findViewById(R.id.test);
 		test.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				IModel model = assistant.getModel();
 				try {
-					String s = getServer();
-					loader.displayImage(s+ Paths.SERVER_PICTURE, srv_image);
-					assistant.getModel().getServerInfo(AssistantServerFragment.this, s);
+					String s = server.getText().toString();
+					assistant.setServer(s);
+					loader.displayImage(model.getServerPictureURL(), srv_image);
+					model.getServerInfo(AssistantServerFragment.this);
 				} catch (MalformedURLException e) {
-
+					Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 				}
 			}
 		});
@@ -74,7 +77,7 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				boolean handled = false;
 				if (actionId == EditorInfo.IME_ACTION_NEXT) {
-					onClick(v);
+					test.callOnClick();
 					handled = true;
 				}
 				return handled;
@@ -116,27 +119,15 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 			server.setText(s);
 	}
 
-	private String getServer() throws MalformedURLException {
-		String s = server.getText().toString();
-
-		if (!s.endsWith("/"))
-			s = s+"/";
-
-		new URL(s);
-
-		return s;
-	}
-
 	@Override
 	public void onClick(View v) {
 		try {
-			String s = getServer();
+			String s = server.getText().toString();
 
 			assistant.setServer(s);
 			assistant.next();
 		} catch (MalformedURLException e) {
 			Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
-			return;
 		}
 	}
 
@@ -144,9 +135,11 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 	public void serverInfo(ServerInfo info) {
 		if (info == null) {
 			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
+			next.setVisibility(View.GONE);
 		} else {
 			srv_name.setText(info.name);
 			srv_desc.setText(info.description);
+			next.setVisibility(View.VISIBLE);
 		}
 	}
 }

@@ -18,6 +18,7 @@ import com.actionbarsherlock.view.Window;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 
 import de.stadtrallye.rallyesoft.common.Std;
@@ -34,6 +35,8 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * Created by Ramon on 19.06.13.
  */
 public class ConnectionAssistant extends SherlockFragmentActivity implements IConnectionAssistant {
+
+	public static final int REQUEST_CODE = 1336;
 
 	private IModel model;
 
@@ -68,14 +71,14 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 			name = savedInstanceState.getString(Std.NAME);
 		}
 
-		model = Model.getInstance(getApplicationContext());
+		model = Model.createEmptyModel(getApplicationContext());
 
 		//Create FragmentHandlers
-		steps = new ArrayList<FragmentHandler<?>>();
-		steps.add(new FragmentHandler<AssistantServerFragment>("server", AssistantServerFragment.class));
-		steps.add(new FragmentHandler<AssistantGroupsFragment>("groups", AssistantGroupsFragment.class));
-		steps.add(new FragmentHandler<AssistantAuthFragment>("auth", AssistantAuthFragment.class));
-		steps.add(new FragmentHandler<AssistantCompleteFragment>("complete", AssistantCompleteFragment.class));
+		steps = new ArrayList<>();
+		steps.add(new FragmentHandler<>("server", AssistantServerFragment.class));
+		steps.add(new FragmentHandler<>("groups", AssistantGroupsFragment.class));
+		steps.add(new FragmentHandler<>("auth", AssistantAuthFragment.class));
+		steps.add(new FragmentHandler<>("complete", AssistantCompleteFragment.class));
 	}
 
 	@Override
@@ -185,13 +188,13 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		try {
 			l = ServerLogin.fromJSON(login);
 
-			server = l.server;
-			groupID = l.groupID;
-			pass = l.groupPassword;
+			server = l.getServer().toString();
+			groupID = l.getGroupID();
+			pass = l.getGroupPassword();
 
 			fastForward = true;
 		} catch (Exception e) {
-			Toast.makeText(this, e.toString(), Toast.LENGTH_LONG);
+			Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
 		}
 	}
 
@@ -226,8 +229,8 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	}
 
 	@Override
-	public ServerLogin getLogin() {
-		return new ServerLogin(server, groupID, name, pass);
+	public void login() {
+		model.login(name, groupID, pass);
 	}
 
 	@Override
@@ -267,8 +270,8 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	}
 
 	@Override
-	public void setServer(String server) {
-		this.server = server;
+	public void setServer(String server) throws MalformedURLException {
+		this.server = model.setServer(server);
 	}
 
 	@Override
@@ -279,6 +282,29 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	@Override
 	public void setGroup(int groupID) {
 		this.groupID = groupID;
+	}
+
+	@Override
+	public void finish(boolean acceptNewConnection) {
+		if (acceptNewConnection && model.isConnected()) {
+			Model.switchToNew(model);
+			model = null;
+		} else {
+			model.onDestroy();
+			model = null;
+		}
+
+		setResult(1);
+
+		super.finish();
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (model != null)
+			model.onDestroy();
+
+		super.onDestroy();
 	}
 
 	/**

@@ -14,39 +14,26 @@ import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.SimpleChatEntry;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.model.structures.RallyeAuth;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Request.RequestType;
 
-public class RequestFactory implements IAuthManager {
+public class RequestFactory {
 	
 	private static final String THIS = RequestFactory.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 
-	private URL base;
+	private ServerLogin login;
 	private String devId;
 	private String pushId;
-//	private String idName;
-	private RallyeAuth rallyeAuth;
-	private ServerLogin login;
 	
-	public RequestFactory(URL baseURL, String devId) {
-		base = baseURL;
+	public RequestFactory(ServerLogin login, String devId) {
+		this.login = login;
 		this.devId = devId;
 		setAuth();
 	}
 	
-	public void setBaseURL(URL baseURL) {
-		base = baseURL;
-	}
-	
 	public void setPushID(String id) {
 		this.pushId = id;
-	}
-	
-	@Override
-	public void setUserAuth(RallyeAuth rallyeAuth) {
-		this.rallyeAuth = rallyeAuth;
 	}
 	
 	private void setAuth() {
@@ -55,10 +42,10 @@ public class RequestFactory implements IAuthManager {
 			protected PasswordAuthentication getPasswordAuthentication() {
 				String realm = getRequestingPrompt();
 				if (realm.equals("RallyeAuth")) {
-					return new PasswordAuthentication(rallyeAuth.getHttpUser(), rallyeAuth.getPassword());
+					return new PasswordAuthentication(login.getHttpUser(), login.getUserPassword().toCharArray());
 				} else if (realm.equals("RallyeNewUser")) {
 					Log.i(THIS, "Switching to NewUserAuthentication");
-					return new PasswordAuthentication(String.valueOf(login.groupID), login.groupPassword.toCharArray());
+					return new PasswordAuthentication(String.valueOf(login.getGroupID()), login.getGroupPassword().toCharArray());
 				} else {
 					return null;
 				}
@@ -67,6 +54,8 @@ public class RequestFactory implements IAuthManager {
 	}
 	
 	private URL getURL(String path) throws HttpRequestException {
+		URL base = login.getServer();
+
 		try {
 			return new URL(base, path);
 		} catch (MalformedURLException e) {
@@ -76,20 +65,16 @@ public class RequestFactory implements IAuthManager {
 	
 	public Request availableGroupsRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.GROUPS);
-		Request r = new Request(url);
-		
-		return r;
+		return new Request(url);
 	}
 	
-	public Request loginRequest(ServerLogin login) throws HttpRequestException {
-		this.login = login;
-		
-		final URL url = getURL(Paths.GROUPS+"/"+login.groupID);
+	public Request loginRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.GROUPS+"/"+login.getGroupID());
 		Request r = new Request(url, RequestType.PUT);
 		
 		try {
 			JSONObject post = new JSONObject()
-				.put(LoginInfo.NAME, login.name)
+				.put(LoginInfo.NAME, login.getName())
 				.put(LoginInfo.UNIQUE_ID, devId)
 				.put(LoginInfo.PUSH_MODE, "gcm")
 				.put(LoginInfo.PUSH_ID, pushId);
@@ -101,45 +86,33 @@ public class RequestFactory implements IAuthManager {
 	}
 	
 	public Request logoutRequest() throws HttpRequestException {
-		final URL url = getURL(Paths.GROUPS+"/"+rallyeAuth.getGroupID()+"/"+rallyeAuth.userID);
-		Request r = new Request(url, RequestType.DELETE);
-		
-		return r;
+		final URL url = getURL(Paths.GROUPS+"/"+login.getGroupID()+"/"+login.getUserID());
+		return new Request(url, RequestType.DELETE);
 	}
 	
 	public Request serverStatusRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.STATUS);
-		Request r = new Request(url);
-		
-		return r;
+		return new Request(url);
 	}
 	
 	public Request availableChatroomsRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.CHATS);
-		Request r = new Request(url);
-		
-		return r;
+		return new Request(url);
 	}
 	
 	public Request chatRefreshRequest(int chatroom, long lastTime) throws HttpRequestException {
 		final URL url = getURL(Paths.CHATS+"/"+chatroom+"/since/"+lastTime);
-		Request r = new Request(url);
-		
-		return r;
+		return new Request(url);
 	}
 
 	public Request mapNodesRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.MAP_NODES);
-		Request r = new Request(url);
-		
-		return r;
+		return new Request(url);
 	}
 	
 	public Request mapEdgesRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.MAP_EDGES);
-		Request r = new Request(url);
-		
-		return r;
+		return new Request(url);
 	}
 
 	public Request chatPostRequest(int chatroom, String msg, int pictureID) throws HttpRequestException {
@@ -158,8 +131,7 @@ public class RequestFactory implements IAuthManager {
 
 	public Request serverConfigRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.CONFIG);
-		Request r = new Request(url);
-		return r;
+		return new Request(url);
 	}
 	
 	public URL getPictureUploadURL(String hash) {
@@ -173,7 +145,6 @@ public class RequestFactory implements IAuthManager {
 
 	public Request serverInfoRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.INFO);
-		Request r = new Request(url);
-		return r;
+		return new Request(url);
 	}
 }

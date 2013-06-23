@@ -1,7 +1,10 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
+import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.structures.GroupUser;
 import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
@@ -9,6 +12,8 @@ import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 
 public interface IModel {
+
+	boolean isEmpty();
 
 	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying }
 
@@ -19,31 +24,38 @@ public interface IModel {
 	interface IServerInfoCallback {
 		void serverInfo(ServerInfo info);
 	}
-	
+
+	GroupUser getUser();
+
 	List<? extends IChatroom> getChatrooms();
 	IChatroom getChatroom(int id);
 	IMap getMap();
+
 	ServerLogin getLogin();
-	GroupUser getUser();
-	
-	void login(ServerLogin login);
+
+	String setServer(String server) throws MalformedURLException;
+
+	void login(String username, int groupID, String groupPassword);
 	void logout();
+
 	void checkConfiguration();
-	void getAvailableGroups(IAvailableGroupsCallback callback, String server);
-	String getAvatarURL(int groupID);
+	void getAvailableGroups(IAvailableGroupsCallback callback);
+	void getServerInfo(IServerInfoCallback callback);
 	
 	void addListener(IConnectionStatusListener l);
 	void removeListener(IConnectionStatusListener l);
-	
+
+	void saveModel();
+
+	URL getPictureUploadURL(String hash);
+	String getAvatarURL(int groupID);
+	String getServerPictureURL();
+	String getUrlFromImageId(int pictureID, PictureSize size);
+
 	ConnectionStatus getConnectionStatus();
-	boolean isDisconnected();
-
-	void getServerInfo(IServerInfoCallback callback, String server);
-
 	boolean isConnectionChanging();
 	boolean isConnected();
-	
-	
+	boolean isDisconnected();
+
 	void onDestroy();
-	void onStop();
 }

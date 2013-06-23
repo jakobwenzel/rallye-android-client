@@ -13,6 +13,7 @@ import com.google.android.gcm.GCMRegistrar;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.PushInit;
 
@@ -53,7 +54,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w(THIS, extras.get("t").toString());
 		
 		if ("100".equals(extras.getString("t"))) { //TODO: discuss definition of int
-			Model model = Model.getInstance(getApplicationContext());
+			IModel model = Model.getModel(getApplicationContext());
 			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
 			if (r != null) {
 				r.refresh(); //TODO: specialize...
@@ -80,7 +81,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 		Log.w("GCMIntentService", "Unregistered GCM!");
 //		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
-		Model.getInstance(getApplicationContext()).logout();
+		Model.getModel(getApplicationContext()).logout();
 	}
 
 }

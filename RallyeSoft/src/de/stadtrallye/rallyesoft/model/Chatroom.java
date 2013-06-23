@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.Tasks;
@@ -106,9 +107,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 
 		Chatroom chatroom = (Chatroom) o;
 
-		if (id != chatroom.id) return false;
-
-		return true;
+		return id == chatroom.id;
 	}
 
 	public static class ChatroomConverter extends JSONConverter<Chatroom> {
@@ -176,7 +175,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		
 		
 		SQLiteStatement s = db.compileStatement("INSERT INTO "+ Chats.TABLE +
-				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, "+ model.getLogin().groupID +", ?, ?, ?, "+ id +")");
+				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, "+ model.getLogin().getGroupID() +", ?, ?, ?, "+ id +")");
 		SQLiteStatement t = db.compileStatement("INSERT INTO "+ Messages.TABLE +
 				" ("+ DatabaseHelper.strStr(Messages.COLS) +") VALUES (null, ?)");
 		SQLiteStatement u = db.compileStatement("SELECT COUNT(*) FROM "+ Chats.TABLE +" WHERE "+ Chats.KEY_ID +"=?");
@@ -354,14 +353,9 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		
 		@Override
 		public String getPictureUrl(int pos) {
-			return getUrlFromImageId(this.pictures.get(pos), size.toChar());
+			return model.getUrlFromImageId(this.pictures.get(pos), size);
 		}
 		
-	}
-	
-	@Override
-	public String getUrlFromImageId(int pictureID, char size) {
-        return model.getLogin().server + Paths.getPic(pictureID, size);
 	}
 	
 	/**
@@ -415,17 +409,5 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
 		}
-	}
-	
-	@Override
-	public void onDestroy() {
-		
-		
-	}
-	
-	@Override
-	public void onStop() {
-		
-		
 	}
 }

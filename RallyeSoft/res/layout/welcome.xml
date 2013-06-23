@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:orientation="vertical"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:padding="16dp"
+			  android:id="@+id/textView">
+
+	<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/welcome_msg"
+			android:layout_gravity="left|center_vertical"/>
+
+	<Button
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/connection_assistant"
+			android:id="@+id/connect"
+			android:layout_marginTop="32dp"/>
+</LinearLayout>

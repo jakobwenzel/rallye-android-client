@@ -29,10 +29,11 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
+import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
-import de.stadtrallye.rallyesoft.model.IPictureGallery.Size;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.widget.GalleryPager;
 
@@ -41,7 +42,7 @@ public class ImageViewActivity extends SherlockActivity {
 	private static final String THIS = ImageViewActivity.class.getSimpleName();
 	
 	private GalleryPager pager;
-	private Model model;
+	private IModel model;
 	private ImageAdapter adapter;
 
 	private IChatroom chatroom;
@@ -63,7 +64,7 @@ public class ImageViewActivity extends SherlockActivity {
 		pager = (GalleryPager)findViewById(R.id.image_pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 		
-		model = Model.getInstance(getApplicationContext());
+		model = Model.getModel(getApplicationContext());
 		
 		Bundle b = getIntent().getExtras();
 		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
@@ -173,7 +174,7 @@ public class ImageViewActivity extends SherlockActivity {
 	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		boolean small = (gallery.getImageSize() == Size.Small);
+		boolean small = (gallery.getImageSize() == PictureSize.Standard);
 		
 		menu.findItem(R.id.image_level_large).setEnabled(small);
 		menu.findItem(R.id.image_level_small).setEnabled(!small);
@@ -187,11 +188,11 @@ public class ImageViewActivity extends SherlockActivity {
 			onBackPressed();
 			return true;
 		case R.id.image_level_large:
-			gallery.setImageSize(Size.Large);
+			gallery.setImageSize(PictureSize.Original);
 			pager.setAdapter(adapter);
 			break;
 		case R.id.image_level_small:
-			gallery.setImageSize(Size.Small);
+			gallery.setImageSize(PictureSize.Standard);
 			pager.setAdapter(adapter);
 			break;
 		}

@@ -5,19 +5,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import de.rallye.model.structures.PictureSize;
+
 abstract class AbstractPictureGallery implements IPictureGallery {
 	
 	protected int initialPos = 0;
 	protected List<Integer> pictures;
-	protected Size size = Size.Small;
+	protected PictureSize size = PictureSize.Standard;
 	
 	@Override
-	public Size getImageSize() {
+	public PictureSize getImageSize() {
 		return size;
 	}
 	
 	@Override
-	public void setImageSize(Size size) {
+	public void setImageSize(PictureSize size) {
 		this.size = size;
 	}
 

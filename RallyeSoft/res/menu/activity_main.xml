@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     
     <item android:id="@+id/menu_login"
-        android:title="@string/login"
+        android:title="@string/connection_assistant"
         android:showAsAction="collapseActionView" />
     
     <item android:id="@+id/menu_logout"
@@ -11,10 +11,5 @@
     <item android:id="@+id/menu_share_barcode"
         android:title="@string/share_barcode"
         android:showAsAction="collapseActionView" />
-    
-    <!-- <item android:id="@+id/menu_foto"
-        android:title="@string/photo"
-        android:icon="@drawable/ic_compose_inverse"
-        android:showAsAction="collapseActionView" /> -->
     
 </menu>

@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft.uimodel;
 
+import java.net.MalformedURLException;
+
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 /**
@@ -8,7 +10,7 @@ import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 public interface IConnectionAssistant extends IProgressUI, IModelActivity {
 
 	void next();
-	void setServer(String server);
+	void setServer(String server) throws MalformedURLException;
 	String getServer();
 	void setGroup(int id);
 
@@ -16,9 +18,9 @@ public interface IConnectionAssistant extends IProgressUI, IModelActivity {
 
 	void setNameAndPass(String name, String pass);
 
-	void finish();
+	void finish(boolean acceptNewConnection);
 
-	ServerLogin getLogin();
+	void login();
 
 	int getGroup();
 
