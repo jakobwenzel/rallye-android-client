@@ -185,12 +185,12 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 	}
 	
 	@Override
-	public void chatUpdate(List<ChatEntry> chats) {
+	public void chatsEdited(List<ChatEntry> chats) {
 		chatAdapter.updateChats(chats);
 	}
 
 	@Override
-	public void addedChats(List<ChatEntry> chats) {
+	public void chatsAdded(List<ChatEntry> chats) {
 		chatAdapter.addChats(chats);
 	}
 	
@@ -227,7 +227,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 	public void onClick(View v) {
 		Editable msg = text.getText();
 		if (msg.length() > 0) {
-			chatroom.addChat(msg.toString());
+			chatroom.postChat(msg.toString(), null);
 		}
 	}
 }

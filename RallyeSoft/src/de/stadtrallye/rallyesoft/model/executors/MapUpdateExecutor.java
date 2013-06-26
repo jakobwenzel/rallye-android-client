@@ -3,10 +3,10 @@ package de.stadtrallye.rallyesoft.model.executors;
 import java.util.List;
 import java.util.Map;
 
-import de.stadtrallye.rallyesoft.model.structures.Edge;
-import de.stadtrallye.rallyesoft.model.structures.Node;
+import de.rallye.model.structures.Edge;
+import de.rallye.model.structures.Node;
+import de.stadtrallye.rallyesoft.model.jsonConverter.Converters;
 import de.stadtrallye.rallyesoft.net.Request;
-import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 
 public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
@@ -26,9 +26,9 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 	@Override
 	protected Map<Integer, Node> tryRun() throws Exception {
 		
-		nodes = new MapConverter().convert(nodeRequest.execute());
+		nodes = JSONArray.getInstance(new Converters.NodeConverter(), nodeRequest.execute()).toMap(new Converters.NodeIndexer());
 		
-		edges = edgeRequest.executeJSONArray(new Edge.EdgeConverter(nodes));
+		edges = edgeRequest.executeJSONArray(new Converters.EdgeConverter(nodes));
 		
 		return nodes;
 	}
@@ -49,13 +49,4 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 	protected void callback() {
 		model.updateMapResult(this);
 	}
-	
-	public static class MapConverter implements IConverter<String, Map<Integer, Node>> {
-		
-		@Override
-		public Map<Integer, Node> convert(String input) {
-			return JSONArray.getInstance(new Node.NodeConverter(), input).toMap(new Node.IndexGetter());
-		}
-	}
-
 }

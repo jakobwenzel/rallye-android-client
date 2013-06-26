@@ -14,7 +14,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.util.List;
 
-import de.stadtrallye.rallyesoft.model.structures.Group;
+import de.rallye.model.structures.Group;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
 
@@ -47,6 +47,7 @@ public class GroupAdapter extends BaseAdapter {
 		DisplayImageOptions disp = new DisplayImageOptions.Builder()
 				.showStubImage(R.drawable.stub_image)
 				.cacheInMemory()
+				.cacheOnDisc()
 				.build();
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
 				.defaultDisplayImageOptions(disp)

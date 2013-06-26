@@ -147,4 +147,9 @@ public class RequestFactory {
 		final URL url = getURL(Paths.INFO);
 		return new Request(url);
 	}
+
+	public Request allUsersRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.USERS);
+		return new Request(url);
+	}
 }

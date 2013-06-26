@@ -1,11 +1,9 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -14,17 +12,16 @@ import com.actionbarsherlock.app.SherlockFragment;
 
 import java.util.List;
 
+import de.rallye.model.structures.Group;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.uimodel.GroupAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
- * Created by Ramon on 19.06.13.
+ * Created by Ramon on 19.06.13
  */
-public class AssistantGroupsFragment extends SherlockFragment implements IModel.IAvailableGroupsCallback {
-
+public class AssistantGroupsFragment extends SherlockFragment implements IModel.IListAvailableCallback<Group> {
 
 	private IConnectionAssistant assistant;
 	private ListView list;
@@ -84,7 +81,7 @@ public class AssistantGroupsFragment extends SherlockFragment implements IModel.
 	}
 
 	@Override
-	public void availableGroups(List<Group> groups) {
+	public void dataAvailable(List<Group> groups) {
 		if (groups != null && groups.size() > 0) {
 
 			groupAdapter = new GroupAdapter(getActivity(), groups, assistant.getModel());

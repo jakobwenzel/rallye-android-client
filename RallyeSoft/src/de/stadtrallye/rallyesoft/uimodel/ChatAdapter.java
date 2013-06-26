@@ -18,17 +18,16 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
+import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
-import de.stadtrallye.rallyesoft.model.structures.GroupUser;
 
 /**
  * Wraps around ChatEntry List
- * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $Chatentry.self
+ * Uses R.layout.chat_item / R.layout.chat_item_right, depending on $ChatEntry.getSender()
  * @author Ramon
  *
  */
@@ -103,7 +102,7 @@ public class ChatAdapter extends BaseAdapter {
         }
         
         if (chatEntry != null) {
-            mem.sender.setText("Sender: "+ chatEntry.userID);
+            mem.sender.setText(chatEntry.getGroupName() +"."+ chatEntry.getUserName());
             mem.msg.setText(chatEntry.message);
             mem.time.setText(converter.format(new Date(chatEntry.timestamp * 1000L)));
             
@@ -111,7 +110,7 @@ public class ChatAdapter extends BaseAdapter {
             // ImageLoader must apparently be called for _EVERY_ entry
             // When called with null or "" as URL, will display empty picture / default resource
             // Otherwise ImageLoader will not be stable and start swapping images
-            if (chatEntry.pictureID > 0) {
+            if (chatEntry.pictureID != null) {
             	loader.displayImage(model.getUrlFromImageId(chatEntry.pictureID, PictureSize.Thumbnail), mem.img);
             } else {
             	loader.displayImage(null, mem.img);

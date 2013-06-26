@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import de.rallye.model.structures.LinkedEdge;
+import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Node;
-import de.rallye.model.structures.PrimitiveEdge;
+import de.rallye.model.structures.Edge;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
@@ -168,7 +168,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		}
 	}
 	
-	public static int getColor(PrimitiveEdge.Type t) {
+	public static int getColor(Edge.Type t) {
 		switch (t) {
 		case Bike:
 			return 0xbb00ff00;
@@ -185,7 +185,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 
 
 	@Override
-	public void mapUpdate(Map<Integer, ? extends Node> nodes, List<? extends LinkedEdge> edges) {
+	public void mapUpdate(Map<Integer, ? extends Node> nodes, List<? extends Edge> edges) {
 		
 		Builder bounds = LatLngBounds.builder();
 		boolean hasBounds = false;
@@ -202,9 +202,9 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		}
 		
 		
-		for (LinkedEdge e: edges) {
+		for (Edge e: edges) {
 			gmap.addPolyline(new PolylineOptions()
-							.add(LatLngAdapter.toGms(e.a.position), LatLngAdapter.toGms(e.b.position))
+							.add(LatLngAdapter.toGms(e.nodeA.position), LatLngAdapter.toGms(e.nodeB.position))
 							.color(getColor(e.type)));
 		}
 		
@@ -229,7 +229,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		bounds.include(LatLngAdapter.toGms(source.position));
 		
-		for (LinkedEdge e: source.getEdges()) {
+		for (Edge e: source.getEdges()) {
 			target = e.getOtherNode(source);
 			targets.add(target);
 			bounds.include(LatLngAdapter.toGms(target.position));

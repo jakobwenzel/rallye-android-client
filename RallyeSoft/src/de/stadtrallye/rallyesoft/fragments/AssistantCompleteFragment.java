@@ -15,7 +15,7 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
- * Created by Ramon on 19.06.13.
+ * Created by Ramon on 19.06.13
  */
 public class AssistantCompleteFragment extends SherlockFragment implements View.OnClickListener, IConnectionStatusListener {
 

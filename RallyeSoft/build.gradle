@@ -10,7 +10,7 @@ apply plugin: 'android'
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
-    compile project(':C::Eclipse:android-client:PagerSlidingTabStrip')
+    compile project('../PagerSlidingTabStrip')
 }
 
 android {

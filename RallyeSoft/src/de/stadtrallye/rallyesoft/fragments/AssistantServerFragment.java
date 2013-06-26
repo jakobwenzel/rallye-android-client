@@ -18,19 +18,16 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
-import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
  * Created by Ramon on 19.06.13.
  */
-public class AssistantServerFragment extends SherlockFragment implements View.OnClickListener, IModel.IServerInfoCallback {
+public class AssistantServerFragment extends SherlockFragment implements View.OnClickListener, IModel.IObjectAvailableCallback<ServerInfo> {
 
 	private IConnectionAssistant assistant;
 
@@ -132,7 +129,7 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 	}
 
 	@Override
-	public void serverInfo(ServerInfo info) {
+	public void dataAvailable(ServerInfo info) {
 		if (info == null) {
 			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
 			next.setVisibility(View.GONE);

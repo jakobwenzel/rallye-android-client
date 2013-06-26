@@ -7,7 +7,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 public interface IChatListener {
 	
-	public void chatUpdate(List<ChatEntry> chats);
-	public void addedChats(List<ChatEntry> chats);
+	public void chatsEdited(List<ChatEntry> chats);
+	public void chatsAdded(List<ChatEntry> chats);
 	public void onChatStatusChanged(ChatStatus status);
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -20,18 +21,21 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import de.rallye.model.structures.Group;
+import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
+import de.rallye.model.structures.ServerConfig;
+import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
-import de.stadtrallye.rallyesoft.model.structures.Group;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.structures.GroupUser;
-import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
+import de.stadtrallye.rallyesoft.model.executors.JSONArrayToMapRequestExecutor;
+import de.stadtrallye.rallyesoft.model.jsonConverter.Converters;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
-import de.stadtrallye.rallyesoft.model.structures.ServerConfig;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.exceptions.LoginFailedException;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
@@ -52,7 +56,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, AVAILABLE_CHATROOMS }
+	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
 	
 	
 	private static Model model; // Singleton Pattern
@@ -65,9 +69,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	ServerConfig serverConfig;
 	
 	private ConnectionStatus status; //TODO: add network state
-	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<IConnectionStatusListener>();
-	private IAvailableGroupsCallback availableGroupsCallback;
-	private IServerInfoCallback serverInfoCallback;
+	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<>();
+	private IListAvailableCallback<Group> availableGroupsCallback;
+	private IObjectAvailableCallback<ServerInfo> serverInfoCallback;
+	private IMapAvailableCallback<Integer, GroupUser> allUsersCallback;
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	final RequestFactory factory;
@@ -187,7 +192,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@Override
 	public void logout() {
 		if (currentLogin == null || !isConnected()) {
-			Exception e = err.logoutInvalid();
+			err.logoutImpossible();
 			return;
 		}
 		
@@ -202,6 +207,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 	}
 	
+	@SuppressWarnings("UnusedParameters")
 	private void logoutResult(RequestExecutor<String, ?> r) {
 		currentLogin.setUserAuth(null);
 		setConnectionStatus(ConnectionStatus.Disconnected);
@@ -276,7 +282,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
-			exec.execute(new JSONObjectRequestExecutor<ServerConfig, Tasks>(factory.serverConfigRequest(), new ServerConfig.ServerConfigConverter(), this, Tasks.CONFIG));
+			exec.execute(new JSONObjectRequestExecutor<>(factory.serverConfigRequest(), new Converters.ServerConfigConverter(), this, Tasks.CONFIG));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -288,6 +294,9 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
 				if (!serverConfig.equals(this.serverConfig)) {
 					this.serverConfig = serverConfig;
+					if (pref != null)
+						save().saveServerConfig().commit();
+					Log.w(THIS, "Server Config has changed, replacing");
 				}
 
 				checkConnectionComplete();
@@ -299,7 +308,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private void getAvailableChatrooms() {
 		try {
 			Log.d(THIS, "getting available chatrooms");
-			exec.execute(new JSONArrayRequestExecutor<Chatroom, Tasks>(factory.availableChatroomsRequest(), new Chatroom.ChatroomConverter(this), this, Tasks.AVAILABLE_CHATROOMS));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.availableChatroomsRequest(), new Chatroom.ChatroomConverter(this), this, Tasks.AVAILABLE_CHATROOMS));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -311,6 +320,9 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
                 if (!chatrooms.equals(this.chatrooms)) {
                     this.chatrooms = chatrooms;
+					if (pref != null)
+						save().saveChatrooms().commit();
+					Log.w(THIS, "Chatroom Config has changed, replacing");
                 }
 
 				checkConnectionComplete();
@@ -323,20 +335,19 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		if (status == ConnectionStatus.Connecting && chatrooms != null && chatrooms.size() > 0 && serverConfig != null) {
 			setConnectionStatus(ConnectionStatus.Connected);
 		}
-			
 	}
 
 	@Override
-	public void getAvailableGroups(IAvailableGroupsCallback callback) {
+	public void getAvailableGroups(IListAvailableCallback<Group> callback) {
 		if (!currentLogin.hasServer()) {
 			err.serverNotSet();
-			callback.availableGroups(null);
+			callback.dataAvailable(null);
 			return;
 		}
 		
 		try {
 			availableGroupsCallback = callback;
-			exec.execute(new JSONArrayRequestExecutor<Group, Tasks>(factory.availableGroupsRequest(), new Group.GroupConverter(), this, Tasks.GROUP_LIST));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.availableGroupsRequest(), new Converters.GroupConverter(), this, Tasks.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -345,27 +356,60 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private void availableGroupsResult(RequestExecutor<List<Group>, ?> r) {
 		final List<Group> groups = r.getResult();
 
+		if (pref != null)
+			save().saveGroups(groups).commit();
+
 		if (availableGroupsCallback != null)
-			uiHandler.post(new Runnable(){
+			uiHandler.post(new Runnable() {
 				@Override
 				public void run() {
-					availableGroupsCallback.availableGroups(groups);
+					availableGroupsCallback.dataAvailable(groups);
 					availableGroupsCallback = null;
 				}
 			});
 	}
 
+	public void getAllUsers(IMapAvailableCallback<Integer, GroupUser> callback) {
+		if (!isConnected()) {
+			err.notLoggedIn();
+			callback.dataAvailable(null);
+			return;
+		}
+
+		try {
+			allUsersCallback = callback;
+			exec.execute(new JSONArrayToMapRequestExecutor<>(factory.allUsersRequest(), new Converters.GroupUserConverter(), new Converters.UserIndexer(), this, Tasks.USER_LIST));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+		}
+	}
+
+	private void allUsersResult(RequestExecutor<java.util.Map<Integer, GroupUser>, ?> r) {
+		final java.util.Map<Integer, GroupUser> users = r.getResult();
+
+		save().saveUsers(users).commit();
+
+		if (allUsersCallback != null)
+			uiHandler.post(new Runnable() {
+				@Override
+				public void run() {
+					allUsersCallback.dataAvailable(users);
+					allUsersCallback = null;
+				}
+			});
+	}
+
 	@Override
-	public void getServerInfo(IServerInfoCallback callback) {
+	public void getServerInfo(IObjectAvailableCallback<ServerInfo> callback) {
 		if (!currentLogin.hasServer()) {
 			err.serverNotSet();
-			callback.serverInfo(null);
+			callback.dataAvailable(null);
 			return;
 		}
 
 		try {
 			serverInfoCallback = callback;
-			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new ServerInfo.Converter(), this, Tasks.SERVER_INFO));
+			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new Converters.ServerInfoConverter(), this, Tasks.SERVER_INFO));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -375,10 +419,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		final ServerInfo info = r.getResult();
 
 		if (serverInfoCallback != null)
-			uiHandler.post(new Runnable(){
+			uiHandler.post(new Runnable() {
 				@Override
 				public void run() {
-					serverInfoCallback.serverInfo(info);
+					serverInfoCallback.dataAvailable(info);
 					serverInfoCallback = null;
 				}
 			});
@@ -419,7 +463,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
 	@Override
 	public GroupUser getUser() {
-		return new GroupUser(currentLogin.getUserID(), currentLogin.getGroupID());
+		return new GroupUser(currentLogin.getUserID(), currentLogin.getGroupID(), currentLogin.getName());
 	}
 
 	/**
@@ -499,6 +543,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		case SERVER_INFO:
 			serverInfoResult((RequestExecutor<ServerInfo, ?>) r);
 			break;
+		case USER_LIST:
+			allUsersResult((RequestExecutor<java.util.Map<Integer, GroupUser>, ?>) r);
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
@@ -541,8 +587,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		public Saver saveServerConfig() {
-			edit.putLong(Std.LATITUDE, (long) (serverConfig.location.latitude* 1000000));
-			edit.putLong(Std.LONGITUDE, (long) (serverConfig.location.longitude* 1000000));
+			edit.putString(Std.LATITUDE, String.valueOf(serverConfig.location.latitude));
+			edit.putString(Std.LONGITUDE, String.valueOf(serverConfig.location.longitude));
 			edit.putString(Std.SERVER+Std.NAME, serverConfig.name);
 			edit.putInt(Std.ROUNDS, serverConfig.rounds);
 			edit.putInt(Std.ROUND_TIME, serverConfig.roundTime);
@@ -553,14 +599,41 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		public void commit() {
 			edit.commit();
 		}
-		
+
+		public Saver saveGroups(List<Group> groups) {
+			db.delete(Groups.TABLE, null, null);
+
+			for (Group g: groups) {
+				ContentValues insert = new ContentValues();
+				insert.put(Groups.KEY_ID, g.groupID);
+				insert.put(Groups.KEY_NAME, g.name);
+				insert.put(Groups.KEY_DESCRIPTION, g.description);
+				db.insert(Groups.TABLE, null, insert);
+			}
+
+			return this;
+		}
+
+		public Saver saveUsers(java.util.Map<Integer, GroupUser> users) {
+			db.delete(Users.TABLE, null, null);
+
+			for (GroupUser u: users.values()) {
+				ContentValues insert = new ContentValues();
+				insert.put(Users.KEY_ID, u.userID);
+				insert.put(Users.KEY_NAME, u.name);
+				insert.put(Users.FOREIGN_GROUP, u.groupID);
+				db.insert(Users.TABLE, null, insert);
+			}
+
+			return this;
+		}
 	}
 	
 	private void restoreServerConfig() {
 		ServerConfig s = new ServerConfig(
 				pref.getString(Std.SERVER+Std.NAME, null),
-				pref.getLong(Std.LATITUDE, 0)/1000000f,
-				pref.getLong(Std.LONGITUDE, 0)/1000000f,
+				Double.valueOf(pref.getString(Std.LATITUDE, "0")),
+				Double.valueOf(pref.getString(Std.LONGITUDE, "0")),
 				pref.getInt(Std.ROUNDS, 0),
 				pref.getInt(Std.ROUND_TIME, 0),
 				pref.getLong(Std.START_TIME, 0));
@@ -637,7 +710,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		Log.i(THIS, "Status: "+ newState);
 		
-		uiHandler.post(new Runnable(){
+		uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for(IConnectionStatusListener l: connectionListeners) {
@@ -652,7 +725,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		err.connectionFailure(e, fallbackState);
 		
-		uiHandler.post(new Runnable(){
+		uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for(IConnectionStatusListener l: connectionListeners) {

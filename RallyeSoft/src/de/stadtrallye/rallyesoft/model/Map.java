@@ -9,15 +9,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.LatLng;
+import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Edges;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Nodes;
 import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
-import de.stadtrallye.rallyesoft.model.structures.Edge;
-import de.stadtrallye.rallyesoft.model.structures.Node;
 
 public class Map implements IMap, MapUpdateExecutor.Callback {
 	
@@ -96,8 +96,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 			}
 			
 			for (Edge m: edges) {
-				edgeIn.bindLong(1, m.a.nodeID);
-				edgeIn.bindLong(2, m.b.nodeID);
+				edgeIn.bindLong(1, m.nodeA.nodeID);
+				edgeIn.bindLong(2, m.nodeB.nodeID);
 				edgeIn.bindString(3, m.type.toString());
 				edgeIn.executeInsert();
 			}

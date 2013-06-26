@@ -73,10 +73,8 @@ public class ErrorHandling {
 		Log.e(where, "Failed to insert into DB: "+ string);
 	}
 
-	public Exception logoutInvalid() {
-		Exception e = new Exception("Cannot logout: no server specified");
-		Log.e(where, e.getMessage());
-		return e;
+	public void logoutImpossible() {
+		Log.w(where, "Cannot logout: no server specified");
 	}
 
 	public void concurrentConnectionChange(String type) {

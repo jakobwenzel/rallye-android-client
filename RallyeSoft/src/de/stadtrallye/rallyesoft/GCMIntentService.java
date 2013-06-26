@@ -11,10 +11,16 @@ import android.util.Log;
 import com.google.android.gcm.GCMBaseIntentService;
 import com.google.android.gcm.GCMRegistrar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import de.rallye.model.structures.Chatroom;
+import de.rallye.model.structures.PushEntity;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.net.PushInit;
 
 public class GCMIntentService extends GCMBaseIntentService {
@@ -49,17 +55,26 @@ public class GCMIntentService extends GCMBaseIntentService {
 		
 		notes.notify(":GCM Mesage", Std.GCM_NOTIFICATION, big.build());
 		
-		Log.w("GCMIntentService.Push", "Note: " +extras);
-		
-		Log.w(THIS, extras.get("t").toString());
-		
-		if ("100".equals(extras.getString("t"))) { //TODO: discuss definition of int
-			IModel model = Model.getModel(getApplicationContext());
-			IChatroom r = model.getChatroom(Integer.parseInt(extras.getString("d")));
-			if (r != null) {
-				r.refresh(); //TODO: specialize...
-			} else
-				Log.e(THIS, "Chat push received, but not my chatroom ("+extras.getInt("d")+")");
+		Log.i("GCMIntentService.Push", "Note: " +extras);
+
+		try {
+			PushEntity.Type type = PushEntity.Type.valueOf(extras.getString(PushEntity.TYPE));
+			JSONObject payload = new JSONObject(extras.getString(PushEntity.PAYLOAD));
+
+			switch (type) {
+
+				case newMessage:
+					ChatEntry chat = new ChatEntry.ChatConverter().doConvert(payload);
+					int roomID = payload.getInt(Chatroom.CHATROOM_ID);
+					Model.getModel(context).getChatroom(roomID).addChat(chat);
+					break;
+				case messageChanged:
+					//TODO:
+					break;
+				default:
+			}
+		} catch (JSONException e) {
+			Log.e(THIS, "Push Message not compatible", e);
 		}
 	}
 

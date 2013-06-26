@@ -4,10 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
+import de.rallye.model.structures.Group;
+import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
-import de.stadtrallye.rallyesoft.model.structures.Group;
-import de.stadtrallye.rallyesoft.model.structures.GroupUser;
-import de.stadtrallye.rallyesoft.model.structures.ServerInfo;
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 
@@ -17,12 +17,16 @@ public interface IModel {
 
 	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying }
 
-	interface IAvailableGroupsCallback {
-		void availableGroups(List<Group> groups);
+	interface IListAvailableCallback<T> {
+		void dataAvailable(List<T> data);
 	}
 
-	interface IServerInfoCallback {
-		void serverInfo(ServerInfo info);
+	interface IMapAvailableCallback<K, T> {
+		void dataAvailable(java.util.Map<K, T> data);
+	}
+
+	interface IObjectAvailableCallback<T> {
+		void dataAvailable(T data);
 	}
 
 	GroupUser getUser();
@@ -39,8 +43,8 @@ public interface IModel {
 	void logout();
 
 	void checkConfiguration();
-	void getAvailableGroups(IAvailableGroupsCallback callback);
-	void getServerInfo(IServerInfoCallback callback);
+	void getAvailableGroups(IListAvailableCallback<Group> callback);
+	void getServerInfo(IObjectAvailableCallback<ServerInfo> callback);
 	
 	void addListener(IConnectionStatusListener l);
 	void removeListener(IConnectionStatusListener l);

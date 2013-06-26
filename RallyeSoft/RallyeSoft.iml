@@ -24,6 +24,7 @@
     <orderEntry type="module" module-name="PagerSlidingTabStrip" />
     <orderEntry type="module" module-name="SherlockActionBar" />
     <orderEntry type="module" module-name="RallyeStructures" />
+    <orderEntry type="library" name="gcm" level="project" />
   </component>
 </module>
 
