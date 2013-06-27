@@ -52,7 +52,8 @@
 	<string name="upload_complete">Hochgeladen</string>
 	<string name="need_connection">Diese Funktion benötigt eine Verbindung zu einem Server</string>
 	<string name="welcome_msg">Willkommen zu RallyeSoft.\nBitte verwenden Sie den Verbindungs-Assistenten um sich mit einem Rallye-Server zu verbinden\n\nViele Funktionen der App stehen erst zur Verfügung wenn die App sich mit mindestens einem Server verbunden hat.</string>
-	<string name="connection_assistant">Verbindungs-Assistent</string>
 	<string name="connection_failure">Verbindung Fehlgeschlagen</string>
+    <string name="ssl">SSL</string>
+    <string name="port">Port</string><string name="path">Pfad</string>
 
 </resources>

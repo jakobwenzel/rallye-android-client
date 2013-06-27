@@ -62,14 +62,15 @@ public class GCMIntentService extends GCMBaseIntentService {
 			JSONObject payload = new JSONObject(extras.getString(PushEntity.PAYLOAD));
 
 			switch (type) {
-
 				case newMessage:
 					ChatEntry chat = new ChatEntry.ChatConverter().doConvert(payload);
 					int roomID = payload.getInt(Chatroom.CHATROOM_ID);
 					Model.getModel(context).getChatroom(roomID).addChat(chat);
 					break;
 				case messageChanged:
-					//TODO:
+					chat = new ChatEntry.ChatConverter().doConvert(payload);
+					roomID = payload.getInt(Chatroom.CHATROOM_ID);
+					Model.getModel(context).getChatroom(roomID).editChat(chat);
 					break;
 				default:
 			}

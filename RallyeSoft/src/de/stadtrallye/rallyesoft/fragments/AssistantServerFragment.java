@@ -6,9 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,13 +23,14 @@ import java.net.MalformedURLException;
 
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
  * Created by Ramon on 19.06.13.
  */
-public class AssistantServerFragment extends SherlockFragment implements View.OnClickListener, IModel.IObjectAvailableCallback<ServerInfo> {
+public class AssistantServerFragment extends SherlockFragment implements IModel.IObjectAvailableCallback<ServerInfo> {
 
 	private IConnectionAssistant assistant;
 
@@ -37,6 +40,10 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 	private TextView srv_desc;
 	private Button next;
 	private ImageLoader loader;
+    private Spinner protocol;
+	private EditText port;
+	private Button test;
+	private EditText path;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -48,19 +55,34 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.assistant_server, container, false);
+
+		protocol = (Spinner) v.findViewById(R.id.protocol);
 		server = (EditText) v.findViewById(R.id.server);
+		port = (EditText) v.findViewById(R.id.port);
+		path = (EditText) v.findViewById(R.id.path);
 
-		next = (Button) v.findViewById(R.id.next);
-		next.setOnClickListener(this);
+		port.setHint(Std.DEFAULT_PORT);
+		path.setHint(Std.DEFAULT_PATH);
 
-		final Button test = (Button) v.findViewById(R.id.test);
+		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				boolean handled = false;
+				if (actionId == EditorInfo.IME_ACTION_GO) {
+					test.callOnClick();
+					handled = true;
+				}
+				return handled;
+			}
+		});
+
+		test = (Button) v.findViewById(R.id.test);
 		test.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				IModel model = assistant.getModel();
 				try {
-					String s = server.getText().toString();
-					assistant.setServer(s);
+					assistant.setServer(getServer());
 					loader.displayImage(model.getServerPictureURL(), srv_image);
 					model.getServerInfo(AssistantServerFragment.this);
 				} catch (MalformedURLException e) {
@@ -69,21 +91,22 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 			}
 		});
 
-		server.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				boolean handled = false;
-				if (actionId == EditorInfo.IME_ACTION_NEXT) {
-					test.callOnClick();
-					handled = true;
-				}
-				return handled;
-			}
-		});
-
 		srv_image = (ImageView) v.findViewById(R.id.server_image);
 		srv_name = (TextView) v.findViewById(R.id.server_name);
 		srv_desc = (TextView) v.findViewById(R.id.server_desc);
+
+		next = (Button) v.findViewById(R.id.next);
+		next.setOnClickListener(new View.OnClickListener(){
+			@Override
+			public void onClick(View view) {
+				try {
+					assistant.setServer(getServer());
+					assistant.next();
+				} catch (MalformedURLException e) {
+					Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
+				}
+			}
+		});
 
 		loader = ImageLoader.getInstance();
 		DisplayImageOptions disp = new DisplayImageOptions.Builder()
@@ -116,16 +139,17 @@ public class AssistantServerFragment extends SherlockFragment implements View.On
 			server.setText(s);
 	}
 
-	@Override
-	public void onClick(View v) {
-		try {
-			String s = server.getText().toString();
+	private String getServer() {//TODO: check validity per field
+		String protocol = this.protocol.getSelectedItem().toString();
+		String server = this.server.getText().toString();
+		String port = this.port.getText().toString();
+		if (port.equals(""))
+			port = Std.DEFAULT_PORT;
+		String path = this.path.getText().toString();
+		if (path.equals(""))
+			path = Std.DEFAULT_PATH;
 
-			assistant.setServer(s);
-			assistant.next();
-		} catch (MalformedURLException e) {
-			Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
-		}
+		return protocol +"://"+ server +":"+ port +"/"+ path;
 	}
 
 	@Override

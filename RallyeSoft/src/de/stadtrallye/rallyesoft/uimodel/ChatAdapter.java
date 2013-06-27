@@ -141,13 +141,21 @@ public class ChatAdapter extends BaseAdapter {
 		return chats.get(position).chatID;
 	}
 	
-	public void updateChats(List<ChatEntry> chats) {
+	public void replaceChats(List<ChatEntry> chats) {
 		this.chats = chats;
 		notifyDataSetChanged();
 	}
 	
 	public void addChats(List<ChatEntry> chats) {
 		this.chats.addAll(chats);
+		notifyDataSetChanged();
+	}
+
+	public void editChats(List<ChatEntry> chats) {
+
+		for (ChatEntry c: chats) {
+			this.chats.set(this.chats.indexOf(c), c);
+		}
 		notifyDataSetChanged();
 	}
 }

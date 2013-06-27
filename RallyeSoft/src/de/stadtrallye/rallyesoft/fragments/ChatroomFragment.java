@@ -135,7 +135,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 		super.onStart();
 		
 		chatroom.addListener(this);
-		chatroom.provideChats();
+		chatroom.provideChats(this);
 	}
 	
 	@Override
@@ -186,12 +186,17 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 	
 	@Override
 	public void chatsEdited(List<ChatEntry> chats) {
-		chatAdapter.updateChats(chats);
+		chatAdapter.editChats(chats);
 	}
 
 	@Override
 	public void chatsAdded(List<ChatEntry> chats) {
 		chatAdapter.addChats(chats);
+	}
+
+	@Override
+	public void chatsProvided(List<ChatEntry> chats) {
+		chatAdapter.replaceChats(chats);
 	}
 	
 	@Override

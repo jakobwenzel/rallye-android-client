@@ -198,6 +198,24 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 
 		notifyChatsEdited(upd);
 	}
+
+	@Override
+	public void editChat(ChatEntry chatEntry) {
+		ContentValues update = new ContentValues();
+		update.put(Chats.KEY_MESSAGE, chatEntry.message);
+		update.put(Chats.KEY_TIME, chatEntry.timestamp);
+		update.put(Chats.KEY_PICTURE, chatEntry.pictureID);
+		update.put(Chats.FOREIGN_GROUP, chatEntry.groupID);
+		update.put(Chats.FOREIGN_USER, chatEntry.userID);
+		update.put(Chats.FOREIGN_ROOM, id);
+
+		model.db.update(Chats.TABLE, update, Chats.KEY_ID+"="+chatEntry.chatID, null);
+
+		List<ChatEntry> upd = new ArrayList<>();
+		upd.add(chatEntry);
+
+		notifyChatsEdited(upd);
+	}
 	
 	private void putChats(List<ChatEntry> entries) {
 		SQLiteDatabase db = model.db;
@@ -268,7 +286,8 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 			}
 		});
 	}
-	
+
+	@Override
 	public ChatStatus getChatStatus() {
 		return status;
 	}
@@ -282,15 +301,16 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	public void removeListener(IChatListener l) {
 		listeners.remove(l);
 	}
-	
-//	private boolean sqlToBool(int in) {
-//		return (in > 0)? true : false;
-//	}
-	
+
+	/**
+	 * Request a callback with all available Chats
+	 * Callback pattern in anticipation of asynchronous DB access
+	 * @param callback the single Listener that wants to completely refresh or initialize its content
+	 */
 	@Override
-	public void provideChats() {
+	public void provideChats(IChatListener callback) {
 		Log.i(THIS, "Chats requested");
-		notifyChatsEdited(getAllChats());
+		callback.chatsProvided(getAllChats());
 	}
 	
 	private void notifyChatsEdited(final List<ChatEntry> entries) {
@@ -317,6 +337,11 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		});
 	}
 
+	/**
+	 * Retrieve all Chats from DB
+	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available
+	 * @return preliminary chatEntries, will be edited if incomplete
+	 */
 	private List<ChatEntry> getAllChats() {
 		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
 				new String[]{Chats.KEY_ID, Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
@@ -394,10 +419,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 		}
 		
 	}
-	
-	/**
-	 * @param initialPictureId -1 results in a initialPosition of 0
-	 */
+
 	@Override
 	public IPictureGallery getPictureGallery(int initialPictureId) {
 		return new PictureGallery(initialPictureId);
@@ -407,7 +429,12 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<Tasks> {
 	public void saveCurrentState(int lastRead) {
 		
 	}
-	
+
+	@Override//TODO
+	public int getLastState() {
+		return 0;
+	}
+
 	@Override
 	public void postChat(String msg, Integer pictureID) {
 		//TODO: save to DB

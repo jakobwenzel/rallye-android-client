@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="protocols">
+        <item>HTTP</item>
+        <item>HTTPS</item>
+    </string-array>
     <string-array name="dashboard_entries">
-		<item>Willkommen</item>
+        <item>Willkommen</item>
         <item >Übersicht</item>
         <item >Karte</item>
         <item >Nächster Zug</item>
