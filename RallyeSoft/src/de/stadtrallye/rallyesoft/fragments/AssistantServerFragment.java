@@ -64,17 +64,17 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		port.setHint(Std.DEFAULT_PORT);
 		path.setHint(Std.DEFAULT_PATH);
 
-		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				boolean handled = false;
-				if (actionId == EditorInfo.IME_ACTION_GO) {
-					test.callOnClick();
-					handled = true;
-				}
-				return handled;
-			}
-		});
+//		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//			@Override
+//			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+//				boolean handled = false;
+//				if (actionId == EditorInfo.IME_ACTION_GO) {
+//					test.callOnClick();
+//					handled = true;
+//				}
+//				return handled;
+//			}
+//		});
 
 		test = (Button) v.findViewById(R.id.test);
 		test.setOnClickListener(new View.OnClickListener() {
@@ -135,8 +135,13 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		super.onStart();
 
 		String s = assistant.getServer();
-		if (s != null)
-			server.setText(s);
+		if (s != null) {
+			String[] parts = s.replaceAll("^(http|https)://(\\w+\\.\\w+):(\\d+)/(\\w+)/?$", "$1;$2;$3;$4").split(";");
+			protocol.setSelection(parts[0].equals("http")? 0 : 1);
+			port.setText(parts[2]);
+			server.setText(parts[1]);
+			path.setText(parts[3]);
+		}
 	}
 
 	private String getServer() {//TODO: check validity per field

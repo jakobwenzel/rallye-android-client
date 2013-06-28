@@ -4,20 +4,18 @@
 			xmlns:tools="http://schemas.android.com/tools"
 			android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:id="@+id/scrollView"
-		tools:context=".ConnectionAssistant">
+		android:id="@+id/scrollView">
 
 		<RelativeLayout
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:padding="16dp" android:scrollbars="">
+				android:padding="16dp">
 
 			<TextView
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@string/assistant_choose_server"
-					android:id="@+id/textView"
-					android:layout_gravity="left|center_vertical"/>
+					android:id="@+id/textView"/>
 
 			<Spinner
 					android:layout_width="wrap_content"
@@ -89,7 +87,7 @@
 					android:inputType="text"
 					android:id="@+id/path"
 					android:layout_below="@+id/server"
-					android:imeOptions="actionGo"
+					android:imeOptions="actionSend"
 					android:layout_marginTop="16dp"
 					android:layout_alignParentRight="true"
 					android:layout_toRightOf="@+id/textViewPath"
