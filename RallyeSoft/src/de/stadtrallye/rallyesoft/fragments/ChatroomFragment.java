@@ -22,9 +22,7 @@ import java.util.List;
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IChatListener;
 import de.stadtrallye.rallyesoft.model.IChatroom;
-import de.stadtrallye.rallyesoft.model.IChatroom.ChatStatus;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatAdapter;
@@ -36,7 +34,7 @@ import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
  * @author Ramon
  *
  */
-public class ChatroomFragment extends SherlockFragment implements IChatListener, OnClickListener {
+public class ChatroomFragment extends SherlockFragment implements IChatroom.IChatroomListener, OnClickListener {
 
 	private static final String THIS = ChatroomFragment.class.getSimpleName();
 	private static final boolean DEBUG = false;
@@ -200,8 +198,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 	}
 	
 	@Override
-	public void onChatStatusChanged(ChatStatus newStatus) {
-		
+	public void onChatStatusChanged(IChatroom.ChatroomState newStatus) {
 		switch (newStatus) {
 		case Refreshing:
 			ui.activateProgressAnimation();
@@ -210,21 +207,21 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 			ui.deactivateProgressAnimation();
 			send.setEnabled(true);
 			break;
-		case Offline:
-			ui.deactivateProgressAnimation();
-			send.setEnabled(false);
-			break;
-		case Posting:
-			ui.activateProgressAnimation();
-			send.setVisibility(View.GONE);
-			loading.setVisibility(View.VISIBLE);
-			break;
-//		case PostSuccessfull:
-//			text.getText().clear();
-//		case PostFailed:
-//			send.setVisibility(View.VISIBLE);
-//			loading.setVisibility(View.GONE);
-//			break;
+		}
+	}
+
+	@Override
+	public void onPostStateChange(int id, IChatroom.PostState state, ChatEntry chatEntry) {
+		switch (state) {
+			case Success:
+				text.getText().clear();
+				loading.setVisibility(View.GONE);
+				break;
+			case Failure:
+				loading.setVisibility(View.GONE);
+				break;
+			case Retrying:
+				break;
 		}
 	}
 
@@ -233,6 +230,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatListener,
 		Editable msg = text.getText();
 		if (msg.length() > 0) {
 			chatroom.postChat(msg.toString(), null);
+			loading.setVisibility(View.VISIBLE);
 		}
 	}
 }

@@ -115,14 +115,14 @@ public class RequestFactory {
 		return new Request(url);
 	}
 
-	public Request chatPostRequest(int chatroom, String msg, int pictureID) throws HttpRequestException {
+	public Request chatPostRequest(int chatroom, String msg, Integer pictureID) throws HttpRequestException {
 		final URL url = getURL(Paths.CHATS+"/"+chatroom);
-		Request r = new Request(url, RequestType.POST);
+		Request r = new Request(url, RequestType.PUT);
 		
 		try {
 			r.putPost(new JSONObject()
 				.put(SimpleChatEntry.MESSAGE, msg)
-				.put(SimpleChatEntry.PICTURE_ID, (pictureID > 0)? pictureID : JSONObject.NULL));
+				.put(SimpleChatEntry.PICTURE_ID, (pictureID == null)? pictureID : JSONObject.NULL));
 			return r;
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);

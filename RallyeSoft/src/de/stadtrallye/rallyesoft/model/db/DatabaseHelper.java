@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 19;
+	private static final int DATABASE_VERSION = 20;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 
 	public static final class Users {
@@ -38,11 +38,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		public static final String TABLE = "chatrooms";
 		public static final String KEY_ID = "chatroomID";
 		public static final String KEY_NAME = "chatroomName";
+		public static final String KEY_LAST_REFRESH = "lastRefresh";
 		public static final String CREATE =
 				"CREATE TABLE "+ TABLE +" ("+
 					KEY_ID +" INTEGER PRIMARY KEY, "+
-					KEY_NAME +" VARCHAR(50) NOT NULL)";
-		public static final String[] COLS = new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME};
+					KEY_NAME +" VARCHAR(50) NOT NULL, "+
+					KEY_LAST_REFRESH +" TIMESTAMP NOT NULL)";
+		public static final String[] COLS = new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_REFRESH};
 	}
   
 	public static final class Chats {

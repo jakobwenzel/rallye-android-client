@@ -677,6 +677,14 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 	}
 
+
+	/**
+	 * Called by parts of the Model, if their connection / communication fails, indicating a complete Network / Server failure
+	 * Model needs to restart / reestablish connection / report to user
+	 * @param exception the exception that caused the failure
+	 */
+	void commError(Exception exception) {
+	}
 	
 	/**
 	 * shutdown Executor (prevent it from accepting new Tasks but complete all previously accepted ones)
