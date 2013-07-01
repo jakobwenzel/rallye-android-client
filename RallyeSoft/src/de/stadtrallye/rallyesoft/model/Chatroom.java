@@ -199,6 +199,11 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public void addChat(ChatEntry chatEntry) {
+		if (chatEntry.chatID <= this.lastId) {
+			Log.w(THIS, "Received Chat via Push that was already in the DB: "+ chatEntry.chatID);
+			return;
+		}
+
 		saveChat(chatEntry);
 
 //		lookupNames(chatEntry);
