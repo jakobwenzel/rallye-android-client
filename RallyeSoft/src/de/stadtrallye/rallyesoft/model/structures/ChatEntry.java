@@ -41,6 +41,10 @@ public class ChatEntry extends de.rallye.model.structures.ChatEntry {
 	}
 	
 	public Sender getSender(GroupUser user) {
+		return getSender(user, this.groupID, this.userID);
+	}
+
+	public static Sender getSender(GroupUser user, int groupID, int userID) {
 		if (userID == user.userID) {
 			return Sender.Me;
 		} else if (groupID == user.groupID) {
@@ -59,7 +63,7 @@ public class ChatEntry extends de.rallye.model.structures.ChatEntry {
 							o.getInt(ChatEntry.TIMESTAMP),
 							o.getInt(ChatEntry.GROUP_ID),
 							o.getInt(ChatEntry.USER_ID),
-							o.getInt(ChatEntry.PICTURE_ID));
+							o.optInt(ChatEntry.PICTURE_ID));
 		}
 	}
 }

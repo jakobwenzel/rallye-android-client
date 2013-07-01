@@ -20,6 +20,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						KEY_ID +" INTEGER PRIMARY KEY, "+
 						KEY_NAME +" VARACHAR(50), "+
 						FOREIGN_GROUP +" INTEGER NOT NULL)";
+		public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME };
 	}
 	
 	public static final class Groups {
@@ -32,6 +33,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						KEY_ID +" INTEGER PRIMARY KEY, "+
 						KEY_NAME +" VARCHAR(50), "+
 						KEY_DESCRIPTION +" TEXT)";
+		public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME, KEY_DESCRIPTION };
 	}
 	
 	public static final class Chatrooms {
@@ -44,7 +46,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 					KEY_ID +" INTEGER PRIMARY KEY, "+
 					KEY_NAME +" VARCHAR(50) NOT NULL, "+
 					KEY_LAST_REFRESH +" TIMESTAMP NOT NULL)";
-		public static final String[] COLS = new String[]{Chatrooms.KEY_ID, Chatrooms.KEY_NAME, Chatrooms.KEY_LAST_REFRESH};
+		public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME, KEY_LAST_REFRESH};
 	}
   
 	public static final class Chats {
@@ -65,7 +67,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				  KEY_MESSAGE +" TEXT, "+
 				  KEY_PICTURE +" INTEGER, "+
 				  Chatrooms.KEY_ID +" INTEGER NOT NULL)";
-		public static final String[] COLS = new String[]{ Chats.KEY_ID, Chats.KEY_TIME, Chats.FOREIGN_GROUP, Chats.FOREIGN_USER, Chats.KEY_MESSAGE, Chats.KEY_PICTURE, Chats.FOREIGN_ROOM };
+		public static final String[] COLS = new String[]{ KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM };
 	}
     
     public static final class Nodes {
@@ -82,7 +84,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     					KEY_LAT +" double NOT NULL, "+
     					KEY_LON +" double NOT NULL, "+
     					KEY_DESCRIPTION +" TEXT)";
-    	public static final String[] COLS = new String[]{ Nodes.KEY_ID, Nodes.KEY_NAME, Nodes.KEY_LAT, Nodes.KEY_LON, Nodes.KEY_DESCRIPTION };
+    	public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME, KEY_LAT, KEY_LON, KEY_DESCRIPTION };
     }
     
     public static final class Edges {
@@ -96,7 +98,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     					KEY_B +" int NOT NULL REFERENCES "+ Nodes.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
     					KEY_TYPE +" VARCHAR(10) NOT NULL, "+
     					"PRIMARY KEY ("+ KEY_A+", "+ KEY_B +"))";
-    	public static final String[] COLS = new String[]{ Edges.KEY_A, Edges.KEY_B, Edges.KEY_TYPE };
+    	public static final String[] COLS = new String[]{ KEY_A, KEY_B, KEY_TYPE };
     }
 
     public DatabaseHelper(Context context) {

@@ -55,5 +55,6 @@
 	<string name="connection_failure">Verbindung Fehlgeschlagen</string>
     <string name="ssl">SSL</string>
     <string name="port">Port</string><string name="path">Pfad</string>
+	<string name="chat_post_failure">Senden der Nachricht fehlgeschlagen...</string>
 
 </resources>

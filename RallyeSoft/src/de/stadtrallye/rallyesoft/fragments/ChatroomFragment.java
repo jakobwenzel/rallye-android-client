@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
 
@@ -26,6 +27,7 @@ import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatAdapter;
+import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 
@@ -47,7 +49,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	private IProgressUI ui; // access to IndeterminateProgress in ActionBar
 	
 	private ListView list;	//List of ChatEntries
-	private ChatAdapter chatAdapter; //Adapter for List
+	private ChatCursorAdapter chatAdapter; //Adapter for List
 	private Button send;
 	private EditText text;
 	private ProgressBar loading;
@@ -105,8 +107,9 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
 		
-		chatAdapter = new ChatAdapter(getActivity(), model);
-        list.setAdapter(chatAdapter);
+//		chatAdapter = new ChatAdapter(getActivity(), model);
+//        list.setAdapter(chatAdapter);
+		chatAdapter = new ChatCursorAdapter(getActivity(), chatroom.getChatCursor(), model);
         
         restoreScrollState();
         
@@ -114,12 +117,13 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				if (!chatAdapter.hasPicture(pos))
+				Integer picID = chatAdapter.getPictureID(pos);
+				if (picID == null)
 					return;
 				
 				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
 				intent.putExtra(Std.CHATROOM, chatroom.getID());
-				intent.putExtra(Std.IMAGE, chatAdapter.getChatEntry(pos).pictureID);
+				intent.putExtra(Std.IMAGE, chatAdapter.getPictureID(pos));
 				startActivity(intent);
 			}
 		});
@@ -133,6 +137,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		super.onStart();
 		
 		chatroom.addListener(this);
+		chatAdapter.changeCursor(chatroom.getChatCursor());
 		chatroom.provideChats(this);
 	}
 	
@@ -184,17 +189,17 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	
 	@Override
 	public void chatsEdited(List<ChatEntry> chats) {
-		chatAdapter.editChats(chats);
+//		chatAdapter.editChats(chats);
 	}
 
 	@Override
 	public void chatsAdded(List<ChatEntry> chats) {
-		chatAdapter.addChats(chats);
+//		chatAdapter.addChats(chats);
 	}
 
 	@Override
 	public void chatsProvided(List<ChatEntry> chats) {
-		chatAdapter.replaceChats(chats);
+//		chatAdapter.replaceChats(chats);
 	}
 	
 	@Override
@@ -216,9 +221,11 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			case Success:
 				text.getText().clear();
 				loading.setVisibility(View.GONE);
+//				chatAdapter.addChat(chatEntry);
 				break;
 			case Failure:
 				loading.setVisibility(View.GONE);
+				Toast.makeText(getActivity(), getString(R.string.chat_post_failure), Toast.LENGTH_SHORT).show();
 				break;
 			case Retrying:
 				break;

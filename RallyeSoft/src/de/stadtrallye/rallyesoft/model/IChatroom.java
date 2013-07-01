@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft.model;
 
+import android.database.Cursor;
+
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
@@ -57,6 +59,8 @@ public interface IChatroom {
 	 * @param chatEntry chatID identifies the entry to edit, everything else will be updated
 	 */
 	void editChat(ChatEntry chatEntry);
+
+	Cursor getChatCursor();//TODO
 
 	/**
 	 * @param initialPictureId the PictureID the Gallery should display after starting (not forced, only available via the Gallery)

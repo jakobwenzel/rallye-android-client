@@ -89,4 +89,8 @@ public class ErrorHandling {
 	public void serverNotSet() {
 		Log.e(where, "Server was not set");
 	}
+
+	public void concurrentRefresh() {
+		Log.e(where, "Refreshing Chatroom, while not Ready");
+	}
 }

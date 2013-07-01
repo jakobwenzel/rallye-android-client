@@ -1,7 +1,10 @@
 package de.stadtrallye.rallyesoft.model;
 
 import java.sql.SQLDataException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -161,15 +164,18 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	}
 
 	@Override
-	public void refresh() {
+	public synchronized void refresh() {
 		if (!model.isConnected()) {
 			err.notLoggedIn();
 			return;
 		}
+		if (status != ChatroomState.Ready) {
+			err.concurrentRefresh();
+		}
 		
 		try {
 			setChatStatus(ChatroomState.Refreshing);
-			
+
 			model.exec.execute(new JSONArrayRequestExecutor<>(model.factory.chatRefreshRequest(id, lastRefresh), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -179,8 +185,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	private void chatRefreshResult(RequestExecutor<List<ChatEntry>, ?> r) {
 		if (r.isSuccessful()){
 			List<ChatEntry> res = r.getResult();
-			
-			model.getLogin().validated();
 
 			if (res.size() > 0) {
 				saveChats(res);
@@ -195,17 +199,14 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public void addChat(ChatEntry chatEntry) {
-		ContentValues insert = new ContentValues();
-		insert.put(Chats.KEY_ID, chatEntry.chatID);
+		saveChat(chatEntry);
 
-		fillContentValues(insert, chatEntry);
-
-		model.db.insert(Chats.TABLE, null, insert);
+		lookupNames(chatEntry);
 
 		List<ChatEntry> upd = new ArrayList<>();
 		upd.add(chatEntry);
 
-		this.lastRefresh = chatEntry.timestamp;
+		Log.i(THIS, "Pushed: "+ chatEntry);
 
 		notifyChatsAdded(upd);
 	}
@@ -218,12 +219,55 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		model.db.update(Chats.TABLE, update, Chats.KEY_ID+"="+chatEntry.chatID, null);
 
+		//TODO: setLast()
+		setLast(chatEntry.timestamp, 0);
+
+		lookupNames(chatEntry);
+
 		List<ChatEntry> upd = new ArrayList<>();
 		upd.add(chatEntry);
 
-		this.lastRefresh = chatEntry.timestamp;
-
 		notifyChatsEdited(upd);
+	}
+
+	private void lookupNames(final ChatEntry chatEntry) {
+		Cursor c = model.db.query(Users.TABLE, Users.COLS, Users.KEY_ID+"="+chatEntry.userID, null, null, null, null);
+		if (c.moveToFirst()) {
+			chatEntry.setUserName(c.getString(1));
+		} else {
+			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
+				@Override
+				public void dataAvailable(Map<Integer, GroupUser> users) {
+					chatEntry.setUserName(users.get(chatEntry.userID).name);
+
+					List<ChatEntry> list = new ArrayList<>();
+					list.add(chatEntry);
+					notifyChatsEdited(list);
+				}
+			});
+		}
+		c.close();
+
+		c = model.db.query(Groups.TABLE, Groups.COLS, Groups.KEY_ID+"="+chatEntry.groupID, null, null, null, null);
+		if (c.moveToFirst()) {
+			chatEntry.setGroupName(c.getString(1));
+		} else {
+			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
+				@Override
+				public void dataAvailable(List<Group> groups) {
+					HashMap<Integer, Group> groupMap = new HashMap<>();
+					for (Group g: groups) {
+						groupMap.put(g.groupID, g);
+					}
+
+					chatEntry.setGroupName(groupMap.get(chatEntry.groupID).name);
+
+					List<ChatEntry> list = new ArrayList<>();
+					list.add(chatEntry);
+					notifyChatsEdited(list);
+				}
+			});
+		}
 	}
 
 	/**
@@ -242,11 +286,11 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	 * Save ChatEntries to DB
 	 * @param entries All entries that have a higher chatID than this.lastID will be saved to DB
 	 */
-	private void saveChats(List<ChatEntry> entries) {
+	private synchronized void saveChats(List<ChatEntry> entries) {
 		SQLiteDatabase db = model.db;
-		
+		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
 		SQLiteStatement s = db.compileStatement("INSERT INTO "+ Chats.TABLE +
-				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, "+ model.getLogin().getGroupID() +", ?, ?, ?, "+ id +")");
+				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, ?, ?, ?, ?, "+ id +")");
 		
 		int chatId;
 
@@ -264,10 +308,11 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	//				Log.d(THIS, "Inserted "+c+" in Messages");
 					
 					s.bindLong(1, c.chatID);
-					s.bindLong(2, c.timestamp); //Timestamp
-					s.bindLong(3, c.userID);
-					s.bindString(4, c.message);
-					s.bindLong(5, (c.pictureID != null)? c.pictureID : 0);
+					s.bindLong(2, c.timestamp);
+					s.bindLong(3, c.groupID);
+					s.bindLong(4, c.userID);
+					s.bindString(5, c.message);
+					s.bindLong(6, (c.pictureID != null)? c.pictureID : 0);
 					chatId = (int) s.executeInsert();
 					
 	//				Log.d(THIS, "Inserted "+c+" in Chats");
@@ -282,8 +327,8 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			
 			if (entries.size() > 0) {
 				ChatEntry last = entries.get(entries.size()-1);
-				lastRefresh = last.timestamp;
-				lastId = last.chatID;
+
+				setLast(last.timestamp, last.chatID);
 			}
 
 		} catch (Exception e) {
@@ -297,6 +342,32 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		notifyChatsAdded(entries);
 	}
 
+	private void saveChat(ChatEntry chat) {
+		ContentValues insert = new ContentValues();
+		insert.put(Chats.KEY_ID, chat.chatID);
+
+		fillContentValues(insert, chat);
+
+		model.db.insert(Chats.TABLE, null, insert);
+
+		setLast(chat.timestamp, chat.chatID);
+	}
+
+	private synchronized void setLast(long refresh, int id) {
+		if (refresh > 0) {
+			if (refresh > lastRefresh)
+				lastRefresh = refresh;
+			else
+				Log.e(THIS, "Outdated lastID: old:"+ lastId +", new: "+ id);
+		}
+
+		if (id > 0) {
+			if (id > lastId)
+				lastId = id;
+			else
+				Log.e(THIS, "Outdated lastID: old:"+ lastId +", new: "+ id);
+		}
+	}
 
 	private void setChatStatus(final ChatroomState newState) {
 		status = newState;
@@ -428,6 +499,25 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		return out;
 	}
+
+	public static class ChatCursor {
+		public static final int chatID = 0;
+		public static final int message = 1;
+		public static final int timestamp = 2;
+		public static final int groupID = 3;
+		public static final int groupName = 4;
+		public static final int userID = 5;
+		public static final int userName = 6;
+		public static final int pictureID = 7;
+	}
+
+	@Override
+	public Cursor getChatCursor() {
+		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
+				new String[]{Chats.KEY_ID +" AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
+		Log.i(THIS, "new Cursor: "+ c.getCount() +" rows");
+		return c;
+	}
 	
 	private class PictureGallery extends AbstractPictureGallery {
 		
@@ -472,7 +562,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public int postChat(String msg, Integer pictureID) {
-		//TODO: save to DB
 		if (!model.isConnected()) {
             err.notLoggedIn();
             return -1;
@@ -490,7 +579,12 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	
 	private void chatPostResult(RequestExecutor<ChatEntry, ?> r, int postID) {
 		if (r.isSuccessful()) {
-			notifyChatPostState(PostState.Success, postID, r.getResult());
+			ChatEntry chat = r.getResult();
+
+			saveChat(chat);
+
+			lookupNames(chat);
+			notifyChatPostState(PostState.Success, postID, chat);
 		} else {
 			notifyChatPostState(PostState.Failure, postID, null);
 			model.commError(null);//TODO: better exception handling for communication breakdown
