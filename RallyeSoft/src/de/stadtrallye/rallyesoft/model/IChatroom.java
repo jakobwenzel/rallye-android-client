@@ -35,11 +35,11 @@ public interface IChatroom {
 
 	ChatroomState getChatStatus();
 
-	/**
-	 * Request the Model, to callback to all IChatListeners.chatsAdded with all available chats
-	 * For initializing purposes
-	 */
-	void provideChats(IChatroomListener callback);
+//	/**
+//	 * Request the Model, to callback to all IChatListeners.chatsAdded with all available chats
+//	 * For initializing purposes
+//	 */
+//	void provideChats(IChatroomListener callback);
 
 	/**
 	 * Post a new Chat to the Chatroom
@@ -71,21 +71,21 @@ public interface IChatroom {
 
 	public interface IChatroomListener {
 
-		/**
-		 * Swap each existing chat with its replacement (Identified by chatID)
-		 */
-		public void chatsEdited(List<ChatEntry> chats);
-
-		/**
-		 * Add these chats to the existing ones
-		 */
-		public void chatsAdded(List<ChatEntry> chats);
-
-		/**
-		 * Callback for IChatroom.provideChats()
-		 * @param chats all available Chats
-		 */
-		public void chatsProvided(List<ChatEntry> chats);
+//		/**
+//		 * Swap each existing chat with its replacement (Identified by chatID)
+//		 */
+//		public void chatsEdited(List<ChatEntry> chats);
+//
+//		/**
+//		 * Add these chats to the existing ones
+//		 */
+//		public void chatsAdded(List<ChatEntry> chats);
+//
+//		/**
+//		 * Callback for IChatroom.provideChats()
+//		 * @param chats all available Chats
+//		 */
+//		public void chatsProvided(List<ChatEntry> chats);
 
 		/**
 		 * Callback for changes to the Chatrooms State
@@ -97,5 +97,7 @@ public interface IChatroom {
 		 * @param id the id returned by Chatroom:postChat
 		 */
 		public void onPostStateChange(int id, PostState state, ChatEntry chatEntry);
+
+		public void onChatsChanged();
 	}
 }

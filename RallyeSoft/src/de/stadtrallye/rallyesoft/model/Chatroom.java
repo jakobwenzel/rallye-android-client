@@ -201,14 +201,15 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	public void addChat(ChatEntry chatEntry) {
 		saveChat(chatEntry);
 
-		lookupNames(chatEntry);
-
-		List<ChatEntry> upd = new ArrayList<>();
-		upd.add(chatEntry);
+//		lookupNames(chatEntry);
+//
+//		List<ChatEntry> upd = new ArrayList<>();
+//		upd.add(chatEntry);
 
 		Log.i(THIS, "Pushed: "+ chatEntry);
 
-		notifyChatsAdded(upd);
+//		notifyChatsAdded(upd);
+		notifyChatsChanged();
 	}
 
 	@Override
@@ -222,53 +223,54 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		//TODO: setLast()
 		setLast(chatEntry.timestamp, 0);
 
-		lookupNames(chatEntry);
+//		lookupNames(chatEntry);
+//
+//		List<ChatEntry> upd = new ArrayList<>();
+//		upd.add(chatEntry);
 
-		List<ChatEntry> upd = new ArrayList<>();
-		upd.add(chatEntry);
-
-		notifyChatsEdited(upd);
+//		notifyChatsEdited(upd);
+		notifyChatsChanged();
 	}
 
-	private void lookupNames(final ChatEntry chatEntry) {
-		Cursor c = model.db.query(Users.TABLE, Users.COLS, Users.KEY_ID+"="+chatEntry.userID, null, null, null, null);
-		if (c.moveToFirst()) {
-			chatEntry.setUserName(c.getString(1));
-		} else {
-			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
-				@Override
-				public void dataAvailable(Map<Integer, GroupUser> users) {
-					chatEntry.setUserName(users.get(chatEntry.userID).name);
-
-					List<ChatEntry> list = new ArrayList<>();
-					list.add(chatEntry);
-					notifyChatsEdited(list);
-				}
-			});
-		}
-		c.close();
-
-		c = model.db.query(Groups.TABLE, Groups.COLS, Groups.KEY_ID+"="+chatEntry.groupID, null, null, null, null);
-		if (c.moveToFirst()) {
-			chatEntry.setGroupName(c.getString(1));
-		} else {
-			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
-				@Override
-				public void dataAvailable(List<Group> groups) {
-					HashMap<Integer, Group> groupMap = new HashMap<>();
-					for (Group g: groups) {
-						groupMap.put(g.groupID, g);
-					}
-
-					chatEntry.setGroupName(groupMap.get(chatEntry.groupID).name);
-
-					List<ChatEntry> list = new ArrayList<>();
-					list.add(chatEntry);
-					notifyChatsEdited(list);
-				}
-			});
-		}
-	}
+//	private void lookupNames(final ChatEntry chatEntry) {
+//		Cursor c = model.db.query(Users.TABLE, Users.COLS, Users.KEY_ID+"="+chatEntry.userID, null, null, null, null);
+//		if (c.moveToFirst()) {
+//			chatEntry.setUserName(c.getString(1));
+//		} else {
+//			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
+//				@Override
+//				public void dataAvailable(Map<Integer, GroupUser> users) {
+//					chatEntry.setUserName(users.get(chatEntry.userID).name);
+//
+//					List<ChatEntry> list = new ArrayList<>();
+//					list.add(chatEntry);
+//					notifyChatsEdited(list);
+//				}
+//			});
+//		}
+//		c.close();
+//
+//		c = model.db.query(Groups.TABLE, Groups.COLS, Groups.KEY_ID+"="+chatEntry.groupID, null, null, null, null);
+//		if (c.moveToFirst()) {
+//			chatEntry.setGroupName(c.getString(1));
+//		} else {
+//			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
+//				@Override
+//				public void dataAvailable(List<Group> groups) {
+//					HashMap<Integer, Group> groupMap = new HashMap<>();
+//					for (Group g: groups) {
+//						groupMap.put(g.groupID, g);
+//					}
+//
+//					chatEntry.setGroupName(groupMap.get(chatEntry.groupID).name);
+//
+//					List<ChatEntry> list = new ArrayList<>();
+//					list.add(chatEntry);
+//					notifyChatsEdited(list);
+//				}
+//			});
+//		}
+//	}
 
 	/**
 	 * Helper to remove redundancy of adding all Attributes to a ContentValues Map (except chatID)
@@ -339,7 +341,8 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		
 		Log.i(THIS, "Received "+ entries.size() +" new Chats in Chatroom "+ this.id +" since "+ this.lastRefresh +"");
 		
-		notifyChatsAdded(entries);
+//		notifyChatsAdded(entries);
+		notifyChatsChanged();
 	}
 
 	private void saveChat(ChatEntry chat) {
@@ -399,34 +402,45 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		listeners.remove(l);
 	}
 
-	/**
-	 * Request a callback with all available Chats
-	 * Callback pattern in anticipation of asynchronous DB access
-	 * @param callback the single Listener that wants to completely refresh or initialize its content
-	 */
-	@Override//TODO: switch to CursorAdapter and Cursor as return type
-	public void provideChats(IChatroomListener callback) {
-		Log.i(THIS, "Chats requested");
-		callback.chatsProvided(getAllChats());
-	}
+//	/**
+//	 * Request a callback with all available Chats
+//	 * Callback pattern in anticipation of asynchronous DB access
+//	 * @param callback the single Listener that wants to completely refresh or initialize its content
+//	 */
+//	@Override//TODO: switch to CursorAdapter and Cursor as return type
+//	public void provideChats(IChatroomListener callback) {
+//		Log.i(THIS, "Chats requested");
+//		callback.chatsProvided(getAllChats());
+//	}
 	
-	private void notifyChatsEdited(final List<ChatEntry> entries) {
+//	private void notifyChatsEdited(final List<ChatEntry> entries) {
+//		model.uiHandler.post(new Runnable() {
+//			@Override
+//			public void run() {
+//				for(IChatroomListener l: listeners) {
+//					l.chatsEdited(entries);
+//				}
+//			}
+//		});
+//	}
+	
+//	private void notifyChatsAdded(final List<ChatEntry> entries) {
+//		model.uiHandler.post(new Runnable() {
+//			@Override
+//			public void run() {
+//				for(IChatroomListener l: listeners) {
+//					l.chatsAdded(entries);
+//				}
+//			}
+//		});
+//	}
+
+	private void notifyChatsChanged() {
 		model.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for(IChatroomListener l: listeners) {
-					l.chatsEdited(entries);
-				}
-			}
-		});
-	}
-	
-	private void notifyChatsAdded(final List<ChatEntry> entries) {
-		model.uiHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				for(IChatroomListener l: listeners) {
-					l.chatsAdded(entries);
+					l.onChatsChanged();
 				}
 			}
 		});
@@ -443,62 +457,62 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		});
 	}
 
-	/**
-	 * Retrieve all Chats from DB
-	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available
-	 * @return preliminary chatEntries, will be edited if incomplete
-	 */
-	private List<ChatEntry> getAllChats() {
-		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
-				new String[]{Chats.KEY_ID, Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
-		
-		final ArrayList<ChatEntry> out = new ArrayList<>(),
-					missingUser = new ArrayList<>(),
-					missingGroup = new ArrayList<>();
-		
-		while (c.moveToNext()) {
-			String groupName = c.getString(4), userName = c.getString(6);
-			ChatEntry chatEntry = new ChatEntry(c.getInt(0), c.getString(1), c.getLong(2), c.getInt(3), groupName, c.getInt(5), userName, c.getInt(7));
-			out.add(chatEntry);
-			if (groupName == null) {
-				missingGroup.add(chatEntry);
-			}
-
-			if (userName == null) {
-				missingUser.add(chatEntry);
-			}
-		}
-		c.close();
-
-		if (missingGroup.size() > 0) {
-			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
-				@Override
-				public void dataAvailable(List<Group> groups) {
-					HashMap<Integer, Group> groupMap = new HashMap<>();
-					for (Group g: groups) {
-						groupMap.put(g.groupID, g);
-					}
-
-					for (ChatEntry chat: missingGroup) {
-						chat.setGroupName(groupMap.get(chat.groupID).name);
-					}
-					notifyChatsEdited(missingGroup);
-				}
-			});
-		}
-		if (missingUser.size() > 0) {
-			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
-				@Override
-				public void dataAvailable(Map<Integer, GroupUser> users) {
-					for (ChatEntry chat: missingUser) {
-						chat.setUserName(users.get(chat.userID).name);
-					}
-					notifyChatsEdited(missingUser);
-				}
-			});
-		}
-		return out;
-	}
+//	/**
+//	 * Retrieve all Chats from DB
+//	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available
+//	 * @return preliminary chatEntries, will be edited if incomplete
+//	 */
+//	private List<ChatEntry> getAllChats() {
+//		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
+//				new String[]{Chats.KEY_ID, Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
+//
+//		final ArrayList<ChatEntry> out = new ArrayList<>(),
+//					missingUser = new ArrayList<>(),
+//					missingGroup = new ArrayList<>();
+//
+//		while (c.moveToNext()) {
+//			String groupName = c.getString(4), userName = c.getString(6);
+//			ChatEntry chatEntry = new ChatEntry(c.getInt(0), c.getString(1), c.getLong(2), c.getInt(3), groupName, c.getInt(5), userName, c.getInt(7));
+//			out.add(chatEntry);
+//			if (groupName == null) {
+//				missingGroup.add(chatEntry);
+//			}
+//
+//			if (userName == null) {
+//				missingUser.add(chatEntry);
+//			}
+//		}
+//		c.close();
+//
+//		if (missingGroup.size() > 0) {
+//			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
+//				@Override
+//				public void dataAvailable(List<Group> groups) {
+//					HashMap<Integer, Group> groupMap = new HashMap<>();
+//					for (Group g: groups) {
+//						groupMap.put(g.groupID, g);
+//					}
+//
+//					for (ChatEntry chat: missingGroup) {
+//						chat.setGroupName(groupMap.get(chat.groupID).name);
+//					}
+//					notifyChatsEdited(missingGroup);
+//				}
+//			});
+//		}
+//		if (missingUser.size() > 0) {
+//			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
+//				@Override
+//				public void dataAvailable(Map<Integer, GroupUser> users) {
+//					for (ChatEntry chat: missingUser) {
+//						chat.setUserName(users.get(chat.userID).name);
+//					}
+//					notifyChatsEdited(missingUser);
+//				}
+//			});
+//		}
+//		return out;
+//	}
 
 	public static class ChatCursor {
 		public static final int chatID = 0;
@@ -583,8 +597,9 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 			saveChat(chat);
 
-			lookupNames(chat);
+//			lookupNames(chat);
 			notifyChatPostState(PostState.Success, postID, chat);
+			notifyChatsChanged();
 		} else {
 			notifyChatPostState(PostState.Failure, postID, null);
 			model.commError(null);//TODO: better exception handling for communication breakdown

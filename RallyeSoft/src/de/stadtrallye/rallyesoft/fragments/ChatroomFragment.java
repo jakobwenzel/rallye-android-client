@@ -106,10 +106,9 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		if (chatroom == null) {
 			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
 		}
-		
-//		chatAdapter = new ChatAdapter(getActivity(), model);
-//        list.setAdapter(chatAdapter);
-		chatAdapter = new ChatCursorAdapter(getActivity(), chatroom.getChatCursor(), model);
+
+		chatAdapter = new ChatCursorAdapter(getActivity(), null, model);
+		list.setAdapter(chatAdapter);
         
         restoreScrollState();
         
@@ -138,7 +137,6 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		
 		chatroom.addListener(this);
 		chatAdapter.changeCursor(chatroom.getChatCursor());
-		chatroom.provideChats(this);
 	}
 	
 	@Override
@@ -186,22 +184,12 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		
 		outState.putSerializable(Std.LAST_POS, lastPos);
 	}
-	
-	@Override
-	public void chatsEdited(List<ChatEntry> chats) {
-//		chatAdapter.editChats(chats);
-	}
 
 	@Override
-	public void chatsAdded(List<ChatEntry> chats) {
-//		chatAdapter.addChats(chats);
+	public void onChatsChanged() {
+		chatAdapter.changeCursor(chatroom.getChatCursor());
 	}
 
-	@Override
-	public void chatsProvided(List<ChatEntry> chats) {
-//		chatAdapter.replaceChats(chats);
-	}
-	
 	@Override
 	public void onChatStatusChanged(IChatroom.ChatroomState newStatus) {
 		switch (newStatus) {
@@ -221,7 +209,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			case Success:
 				text.getText().clear();
 				loading.setVisibility(View.GONE);
-//				chatAdapter.addChat(chatEntry);
+				chatAdapter.changeCursor(chatroom.getChatCursor());
 				break;
 			case Failure:
 				loading.setVisibility(View.GONE);
