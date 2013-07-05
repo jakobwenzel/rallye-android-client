@@ -51,6 +51,9 @@ public interface IModel {
 
 	void saveModel();
 
+	void onMissingUserName(int userID);
+	void onMissingGroupName(int groupID);
+
 	URL getPictureUploadURL(String hash);
 	String getAvatarURL(int groupID);
 	String getServerPictureURL();

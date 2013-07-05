@@ -26,7 +26,7 @@ public interface IChatroom {
 	void saveCurrentState(int lastRead);
 
 	/**
-	 * @return the last Read saved by {@link saveCurrentState} chatID
+	 * @return the last Read saved by {@see saveCurrentState} chatID
 	 */
 	int getLastState();
 	

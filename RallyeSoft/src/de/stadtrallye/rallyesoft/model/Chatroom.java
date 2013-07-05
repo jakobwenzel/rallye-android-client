@@ -462,6 +462,17 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		});
 	}
 
+	public void onDbChange() {
+		model.uiHandler.post(new Runnable() {
+			@Override
+			public void run() {
+				for (IChatroomListener l: listeners) {
+					l.onChatsChanged();
+				}
+			}
+		});
+	}
+
 //	/**
 //	 * Retrieve all Chats from DB
 //	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available

@@ -32,6 +32,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
  * @author Ramon
  *
  */
+@Deprecated
 public class ChatAdapter extends BaseAdapter {
 
 	private List<ChatEntry> chats = new ArrayList<ChatEntry>();

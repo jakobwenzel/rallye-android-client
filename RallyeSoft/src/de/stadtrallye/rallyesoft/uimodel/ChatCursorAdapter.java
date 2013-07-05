@@ -27,7 +27,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
 
 /**
- * Created by Ramon on 30.06.13.
+ * Created by Ramon on 30.06.13
  */
 public class ChatCursorAdapter extends CursorAdapter {
 
@@ -48,6 +48,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 
 	public ChatCursorAdapter(Context context, Cursor cursor, IModel model) {
 		super(context, cursor, false);
+		//TODO: maybe get column ids from cursor? (may need to refresh on cursor change?)
 
 		this.user = model.getUser();
 		this.model = model;
@@ -71,13 +72,6 @@ public class ChatCursorAdapter extends CursorAdapter {
 	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
 		View v = inflator.inflate(R.layout.chat_item, null);
-
-		int groupID = cursor.getInt(ChatCursor.groupID);
-		int userID = cursor.getInt(ChatCursor.userID);
-
-		ChatEntry.Sender s = ChatEntry.getSender(user, groupID, userID);
-		boolean me = (s == Sender.Me);
-
 
 		ViewMem mem = new ViewMem();
 		mem.layout = (LinearLayout) v.findViewById(R.id.chat_row);
@@ -115,11 +109,13 @@ public class ChatCursorAdapter extends CursorAdapter {
 		String userName = cursor.getString(ChatCursor.userName);
 		if (userName == null) {
 			userName = String.valueOf(userID);
+			model.onMissingUserName(userID);
 		}
 
 		String groupName = cursor.getString(ChatCursor.groupName);
 		if (groupName == null) {
 			groupName = String.valueOf(groupID);
+			model.onMissingGroupName(groupID);
 		}
 
 		mem.sender.setText(userName +" ("+ groupName +")");

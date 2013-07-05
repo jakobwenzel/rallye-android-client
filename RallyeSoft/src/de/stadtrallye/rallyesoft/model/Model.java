@@ -30,7 +30,6 @@ import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
-import de.stadtrallye.rallyesoft.model.executors.JSONArrayToMapRequestExecutor;
 import de.stadtrallye.rallyesoft.model.jsonConverter.Converters;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -72,7 +71,6 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<>();
 	private IListAvailableCallback<Group> availableGroupsCallback;
 	private IObjectAvailableCallback<ServerInfo> serverInfoCallback;
-	private IMapAvailableCallback<Integer, GroupUser> allUsersCallback;
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	final RequestFactory factory;
@@ -338,7 +336,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 
 	@Override
-	public void getAvailableGroups(IListAvailableCallback<Group> callback) {
+	public void getAvailableGroups(IListAvailableCallback<Group> callback) {//TODO: remove callback, do automatically on connect
 		if (!currentLogin.hasServer()) {
 			err.serverNotSet();
 			callback.dataAvailable(null);
@@ -369,34 +367,27 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			});
 	}
 
-	public void getAllUsers(IMapAvailableCallback<Integer, GroupUser> callback) {
+	public void refreshAllUsers() {
 		if (!isConnected()) {
 			err.notLoggedIn();
-			callback.dataAvailable(null);
 			return;
 		}
 
 		try {
-			allUsersCallback = callback;
-			exec.execute(new JSONArrayToMapRequestExecutor<>(factory.allUsersRequest(), new Converters.GroupUserConverter(), new Converters.UserIndexer(), this, Tasks.USER_LIST));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.allUsersRequest(), new Converters.GroupUserConverter(), this, Tasks.USER_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
 	}
 
-	private void allUsersResult(RequestExecutor<java.util.Map<Integer, GroupUser>, ?> r) {
-		final java.util.Map<Integer, GroupUser> users = r.getResult();
+	private void refreshAllUsersResult(RequestExecutor<List<GroupUser>, ?> r) {
+		final List<GroupUser> users = r.getResult();
 
 		save().saveUsers(users).commit();
 
-		if (allUsersCallback != null)
-			uiHandler.post(new Runnable() {
-				@Override
-				public void run() {
-					allUsersCallback.dataAvailable(users);
-					allUsersCallback = null;
-				}
-			});
+		for (Chatroom c: chatrooms) {
+			c.onDbChange();
+		}
 	}
 
 	@Override
@@ -426,6 +417,16 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 					serverInfoCallback = null;
 				}
 			});
+	}
+
+	@Override
+	public void onMissingGroupName(int groupID) {
+		refreshAllUsers();
+	}
+
+	@Override
+	public void onMissingUserName(int userID) {
+		getAvailableGroups(null);
 	}
 
 	@Override
@@ -544,7 +545,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			serverInfoResult((RequestExecutor<ServerInfo, ?>) r);
 			break;
 		case USER_LIST:
-			allUsersResult((RequestExecutor<java.util.Map<Integer, GroupUser>, ?>) r);
+			refreshAllUsersResult((RequestExecutor<List<GroupUser>, ?>) r);
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
@@ -614,10 +615,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			return this;
 		}
 
-		public Saver saveUsers(java.util.Map<Integer, GroupUser> users) {
+		public Saver saveUsers(List<GroupUser> users) {
 			db.delete(Users.TABLE, null, null);
 
-			for (GroupUser u: users.values()) {
+			for (GroupUser u: users) {
 				ContentValues insert = new ContentValues();
 				insert.put(Users.KEY_ID, u.userID);
 				insert.put(Users.KEY_NAME, u.name);
