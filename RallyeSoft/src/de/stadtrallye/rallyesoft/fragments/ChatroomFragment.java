@@ -10,15 +10,13 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
-
-import java.util.List;
 
 import de.stadtrallye.rallyesoft.ImageViewActivity;
 import de.stadtrallye.rallyesoft.R;
@@ -26,7 +24,6 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.uimodel.ChatAdapter;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
@@ -50,7 +47,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	
 	private ListView list;	//List of ChatEntries
 	private ChatCursorAdapter chatAdapter; //Adapter for List
-	private Button send;
+	private ImageButton send;
 	private EditText text;
 	private ProgressBar loading;
 
@@ -72,7 +69,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.chat_list, container, false);
 		list = (ListView) v.findViewById(R.id.chat_list);
-		send = (Button) v.findViewById(R.id.button_send);
+		send = (ImageButton) v.findViewById(R.id.button_send);
 		text = (EditText) v.findViewById(R.id.edit_new_message);
 		loading = (ProgressBar) v.findViewById(R.id.loading);
 
@@ -191,7 +188,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	}
 
 	@Override
-	public void onChatStatusChanged(IChatroom.ChatroomState newStatus) {
+	public void onChatStateChanged(IChatroom.ChatroomState newStatus) {
 		switch (newStatus) {
 		case Refreshing:
 			ui.activateProgressAnimation();
@@ -204,7 +201,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	}
 
 	@Override
-	public void onPostStateChange(int id, IChatroom.PostState state, ChatEntry chatEntry) {
+	public void onPostStateChange(int id, IChatroom.PostState state, ChatEntry chat) {
 		switch (state) {
 			case Success:
 				text.getText().clear();

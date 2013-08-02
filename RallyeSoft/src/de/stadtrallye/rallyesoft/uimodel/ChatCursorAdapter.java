@@ -122,6 +122,8 @@ public class ChatCursorAdapter extends CursorAdapter {
 		mem.msg.setText(cursor.getString(ChatCursor.message));
 		mem.time.setText(converter.format(new Date(cursor.getLong(ChatCursor.timestamp) * 1000L)));
 
+		int pictureID = cursor.getInt(ChatCursor.pictureID);
+
 		// ImageLoader jar
 		// ImageLoader must apparently be called for _EVERY_ entry
 		// When called with null or "" as URL, will display empty picture / default resource

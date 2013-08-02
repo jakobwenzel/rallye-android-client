@@ -41,12 +41,12 @@
 		android:layout_alignRight="@+id/edit_new_message"
 		android:indeterminate="true" />
 
-	<Button
+	<ImageButton
 			android:id="@+id/button_send"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_gravity="right"
-			android:text="@string/send"
+			android:src="@drawable/send_now_dark"
 			android:layout_alignParentBottom="true"
 			android:layout_alignParentRight="true" />
 

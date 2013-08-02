@@ -1,23 +1,19 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.sql.SQLDataException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
-import de.rallye.model.structures.Group;
-import de.rallye.model.structures.GroupUser;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.sql.SQLDataException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.AdvTaskId;
@@ -225,7 +221,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		model.db.update(Chats.TABLE, update, Chats.KEY_ID+"="+chatEntry.chatID, null);
 
-		//TODO: setLast()
 		setLast(chatEntry.timestamp, 0);
 
 //		lookupNames(chatEntry);
@@ -386,7 +381,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			@Override
 			public void run() {
 				for (IChatroomListener l: listeners) {
-					l.onChatStatusChanged(newState);
+					l.onChatStateChanged(newState);
 				}
 			}
 		});
@@ -412,7 +407,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 //	 * Callback pattern in anticipation of asynchronous DB access
 //	 * @param callback the single Listener that wants to completely refresh or initialize its content
 //	 */
-//	@Override//TODO: switch to CursorAdapter and Cursor as return type
+//	@Override
 //	public void provideChats(IChatroomListener callback) {
 //		Log.i(THIS, "Chats requested");
 //		callback.chatsProvided(getAllChats());

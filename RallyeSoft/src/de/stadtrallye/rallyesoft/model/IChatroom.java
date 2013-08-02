@@ -10,8 +10,15 @@ public interface IChatroom {
 
 	enum ChatroomState { Ready, Refreshing }
 	enum PostState { Success, Failure, Retrying }
-	
+
+	/**
+	 * @return get the chatroomID of this Chatroom
+	 */
 	int getID();
+
+	/**
+	 * @return the Chatroom name provided by the server, or "Chatroom {getID()}" as fallback
+	 */
 	String getName();
 
 	/**
@@ -33,13 +40,10 @@ public interface IChatroom {
 	void addListener(IChatroomListener l);
 	void removeListener(IChatroomListener l);
 
+	/**
+	 * Get the current ChatroomState of this Chatroom
+	 */
 	ChatroomState getChatStatus();
-
-//	/**
-//	 * Request the Model, to callback to all IChatListeners.chatsAdded with all available chats
-//	 * For initializing purposes
-//	 */
-//	void provideChats(IChatroomListener callback);
 
 	/**
 	 * Post a new Chat to the Chatroom
@@ -60,7 +64,11 @@ public interface IChatroom {
 	 */
 	void editChat(ChatEntry chatEntry);
 
-	Cursor getChatCursor();//TODO
+	/**
+	 *
+	 * @return a Cursor for all chats of this Chatroom (use {@link Chatroom.ChatCursor} for indexes)
+	 */
+	Cursor getChatCursor();
 
 	/**
 	 * @param initialPictureId the PictureID the Gallery should display after starting (not forced, only available via the Gallery)
@@ -71,33 +79,22 @@ public interface IChatroom {
 
 	public interface IChatroomListener {
 
-//		/**
-//		 * Swap each existing chat with its replacement (Identified by chatID)
-//		 */
-//		public void chatsEdited(List<ChatEntry> chats);
-//
-//		/**
-//		 * Add these chats to the existing ones
-//		 */
-//		public void chatsAdded(List<ChatEntry> chats);
-//
-//		/**
-//		 * Callback for IChatroom.provideChats()
-//		 * @param chats all available Chats
-//		 */
-//		public void chatsProvided(List<ChatEntry> chats);
-
 		/**
 		 * Callback for changes to the Chatrooms State
+		 * @param status the new ChatroomState
 		 */
-		public void onChatStatusChanged(ChatroomState status);
+		public void onChatStateChanged(ChatroomState status);
 
 		/**
-		 *
+		 * Callback after trying to post a new message
 		 * @param id the id returned by Chatroom:postChat
+		 * @param chat the complete ChatEntry as returned by the server
 		 */
-		public void onPostStateChange(int id, PostState state, ChatEntry chatEntry);
+		public void onPostStateChange(int id, PostState state, ChatEntry chat);
 
+		/**
+		 * The DB has changed and a new ChatCursor should be requested;
+		 */
 		public void onChatsChanged();
 	}
 }
