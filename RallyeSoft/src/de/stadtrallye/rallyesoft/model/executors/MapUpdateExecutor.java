@@ -5,7 +5,7 @@ import java.util.Map;
 
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Node;
-import de.stadtrallye.rallyesoft.model.jsonConverter.Converters;
+import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.net.Request;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 
@@ -26,9 +26,9 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 	@Override
 	protected Map<Integer, Node> tryRun() throws Exception {
 		
-		nodes = JSONArray.getInstance(new Converters.NodeConverter(), nodeRequest.execute()).toMap(new Converters.NodeIndexer());
+		nodes = JSONArray.getInstance(new JsonConverters.NodeConverter(), nodeRequest.execute()).toMap(new JsonConverters.NodeIndexer());
 		
-		edges = edgeRequest.executeJSONArray(new Converters.EdgeConverter(nodes));
+		edges = edgeRequest.executeJSONArray(new JsonConverters.EdgeConverter(nodes));
 		
 		return nodes;
 	}

@@ -37,6 +37,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
+import de.stadtrallye.rallyesoft.fragments.TasksOverviewFragment;
 import de.stadtrallye.rallyesoft.fragments.TurnFragment;
 import de.stadtrallye.rallyesoft.fragments.WelcomeFragment;
 import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
@@ -143,6 +144,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 		tabs.add(new FragmentHandler<>("welcome", WelcomeFragment.class, false));
 		tabs.add(new FragmentHandler<>("overview", OverviewFragment.class, false));
 		tabs.add(mapFragmentHandler = new FragmentHandler<>("map", GameMapFragment.class, false));
+		tabs.add(new FragmentHandler<>("tasks", TasksOverviewFragment.class, false));
 		tabs.add(new FragmentHandler<>("turn", TurnFragment.class, false));
 		tabs.add(new FragmentHandler<>("chat", ChatsFragment.class, true));
 	}
@@ -279,7 +281,7 @@ public class MainActivity extends SlidingFragmentActivity implements  ActionBar.
 			mapFragmentHandler.setArguments(b);
 			break;
 		default:
-			if (pos < 0 || pos > 4) {
+			if (pos < 0 || pos > 5) {
 				Toast.makeText(getApplicationContext(), getResources().getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
 				return false;
 			}

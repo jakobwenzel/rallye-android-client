@@ -110,7 +110,7 @@ public class ImageViewActivity extends SherlockActivity {
 		
 		@Override
 		public Object instantiateItem(ViewGroup view, int position) {
-			final View imageLayout = inflater.inflate(R.layout.item_pager_image, null);
+			final View imageLayout = inflater.inflate(R.layout.image_pager_item, null);
 			final ImageView imageView = (ImageView) imageLayout.findViewById(R.id.image);
 			final ProgressBar spinner = (ProgressBar) imageLayout.findViewById(R.id.loading);
 			

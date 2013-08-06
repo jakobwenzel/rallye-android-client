@@ -119,7 +119,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 				
 				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
 				intent.putExtra(Std.CHATROOM, chatroom.getID());
-				intent.putExtra(Std.IMAGE, chatAdapter.getPictureID(pos));
+				intent.putExtra(Std.IMAGE, picID);
 				startActivity(intent);
 			}
 		});

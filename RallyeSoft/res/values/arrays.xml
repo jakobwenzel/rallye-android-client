@@ -8,6 +8,7 @@
         <item>Willkommen</item>
         <item >Übersicht</item>
         <item >Karte</item>
+		<item>Tasks</item>
         <item >Nächster Zug</item>
         <item >Chat</item>
     </string-array>

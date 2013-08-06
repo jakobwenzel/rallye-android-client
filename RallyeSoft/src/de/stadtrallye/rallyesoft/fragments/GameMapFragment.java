@@ -26,16 +26,15 @@ import java.util.Map.Entry;
 
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Node;
-import de.rallye.model.structures.Edge;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
-import de.stadtrallye.rallyesoft.model.IMapListener;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 
-public class GameMapFragment extends SherlockMapFragment implements IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
+import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
+
+public class GameMapFragment extends SherlockMapFragment implements IMap.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
 	
@@ -192,19 +191,19 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		
 		for (Node n: nodes.values()) {
 			Marker m = gmap.addMarker(new MarkerOptions()
-								.position(LatLngAdapter.toGms(n.position))
+								.position(toGms(n.location))
 								.title(n.name)
 								.snippet(n.description));
 			
 			hasBounds = true;
-			bounds.include(LatLngAdapter.toGms(n.position));
+			bounds.include(toGms(n.location));
 			markers.put(m, n);
 		}
 		
 		
 		for (Edge e: edges) {
 			gmap.addPolyline(new PolylineOptions()
-							.add(LatLngAdapter.toGms(e.nodeA.position), LatLngAdapter.toGms(e.nodeB.position))
+							.add(toGms(e.nodeA.location), toGms(e.nodeB.location))
 							.color(getColor(e.type)));
 		}
 		
@@ -227,12 +226,12 @@ public class GameMapFragment extends SherlockMapFragment implements IMapListener
 		Builder bounds = LatLngBounds.builder();
 		ArrayList<Node> targets = new ArrayList<Node>();
 		
-		bounds.include(LatLngAdapter.toGms(source.position));
+		bounds.include(toGms(source.location));
 		
 		for (Edge e: source.getEdges()) {
 			target = e.getOtherNode(source);
 			targets.add(target);
-			bounds.include(LatLngAdapter.toGms(target.position));
+			bounds.include(toGms(target.location));
 		}
 		Log.i(THIS, "found "+ targets.size() +" targets/edges");
 		

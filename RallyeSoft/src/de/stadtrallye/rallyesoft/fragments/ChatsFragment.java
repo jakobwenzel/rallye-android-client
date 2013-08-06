@@ -151,8 +151,6 @@ public class ChatsFragment extends SherlockFragment {
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
-
-		private boolean enable = true;
 		
 		public ChatFragmentAdapter(FragmentManager fm) {
 			super(fm);
@@ -164,54 +162,34 @@ public class ChatsFragment extends SherlockFragment {
 		 */
 		@Override
 		public long getItemId(int position) {
-			return (enable)? chatrooms.get(position).getID() : -1;
+			return chatrooms.get(position).getID();
 		}
 
 		@Override
 		public Fragment getItem(int pos) {
-			if (enable)
-				return getChatFragment(pos);
-			else 
-				return getDummyFragment();
-		}
-		
-		private Fragment getDummyFragment() {
-			Fragment f = new DummyFragment();
-			Bundle b = new Bundle();
-			b.putInt(Std.LAYOUT, R.layout.chat_unavailable);
-			f.setArguments(b);
-			return f;
-		}
-		
-		private Fragment getChatFragment(int pos) {
 			ChatroomFragment f;
-			
+
 			f = new ChatroomFragment();
 			Bundle b = new Bundle();
 			b.putInt(Std.CHATROOM, chatrooms.get(pos).getID());
 			f.setArguments(b);
-			
+
 			return f;
 		}
 
 		@Override
 		public int getCount() {
-			return (enable)? chatrooms.size() : 1;
+			return chatrooms.size();
 		}
 		
 		@Override
 		public int getItemPosition(Object object) {
-			if (enable && object instanceof DummyFragment)
-				return POSITION_NONE;
-			else if (!enable && object instanceof ChatroomFragment)
-				return POSITION_NONE;
-			else
-				return POSITION_UNCHANGED;
+			return POSITION_UNCHANGED;
 		}
 		
 		@Override
 		public CharSequence getPageTitle(int pos) {
-			return (enable)? chatrooms.get(pos).getName() : "";
+			return chatrooms.get(pos).getName();
 		}
 
 	}

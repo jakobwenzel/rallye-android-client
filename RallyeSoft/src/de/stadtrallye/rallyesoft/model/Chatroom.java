@@ -314,7 +314,12 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 					s.bindLong(3, c.groupID);
 					s.bindLong(4, c.userID);
 					s.bindString(5, c.message);
-					s.bindLong(6, (c.pictureID != null)? c.pictureID : 0);
+
+					if (c.pictureID != null)
+						s.bindLong(6, c.pictureID);
+					else
+						s.bindNull(6);
+
 					chatId = (int) s.executeInsert();
 					
 	//				Log.d(THIS, "Inserted "+c+" in Chats");
@@ -524,17 +529,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 //		}
 //		return out;
 //	}
-
-	public static class ChatCursor {
-		public static final int chatID = 0;
-		public static final int message = 1;
-		public static final int timestamp = 2;
-		public static final int groupID = 3;
-		public static final int groupName = 4;
-		public static final int userID = 5;
-		public static final int userName = 6;
-		public static final int pictureID = 7;
-	}
 
 	@Override
 	public Cursor getChatCursor() {

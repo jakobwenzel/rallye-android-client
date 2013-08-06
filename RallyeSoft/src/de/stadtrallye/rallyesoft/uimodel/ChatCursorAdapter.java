@@ -21,8 +21,9 @@ import java.util.Date;
 
 import de.rallye.model.structures.GroupUser;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.Chatroom.ChatCursor;
 import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
+import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
 
@@ -37,6 +38,8 @@ public class ChatCursorAdapter extends CursorAdapter {
 	private final GroupUser user;
 	private final IModel model;
 
+	private CursorConverters.ChatCursorIds c;
+
 	private class ViewMem {
 		public ImageView img_l;
 		public ImageView img_r;
@@ -48,7 +51,8 @@ public class ChatCursorAdapter extends CursorAdapter {
 
 	public ChatCursorAdapter(Context context, Cursor cursor, IModel model) {
 		super(context, cursor, false);
-		//TODO: maybe get column ids from cursor? (may need to refresh on cursor change?)
+
+		c = CursorConverters.ChatCursorIds.read(cursor);
 
 		this.user = model.getUser();
 		this.model = model;
@@ -96,8 +100,8 @@ public class ChatCursorAdapter extends CursorAdapter {
 	}
 
 	private void fillView(ViewMem mem, Cursor cursor) {
-		int groupID = cursor.getInt(ChatCursor.groupID);
-		int userID = cursor.getInt(ChatCursor.userID);
+		int groupID = cursor.getInt(c.groupID);
+		int userID = cursor.getInt(c.userID);
 
 		ChatEntry.Sender s = ChatEntry.getSender(user, groupID, userID);
 		boolean me = (s == Sender.Me);
@@ -106,23 +110,24 @@ public class ChatCursorAdapter extends CursorAdapter {
 		mem.img_r.setVisibility((me)? View.VISIBLE : View.GONE);
 		mem.img_l.setVisibility((me)? View.GONE : View.VISIBLE);
 
-		String userName = cursor.getString(ChatCursor.userName);
+		String userName = cursor.getString(c.userName);
 		if (userName == null) {
 			userName = String.valueOf(userID);
 			model.onMissingUserName(userID);
 		}
 
-		String groupName = cursor.getString(ChatCursor.groupName);
+		String groupName = cursor.getString(c.groupName);
 		if (groupName == null) {
 			groupName = String.valueOf(groupID);
 			model.onMissingGroupName(groupID);
 		}
 
 		mem.sender.setText(userName +" ("+ groupName +")");
-		mem.msg.setText(cursor.getString(ChatCursor.message));
-		mem.time.setText(converter.format(new Date(cursor.getLong(ChatCursor.timestamp) * 1000L)));
+		mem.msg.setText(cursor.getString(c.message));
+		mem.time.setText(converter.format(new Date(cursor.getLong(c.timestamp) * 1000L)));
 
-		int pictureID = cursor.getInt(ChatCursor.pictureID);
+		int pictureID = cursor.getInt(c.pictureID);
+		//TODO: show the picture itself
 
 		// ImageLoader jar
 		// ImageLoader must apparently be called for _EVERY_ entry
@@ -132,7 +137,20 @@ public class ChatCursorAdapter extends CursorAdapter {
 		loader.displayImage(null, (!me)? mem.img_r : mem.img_l);
 	}
 
+	/**
+	 * Unsafe to call if no valid cursor is present
+	 * @param pos Chat Entry Position
+	 * @return null, if none, else int > 0
+	 */
 	public Integer getPictureID(int pos) {
-		return null;
+		Cursor cursor = getCursor();
+		cursor.moveToPosition(pos);
+		return (cursor.isNull(c.pictureID))? null : cursor.getInt(c.pictureID);
+	}
+
+	@Override
+	public void changeCursor(Cursor cursor) {
+		c = CursorConverters.ChatCursorIds.read(cursor);
+		super.changeCursor(cursor);
 	}
 }

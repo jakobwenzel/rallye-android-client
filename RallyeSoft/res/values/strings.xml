@@ -56,5 +56,8 @@
     <string name="ssl">SSL</string>
     <string name="port">Port</string><string name="path">Pfad</string>
 	<string name="chat_post_failure">Senden der Nachricht fehlgeschlagen...</string>
+	<string name="locspecific_tasks">Ortsgebundene Aufgaben</string>
+	<string name="ubiquitous_tasks">Nichtgebundene Aufgaben</string>
+	<string name="resize">Größe wechseln</string>
 
 </resources>

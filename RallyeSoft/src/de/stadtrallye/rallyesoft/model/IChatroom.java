@@ -6,6 +6,10 @@ import java.util.List;
 
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
+/**
+ * Represents 1 Chatroom, belonging to a Model
+ * Currently refreshes only manually, push-implementation can be external, calling addChat()
+ */
 public interface IChatroom {
 
 	enum ChatroomState { Ready, Refreshing }
@@ -65,8 +69,8 @@ public interface IChatroom {
 	void editChat(ChatEntry chatEntry);
 
 	/**
-	 *
-	 * @return a Cursor for all chats of this Chatroom (use {@link Chatroom.ChatCursor} for indexes)
+	 * a Cursor for all chats of this Chatroom
+	 * @return _id, Chats.KEY_MESSAGE ("message"), Chats.KEY_TIME ("timestamp"), Chats.FOREIGN_GROUP ("groupID"), Groups.KEY_NAME ("groupName"), Chats.FOREIGN_USER ("userID"), Users.KEY_NAME ("userName"), Chats.KEY_PICTURE ("pictureID")
 	 */
 	Cursor getChatCursor();
 
@@ -77,6 +81,10 @@ public interface IChatroom {
 	IPictureGallery getPictureGallery(int initialPictureId);
 
 
+	/**
+	 * Contains Callbacks for the 2 states a Chatroom has
+	 * and a callback for when current cursors become invalid
+	 */
 	public interface IChatroomListener {
 
 		/**

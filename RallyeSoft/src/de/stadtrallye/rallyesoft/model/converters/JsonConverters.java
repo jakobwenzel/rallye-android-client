@@ -1,5 +1,6 @@
-package de.stadtrallye.rallyesoft.model.jsonConverter;
+package de.stadtrallye.rallyesoft.model.converters;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,6 +13,7 @@ import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.Node;
 import de.rallye.model.structures.ServerConfig;
 import de.rallye.model.structures.ServerInfo;
+import de.rallye.model.structures.Task;
 import de.rallye.model.structures.User;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
@@ -19,7 +21,8 @@ import de.stadtrallye.rallyesoft.util.JSONConverter;
 /**
  * Created by Ramon on 25.06.13
  */
-public class Converters {
+public class JsonConverters {
+
 	public static class GroupConverter extends JSONConverter<Group> {
 
 		@Override
@@ -27,6 +30,24 @@ public class Converters {
 			return new Group(o.getInt(Group.GROUP_ID),
 					o.getString(Group.NAME),
 					o.getString(Group.DESCRIPTION));
+		}
+	}
+
+	public static class TaskConverter extends JSONConverter<Task> {
+
+		@Override
+		public Task doConvert(JSONObject o) throws JSONException {
+			LatLng coords;
+			if (o.isNull(Task.LOCATION))
+				coords = null;
+			else {
+				JSONObject p = o.getJSONObject(Task.LOCATION);
+				coords = new LatLng(p.getDouble(LatLng.LAT), p.getDouble(LatLng.LNG));
+			}
+
+			return new Task(o.getInt(Task.TASK_ID), o.getBoolean(Task.LOCATION_SPECIFIC),
+					coords, o.getString(Task.NAME), o.getString(Task.DESCRIPTION),
+					o.getBoolean(Task.MULTIPLE_SUBMITS), o.getInt(Task.SUBMIT_TYPE));
 		}
 	}
 
@@ -52,7 +73,7 @@ public class Converters {
 
 		@Override
 		public Node doConvert(JSONObject o) throws JSONException {
-			JSONObject p = o.getJSONObject(Node.POSITION);
+			JSONObject p = o.getJSONObject(Node.LOCATION);
 
 			return new Node(
 					o.getInt(Node.NODE_ID),
@@ -88,7 +109,22 @@ public class Converters {
 	public static class ServerInfoConverter extends JSONConverter<ServerInfo> {
 		@Override
 		public ServerInfo doConvert(JSONObject o) throws JSONException {
-			return new ServerInfo(o.getString(ServerInfo.NAME), o.getString(ServerInfo.DESCRIPTION));
+			JSONArray js = o.getJSONArray(ServerInfo.API);
+
+			ServerInfo.Api[] apis = new ServerInfo.Api[js.length()];
+			ServerInfoApiConverter converter = new ServerInfoApiConverter();
+			for (int i=0; i<js.length(); i++) {
+				apis[i] = converter.doConvert(js.getJSONObject(i));
+			}
+
+			return new ServerInfo(o.getString(ServerInfo.NAME), o.getString(ServerInfo.DESCRIPTION), apis);
+		}
+	}
+	public static class ServerInfoApiConverter extends JSONConverter<ServerInfo.Api> {
+
+		@Override
+		public ServerInfo.Api doConvert(JSONObject o) throws JSONException {
+			return new ServerInfo.Api(o.getString(ServerInfo.Api.NAME), o.getInt(ServerInfo.Api.VERSION));
 		}
 	}
 

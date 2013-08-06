@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft.util;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,7 +21,8 @@ public abstract class JSONConverter<T> implements IConverter<JSONObject, T> {
 	public T convert(JSONObject input) {
 		try {
 			return doConvert(input);
-		} catch (JSONException e) { 
+		} catch (JSONException e) {
+			Log.w("JSONConverter", "falling back, conversion failed", e);
 			return fallback();
 		}
 	}

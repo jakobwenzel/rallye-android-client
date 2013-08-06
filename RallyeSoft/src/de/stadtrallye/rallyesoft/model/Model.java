@@ -27,10 +27,10 @@ import de.rallye.model.structures.PictureSize;
 import de.rallye.model.structures.ServerConfig;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
+import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
-import de.stadtrallye.rallyesoft.model.jsonConverter.Converters;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
@@ -44,18 +44,18 @@ import de.stadtrallye.rallyesoft.net.RequestFactory;
 /**
  * My Model
  * Should be the only Class to write to Preferences
- * All Tasks should start here
+ * All CallbackIds should start here
  * @author Ray
  *
  */
-public class Model extends Binder implements IModel, RequestExecutor.Callback<Model.Tasks> {
+public class Model extends Binder implements IModel, RequestExecutor.Callback<Model.CallbackIds> {
 	
 	private static final String THIS = Model.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-	enum Tasks { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
+	enum CallbackIds { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
 	
 	
 	private static Model model; // Singleton Pattern
@@ -78,6 +78,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private List<Chatroom> chatrooms;
 	final private Map map;
+	private final Tasks tasks;
 	
 	SQLiteDatabase db;
 	
@@ -183,6 +184,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 
 		map = new Map(this);
+		tasks = new Tasks(this);
 
         checkConfiguration();
 	}
@@ -199,7 +201,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			save().saveConnectionStatus().commit();
 		
 		try {
-			exec.execute(new RequestExecutor<String, Tasks>(factory.logoutRequest(), null, this, Tasks.LOGOUT));
+			exec.execute(new RequestExecutor<String, CallbackIds>(factory.logoutRequest(), null, this, CallbackIds.LOGOUT));
 		} catch (Exception e) {
 			err.requestException(e);
 		}
@@ -241,7 +243,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		try {
 			factory.setPushID(GCMRegistrar.getRegistrationId(context));//TODO: necessary?
 			
-			exec.execute(new JSONObjectRequestExecutor<>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, Tasks.LOGIN));
+			exec.execute(new JSONObjectRequestExecutor<>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		
 		} catch (Exception e) {
 			err.requestException(e);
@@ -254,10 +256,12 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		if (r.isSuccessful()) {
 			
 			currentLogin.setUserAuth(r.getResult());
+			setConnectionStatus(ConnectionStatus.InternalConnected);
 			
 			getAvailableChatrooms();
 			refreshServerConfig();
 			map.updateMap();
+			tasks.updateTasks();
 		} else {
 			connectionFailure(r.getException(), ConnectionStatus.Disconnected);
 		}
@@ -280,7 +284,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
-			exec.execute(new JSONObjectRequestExecutor<>(factory.serverConfigRequest(), new Converters.ServerConfigConverter(), this, Tasks.CONFIG));
+			exec.execute(new JSONObjectRequestExecutor<>(factory.serverConfigRequest(), new JsonConverters.ServerConfigConverter(), this, CallbackIds.CONFIG));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -306,7 +310,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private void getAvailableChatrooms() {
 		try {
 			Log.d(THIS, "getting available chatrooms");
-			exec.execute(new JSONArrayRequestExecutor<>(factory.availableChatroomsRequest(), new Chatroom.ChatroomConverter(this), this, Tasks.AVAILABLE_CHATROOMS));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.availableChatroomsRequest(), new Chatroom.ChatroomConverter(this), this, CallbackIds.AVAILABLE_CHATROOMS));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -345,7 +349,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		try {
 			availableGroupsCallback = callback;
-			exec.execute(new JSONArrayRequestExecutor<>(factory.availableGroupsRequest(), new Converters.GroupConverter(), this, Tasks.GROUP_LIST));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.availableGroupsRequest(), new JsonConverters.GroupConverter(), this, CallbackIds.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -374,7 +378,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 
 		try {
-			exec.execute(new JSONArrayRequestExecutor<>(factory.allUsersRequest(), new Converters.GroupUserConverter(), this, Tasks.USER_LIST));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.allUsersRequest(), new JsonConverters.GroupUserConverter(), this, CallbackIds.USER_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -400,7 +404,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
 		try {
 			serverInfoCallback = callback;
-			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new Converters.ServerInfoConverter(), this, Tasks.SERVER_INFO));
+			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new JsonConverters.ServerInfoConverter(), this, CallbackIds.SERVER_INFO));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -450,6 +454,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@Override
 	public boolean isConnected() {
 		return status == ConnectionStatus.Connected;
+	}
+
+	boolean isConnectedInternal() {
+		return status == ConnectionStatus.Connected || status == ConnectionStatus.InternalConnected;
 	}
 	
 	@Override
@@ -508,6 +516,11 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 
 	@Override
+	public ITasks getTasks() {
+		return tasks;
+	}
+
+	@Override
 	public String getAvatarURL(int groupID) {
 		return currentLogin.getServer().toString() + Paths.getAvatar(groupID);
 	}
@@ -524,13 +537,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void executorResult(RequestExecutor<?, Tasks> r, Tasks callbackId) {
+	public void executorResult(RequestExecutor<?, CallbackIds> r, CallbackIds callbackId) {
 		switch (callbackId) {
 		case CONFIG:
 			serverConfigResult((RequestExecutor<ServerConfig, ?>) r);
 			break;
 		case LOGOUT:
-			logoutResult((RequestExecutor<String, Tasks>) r);
+			logoutResult((RequestExecutor<String, CallbackIds>) r);
 			break;
 		case GROUP_LIST:
 			availableGroupsResult((RequestExecutor<List<Group>, ?>) r);
@@ -546,6 +559,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			break;
 		case USER_LIST:
 			refreshAllUsersResult((RequestExecutor<List<GroupUser>, ?>) r);
+			break;
 		default:
 			Log.e(THIS, "Unknown Executor Callback");
 			break;
@@ -688,7 +702,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	/**
-	 * shutdown Executor (prevent it from accepting new Tasks but complete all previously accepted ones)
+	 * shutdown Executor (prevent it from accepting new CallbackIds but complete all previously accepted ones)
 	 */
 	@Override
 	public void onDestroy() {
@@ -718,6 +732,9 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		status = newState;
 		
 		Log.i(THIS, "Status: "+ newState);
+
+		if (newState == ConnectionStatus.InternalConnected) // Only for Submodules of Model, that run between first login on server and "official" connected
+			return;
 		
 		uiHandler.post(new Runnable() {
 			@Override

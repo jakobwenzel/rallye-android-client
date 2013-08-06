@@ -2,13 +2,37 @@ package de.stadtrallye.rallyesoft.model.db;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 20;
+	private static final int DATABASE_VERSION = 21;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
+
+	public static final class Tasks {
+		public static final String TABLE = "tasks";
+		public static final String KEY_ID = "taskID";
+		public static final String KEY_NAME = "name";
+		public static final String KEY_DESCRIPTION = "description";
+		public static final String KEY_LOCATION_SPECIFIC = "locationSpecific";
+		public static final String KEY_LAT = "latitude";
+		public static final String KEY_LON = "longitude";
+		public static final String KEY_MULTIPLE = "multipleSubmits";
+		public static final String KEY_SUBMIT_TYPE = "submitType";
+		public static final String CREATE =
+				"CREATE TABLE "+ TABLE +" ("+
+						KEY_ID +" INTEGER PRIMARY KEY, "+
+						KEY_NAME +" VARCHAR(50) NOT NULL, "+
+						KEY_DESCRIPTION +" TEXT NOT NULL, "+
+						KEY_LOCATION_SPECIFIC + " INTEGER NOT NULL, "+
+						KEY_LAT +" DOUBLE, "+
+						KEY_LON +" DOUBLE, "+
+						KEY_MULTIPLE +" INTEGER NOT NULL, "+
+						KEY_SUBMIT_TYPE +" INTEGER NOT NULL)";
+		public static final String[] COLS = { KEY_ID, KEY_NAME, KEY_DESCRIPTION, KEY_LOCATION_SPECIFIC, KEY_LAT, KEY_LON, KEY_MULTIPLE, KEY_SUBMIT_TYPE };
+	}
 
 	public static final class Users {
 		public static final String TABLE = "users";
@@ -20,7 +44,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						KEY_ID +" INTEGER PRIMARY KEY, "+
 						KEY_NAME +" VARACHAR(50), "+
 						FOREIGN_GROUP +" INTEGER NOT NULL)";
-		public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME };
+		public static final String[] COLS = { KEY_ID, KEY_NAME };
 	}
 	
 	public static final class Groups {
@@ -33,7 +57,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 						KEY_ID +" INTEGER PRIMARY KEY, "+
 						KEY_NAME +" VARCHAR(50), "+
 						KEY_DESCRIPTION +" TEXT)";
-		public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME, KEY_DESCRIPTION };
+		public static final String[] COLS = { KEY_ID, KEY_NAME, KEY_DESCRIPTION };
 	}
 	
 	public static final class Chatrooms {
@@ -46,7 +70,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 					KEY_ID +" INTEGER PRIMARY KEY, "+
 					KEY_NAME +" VARCHAR(50) NOT NULL, "+
 					KEY_LAST_REFRESH +" TIMESTAMP NOT NULL)";
-		public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME, KEY_LAST_REFRESH};
+		public static final String[] COLS = { KEY_ID, KEY_NAME, KEY_LAST_REFRESH};
 	}
   
 	public static final class Chats {
@@ -67,7 +91,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				  KEY_MESSAGE +" TEXT, "+
 				  KEY_PICTURE +" INTEGER, "+
 				  Chatrooms.KEY_ID +" INTEGER NOT NULL)";
-		public static final String[] COLS = new String[]{ KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM };
+		public static final String[] COLS = { KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM };
 	}
     
     public static final class Nodes {
@@ -84,7 +108,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     					KEY_LAT +" double NOT NULL, "+
     					KEY_LON +" double NOT NULL, "+
     					KEY_DESCRIPTION +" TEXT)";
-    	public static final String[] COLS = new String[]{ KEY_ID, KEY_NAME, KEY_LAT, KEY_LON, KEY_DESCRIPTION };
+    	public static final String[] COLS = { KEY_ID, KEY_NAME, KEY_LAT, KEY_LON, KEY_DESCRIPTION };
     }
     
     public static final class Edges {
@@ -98,7 +122,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     					KEY_B +" int NOT NULL REFERENCES "+ Nodes.TABLE +" ON DELETE CASCADE ON UPDATE CASCADE, "+
     					KEY_TYPE +" VARCHAR(10) NOT NULL, "+
     					"PRIMARY KEY ("+ KEY_A+", "+ KEY_B +"))";
-    	public static final String[] COLS = new String[]{ KEY_A, KEY_B, KEY_TYPE };
+    	public static final String[] COLS = { KEY_A, KEY_B, KEY_TYPE };
     }
 
     public DatabaseHelper(Context context) {
@@ -113,6 +137,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(Chats.CREATE);
 		db.execSQL(Nodes.CREATE);
 		db.execSQL(Edges.CREATE);
+		db.execSQL(Tasks.CREATE);
 	}
 	
 	@Override
@@ -129,6 +154,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL("DROP TABLE IF EXISTS messages");//TODO: remove
 		db.execSQL("DROP TABLE IF EXISTS "+ Nodes.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS "+ Edges.TABLE);
+		db.execSQL("DROP TABLE IF EXISTS "+ Tasks.TABLE);
 		
 		this.onCreate(db);
 	}
@@ -172,6 +198,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		
 		return b.toString();
+	}
+
+	public static boolean getBoolean(Cursor c, int row) {
+		return (c.getInt(row) == 0)? false : true;
 	}
 
 }

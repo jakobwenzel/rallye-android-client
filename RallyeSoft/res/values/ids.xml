@@ -5,4 +5,5 @@
     <item name="center_menu" type="id"/>
 	<item name="scan_qr_login" type="id"/>
     <item name="uploader" type="id"/>
+	<item name="resize_menu" type="id"/>
 </resources>

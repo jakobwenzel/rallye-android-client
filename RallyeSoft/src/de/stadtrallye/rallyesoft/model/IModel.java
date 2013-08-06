@@ -15,7 +15,7 @@ public interface IModel {
 
 	boolean isEmpty();
 
-	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, Retrying }
+	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, InternalConnected, Retrying }
 
 	interface IListAvailableCallback<T> {
 		void dataAvailable(List<T> data);
@@ -34,6 +34,7 @@ public interface IModel {
 	List<? extends IChatroom> getChatrooms();
 	IChatroom getChatroom(int id);
 	IMap getMap();
+	ITasks getTasks();
 
 	ServerLogin getLogin();
 

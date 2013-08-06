@@ -152,4 +152,9 @@ public class RequestFactory {
 		final URL url = getURL(Paths.USERS);
 		return new Request(url);
 	}
+
+	public Request allTasksRequest() throws HttpRequestException {
+		final URL url = getURL(Paths.TASKS);
+		return new Request(url);
+	}
 }

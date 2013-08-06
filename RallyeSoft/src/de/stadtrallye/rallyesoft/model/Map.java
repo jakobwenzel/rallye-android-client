@@ -21,7 +21,7 @@ import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
 
 public class Map implements IMap, MapUpdateExecutor.Callback {
 	
-	private static final String THIS = Model.class.getSimpleName();
+	private static final String THIS = Tasks.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	
 	final private Model model;
@@ -36,7 +36,7 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 	
 	@Override
 	public void updateMap() {
-		if (!model.isConnected()) {
+		if (!model.isConnectedInternal()) {
 			err.notLoggedIn();
 			return;
 		}
@@ -89,8 +89,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 			for (Node n: nodes.values()) {
 				nodeIn.bindLong(1, n.nodeID);
 				nodeIn.bindString(2, n.name);
-				nodeIn.bindDouble(3, n.position.latitude);
-				nodeIn.bindDouble(4, n.position.longitude);
+				nodeIn.bindDouble(3, n.location.latitude);
+				nodeIn.bindDouble(4, n.location.longitude);
 				nodeIn.bindString(5, n.description);
 				nodeIn.executeInsert();
 			}
