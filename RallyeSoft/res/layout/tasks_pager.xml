@@ -26,11 +26,9 @@
 			android:layout_height="wrap_content"
 			android:padding="10dp"
 			android:background="@color/abs__bright_foreground_disabled_holo_light"
-			android:textColor="#FFFFFF"
-			app:footerColor="#FFAA2222"
-			app:footerLineHeight="0dp"
+			android:textColor="#FFCCCCCC"
 			app:footerIndicatorStyle="none"
-			app:selectedColor="#FF000000"
+			app:selectedColor="#FFFFFFFF"
 			app:selectedBold="true"/>
 
 </LinearLayout>

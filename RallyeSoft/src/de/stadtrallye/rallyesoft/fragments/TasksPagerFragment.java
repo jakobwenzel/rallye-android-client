@@ -54,7 +54,6 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		pager = (ViewPager) v.findViewById(R.id.tasks_pager);
 		indicator = (TitlePageIndicator) v.findViewById(R.id.pager_indicator);
 
-		indicator.setViewPager(pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 
 		return v;
@@ -73,6 +72,7 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 
 		fragmentAdapter = new TaskFragmentAdapter(getChildFragmentManager(), tasks.getTasksCursor());
 		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
 
 		int tab = -1, id;
 		if (savedInstanceState != null) {
@@ -167,6 +167,10 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 			return f;
 		}
 
+		@Override
+		public CharSequence getPageTitle(int position) {
+			return (position+1) +" "+ getString(R.string.of) +" "+ getCount();
+		}
 
 		@Override
 		public int getCount() {

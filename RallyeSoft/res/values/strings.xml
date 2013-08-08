@@ -64,5 +64,6 @@
 	<string name="next_move">Nächster Zug</string>
 	<string name="chat">Chat</string>
 	<string name="no_nodes">No Nodes to center on!</string>
+	<string name="of">von</string>
 
 </resources>
