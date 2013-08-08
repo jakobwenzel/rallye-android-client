@@ -14,15 +14,16 @@ import android.view.View;
  */
 public class MenuItemImpl implements MenuItem {
 
-	private com.actionbarsherlock.view.MenuItem base;
+//	private com.actionbarsherlock.view.MenuItem base;
 
-	public MenuItemImpl(com.actionbarsherlock.view.MenuItem base) {
-		this.base = base;
-	}
+//	public MenuItemImpl(com.actionbarsherlock.view.MenuItem base) {
+//		this.base = base;
+//	}
 
 	@Override
 	public int getItemId() {
-		return base.getItemId();
+//		return base.getItemId();
+		return android.R.id.home;
 	}
 
 	public boolean isEnabled() {

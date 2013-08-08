@@ -1,6 +1,7 @@
 package de.stadtrallye.rallyesoft.uimodel;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,9 +20,9 @@ public abstract class TabManager {
 	protected final Context context;
 	private final FragmentManager fragmentManager;
 	private final int replaceId;
-//	private final int subTabStart = 100;
 	protected Integer currentTab = null;
 	protected Tab<?> activeTab = null;
+	protected Integer parentTab = null;
 
 	protected final Map<Integer, Tab<?>> tabs = new HashMap<>();
 	private int defaultTab = 0;
@@ -32,26 +33,49 @@ public abstract class TabManager {
 		this.replaceId = replaceId;
 	}
 
+
 	public void setDefaultTab(int tab) {
 		defaultTab = tab;
 	}
 
 	public void restoreState(Bundle state) {
-		if (state != null)
+		if (state != null) {
 			currentTab = state.getInt(Std.TAB, defaultTab);
+			parentTab = state.getInt(Std.SUB_TAB, -1);
+			if (parentTab == -1)
+				parentTab = null;
+		}
 	}
 
 	public void saveState(Bundle outState) {
 		outState.putInt(Std.TAB, currentTab);
+		if (parentTab != null)
+			outState.putInt(Std.SUB_TAB, parentTab);
 	}
 
 	public void setArguments(int key, Bundle args) {
-		tabs.get(key).setArguments(args);
+		tabs.get(key).args = args;
 	}
 
-	public int getCurrentTitle() {
-		return activeTab.title;
+	public boolean onAndroidHome() {
+		if (parentTab != null) {
+			closeSubTab();
+			return true;
+		} else
+			return false;
 	}
+
+	public boolean  onBackPressed() {
+		if (parentTab != null) {
+			closeSubTab();
+			return true;
+		} else
+			return false;
+	}
+
+	public abstract void onConfigurationChanged(Configuration newConfig);
+
+	public abstract void onPostCreate();
 
 	/**
 	 * Envelops a Fragment, reuses a already existing Fragment otherwise instantiates a new one
@@ -63,33 +87,28 @@ public abstract class TabManager {
 
 		public final String tag;
 		private final Class<C> clz;
-		public final int title;
+		public final int titleId;
 		private Bundle args;
 		public final boolean requiresOnline;
 
-		public Tab(String tag, Class<C> clz, int title, boolean requiresOnline) {
+		public Tab(String tag, Class<C> clz, int titleId, boolean requiresOnline) {
 			this.tag = tag;
 			this.clz = clz;
 			this.requiresOnline = requiresOnline;
-			this.title = title;
-		}
-
-		public void setArguments(Bundle arg) {
-			this.args = arg;
-		}
-
-		public Bundle getArguments() {
-			return args;
+			this.titleId = titleId;
 		}
 
 		public Fragment getFragment() {
 			Fragment f = fragmentManager.findFragmentByTag(tag);
 
 			if (f == null) {
-				if (args == null)
-					f = Fragment.instantiate(context, clz.getName());
-				else
-					f = Fragment.instantiate(context, clz.getName(), args);
+				f = Fragment.instantiate(context, clz.getName());
+				if (args != null)
+					f.setArguments(args);
+			} else if (args != null) {
+				Bundle oldArgs = f.getArguments();
+				if (!args.equals(oldArgs))
+					oldArgs.putAll(args);
 			}
 
 			return f;
@@ -97,8 +116,15 @@ public abstract class TabManager {
 	}
 
 	public void showTab() {
-		if (tabs.get(currentTab) != activeTab)
-			switchToTab(currentTab);
+		if (tabs.get(currentTab) != activeTab) {
+			if (parentTab == null)
+				switchToTab(currentTab);
+			else {
+				int subTab = currentTab;
+				currentTab = parentTab;
+				openSubTab(subTab, null);
+			}
+		}
 	}
 
 	public boolean switchToTab(int key) {
@@ -128,21 +154,48 @@ public abstract class TabManager {
 
 	protected abstract void switchFailedCondition();
 
-//	public boolean switchToSubTab(int key) {
-//		Tab<?> tab = tabs.get(key);
-//
-//		try {
-//			startTransaction(tab)
+	public boolean openSubTab(int key, Bundle args) {
+		Tab<?> tab = tabs.get(key);
+		tab.args = args;
+
+		try {
+			startTransaction(tab)
 //				.addToBackStack(null)
-//			.commit();
-//
-//			setActiveTab(key, tab);
-//
-//			return true;
-//		} catch (Exception e) {
-//			return false;
-//		}
-//	}
+				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+			.commit();
+
+			setSubMode(true);
+			setActiveTab(key, tab);
+
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean closeSubTab() {
+		Tab<?> tab = tabs.get(parentTab);
+
+		try {
+			startTransaction(tab)
+				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
+			.commit();
+
+			setActiveTab(parentTab, tab);
+			setSubMode(false);
+
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	protected void setSubMode(boolean subTab) {
+		if (subTab)
+			parentTab = currentTab;
+		else
+			parentTab = null;
+	}
 
 	private FragmentTransaction startTransaction(Tab<?> tab) throws Exception {
 		if (!checkCondition(tab))

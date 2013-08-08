@@ -38,34 +38,30 @@ import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
+import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.MenuItemImpl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
+import de.stadtrallye.rallyesoft.uimodel.TabManager;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends SherlockFragmentActivity implements AdapterView.OnItemClickListener, IModelActivity,
-																		IModel.IModelListener, IProgressUI {
+public class MainActivity extends SherlockFragmentActivity implements IModelActivity,
+																		IModel.IModelListener, IProgressUI, ITabActivity {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
 	private IModel model;
 	private boolean keepModel = false;
 	private boolean progressCircle = false;
-	private String[] nav;
 
-//	private SlidingMenu sm;
 	private RallyeTabManager tabManager;
 	private DrawerLayout drawerLayout;
-	private ListView dashboard;
-	private ActionBarDrawerToggle drawerToggle;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		initFrame();
-
-		initSlidingMenu();
+		initFrame();// Layout, Title, ProgressCircle etc.
 
 		// Ray's INIT
 		PushInit.ensureRegistration(this);
@@ -75,7 +71,7 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 		model.addListener(this);
 		keepModel = false;
 
-		tabManager = new RallyeTabManager(this, model);
+		tabManager = new RallyeTabManager(this, model, drawerLayout);
 		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
 
 		// Recover Last State
@@ -105,49 +101,6 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 		return ab;
 	}
 
-	private void initSlidingMenu() {
-//		setBehindContentView(R.layout.dashboard_main);
-//		setSlidingActionBarEnabled(false);
-
-		drawerToggle = new ActionBarDrawerToggle(this, drawerLayout,
-				R.drawable.ic_drawer, R.string.abs__action_bar_home_description, R.string.abs__action_bar_up_description) {
-
-			/** Called when a drawer has settled in a completely closed state. */
-			public void onDrawerClosed(View view) {
-				getActionBar().setTitle(tabManager.getCurrentTitle());
-				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-			}
-
-			/** Called when a drawer has settled in a completely open state. */
-			public void onDrawerOpened(View drawerView) {
-				getActionBar().setTitle(R.string.dash_menu);
-				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-			}
-		};
-
-		// Set the drawer toggle as the DrawerListener
-		drawerLayout.setDrawerListener(drawerToggle);
-
-		// Settings for SideBar
-//		sm = getSlidingMenu();
-//		sm.setShadowWidthRes(R.dimen.shadow_width);
-//		sm.setShadowDrawable(R.drawable.defaultshadow);
-//		sm.setSelectorEnabled(true);
-//		sm.setSelectorDrawable(R.drawable.arrow);
-//		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
-//		sm.setBehindScrollScale(0);
-//		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
-
-		// Populate SideBar
-		nav = getResources().getStringArray(R.array.dashboard_entries);
-
-		dashboard = (ListView) findViewById(R.id.left_drawer);
-		//TODO: own Adapter to disable elements if offline/highlight current element and set the SlidingMenu selector as soon as the first View has been instantiated
-		ArrayAdapter<String> dashAdapter = new ArrayAdapter<>(this, R.layout.dashboard_item, android.R.id.text1, nav);
-		dashboard.setAdapter(dashAdapter);
-		dashboard.setOnItemClickListener(this);
-	}
-
 	@TargetApi(14)
 	private void initNFC() {
 		NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -175,8 +128,8 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
-		// Sync the toggle state after onRestoreInstanceState has occurred.
-		drawerToggle.syncState();
+
+		tabManager.onPostCreate();
 	}
 
 	@Override
@@ -187,15 +140,6 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 		onConnectionStatusChange(model.getConnectionStatus());
 
 		tabManager.showTab();
-	}
-
-	/**
-	 * AdapterView.OnItemClickListener
-	 */
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-		tabManager.switchToTab(pos);
-		drawerLayout.closeDrawer(dashboard);
 	}
 
 	@Override
@@ -216,7 +160,7 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// If the nav drawer is open, hide action items related to the content view
-		boolean drawerOpen = drawerLayout.isDrawerOpen(dashboard);
+		boolean drawerOpen = tabManager.isMenuOpen();
 
 		boolean act = model.isConnected();
 		MenuItem logout = menu.findItem(R.id.menu_logout);
@@ -229,13 +173,9 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		if (drawerToggle.onOptionsItemSelected(new MenuItemImpl(item)))
-			return true;
-
 		switch (item.getItemId()) {
-//			case android.R.id.home:
-//				toggle();
-//				break;
+			case android.R.id.home:
+				return tabManager.onAndroidHome();
 			case R.id.menu_login:
 				Intent intent = new Intent(this, ConnectionAssistant.class);
 				startActivityForResult(intent, ConnectionAssistant.REQUEST_CODE);
@@ -254,8 +194,14 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 	}
 
 	@Override
+	public void onBackPressed() {
+		if (!tabManager.onBackPressed())
+			super.onBackPressed();
+	}
+
+	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
-		drawerToggle.onConfigurationChanged(newConfig);
+		tabManager.onConfigurationChanged(newConfig);
 	}
 
 	/**
@@ -375,6 +321,14 @@ public class MainActivity extends SherlockFragmentActivity implements AdapterVie
 	@Override
 	public IModel getModel() {
 		return model;
+	}
+
+	/**
+	 * ITabActivity
+	 */
+	@Override
+	public TabManager getTabManager() {
+		return tabManager;
 	}
 
 	/**

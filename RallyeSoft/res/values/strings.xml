@@ -65,5 +65,7 @@
 	<string name="chat">Chat</string>
 	<string name="no_nodes">No Nodes to center on!</string>
 	<string name="of">von</string>
+	<string name="menu_drawer_open">Drawer Menü öffnen</string>
+	<string name="menu_drawer_close">Drawer Menü schließen</string>
 
 </resources>

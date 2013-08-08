@@ -20,15 +20,8 @@
 			android:layout_height="0dp"
 			android:layout_weight="0.5" />
 
-	<com.viewpagerindicator.TitlePageIndicator
-			android:id="@+id/pager_indicator"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:padding="10dp"
-			android:background="@color/abs__bright_foreground_disabled_holo_light"
-			android:textColor="#FFCCCCCC"
-			app:footerIndicatorStyle="none"
-			app:selectedColor="#FFFFFFFF"
-			app:selectedBold="true"/>
+	<include
+			layout="@layout/tasks_pager_indicator"/>
+
 
 </LinearLayout>

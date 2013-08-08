@@ -2,7 +2,6 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,12 +18,14 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
-import de.stadtrallye.rallyesoft.HostActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
+import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
+import de.stadtrallye.rallyesoft.uimodel.TabManager;
 import de.stadtrallye.rallyesoft.uimodel.TaskCursorAdapter;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
@@ -39,9 +40,9 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 	private IModel model;
 	private ITasks tasks;
 	private ListView list;
-	//	private View map;
 	private TaskCursorAdapter listAdapter;
 	private byte size = 0;
+	private TabManager tabManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -75,8 +76,9 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
 			tasks = model.getTasks();
+			tabManager = ((ITabActivity) getActivity()).getTabManager();
 		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and extend SlidingFragmentActivity");
+			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and ITabActivity");
 		}
 
 		listAdapter = new TaskCursorAdapter(getActivity(), tasks.getTasksCursor());
@@ -120,12 +122,10 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
-
 		refreshMenuItem.setIcon(R.drawable.refresh);
 		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 
 		MenuItem resize = menu.add(Menu.NONE, R.id.resize_menu, 40, R.string.resize);
-
 		resize.setIcon(R.drawable.center);
 		resize.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 	}
@@ -168,8 +168,13 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		Intent intent = new Intent(getActivity(), HostActivity.class);
-		intent.putExtra(Std.TASK_ID, (int) id);
-		startActivity(intent);
+//		Intent intent = new Intent(getActivity(), HostActivity.class);
+//		intent.putExtra(Std.TASK_ID, (int) id);
+//		startActivity(intent);
+
+		Bundle args = new Bundle();
+		args.putInt(Std.TASK_ID, (int)id);
+
+		tabManager.openSubTab(RallyeTabManager.TAB_TASKS_DETAILS, args);
 	}
 }

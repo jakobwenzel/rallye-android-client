@@ -74,12 +74,13 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
 
-		int tab = -1, id;
+		int tab = -1;
 		if (savedInstanceState != null) {
 			tab = savedInstanceState.getInt(Std.TAB, -1);
 		}
-		if (tab == -1) {
-			id = getArguments().getInt(Std.TASK_ID, -1);
+		Bundle args = getArguments();
+		if (tab == -1 && args != null) {
+			int id = args.getInt(Std.TASK_ID, -1);
 			tab = (id >= 0) ? tasks.getTaskPositionInCursor(id) : 0;
 		}
 
@@ -92,7 +93,7 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		if (mapFragment == null) {
 			mapFragment = new TasksMapFragment();
 
-			Bundle args = getDefaultMapOptions(model);
+			args = getDefaultMapOptions(model);
 			args.putBoolean(Std.TASK_MAP_MODE_SINGLE, true);
 			mapFragment.setArguments(args);
 		}

@@ -48,4 +48,5 @@ public class Std {
 	public static final String MAP_BOUNDS = "map_bounds";
 	public static final String ZOOM = "zoom";
 	public static final String HASH = "hash";
+	public static final String SUB_TAB = "subTab";
 }
