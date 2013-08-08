@@ -3,7 +3,9 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/google-play-services_lib/libs/google-play-services.jar!/" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="file://$APPLICATION_HOME_DIR$/sdk/extras/google/google_play_services/docs/reference" />
+    </JAVADOC>
     <SOURCES />
   </library>
 </component>

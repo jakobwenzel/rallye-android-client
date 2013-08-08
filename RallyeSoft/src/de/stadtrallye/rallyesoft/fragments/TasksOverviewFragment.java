@@ -81,10 +81,9 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 
 		listAdapter = new TaskCursorAdapter(getActivity(), tasks.getTasksCursor());
 		list.setAdapter(listAdapter);
-
 		list.setOnItemClickListener(this);
 
-		FragmentManager fm = getFragmentManager();
+		FragmentManager fm = getChildFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
 
 		Fragment mapFragment = fm.findFragmentByTag(TasksMapFragment.TAG);

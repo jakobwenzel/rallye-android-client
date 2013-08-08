@@ -33,12 +33,15 @@ public class HostActivity extends SherlockFragmentActivity implements IModelActi
 			model = Model.getModel(getApplicationContext());
 
 		FragmentManager fm = getSupportFragmentManager();
-		Fragment f = fm.findFragmentByTag("tasks_details");
-		if (f == null) {
-			f = new TasksPagerFragment();
-		}
-		Bundle args = getIntent().getExtras();
-		f.setArguments(args);
+//		Fragment f = fm.findFragmentByTag("tasks_details");
+//		if (f == null) {
+			Fragment f = new TasksPagerFragment();
+			Bundle args = getIntent().getExtras();
+			f.setArguments(args);
+//		} else {
+//			f.getArguments().putAll(getIntent().getExtras());
+//		}
+
 		fm.beginTransaction().replace(android.R.id.content, f, "tasks_details").commit();
 	}
 

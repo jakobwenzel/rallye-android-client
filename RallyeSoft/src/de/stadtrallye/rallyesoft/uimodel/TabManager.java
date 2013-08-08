@@ -49,6 +49,10 @@ public abstract class TabManager {
 		tabs.get(key).setArguments(args);
 	}
 
+	public int getCurrentTitle() {
+		return activeTab.title;
+	}
+
 	/**
 	 * Envelops a Fragment, reuses a already existing Fragment otherwise instantiates a new one
 	 * @author Ramon

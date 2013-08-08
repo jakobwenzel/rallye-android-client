@@ -27,6 +27,8 @@
     <orderEntry type="module" module-name="RallyeStructures" />
     <orderEntry type="library" name="gcm" level="project" />
     <orderEntry type="module" module-name="ViewPagerIndicator" />
+    <orderEntry type="library" name="support-v4" level="project" />
+    <orderEntry type="module" module-name="google-play-services_lib" />
   </component>
 </module>
 

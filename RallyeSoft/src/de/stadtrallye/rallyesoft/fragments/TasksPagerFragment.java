@@ -85,7 +85,7 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 
 		pager.setCurrentItem(tab);
 
-		FragmentManager fm = getFragmentManager();
+		FragmentManager fm = getChildFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
 
 		Fragment mapFragment = fm.findFragmentByTag(TasksMapFragment.TAG);

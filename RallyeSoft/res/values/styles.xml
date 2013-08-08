@@ -1,8 +1,7 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="RallyeTheme" parent="@style/Theme.Sherlock.Light.DarkActionBar">
-        <item name="homeAsUpIndicator">@drawable/home_indicator</item>
-        <item name="android:homeAsUpIndicator">@drawable/home_indicator</item>
+
     </style>
     
     <style name="Dashboard">

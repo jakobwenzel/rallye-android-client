@@ -1,11 +1,10 @@
 package de.stadtrallye.rallyesoft.uimodel;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
@@ -32,10 +31,10 @@ public class RallyeTabManager extends TabManager {
 	public static final int TAB_CHAT = 5;
 	public static final int TAB_TASKS_DETAILS = 100;
 
-	private final SlidingFragmentActivity activity;
+	private final FragmentActivity activity;
 	protected final IModel model;
 
-	public RallyeTabManager(SlidingFragmentActivity activity, IModel model) {
+	public RallyeTabManager(FragmentActivity activity, IModel model) {
 		super(activity, activity.getSupportFragmentManager(), R.id.content_frame);
 
 		setDefaultTab(TAB_OVERVIEW);
@@ -69,7 +68,7 @@ public class RallyeTabManager extends TabManager {
 
 	@Override
 	protected void showSelectedTab(int key, Tab<?> tab) {
-		activity.getSlidingMenu().setSelectedView(getSelectedView(currentTab));
+//		activity.getSlidingMenu().setSelectedView(getSelectedView(currentTab));
 		activity.setTitle(tab.title);
 	}
 
@@ -79,7 +78,7 @@ public class RallyeTabManager extends TabManager {
 	}
 
 	private View getSelectedView(int pos) {
-		View v = ((ListView)activity.findViewById(R.id.dashboard_list)).getChildAt(pos);
+		View v = ((ListView)activity.findViewById(R.id.left_drawer)).getChildAt(pos);
 //		Log.d(THIS, "SlidingSelector on "+ v);
 		return v;
 	}

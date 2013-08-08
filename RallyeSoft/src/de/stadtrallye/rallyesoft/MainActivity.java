@@ -2,12 +2,15 @@ package de.stadtrallye.rallyesoft;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -17,14 +20,13 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.zxing.integration.android.IntentIntegrator;
-import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
-import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import java.lang.reflect.Field;
 
@@ -36,12 +38,13 @@ import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
+import de.stadtrallye.rallyesoft.uimodel.MenuItemImpl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends SlidingFragmentActivity implements AdapterView.OnItemClickListener, IModelActivity,
-		IModel.IModelListener, IProgressUI {
+public class MainActivity extends SherlockFragmentActivity implements AdapterView.OnItemClickListener, IModelActivity,
+																		IModel.IModelListener, IProgressUI {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
@@ -50,8 +53,11 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 	private boolean progressCircle = false;
 	private String[] nav;
 
-	private SlidingMenu sm;
+//	private SlidingMenu sm;
 	private RallyeTabManager tabManager;
+	private DrawerLayout drawerLayout;
+	private ListView dashboard;
+	private ActionBarDrawerToggle drawerToggle;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -90,6 +96,8 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 		setTitle(R.string.title_main);
 		setContentView(R.layout.main);
 
+		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
@@ -98,23 +106,42 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 	}
 
 	private void initSlidingMenu() {
-		setBehindContentView(R.layout.dashboard_main);
+//		setBehindContentView(R.layout.dashboard_main);
 //		setSlidingActionBarEnabled(false);
 
+		drawerToggle = new ActionBarDrawerToggle(this, drawerLayout,
+				R.drawable.ic_drawer, R.string.abs__action_bar_home_description, R.string.abs__action_bar_up_description) {
+
+			/** Called when a drawer has settled in a completely closed state. */
+			public void onDrawerClosed(View view) {
+				getActionBar().setTitle(tabManager.getCurrentTitle());
+				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+			}
+
+			/** Called when a drawer has settled in a completely open state. */
+			public void onDrawerOpened(View drawerView) {
+				getActionBar().setTitle(R.string.dash_menu);
+				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+			}
+		};
+
+		// Set the drawer toggle as the DrawerListener
+		drawerLayout.setDrawerListener(drawerToggle);
+
 		// Settings for SideBar
-		sm = getSlidingMenu();
-		sm.setShadowWidthRes(R.dimen.shadow_width);
-		sm.setShadowDrawable(R.drawable.defaultshadow);
-		sm.setSelectorEnabled(true);
-		sm.setSelectorDrawable(R.drawable.arrow);
-		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
-		sm.setBehindScrollScale(0);
-		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
+//		sm = getSlidingMenu();
+//		sm.setShadowWidthRes(R.dimen.shadow_width);
+//		sm.setShadowDrawable(R.drawable.defaultshadow);
+//		sm.setSelectorEnabled(true);
+//		sm.setSelectorDrawable(R.drawable.arrow);
+//		sm.setBehindWidthRes(R.dimen.slidingmenu_width);
+//		sm.setBehindScrollScale(0);
+//		sm.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 
 		// Populate SideBar
 		nav = getResources().getStringArray(R.array.dashboard_entries);
 
-		ListView dashboard = (ListView) sm.findViewById(R.id.dashboard_list);
+		dashboard = (ListView) findViewById(R.id.left_drawer);
 		//TODO: own Adapter to disable elements if offline/highlight current element and set the SlidingMenu selector as soon as the first View has been instantiated
 		ArrayAdapter<String> dashAdapter = new ArrayAdapter<>(this, R.layout.dashboard_item, android.R.id.text1, nav);
 		dashboard.setAdapter(dashAdapter);
@@ -145,6 +172,12 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 		}
 	}
 
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		// Sync the toggle state after onRestoreInstanceState has occurred.
+		drawerToggle.syncState();
+	}
 
 	@Override
 	public void onStart() {
@@ -162,7 +195,7 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 		tabManager.switchToTab(pos);
-		getSlidingMenu().showContent();
+		drawerLayout.closeDrawer(dashboard);
 	}
 
 	@Override
@@ -182,20 +215,27 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		// If the nav drawer is open, hide action items related to the content view
+		boolean drawerOpen = drawerLayout.isDrawerOpen(dashboard);
+
 		boolean act = model.isConnected();
-//		menu.findItem(R.id.menu_login).setEnabled(!act);
-		menu.findItem(R.id.menu_logout).setEnabled(act);
-		menu.findItem(R.id.menu_share_barcode).setEnabled(act);
+		MenuItem logout = menu.findItem(R.id.menu_logout);
+		logout.setVisible(!drawerOpen).setEnabled(act);
+		MenuItem share = menu.findItem(R.id.menu_share_barcode);
+		share.setVisible(!drawerOpen).setEnabled(act);
 
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		if (drawerToggle.onOptionsItemSelected(new MenuItemImpl(item)))
+			return true;
+
 		switch (item.getItemId()) {
-			case android.R.id.home:
-				toggle();
-				break;
+//			case android.R.id.home:
+//				toggle();
+//				break;
 			case R.id.menu_login:
 				Intent intent = new Intent(this, ConnectionAssistant.class);
 				startActivityForResult(intent, ConnectionAssistant.REQUEST_CODE);
@@ -211,6 +251,11 @@ public class MainActivity extends SlidingFragmentActivity implements AdapterView
 				return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		drawerToggle.onConfigurationChanged(newConfig);
 	}
 
 	/**

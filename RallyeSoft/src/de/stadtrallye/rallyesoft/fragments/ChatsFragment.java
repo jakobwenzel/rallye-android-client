@@ -18,8 +18,6 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
-import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
-import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
 import java.util.List;
 
@@ -44,7 +42,6 @@ public class ChatsFragment extends SherlockFragment {
 	private ChatFragmentAdapter fragmentAdapter;
 	private List<? extends IChatroom> chatrooms;
 	private int currentTab = 0;
-	private SlidingMenu slidingMenu;
 	
 	
 	@Override
@@ -69,7 +66,7 @@ public class ChatsFragment extends SherlockFragment {
 
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
-		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
+//		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
 		
 		return v;
 	}
@@ -80,7 +77,7 @@ public class ChatsFragment extends SherlockFragment {
 		
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
-			slidingMenu = ((SlidingFragmentActivity) getActivity()).getSlidingMenu();
+//			slidingMenu = ((SlidingFragmentActivity) getActivity()).getSlidingMenu();
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and extend SlidingFragmentActivity");
 		}
@@ -98,8 +95,6 @@ public class ChatsFragment extends SherlockFragment {
 	@Override
 	public void onStop() {
 		super.onStop();
-		
-		slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
 		
 		currentTab = pager.getCurrentItem();
 	}
@@ -193,30 +188,30 @@ public class ChatsFragment extends SherlockFragment {
 
 	}
 	
-	private class SlidingMenuHelper implements OnPageChangeListener {
-		
-		private SlidingMenu slidingMenu;
-
-		public SlidingMenuHelper(SlidingMenu slidingMenu) {
-			this.slidingMenu = slidingMenu;
-		}
-		
-		@Override
-		public void onPageScrollStateChanged(int arg0) { }
-
-		@Override
-		public void onPageScrolled(int arg0, float arg1, int arg2) { }
-
-		@Override
-		public void onPageSelected(int position) {
-			switch (position) {
-			case 0:
-				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
-				break;
-			default:
-				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
-				break;
-			}
-		}
-	}
+//	private class SlidingMenuHelper implements OnPageChangeListener {
+//
+//		private SlidingMenu slidingMenu;
+//
+//		public SlidingMenuHelper(SlidingMenu slidingMenu) {
+//			this.slidingMenu = slidingMenu;
+//		}
+//
+//		@Override
+//		public void onPageScrollStateChanged(int arg0) { }
+//
+//		@Override
+//		public void onPageScrolled(int arg0, float arg1, int arg2) { }
+//
+//		@Override
+//		public void onPageSelected(int position) {
+//			switch (position) {
+//			case 0:
+//				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+//				break;
+//			default:
+//				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
+//				break;
+//			}
+//		}
+//	}
 }

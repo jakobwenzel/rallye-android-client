@@ -4,6 +4,7 @@
     <facet type="android" name="Android">
       <configuration>
         <option name="LIBRARY_PROJECT" value="true" />
+        <option name="UPDATE_PROPERTY_FILES" value="true" />
         <notImportedProperties>
           <property>MANIFEST_FILE_PATH</property>
           <property>RESOURCES_DIR_PATH</property>
@@ -21,7 +22,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="SherlockActionBar" exported="" />
+    <orderEntry type="module" module-name="SherlockActionBar" />
+    <orderEntry type="library" name="support-v4" level="project" />
   </component>
 </module>
 
