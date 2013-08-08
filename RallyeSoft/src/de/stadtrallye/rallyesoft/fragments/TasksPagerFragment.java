@@ -4,37 +4,29 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
-import com.google.android.gms.maps.GoogleMapOptions;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
-import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
+import com.viewpagerindicator.TitlePageIndicator;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
-import de.stadtrallye.rallyesoft.widget.MapPager;
+import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
+
+import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
 /**
- * Created by Ramon on 06.08.13.
+ * Fragment to show the details of tasks, similar to the mail-view in GMail
+ * Enhanced by a GMap
  */
 public class TasksPagerFragment extends SherlockFragment implements ITasks.ITasksListener {
 
@@ -44,9 +36,8 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 	private ViewPager pager;
 	private TaskFragmentAdapter fragmentAdapter;
 	private ITasks tasks;
-//	private int currentTab = 0;
-//	private SlidingMenu slidingMenu;
-//	private SlidingMenuHelper slidingHelper = new SlidingMenuHelper();
+	private ITasksMapControl mapControl;
+	private TitlePageIndicator indicator;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -61,8 +52,10 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		View v = inflater.inflate(R.layout.tasks_pager, container, false);
 
 		pager = (ViewPager) v.findViewById(R.id.tasks_pager);
+		indicator = (TitlePageIndicator) v.findViewById(R.id.pager_indicator);
+
+		indicator.setViewPager(pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
-//		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
 
 		return v;
 	}
@@ -74,43 +67,45 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
 			tasks = model.getTasks();
-//			slidingMenu = ((SlidingFragmentActivity) getActivity()).getSlidingMenu();
 		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and extend SlidingFragmentActivity");//TODO
+			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
 		}
 
 		fragmentAdapter = new TaskFragmentAdapter(getChildFragmentManager(), tasks.getTasksCursor());
 		pager.setAdapter(fragmentAdapter);
 
+		int tab = -1, id;
 		if (savedInstanceState != null) {
-			pager.setCurrentItem(savedInstanceState.getInt(Std.TASK_CURSOR_POSITION, 0));
+			tab = savedInstanceState.getInt(Std.TAB, -1);
 		}
+		if (tab == -1) {
+			id = getArguments().getInt(Std.TASK_ID, -1);
+			tab = (id >= 0) ? tasks.getTaskPositionInCursor(id) : 0;
+		}
+
+		pager.setCurrentItem(tab);
 
 		FragmentManager fm = getFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
 
-		Fragment mapFragment = fm.findFragmentByTag("taskMap");
+		Fragment mapFragment = fm.findFragmentByTag(TasksMapFragment.TAG);
 		if (mapFragment == null) {
 			mapFragment = new TasksMapFragment();
-			Bundle b = new Bundle();
-			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
-			de.rallye.model.structures.LatLng loc = model.getMap().getMapLocation();
-			if (loc != null) {
-				gmo.camera(new CameraPosition(LatLngAdapter.toGms(loc), model.getMap().getZoomLevel(), 0, 0));
-			}
-			b.putParcelable("MapOptions", gmo);
-			mapFragment.setArguments(b);
+
+			Bundle args = getDefaultMapOptions(model);
+			args.putBoolean(Std.TASK_MAP_MODE_SINGLE, true);
+			mapFragment.setArguments(args);
 		}
 
-		ft.replace(R.id.map, mapFragment, "taskMap").commit();
+		mapControl = (ITasksMapControl) mapFragment;
+
+		ft.replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-
-//		pager.setCurrentItem(currentTab);
 		tasks.addListener(this);
 	}
 
@@ -119,15 +114,13 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		super.onStop();
 
 		tasks.removeListener(this);
-
-//		currentTab = pager.getCurrentItem();
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 
-//		outState.putInt(Std.TAB, pager.getCurrentItem());
+		outState.putInt(Std.TAB, pager.getCurrentItem());
 	}
 
 	@Override
@@ -156,6 +149,13 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 			c = CursorConverters.TaskCursorIds.read(cursor);
 			this.cursor = cursor;
 			this.notifyDataSetChanged();
+		}
+
+		@Override
+		public void setPrimaryItem(ViewGroup container, int position, Object object) {
+			super.setPrimaryItem(container, position, object);
+
+			mapControl.setTask(CursorConverters.getTask(position, cursor, c));
 		}
 
 		@Override

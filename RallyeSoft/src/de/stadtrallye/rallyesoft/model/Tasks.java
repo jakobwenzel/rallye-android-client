@@ -8,7 +8,6 @@ import android.util.Log;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
@@ -134,15 +133,15 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 		});
 	}
 
-	@Override
-	public Cursor getLocationSpecificTasksCursor() {
-		return getTasksCursor(true);
-	}
-
-	@Override
-	public Cursor getUbiquitousTasksCursor() {
-		return getTasksCursor(false);
-	}
+//	@Override
+//	public Cursor getLocationSpecificTasksCursor() {
+//		return getTasksCursor(true);
+//	}
+//
+//	@Override
+//	public Cursor getUbiquitousTasksCursor() {
+//		return getTasksCursor(false);
+//	}
 
 	@Override
 	public Cursor getTasksCursor() {
@@ -155,18 +154,28 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 		Cursor c = model.db.query(DatabaseHelper.Tasks.TABLE,
 				new String[]{DatabaseHelper.Tasks.KEY_ID + " AS _id", DatabaseHelper.Tasks.KEY_NAME, DatabaseHelper.Tasks.KEY_DESCRIPTION,
 						DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC, DatabaseHelper.Tasks.KEY_LAT, DatabaseHelper.Tasks.KEY_LON, DatabaseHelper.Tasks.KEY_MULTIPLE, DatabaseHelper.Tasks.KEY_SUBMIT_TYPE},
-				cond, null, null, null, DatabaseHelper.Tasks.KEY_ID);
+				cond, null, null, null, DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC +" DESC");
 		Log.i(THIS, "new Cursor: "+ c.getCount() +" rows");
 		return c;
 	}
 
 	@Override
-	public LatLng getMapLocation() {
-		return (model.serverConfig != null)? model.serverConfig.location : null;
-	}
+	public int getTaskPositionInCursor(int initialTaskId) {
+		if (initialTaskId < 0)
+			return 0;
 
-	@Override
-	public float getZoomLevel() {
-		return (model.serverConfig != null)? model.serverConfig.zoomLevel : 0;
+		Cursor c = getTasksCursor(null);
+
+		int id,i = 0;
+		while (c.moveToNext()) {
+			id = c.getInt(0);
+
+			if (id == initialTaskId) {
+				return i;
+			}
+			i++;
+		}
+		c.close();
+		return 0;
 	}
 }

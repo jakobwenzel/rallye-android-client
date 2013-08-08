@@ -103,8 +103,6 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 			map.provideMap();
 		}
 		
-//		zoomMap();//TODO: we need to detect user interaction with the map to correctly assume custom zoom before re-zooming after rotations
-		
 		map.addListener(this);
 	}
 	
@@ -158,7 +156,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 				zoom = Zoom.ToGame;
 				zoomMap();
 			} else {
-				Toast.makeText(getActivity(), "No Nodes to center on!", Toast.LENGTH_SHORT).show();//TODO: R.string
+				Toast.makeText(getActivity(), getString(R.string.no_nodes), Toast.LENGTH_SHORT).show();
 			}
 			return true;
 		default:

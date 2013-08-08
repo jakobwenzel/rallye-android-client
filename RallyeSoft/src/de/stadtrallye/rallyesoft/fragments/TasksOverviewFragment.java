@@ -2,13 +2,11 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
-import android.os.Build;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,21 +18,16 @@ import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
-import com.google.android.gms.maps.GoogleMapOptions;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
-import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
+import de.stadtrallye.rallyesoft.HostActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
-import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.TaskCursorAdapter;
-import de.stadtrallye.rallyesoft.widget.MapPager;
+
+import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
 /**
  * Fragment that contains a ViewPager sorting the Tasks in location specific and ubiquitous
@@ -46,9 +39,9 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 	private IModel model;
 	private ITasks tasks;
 	private ListView list;
-//	private View map;
+	//	private View map;
 	private TaskCursorAdapter listAdapter;
-	private byte size = 0;//TODO: save
+	private byte size = 0;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -70,7 +63,7 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 		list = (ListView) v.findViewById(R.id.tasks_list);
 
 		if (android.os.Build.VERSION.SDK_INT >= 11)
-			setLayoutTransition(container);
+			setLayoutTransition((ViewGroup) v);
 
 		return v;
 	}
@@ -94,20 +87,14 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 		FragmentManager fm = getFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
 
-		Fragment mapFragment = fm.findFragmentByTag("taskMap");
+		Fragment mapFragment = fm.findFragmentByTag(TasksMapFragment.TAG);
 		if (mapFragment == null) {
 			mapFragment = new TasksMapFragment();
-			Bundle b = new Bundle();
-			GoogleMapOptions gmo = new GoogleMapOptions().compassEnabled(true);
-			de.rallye.model.structures.LatLng loc = model.getMap().getMapLocation();
-			if (loc != null) {
-				gmo.camera(new CameraPosition(LatLngAdapter.toGms(loc), model.getMap().getZoomLevel(), 0, 0));
-			}
-			b.putParcelable("MapOptions", gmo);
-			mapFragment.setArguments(b);
+
+			mapFragment.setArguments(getDefaultMapOptions(model));
 		}
 
-		ft.replace(R.id.map, mapFragment, "taskMap").commit();
+		ft.replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();
 	}
 
 	@Override
@@ -141,7 +128,7 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 		MenuItem resize = menu.add(Menu.NONE, R.id.resize_menu, 40, R.string.resize);
 
 		resize.setIcon(R.drawable.center);
-		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+		resize.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 	}
 
 	@Override
@@ -151,26 +138,28 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 				model.getTasks().updateTasks();
 				return true;
 			case R.id.resize_menu:
-				switch (size) {
-					case 0:
-						list.setVisibility(View.GONE);
-						size = 1;
-						break;
-					case 1:
-						list.setVisibility(View.VISIBLE);
-						getView().findViewById(R.id.map).setVisibility(View.GONE);
-						size = 2;
-						break;
-					case 2:
-						list.setVisibility(View.VISIBLE);
-						getView().findViewById(R.id.map).setVisibility(View.VISIBLE);
-						size = 0;
-				}
+				setSize((byte)((size+1) % 3));
 				return true;
 			default:
 				Log.d(THIS, "No hit on menu item " + item);
 				return false;
 		}
+	}
+
+	private void setSize(byte newSize) {
+		switch (newSize) {
+			case 1:
+				list.setVisibility(View.GONE);
+				break;
+			case 2:
+				list.setVisibility(View.VISIBLE);
+				getView().findViewById(R.id.map).setVisibility(View.GONE);
+				break;
+			case 0:
+				list.setVisibility(View.VISIBLE);
+				getView().findViewById(R.id.map).setVisibility(View.VISIBLE);
+		}
+		size = newSize;
 	}
 
 	@Override
@@ -180,18 +169,8 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		FragmentManager fm = getFragmentManager();
-		FragmentTransaction ft = fm.beginTransaction();
-
-		Fragment f = fm.findFragmentByTag("taskPager");
-		if (f == null) {
-			f = new TasksPagerFragment();
-		}
-
-		Bundle b = new Bundle();
-		b.putInt(Std.TASK_CURSOR_POSITION, position);
-		f.setArguments(b);
-
-		ft.addToBackStack("SubFrag").replace(android.R.id.content, f, "taskPager").commit();
+		Intent intent = new Intent(getActivity(), HostActivity.class);
+		intent.putExtra(Std.TASK_ID, (int) id);
+		startActivity(intent);
 	}
 }

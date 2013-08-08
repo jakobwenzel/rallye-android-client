@@ -569,13 +569,13 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		return new PictureGallery(initialPictureId);
 	}
 	
-	@Override//TODO
-	public void saveCurrentState(int lastRead) {
+	@Override
+	public void saveCurrentState(int lastRead) {//TODO
 		
 	}
 
-	@Override//TODO
-	public int getLastState() {
+	@Override
+	public int getLastState() {//TODO
 		return 0;
 	}
 
@@ -607,7 +607,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			notifyChatsChanged();
 		} else {
 			notifyChatPostState(PostState.Failure, postID, null);
-			model.commError(null);//TODO: better exception handling for communication breakdown
+			model.commError(null);
 		}
 	}
 	

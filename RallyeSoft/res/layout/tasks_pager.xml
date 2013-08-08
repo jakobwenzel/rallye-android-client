@@ -2,6 +2,7 @@
 
 <LinearLayout
 		xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res/de.stadtrallye.rallyesoft"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:orientation="vertical">
@@ -10,17 +11,26 @@
 		android:id="@+id/map"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
-		android:layout_weight="0.5">
-
-	</FrameLayout>
+		android:layout_weight="0.5" />
 
 
 	<android.support.v4.view.ViewPager
 			android:id="@+id/tasks_pager"
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="0.5">
+			android:layout_weight="0.5" />
 
-	</android.support.v4.view.ViewPager>
+	<com.viewpagerindicator.TitlePageIndicator
+			android:id="@+id/pager_indicator"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:padding="10dp"
+			android:background="@color/abs__bright_foreground_disabled_holo_light"
+			android:textColor="#FFFFFF"
+			app:footerColor="#FFAA2222"
+			app:footerLineHeight="0dp"
+			app:footerIndicatorStyle="none"
+			app:selectedColor="#FF000000"
+			app:selectedBold="true"/>
 
 </LinearLayout>

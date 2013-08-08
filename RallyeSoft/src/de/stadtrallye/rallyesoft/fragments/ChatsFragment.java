@@ -21,7 +21,6 @@ import com.astuetz.viewpager.extensions.PagerSlidingTabStrip;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.R;
@@ -67,6 +66,10 @@ public class ChatsFragment extends SherlockFragment {
 		pager = (ViewPager) v.findViewById(R.id.pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
+
+		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
+		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
 		
 		return v;
 	}
@@ -88,10 +91,6 @@ public class ChatsFragment extends SherlockFragment {
 		super.onStart();
 		
 		chatrooms = model.getChatrooms();
-
-		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
-		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
 		
 		pager.setCurrentItem(currentTab);
 	}

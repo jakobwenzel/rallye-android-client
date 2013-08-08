@@ -4,8 +4,7 @@
 			  android:orientation="horizontal"
 			  android:layout_width="match_parent"
 			  android:layout_height="match_parent"
-			  android:descendantFocusability="blocksDescendants"
-		>
+			  android:descendantFocusability="blocksDescendants">
 
 	<TextView
 			android:layout_width="0dp"
@@ -13,7 +12,14 @@
 			android:textAppearance="?android:attr/textAppearanceMedium"
 			android:id="@+id/name"
 			android:layout_gravity="center_vertical"
-			android:layout_weight="1"/>
+			android:layout_weight="1" />
+
+	<View
+			android:layout_width="1dp"
+			android:layout_height="match_parent"
+			android:layout_marginTop="4dp"
+			android:layout_marginBottom="4dp"
+			android:background="@drawable/abs__list_divider_holo_light" /><!-- Fucking ActionBarSherlock!!!!, Supplement ?attr/dividerVertical -->
 
 	<ImageButton
 			android:layout_width="40dp"
@@ -21,6 +27,5 @@
 			android:id="@+id/locate"
 			android:layout_gravity="center_vertical|right"
 			android:src="@drawable/place_dark"
-			android:background="@null"
-			/>
+			android:background="?attr/selectableItemBackground" />
 </LinearLayout>

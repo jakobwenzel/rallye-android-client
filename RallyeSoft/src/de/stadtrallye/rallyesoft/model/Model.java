@@ -55,7 +55,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-	enum CallbackIds { LOGIN, CHECK_SERVER, MAP_NODES, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
+	enum CallbackIds { LOGIN, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
 	
 	
 	private static Model model; // Singleton Pattern
@@ -67,8 +67,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	private ServerLogin currentLogin;
 	ServerConfig serverConfig;
 	
-	private ConnectionStatus status; //TODO: add network state
-	final ArrayList<IConnectionStatusListener> connectionListeners  = new ArrayList<>();
+	private ConnectionStatus status;
+	final ArrayList<IModelListener> modelListeners = new ArrayList<>();
 	private IListAvailableCallback<Group> availableGroupsCallback;
 	private IObjectAvailableCallback<ServerInfo> serverInfoCallback;
 	
@@ -241,7 +241,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		try {
-			factory.setPushID(GCMRegistrar.getRegistrationId(context));//TODO: necessary?
+			factory.setPushID(GCMRegistrar.getRegistrationId(context));// if newly installed GCM_ID has on occasion not been available at first start
 			
 			exec.execute(new JSONObjectRequestExecutor<>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		
@@ -298,7 +298,16 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 					this.serverConfig = serverConfig;
 					if (pref != null)
 						save().saveServerConfig().commit();
-					Log.w(THIS, "Server Config has changed, replacing");
+					Log.d(THIS, "Server Config has changed, replacing");
+
+					uiHandler.post(new Runnable() {
+						@Override
+						public void run() {
+							for (IModelListener l: modelListeners) {
+								l.onServerConfigChange();
+							}
+						}
+					});
 				}
 
 				checkConnectionComplete();
@@ -699,6 +708,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	 * @param exception the exception that caused the failure
 	 */
 	void commError(Exception exception) {
+		//TODO: better exception handling for communication breakdown
 	}
 	
 	/**
@@ -714,13 +724,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	@Override
-	public void addListener(IConnectionStatusListener l) {
-		connectionListeners.add(l);
+	public void addListener(IModelListener l) {
+		modelListeners.add(l);
 	}
 	
 	@Override
-	public void removeListener(IConnectionStatusListener l) {
-		connectionListeners.remove(l);
+	public void removeListener(IModelListener l) {
+		modelListeners.remove(l);
 	}
 	
 	private void setConnectionStatus(final ConnectionStatus newState) {
@@ -739,7 +749,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				for(IConnectionStatusListener l: connectionListeners) {
+				for(IModelListener l: modelListeners) {
 					l.onConnectionStatusChange(newState);
 				}
 			}
@@ -754,7 +764,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				for(IConnectionStatusListener l: connectionListeners) {
+				for(IModelListener l: modelListeners) {
 					l.onConnectionFailed(e, fallbackState);
 				}
 			}

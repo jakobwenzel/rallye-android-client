@@ -81,7 +81,6 @@ public class GCMIntentService extends GCMBaseIntentService {
 
 	@Override
 	protected void onError(Context context, String errorId) {
-		// TODO Auto-generated method stub
 		Log.e("GCMIntentService", errorId);
 	}
 

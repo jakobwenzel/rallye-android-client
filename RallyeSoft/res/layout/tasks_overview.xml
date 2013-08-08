@@ -9,8 +9,7 @@
 			android:id="@+id/map"
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="0.5">
-	</FrameLayout>
+			android:layout_weight="0.5" />
 
 	<ListView
 			android:id="@+id/tasks_list"
@@ -19,6 +18,6 @@
 			android:layout_weight="0.5"
 			android:requiresFadingEdge="vertical"
 			android:fadingEdgeLength="25dp"
-			android:clickable="true"/>
+			android:clickable="true" />
 
 </LinearLayout>

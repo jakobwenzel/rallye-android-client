@@ -5,7 +5,6 @@ import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
@@ -47,7 +46,7 @@ public class ImageViewActivity extends SherlockActivity {
 
 	private IChatroom chatroom;
 	private IPictureGallery gallery;
-	
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +62,7 @@ public class ImageViewActivity extends SherlockActivity {
 		
 		pager = (GalleryPager)findViewById(R.id.image_pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
-		
+
 		model = Model.getModel(getApplicationContext());
 		
 		Bundle b = getIntent().getExtras();
@@ -150,7 +149,7 @@ public class ImageViewActivity extends SherlockActivity {
 				}
 			});
 
-			((ViewPager) view).addView(imageLayout, 0);
+			view.addView(imageLayout, 0);
 			return imageLayout;
 		}
 
@@ -206,7 +205,7 @@ public class ImageViewActivity extends SherlockActivity {
 			getSupportActionBar().show();
 	}
 	
-	private enum Mode { None, Drag, Zoom };
+	private enum Mode { None, Drag, Zoom }
 	
 	private class TouchControl extends SimpleOnGestureListener implements OnTouchListener {
 	
@@ -350,7 +349,7 @@ public class ImageViewActivity extends SherlockActivity {
 				currentScale = maxScale / 2;
 				mCurrent.postScale(s, s, e.getX(), e.getY());
 			} else {
-				s = baseScale / currentScale;
+//				s = baseScale / currentScale;
 				currentScale = baseScale;
 				mCurrent.set(mBase);
 			}

@@ -5,11 +5,11 @@
         <item>https</item>
     </string-array>
     <string-array name="dashboard_entries">
-        <item>Willkommen</item>
-        <item >Übersicht</item>
-        <item >Karte</item>
-		<item>Tasks</item>
-        <item >Nächster Zug</item>
-        <item >Chat</item>
+        <item>@string/welcome</item>
+        <item>@string/overview</item>
+        <item>@string/map</item>
+		<item>@string/tasks</item>
+        <item>@string/next_move</item>
+        <item>@string/chat</item>
     </string-array>
 </resources>

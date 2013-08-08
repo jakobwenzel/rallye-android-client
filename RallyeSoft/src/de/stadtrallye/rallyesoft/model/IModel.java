@@ -15,17 +15,17 @@ public interface IModel {
 
 	boolean isEmpty();
 
-	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, InternalConnected, Retrying }
+	enum ConnectionStatus { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, InternalConnected }
 
 	interface IListAvailableCallback<T> {
 		void dataAvailable(List<T> data);
 	}
 
-	interface IMapAvailableCallback<K, T> {
-		void dataAvailable(java.util.Map<K, T> data);
-	}
+//	interface IMapAvailableCallback<K, T> {
+//		void dataAvailable(java.util.Map<K, T> data);
+//	}
 
-	interface IObjectAvailableCallback<T> {
+	interface IObjectAvailableCallback<T> { //TODO: save info, instead of using callback
 		void dataAvailable(T data);
 	}
 
@@ -47,8 +47,8 @@ public interface IModel {
 	void getAvailableGroups(IListAvailableCallback<Group> callback);
 	void getServerInfo(IObjectAvailableCallback<ServerInfo> callback);
 	
-	void addListener(IConnectionStatusListener l);
-	void removeListener(IConnectionStatusListener l);
+	void addListener(IModelListener l);
+	void removeListener(IModelListener l);
 
 	void saveModel();
 
@@ -66,4 +66,12 @@ public interface IModel {
 	boolean isDisconnected();
 
 	void onDestroy();
+
+	public interface IModelListener {
+
+		public void onConnectionStatusChange(IModel.ConnectionStatus status);
+		public void onConnectionFailed(Exception e, IModel.ConnectionStatus lastStatus);
+
+		public void onServerConfigChange();
+	}
 }

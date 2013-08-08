@@ -4,6 +4,7 @@
     <facet type="android" name="Android">
       <configuration>
         <option name="LIBRARY_PROJECT" value="true" />
+        <option name="UPDATE_PROPERTY_FILES" value="true" />
         <notImportedProperties>
           <property>MANIFEST_FILE_PATH</property>
           <property>RESOURCES_DIR_PATH</property>
@@ -21,7 +22,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="SlidingMenu" />
+    <orderEntry type="library" name="android-support-v4" level="project" />
   </component>
 </module>
 

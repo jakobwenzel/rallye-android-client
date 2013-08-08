@@ -1,12 +1,10 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.widget.AdapterView;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -14,11 +12,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.HashMap;
 
 import de.rallye.model.structures.Task;
+import de.stadtrallye.rallyesoft.HostActivity;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 
@@ -26,12 +26,16 @@ import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
  * Map of all location specific tasks, combined with a list for direct selection
  * Possibly ability to maximize the map to fullsize
  */
-public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.OnMarkerClickListener, ITasks.ITasksListener, GoogleMap.OnInfoWindowClickListener {
+public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.OnMarkerClickListener, ITasks.ITasksListener, GoogleMap.OnInfoWindowClickListener,
+		ITasksMapControl {
+
+	public static final String TAG = "taskMap";
 
 	private IModel model;
 	private ITasks tasks;
 	private GoogleMap gmap;
 	private HashMap<Marker, Integer> markers = new HashMap<>();
+	private boolean singleMode;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,10 +69,13 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 			gmap.setOnInfoWindowClickListener(this);
 		}
 
+		singleMode = getArguments().getBoolean(Std.TASK_MAP_MODE_SINGLE, false);
+
 //		if (tasks.getMapLocation() != null)
 //			gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(toGms(tasks.getMapLocation()), tasks.getZoomLevel()));
 
-		populateMap();
+		if (!singleMode)
+			populateMap();
 	}
 
 	@Override
@@ -105,6 +112,7 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 		}
 	}
 
+
 	@Override
 	public boolean onMarkerClick(Marker marker) {
 		marker.showInfoWindow();
@@ -119,24 +127,31 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 
 	@Override
 	public void taskUpdate() {
-		populateMap();
+		if (!singleMode)
+			populateMap();
+	}
+
+	@Override
+	public void setTask(Task task) {
+		gmap.clear();
+
+		if (!task.hasLocation())
+			return;
+
+		gmap.addMarker(new MarkerOptions()
+				.position(toGms(task.location))
+				.title(task.name)
+				.snippet(task.description));
+
+		gmap.animateCamera(CameraUpdateFactory.newLatLngZoom(toGms(task.location), model.getMap().getZoomLevel() + 4));
 	}
 
 	@Override
 	public void onInfoWindowClick(Marker marker) {
-		int id = markers.get(marker);//TODO: show details
-		FragmentManager fm = getFragmentManager();
-		FragmentTransaction ft = fm.beginTransaction();
+		int id = markers.get(marker);
 
-		Fragment f = fm.findFragmentByTag("taskPager");
-		if (f == null) {
-			f = new TasksPagerFragment();
-		}
-
-		Bundle b = new Bundle();
-		b.putInt(Std.TASK_CURSOR_POSITION, id);
-		f.setArguments(b);
-
-		ft.addToBackStack("SubFrag").replace(android.R.id.content, f, "taskPager");
+		Intent intent = new Intent(getActivity(), HostActivity.class);
+		intent.putExtra(Std.TASK_ID, id);
+		startActivity(intent);
 	}
 }

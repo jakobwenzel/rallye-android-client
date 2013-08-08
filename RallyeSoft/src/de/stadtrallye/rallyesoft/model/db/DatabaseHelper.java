@@ -151,7 +151,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL("DROP TABLE IF EXISTS "+ Groups.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS "+ Chatrooms.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS "+ Chats.TABLE);
-		db.execSQL("DROP TABLE IF EXISTS messages");//TODO: remove
 		db.execSQL("DROP TABLE IF EXISTS "+ Nodes.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS "+ Edges.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS "+ Tasks.TABLE);

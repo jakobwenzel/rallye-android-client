@@ -3,6 +3,7 @@
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+        <option name="UPDATE_PROPERTY_FILES" value="true" />
         <notImportedProperties>
           <property>MANIFEST_FILE_PATH</property>
           <property>RESOURCES_DIR_PATH</property>
@@ -25,6 +26,7 @@
     <orderEntry type="module" module-name="SherlockActionBar" />
     <orderEntry type="module" module-name="RallyeStructures" />
     <orderEntry type="library" name="gcm" level="project" />
+    <orderEntry type="module" module-name="ViewPagerIndicator" />
   </component>
 </module>
 

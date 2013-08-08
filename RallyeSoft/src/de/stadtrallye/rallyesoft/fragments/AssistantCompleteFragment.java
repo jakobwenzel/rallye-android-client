@@ -10,14 +10,13 @@ import android.widget.Toast;
 import com.actionbarsherlock.app.SherlockFragment;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IConnectionStatusListener;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
  * Created by Ramon on 19.06.13
  */
-public class AssistantCompleteFragment extends SherlockFragment implements View.OnClickListener, IConnectionStatusListener {
+public class AssistantCompleteFragment extends SherlockFragment implements View.OnClickListener, IModel.IModelListener {
 
 	private IConnectionAssistant assistant;
 	private Button next;
@@ -88,5 +87,10 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 	public void onConnectionFailed(Exception e, IModel.ConnectionStatus lastStatus) {
 		Toast.makeText(getActivity(), R.string.invalid_login, Toast.LENGTH_SHORT).show();
 		assistant.back();
+	}
+
+	@Override
+	public void onServerConfigChange() {
+
 	}
 }
