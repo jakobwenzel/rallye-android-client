@@ -120,6 +120,14 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 	}
 
 	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		boolean drawerOpen = tabManager.isMenuOpen();
+
+		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
+		menu.findItem(R.id.resize_menu).setVisible(!drawerOpen);
+	}
+
+	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
 		refreshMenuItem.setIcon(R.drawable.refresh);

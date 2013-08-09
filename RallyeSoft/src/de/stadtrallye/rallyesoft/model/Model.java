@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Binder;
 import android.os.Handler;
@@ -66,11 +68,11 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private ServerLogin currentLogin;
 	ServerConfig serverConfig;
+	private ServerInfo serverInfo;
+	private List<Group> groups;// Needs to be stored here until we have preferences and can save it to Database
 	
-	private ConnectionStatus status;
+	private ConnectionState state;
 	final ArrayList<IModelListener> modelListeners = new ArrayList<>();
-	private IListAvailableCallback<Group> availableGroupsCallback;
-	private IObjectAvailableCallback<ServerInfo> serverInfoCallback;
 	
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
 	final RequestFactory factory;
@@ -95,10 +97,20 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 	}
 
+	/**
+	 * Create a new Model, separate from the general Singleton Pattern of Model
+	 * @param context needed for Database, Preferences etc
+	 * @return a new completely empty Model, ready to connect to a new server
+	 */
 	public static IModel createEmptyModel(Context context) {
 		return new Model(context, null);
 	}
 
+	/**
+	 * Switch the new Model from {@link #createEmptyModel(android.content.Context)} in to the Singleton Pattern of Model after it has been tested
+	 * Will kill and terminate the old Model immediately
+	 * @param newModel a Model whose connection to a new server was successful
+	 */
 	public static void switchToNew(IModel newModel) {
 		if (!(newModel instanceof Model))
 			return;
@@ -159,15 +171,16 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			if (pref != null) {
 				restoreLogin();
 				restoreServerConfig();
+				restoreServerInfo();
 				restoreConnectionStatus();
 			} else {
 				currentLogin = new ServerLogin();
-				setConnectionStatus(ConnectionStatus.Disconnected);
+				setConnectionState(ConnectionState.Disconnected);
 			}
 
 		} catch (Exception e) {
 			Log.w(THIS, "No usable Login-Data found -> stay offline", e);
-			setConnectionStatus(ConnectionStatus.Disconnected);
+			setConnectionState(ConnectionState.Disconnected);
 		}
 
 		String uniqueID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
@@ -196,7 +209,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			return;
 		}
 		
-		setConnectionStatus(ConnectionStatus.Disconnecting);
+		setConnectionState(ConnectionState.Disconnecting);
 		if (pref != null)
 			save().saveConnectionStatus().commit();
 		
@@ -210,7 +223,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	@SuppressWarnings("UnusedParameters")
 	private void logoutResult(RequestExecutor<String, ?> r) {
 		currentLogin.setUserAuth(null);
-		setConnectionStatus(ConnectionStatus.Disconnected);
+		setConnectionState(ConnectionState.Disconnected);
 	}
 
 	@Override
@@ -219,6 +232,11 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			server = server +"/";
 
 		this.currentLogin.setServer(new URL(server));
+
+		setConnectionState(ConnectionState.Disconnected);
+
+		refreshServerInfo();
+		refreshAvailableGroups();
 		return server;
 	}
 	
@@ -234,7 +252,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 				return;
 			}//Sanity
 			
-			setConnectionStatus(ConnectionStatus.Connecting);
+			setConnectionState(ConnectionState.Connecting);
 			currentLogin.setName(username);
 			currentLogin.setGroupID(groupID);
 			currentLogin.setGroupPassword(groupPassword);
@@ -247,7 +265,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		
 		} catch (Exception e) {
 			err.requestException(e);
-			connectionFailure(e, ConnectionStatus.Disconnected);
+			connectionFailure(e, ConnectionState.Disconnected);
 		}
 		
 	}
@@ -256,28 +274,31 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		if (r.isSuccessful()) {
 			
 			currentLogin.setUserAuth(r.getResult());
-			setConnectionStatus(ConnectionStatus.InternalConnected);
+			setConnectionState(ConnectionState.InternalConnected);
 			
-			getAvailableChatrooms();
+			refreshAvailableChatrooms();
 			refreshServerConfig();
 			map.updateMap();
 			tasks.updateTasks();
 		} else {
-			connectionFailure(r.getException(), ConnectionStatus.Disconnected);
+			connectionFailure(r.getException(), ConnectionState.Disconnected);
 		}
 	}
-	
-	/**
-	 * Start checking for configuration changes
-     */
+
+	@Override
+	public void reconnect() {
+		setConnectionState(ConnectionState.Connecting);
+		checkConfiguration();
+	}
+
 	@Override
 	public void checkConfiguration() {
-		if (!isConnected()) {
+		if (!isConnectedInternal()) {
 			err.notLoggedIn();
 			return;
 		}
 
-        getAvailableChatrooms();
+        refreshAvailableChatrooms();
         refreshServerConfig();
 	}
 	
@@ -316,10 +337,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 	}
 	
-	private void getAvailableChatrooms() {
+	private void refreshAvailableChatrooms() {
 		try {
 			Log.d(THIS, "getting available chatrooms");
-			exec.execute(new JSONArrayRequestExecutor<>(factory.availableChatroomsRequest(), new Chatroom.ChatroomConverter(this), this, CallbackIds.AVAILABLE_CHATROOMS));
+			exec.execute(new JSONArrayRequestExecutor<>(factory.availableChatroomsRequest(), new JsonConverters.ChatroomConverter(this), this, CallbackIds.AVAILABLE_CHATROOMS));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -343,21 +364,19 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	private void checkConnectionComplete() {
-		if (status == ConnectionStatus.Connecting && chatrooms != null && chatrooms.size() > 0 && serverConfig != null) {
-			setConnectionStatus(ConnectionStatus.Connected);
+		if ((state == ConnectionState.Connecting || state == ConnectionState.InternalConnected) && chatrooms != null && chatrooms.size() > 0 && serverConfig != null) {
+			setConnectionState(ConnectionState.Connected);
 		}
 	}
 
 	@Override
-	public void getAvailableGroups(IListAvailableCallback<Group> callback) {//TODO: remove callback, do automatically on connect
+	public void refreshAvailableGroups() {
 		if (!currentLogin.hasServer()) {
 			err.serverNotSet();
-			callback.dataAvailable(null);
 			return;
 		}
 		
 		try {
-			availableGroupsCallback = callback;
 			exec.execute(new JSONArrayRequestExecutor<>(factory.availableGroupsRequest(), new JsonConverters.GroupConverter(), this, CallbackIds.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -365,22 +384,24 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 	
 	private void availableGroupsResult(RequestExecutor<List<Group>, ?> r) {
-		final List<Group> groups = r.getResult();
+		if (r.isSuccessful()) {
+			groups = r.getResult();
 
-		if (pref != null)
-			save().saveGroups(groups).commit();
+			if (pref != null)
+				save().saveGroups().commit();
 
-		if (availableGroupsCallback != null)
 			uiHandler.post(new Runnable() {
 				@Override
 				public void run() {
-					availableGroupsCallback.dataAvailable(groups);
-					availableGroupsCallback = null;
+					for (IModelListener l: modelListeners) {
+						l.onAvailableGroupsChange(groups);
+					}
 				}
 			});
+		}
 	}
 
-	public void refreshAllUsers() {
+	private void refreshAllUsers() {
 		if (!isConnected()) {
 			err.notLoggedIn();
 			return;
@@ -403,16 +424,13 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 	}
 
-	@Override
-	public void getServerInfo(IObjectAvailableCallback<ServerInfo> callback) {
+	private void refreshServerInfo() {
 		if (!currentLogin.hasServer()) {
 			err.serverNotSet();
-			callback.dataAvailable(null);
 			return;
 		}
 
 		try {
-			serverInfoCallback = callback;
 			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new JsonConverters.ServerInfoConverter(), this, CallbackIds.SERVER_INFO));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -420,16 +438,23 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	}
 
 	private void serverInfoResult(RequestExecutor<ServerInfo, ?> r) {
-		final ServerInfo info = r.getResult();
+		if (r.isSuccessful()) {
+			serverInfo = r.getResult();
 
-		if (serverInfoCallback != null)
+			if (pref != null)
+				save().saveServerInfo().commit();
+
 			uiHandler.post(new Runnable() {
 				@Override
 				public void run() {
-					serverInfoCallback.dataAvailable(info);
-					serverInfoCallback = null;
+					for (IModelListener l: modelListeners) {
+						l.onServerInfoChange(serverInfo);
+					}
 				}
 			});
+		} else {
+			connectionFailure(r.getException(), ConnectionState.ServerNotAvailable);
+		}
 	}
 
 	@Override
@@ -439,7 +464,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 
 	@Override
 	public void onMissingUserName(int userID) {
-		getAvailableGroups(null);
+		refreshAvailableGroups();
 	}
 
 	@Override
@@ -447,7 +472,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		if (pref == null)
 			pref = getDefaultPreferences(context);
 
-		save().saveLogin().saveServerConfig().saveChatrooms().saveConnectionStatus().commit();
+		save().saveLogin().saveServerConfig().saveChatrooms().saveConnectionStatus().saveGroups().saveServerInfo().commit();
 	}
 
 	@Override
@@ -457,21 +482,26 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	@Override
 	public boolean isConnectionChanging() {
-		return status == ConnectionStatus.Connecting || status == ConnectionStatus.Disconnecting;
+		return state == ConnectionState.Connecting || state == ConnectionState.Disconnecting;
 	}
 	
 	@Override
 	public boolean isConnected() {
-		return status == ConnectionStatus.Connected;
+		return state == ConnectionState.Connected;
 	}
 
+	/**
+	 * Connected or InternalConnected
+	 * InternalConnected will be set by Model after a login was successful, but not all information has been downloaded yet
+	 * Some Modules would like to download independent data while / before other modules a downloading theirs
+	 */
 	boolean isConnectedInternal() {
-		return status == ConnectionStatus.Connected || status == ConnectionStatus.InternalConnected;
+		return state == ConnectionState.Connected || state == ConnectionState.InternalConnected;
 	}
 	
 	@Override
 	public boolean isDisconnected() {
-		return status == ConnectionStatus.Disconnected;
+		return state == ConnectionState.Disconnected;
 	}
 	
 	@Override
@@ -484,28 +514,19 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		return new GroupUser(currentLogin.getUserID(), currentLogin.getGroupID(), currentLogin.getName());
 	}
 
-	/**
-	 * Get the chatrooms available to the current user
-	 * @return Unmodifiable List
-	 */
 	@Override
 	public List<? extends IChatroom> getChatrooms() {
 		return Collections.unmodifiableList(chatrooms);
 	}
 
 
-	/**
-	 *
-	 * @param id the official server side chatroomID
-	 * @return Model of that specific chatroom / null if it does not exist, user has no access
-	 */
 	@Override
 	public IChatroom getChatroom(int id) {
-		if (status != ConnectionStatus.Connected)
+		if (state != ConnectionState.Connected)
 			return null;
 		
 		if (chatrooms == null) {
-			Log.e(THIS, "Chatrooms empty / status: "+ status);
+			Log.e(THIS, "Chatrooms empty / state: "+ state);
 			return null;
 		}
 		
@@ -605,7 +626,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 		}
 		
 		public Saver saveConnectionStatus() {
-			edit.putBoolean(Std.CONNECTED, status == ConnectionStatus.Connected);
+			edit.putBoolean(Std.CONNECTED, state == ConnectionState.Connected);
 			
 			return this;
 		}
@@ -624,7 +645,7 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			edit.commit();
 		}
 
-		public Saver saveGroups(List<Group> groups) {
+		public Saver saveGroups() {
 			db.delete(Groups.TABLE, null, null);
 
 			for (Group g: groups) {
@@ -634,6 +655,8 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 				insert.put(Groups.KEY_DESCRIPTION, g.description);
 				db.insert(Groups.TABLE, null, insert);
 			}
+
+			groups = null;
 
 			return this;
 		}
@@ -650,6 +673,29 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			}
 
 			return this;
+		}
+
+		public Saver saveServerInfo() {
+			edit.putString(Std.SERVER+Std.NAME, serverInfo.name);
+			edit.putString(Std.SERVER+Std.DESCRIPTION, serverInfo.description);
+			edit.putString(Std.SERVER + Std.API, serverInfo.getApiAsString());
+
+			return this;
+		}
+	}
+
+	private void restoreServerInfo() {
+		ServerInfo s = ServerInfo.fromSet(
+				pref.getString(Std.SERVER+Std.NAME, null),
+				pref.getString(Std.SERVER+Std.DESCRIPTION, null),
+				pref.getString(Std.SERVER+Std.API, ""));
+
+		if (s.name != null && s.api.length > 0) {
+			serverInfo = s;
+			Log.i(THIS, "Server Info recovered");
+		} else {
+			serverInfo = null;
+			Log.e(THIS, "Server Info corrupted");
 		}
 	}
 	
@@ -693,10 +739,10 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	
 	private void restoreConnectionStatus() {
 		if (pref.getBoolean(Std.CONNECTED, false)) {
-			status = ConnectionStatus.Connected;
+			state = ConnectionState.Connected;
 			Log.i(THIS, "Status: Connected recovered");
 		} else {
-			status = ConnectionStatus.Disconnected;
+			state = ConnectionState.Disconnected;
 			Log.i(THIS, "Status: Disconnected recovered");
 		}
 	}
@@ -708,7 +754,12 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	 * @param exception the exception that caused the failure
 	 */
 	void commError(Exception exception) {
-		//TODO: better exception handling for communication breakdown
+		if (exception instanceof ConnectException) {
+			Log.e(THIS, "Failed to communicate with server! Going offline!");
+		} else {
+			Log.e(THIS, "Unknown Exception!");
+		}
+		connectionFailure(exception, ConnectionState.ServerNotAvailable);
 	}
 	
 	/**
@@ -732,32 +783,40 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 	public void removeListener(IModelListener l) {
 		modelListeners.remove(l);
 	}
-	
-	private void setConnectionStatus(final ConnectionStatus newState) {
-		if (newState == status) {
+
+	/**
+	 * Change the ConnectionState of the Model, broadcast the new state to all Listeners (except InternalConnected)
+	 */
+	private void setConnectionState(final ConnectionState newState) {
+		if (newState == state) {
 			Log.w(THIS, "Duplicate Status: "+ newState);
 			return;
 		}
 		
-		status = newState;
+		state = newState;
 		
 		Log.i(THIS, "Status: "+ newState);
 
-		if (newState == ConnectionStatus.InternalConnected) // Only for Submodules of Model, that run between first login on server and "official" connected
+		if (newState == ConnectionState.InternalConnected) // Only for Submodules of Model, that run between first login on server and "official" connected
 			return;
 		
 		uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for(IModelListener l: modelListeners) {
-					l.onConnectionStatusChange(newState);
+					l.onConnectionStateChange(newState);
 				}
 			}
 		});
 	}
-	
-	private void connectionFailure(final Exception e, final ConnectionStatus fallbackState) {
-		status = fallbackState;
+
+	/**
+	 * Notify Listeners of a connection failure (e.g. HTTP Timeout)
+	 * @param e Exception that caused the failure
+	 * @param fallbackState a new ConnectionState (e.g. Disconnected / NoNetwork)
+	 */
+	private void connectionFailure(final Exception e, final ConnectionState fallbackState) {
+		state = fallbackState;
 		
 		err.connectionFailure(e, fallbackState);
 		
@@ -770,8 +829,31 @@ public class Model extends Binder implements IModel, RequestExecutor.Callback<Mo
 			}
 		});
 	}
-	
-	public ConnectionStatus getConnectionStatus() {
-		return status;
+
+	@Override
+	public ConnectionState getConnectionState() {
+		return state;
+	}
+
+	@Override
+	public ServerInfo getServerInfo() {
+		return serverInfo;
+	}
+
+	@Override
+	public List<Group> getAvailableGroups() {
+		if (groups != null)
+			return groups;
+		else {
+			Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_ID, Groups.KEY_NAME, Groups.KEY_DESCRIPTION}, "", null, null, null, Groups.KEY_ID);
+			List<Group> groups = new ArrayList<>();
+
+			while (c.moveToNext()) {
+				groups.add(new Group(c.getInt(0), c.getString(1), c.getString(2)));
+			}
+			c.close();
+
+			return groups;
+		}
 	}
 }

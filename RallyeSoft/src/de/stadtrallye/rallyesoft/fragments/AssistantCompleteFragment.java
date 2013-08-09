@@ -9,6 +9,10 @@ import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
 
+import java.util.List;
+
+import de.rallye.model.structures.Group;
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
@@ -77,20 +81,30 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 	}
 
 	@Override
-	public void onConnectionStatusChange(IModel.ConnectionStatus status) {
-		if (status == IModel.ConnectionStatus.Connected) {
+	public void onConnectionStateChange(IModel.ConnectionState newState) {
+		if (newState == IModel.ConnectionState.Connected) {
 			next.setEnabled(true);
 		}
 	}
 
 	@Override
-	public void onConnectionFailed(Exception e, IModel.ConnectionStatus lastStatus) {
+	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
 		Toast.makeText(getActivity(), R.string.invalid_login, Toast.LENGTH_SHORT).show();
 		assistant.back();
 	}
 
 	@Override
 	public void onServerConfigChange() {
+
+	}
+
+	@Override
+	public void onServerInfoChange(ServerInfo info) {
+
+	}
+
+	@Override
+	public void onAvailableGroupsChange(List<Group> groups) {
 
 	}
 }

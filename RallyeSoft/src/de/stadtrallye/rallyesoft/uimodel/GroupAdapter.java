@@ -19,14 +19,15 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
 
 /**
- * Created by Ramon on 19.06.13.
+ * Adapter for showing the Groups available for login on a new server
+ * Special customization to pre select a group if user revisits this tab, but already made a choice
  */
 public class GroupAdapter extends BaseAdapter {
 
 	private final IModel model;
 	private List<Group> groups;
 	private ImageLoader loader;
-	private Context context;
+//	private Context context;
 	private LayoutInflater inflator;
 
 	private class ViewMem {
@@ -37,7 +38,7 @@ public class GroupAdapter extends BaseAdapter {
 
 
 	public GroupAdapter(Context context, List<Group> groups, IModel model) {
-		this.context = context;
+//		this.context = context;
 		this.groups = groups;
 		this.model = model;
 
@@ -104,5 +105,10 @@ public class GroupAdapter extends BaseAdapter {
 	@Override
 	public long getItemId(int position) {
 		return groups.get(position).groupID;
+	}
+
+	public void changeGroups(List<Group> groups) {
+		this.groups = groups;
+		notifyDataSetChanged();
 	}
 }

@@ -15,6 +15,8 @@ import de.rallye.model.structures.ServerConfig;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.Task;
 import de.rallye.model.structures.User;
+import de.stadtrallye.rallyesoft.model.Chatroom;
+import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
@@ -22,6 +24,23 @@ import de.stadtrallye.rallyesoft.util.JSONConverter;
  * Created by Ramon on 25.06.13
  */
 public class JsonConverters {
+
+	public static class ChatroomConverter extends JSONConverter<Chatroom> {
+
+		private Model model;
+
+		public ChatroomConverter(Model model) {
+			this.model = model;
+		}
+
+		@Override
+		public Chatroom doConvert(JSONObject o) throws JSONException {
+			int i = o.getInt(de.rallye.model.structures.Chatroom.CHATROOM_ID);
+			String name = o.getString(de.rallye.model.structures.Chatroom.NAME);
+
+			return new Chatroom(i, name, model);
+		}
+	}
 
 	public static class GroupConverter extends JSONConverter<Group> {
 

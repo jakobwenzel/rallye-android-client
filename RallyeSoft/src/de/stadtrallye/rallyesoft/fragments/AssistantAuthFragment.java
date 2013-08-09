@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -18,7 +17,8 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
- * Created by Ramon on 19.06.13.
+ * 3. Page of ConnectionAssistant
+ * Asks for Username and Group Password
  */
 public class AssistantAuthFragment extends SherlockFragment implements View.OnClickListener {
 
@@ -39,19 +39,17 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 		View v = inflater.inflate(R.layout.assistant_auth, container, false);
 		name = (EditText) v.findViewById(R.id.name);
 		pass = (EditText) v.findViewById(R.id.pass);
-		Button next = (Button) v.findViewById(R.id.next);
+		final Button next = (Button) v.findViewById(R.id.next);
 
 		next.setOnClickListener(this);
 
 		pass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				boolean handled = false;
 				if (actionId == EditorInfo.IME_ACTION_NEXT) {
-					onClick(v);
-					handled = true;
+					next.callOnClick();
 				}
-				return handled;
+				return false;
 			}
 		});
 		return v;

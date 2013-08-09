@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
 
+import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
 
 import android.util.Log;
 
@@ -78,10 +78,10 @@ public class ErrorHandling {
 	}
 
 	public void concurrentConnectionChange(String type) {
-		Log.e(where, "ConnectionStatus is changing, refusing: "+ type);
+		Log.e(where, "ConnectionState is changing, refusing: "+ type);
 	}
 
-	public void connectionFailure(Exception e, ConnectionStatus fallbackState) {
+	public void connectionFailure(Exception e, IModel.ConnectionState fallbackState) {
 		e.printStackTrace();
 		Log.e(where,"fallback: "+ fallbackState);
 	}
@@ -91,6 +91,6 @@ public class ErrorHandling {
 	}
 
 	public void concurrentRefresh() {
-		Log.e(where, "Refreshing Chatroom, while not Ready");
+		Log.e(where, "Already refreshing, cancelling...");
 	}
 }

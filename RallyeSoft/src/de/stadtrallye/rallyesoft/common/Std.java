@@ -49,4 +49,6 @@ public class Std {
 	public static final String ZOOM = "zoom";
 	public static final String HASH = "hash";
 	public static final String SUB_TAB = "subTab";
+	public static final String DESCRIPTION = "description";
+	public static final String API = "api";
 }

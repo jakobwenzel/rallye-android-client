@@ -45,6 +45,7 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 
 //		if (savedInstanceState != null)
 //			currentTab = savedInstanceState.getInt(Std.TAB);
+		setRetainInstance(true);
 	}
 
 	@Override

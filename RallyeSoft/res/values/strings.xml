@@ -67,5 +67,6 @@
 	<string name="of">von</string>
 	<string name="menu_drawer_open">Drawer Menü öffnen</string>
 	<string name="menu_drawer_close">Drawer Menü schließen</string>
+	<string name="reconnect">Erneut verbinden</string><string name="description">Beschreibung</string>
 
 </resources>

@@ -31,6 +31,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 
@@ -38,14 +39,14 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
 	
-	private enum Zoom { ToGame, ToBounds, ZoomCustom };
+	private enum Zoom { ToGame, ToBounds, ZoomCustom }
 	private Zoom zoom;
 	
 	private GoogleMap gmap;
 	private IModel model;
 	private IMap map;
 	private MenuItem refreshMenuItem;
-	private HashMap<Marker, Node> markers = new HashMap<Marker, Node>();
+	private HashMap<Marker, Node> markers = new HashMap<>();
 
 	private LatLngBounds gameBounds;
 	private MenuItem centerMenuItem;
@@ -144,6 +145,14 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 		refreshMenuItem.setIcon(R.drawable.refresh);
 		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 	}
+
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		boolean drawerOpen = ((ITabActivity) getActivity()).getTabManager().isMenuOpen();
+
+		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
+		menu.findItem(R.id.center_menu).setVisible(!drawerOpen);
+	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -222,7 +231,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 		Node source = markers.get(marker),
 				target;
 		Builder bounds = LatLngBounds.builder();
-		ArrayList<Node> targets = new ArrayList<Node>();
+		ArrayList<Node> targets = new ArrayList<>();
 		
 		bounds.include(toGms(source.location));
 		

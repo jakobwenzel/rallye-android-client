@@ -77,6 +77,8 @@ public abstract class TabManager {
 
 	public abstract void onPostCreate();
 
+	public abstract boolean isMenuOpen();
+
 	/**
 	 * Envelops a Fragment, reuses a already existing Fragment otherwise instantiates a new one
 	 * @author Ramon

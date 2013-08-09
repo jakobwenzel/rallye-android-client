@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -20,7 +19,9 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.net.MalformedURLException;
+import java.util.List;
 
+import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
@@ -28,9 +29,10 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
- * Created by Ramon on 19.06.13.
+ * 1. Page of ConnectionAssistant
+ * Asks for Server details and tries the Connection (showing ServerInfo)
  */
-public class AssistantServerFragment extends SherlockFragment implements IModel.IObjectAvailableCallback<ServerInfo> {
+public class AssistantServerFragment extends SherlockFragment implements IModel.IModelListener {
 
 	private IConnectionAssistant assistant;
 
@@ -64,17 +66,15 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		port.setHint(Std.DEFAULT_PORT);
 		path.setHint(Std.DEFAULT_PATH);
 
-//		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//			@Override
-//			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-//				boolean handled = false;
-//				if (actionId == EditorInfo.IME_ACTION_GO) {
-//					test.callOnClick();
-//					handled = true;
-//				}
-//				return handled;
-//			}
-//		});
+		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_SEND) {
+					test.callOnClick();
+				}
+				return false;
+			}
+		});
 
 		test = (Button) v.findViewById(R.id.test);
 		test.setOnClickListener(new View.OnClickListener() {
@@ -82,9 +82,9 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			public void onClick(View v) {
 				IModel model = assistant.getModel();
 				try {
-					assistant.setServer(getServer());
+					String server = getServer();
+					assistant.setServer(server);
 					loader.displayImage(model.getServerPictureURL(), srv_image);
-					model.getServerInfo(AssistantServerFragment.this);
 				} catch (MalformedURLException e) {
 					Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 				}
@@ -99,12 +99,7 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		next.setOnClickListener(new View.OnClickListener(){
 			@Override
 			public void onClick(View view) {
-				try {
-					assistant.setServer(getServer());
-					assistant.next();
-				} catch (MalformedURLException e) {
-					Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
-				}
+				assistant.next();
 			}
 		});
 
@@ -136,12 +131,21 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 
 		String s = assistant.getServer();
 		if (s != null) {
-			String[] parts = s.replaceAll("^(http|https)://(\\w+\\.\\w+):(\\d+)/(\\w+)/?$", "$1;$2;$3;$4").split(";");
+			String[] parts = s.replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)/(\\w+?)/?$", "$1;$2;$3;$4").split(";");
 			protocol.setSelection(parts[0].equals("http")? 0 : 1);
 			port.setText(parts[2]);
 			server.setText(parts[1]);
 			path.setText(parts[3]);
 		}
+
+		assistant.getModel().addListener(this);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+
+		assistant.getModel().removeListener(this);
 	}
 
 	private String getServer() {//TODO: check validity per field
@@ -158,14 +162,32 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 	}
 
 	@Override
-	public void dataAvailable(ServerInfo info) {
-		if (info == null) {
+	public void onConnectionStateChange(IModel.ConnectionState newState) {
+
+	}
+
+	@Override
+	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
+		if (fallbackState == IModel.ConnectionState.ServerNotAvailable) {
 			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
 			next.setVisibility(View.GONE);
-		} else {
-			srv_name.setText(info.name);
-			srv_desc.setText(info.description);
-			next.setVisibility(View.VISIBLE);
 		}
+	}
+
+	@Override
+	public void onServerConfigChange() {
+
+	}
+
+	@Override
+	public void onServerInfoChange(ServerInfo info) {
+		srv_name.setText(info.name);
+		srv_desc.setText(info.description);
+		next.setVisibility(View.VISIBLE);
+	}
+
+	@Override
+	public void onAvailableGroupsChange(List<Group> groups) {
+
 	}
 }

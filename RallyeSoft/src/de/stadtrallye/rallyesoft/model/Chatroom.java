@@ -6,9 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.sql.SQLDataException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -26,16 +23,15 @@ import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> {
-	
+
 	// statics
 	final private static String CLASS = Chatroom.class.getSimpleName();
 	final private String THIS;
 	final private static ErrorHandling err = new ErrorHandling(CLASS);
 
-	private enum Tasks { CHAT_REFRESH, CHAT_POST }
+	private enum Tasks {CHAT_REFRESH, CHAT_POST}
 
 	public static class AdvTaskId {
 		final public Tasks task;
@@ -47,7 +43,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 	}
 
-    // members
+	// members
 	final private Model model;
 	final private int id;
 	final private String name;
@@ -55,27 +51,26 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	private int lastId = 0;
 
 	private int nextTaskId = 0;
-	
-	private ChatroomState status;
-	
+
+	private ChatroomState state;
+
 	private ArrayList<IChatroomListener> listeners = new ArrayList<>();
 
-    /**
-     *
-     * @return all available Chatrooms
-     */
+	/**
+	 * @return all available Chatrooms
+	 */
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<>();
 
 		Cursor c = model.db.query(Chatrooms.TABLE, Chatrooms.COLS, null, null, null, null, null);
-		
+
 		while (c.moveToNext()) {
 			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), model);
 			room.refresh();
 			out.add(room);
 		}
 
-		Log.i(CLASS, "Restored "+ out.size() +" Chatrooms");
+		Log.i(CLASS, "Restored " + out.size() + " Chatrooms");
 		return out;
 	}
 
@@ -84,7 +79,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		db.delete(Chatrooms.TABLE, null, null);
 
-		for (Chatroom c: chatrooms) {
+		for (Chatroom c : chatrooms) {
 			ContentValues insert = new ContentValues();
 			insert.put(Chatrooms.KEY_ID, c.id);
 			insert.put(Chatrooms.KEY_NAME, c.name);
@@ -93,26 +88,27 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 	}
 
-	private Chatroom(int id, String name, Model model) {
+	public Chatroom(int id, String name, Model model) {
 		this(id, name, model, 0);
 	}
-	
+
 	private Chatroom(int id, String name, Model model, long lastRefresh) {
 		this.id = id;
 		this.name = name;
 		this.model = model;
 		this.lastRefresh = lastRefresh;
 
-		THIS = CLASS +" "+ id;
+		THIS = CLASS + " " + id;
 
-		Cursor c = model.db.query(Chats.TABLE, Chats.COLS, Chats.FOREIGN_ROOM+"="+id, null, null, null, Chats.KEY_ID +" DESC", "1");
+		Cursor c = model.db.query(Chats.TABLE, Chats.COLS, Chats.FOREIGN_ROOM + "=" + id, null, null, null, Chats.KEY_ID + " DESC", "1");
 
 		if (c.moveToNext()) {
-			this.lastId =  c.getInt(0);
+			this.lastId = c.getInt(0);
 		}
 		c.close();
 
-		Log.i(THIS, "Chatroom restored: "+ id +", mostRecent:"+ lastId +", lastRefresh:"+ lastRefresh);
+		Log.i(THIS, "Chatroom restored: " + id + ", mostRecent:" + lastId + ", lastRefresh:" + lastRefresh);
+		state = ChatroomState.Ready;
 	}
 
 	@Override
@@ -124,24 +120,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		return id == chatroom.id;
 	}
-
-	public static class ChatroomConverter extends JSONConverter<Chatroom> {
-		
-		private Model model;
-
-		public ChatroomConverter(Model model) {
-			this.model = model;
-		}
-		
-		@Override
-		public Chatroom doConvert(JSONObject o) throws JSONException {
-			int i = o.getInt(de.rallye.model.structures.Chatroom.CHATROOM_ID);
-			String name = o.getString(de.rallye.model.structures.Chatroom.NAME);
-			
-			return new Chatroom(i, name, model);
-		}
-	}
-
 
 	// Implementation
 	@Override
@@ -165,30 +143,32 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			err.notLoggedIn();
 			return;
 		}
-		if (status != ChatroomState.Ready) {
+		if (state != ChatroomState.Ready) {
 			err.concurrentRefresh();
+			return;
 		}
-		
+
 		try {
-			setChatStatus(ChatroomState.Refreshing);
+			setState(ChatroomState.Refreshing);
 
 			model.exec.execute(new JSONArrayRequestExecutor<>(model.factory.chatRefreshRequest(id, lastRefresh), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
 	}
-	
+
 	private void chatRefreshResult(RequestExecutor<List<ChatEntry>, ?> r) {
-		if (r.isSuccessful()){
+		if (r.isSuccessful()) {
 			List<ChatEntry> res = r.getResult();
 
 			if (res.size() > 0) {
 				saveChats(res);
 			} else
 				Log.i(THIS, "No new Entries");
-			setChatStatus(ChatroomState.Ready);
+			setState(ChatroomState.Ready);
 		} else {
 			err.asyncTaskResponseError(r.getException());
+			setState(ChatroomState.Ready);
 			model.commError(r.getException());
 		}
 	}
@@ -196,7 +176,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	@Override
 	public void addChat(ChatEntry chatEntry) {
 		if (chatEntry.chatID <= this.lastId) {
-			Log.w(THIS, "Received Chat via Push that was already in the DB: "+ chatEntry.chatID);
+			Log.w(THIS, "Received Chat via Push that was already in the DB: " + chatEntry.chatID);
 			return;
 		}
 
@@ -207,7 +187,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 //		List<ChatEntry> upd = new ArrayList<>();
 //		upd.add(chatEntry);
 
-		Log.i(THIS, "Pushed: "+ chatEntry);
+		Log.i(THIS, "Pushed: " + chatEntry);
 
 //		notifyChatsAdded(upd);
 		notifyChatsChanged();
@@ -219,7 +199,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		fillContentValues(update, chatEntry);
 
-		model.db.update(Chats.TABLE, update, Chats.KEY_ID+"="+chatEntry.chatID, null);
+		model.db.update(Chats.TABLE, update, Chats.KEY_ID + "=" + chatEntry.chatID, null);
 
 		setLast(chatEntry.timestamp, 0);
 
@@ -286,19 +266,20 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	/**
 	 * Save ChatEntries to DB
+	 *
 	 * @param entries All entries that have a higher chatID than this.lastID will be saved to DB
 	 */
 	private synchronized void saveChats(List<ChatEntry> entries) {
 		SQLiteDatabase db = model.db;
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
-		SQLiteStatement s = db.compileStatement("INSERT INTO "+ Chats.TABLE +
-				" ("+ DatabaseHelper.strStr(Chats.COLS) +") VALUES (?, ?, ?, ?, ?, ?, "+ id +")");
-		
+		SQLiteStatement s = db.compileStatement("INSERT INTO " + Chats.TABLE +
+				" (" + DatabaseHelper.strStr(Chats.COLS) + ") VALUES (?, ?, ?, ?, ?, ?, " + id + ")");
+
 		int chatId;
 
 		try {
 			ChatEntry c;
-			for (Iterator<ChatEntry> i = entries.iterator(); i.hasNext();) {
+			for (Iterator<ChatEntry> i = entries.iterator(); i.hasNext(); ) {
 				c = i.next();
 
 				if (c.chatID <= lastId) {
@@ -307,8 +288,8 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 				}
 
 				try {
-	//				Log.d(THIS, "Inserted "+c+" in Messages");
-					
+					//				Log.d(THIS, "Inserted "+c+" in Messages");
+
 					s.bindLong(1, c.chatID);
 					s.bindLong(2, c.timestamp);
 					s.bindLong(3, c.groupID);
@@ -321,19 +302,19 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 						s.bindNull(6);
 
 					chatId = (int) s.executeInsert();
-					
-	//				Log.d(THIS, "Inserted "+c+" in Chats");
+
+					//				Log.d(THIS, "Inserted "+c+" in Chats");
 
 					if (chatId != c.chatID)
 						throw new SQLDataException();
-					
+
 				} catch (Exception e) {
 					Log.e(THIS, "Single Insert failed", e);
 				}
 			}
-			
+
 			if (entries.size() > 0) {
-				ChatEntry last = entries.get(entries.size()-1);
+				ChatEntry last = entries.get(entries.size() - 1);
 
 				setLast(last.timestamp, last.chatID);
 			}
@@ -343,9 +324,9 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		} finally {
 			s.close();
 		}
-		
-		Log.i(THIS, "Received "+ entries.size() +" new Chats in Chatroom "+ this.id +" since "+ this.lastRefresh +"");
-		
+
+		Log.i(THIS, "Received " + entries.size() + " new Chats in Chatroom " + this.id + " since " + this.lastRefresh + "");
+
 //		notifyChatsAdded(entries);
 		notifyChatsChanged();
 	}
@@ -366,26 +347,26 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			if (refresh > lastRefresh)
 				lastRefresh = refresh;
 			else
-				Log.e(THIS, "Outdated lastID: old:"+ lastId +", new: "+ id);
+				Log.e(THIS, "Outdated lastID: old:" + lastId + ", new: " + id);
 		}
 
 		if (id > 0) {
 			if (id > lastId)
 				lastId = id;
 			else
-				Log.e(THIS, "Outdated lastID: old:"+ lastId +", new: "+ id);
+				Log.e(THIS, "Outdated lastID: old:" + lastId + ", new: " + id);
 		}
 	}
 
-	private void setChatStatus(final ChatroomState newState) {
-		status = newState;
+	private void setState(final ChatroomState newState) {
+		state = newState;
 
-		Log.i(THIS, "Status: "+ newState);
+		Log.i(THIS, "Status: " + newState);
 
 		model.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				for (IChatroomListener l: listeners) {
+				for (IChatroomListener l : listeners) {
 					l.onChatStateChanged(newState);
 				}
 			}
@@ -394,7 +375,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public ChatroomState getChatStatus() {
-		return status;
+		return state;
 	}
 
 	@Override
@@ -417,7 +398,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 //		Log.i(THIS, "Chats requested");
 //		callback.chatsProvided(getAllChats());
 //	}
-	
+
 //	private void notifyChatsEdited(final List<ChatEntry> entries) {
 //		model.uiHandler.post(new Runnable() {
 //			@Override
@@ -428,7 +409,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 //			}
 //		});
 //	}
-	
+
 //	private void notifyChatsAdded(final List<ChatEntry> entries) {
 //		model.uiHandler.post(new Runnable() {
 //			@Override
@@ -444,7 +425,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		model.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				for(IChatroomListener l: listeners) {
+				for (IChatroomListener l : listeners) {
 					l.onChatsChanged();
 				}
 			}
@@ -455,7 +436,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		model.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				for(IChatroomListener l: listeners) {
+				for (IChatroomListener l : listeners) {
 					l.onPostStateChange(postID, state, chatEntry);
 				}
 			}
@@ -466,7 +447,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		model.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				for (IChatroomListener l: listeners) {
+				for (IChatroomListener l : listeners) {
 					l.onChatsChanged();
 				}
 			}
@@ -532,19 +513,19 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public Cursor getChatCursor() {
-		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
-				new String[]{Chats.KEY_ID +" AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
-		Log.i(THIS, "new Cursor: "+ c.getCount() +" rows");
+		Cursor c = model.db.query(Chats.TABLE + " AS c LEFT JOIN " + Groups.TABLE + " AS g USING(" + Chats.FOREIGN_GROUP + ") LEFT JOIN " + Users.TABLE + " AS u USING(" + Chats.FOREIGN_USER + ")",
+				new String[]{Chats.KEY_ID + " AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c." + Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID + "=" + id, null, null, null, Chats.KEY_TIME);
+		Log.i(THIS, "new Cursor: " + c.getCount() + " rows");
 		return c;
 	}
-	
+
 	private class PictureGallery extends AbstractPictureGallery {
-		
+
 		public PictureGallery(int initialPictureID) {
 			this.pictures = new ArrayList<>();
-			
-			Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE+" <> 0 AND "+Chats.FOREIGN_ROOM+" = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
-			
+
+			Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+
 			int picId, i = 0;
 			while (c.moveToNext()) {
 				picId = c.getInt(0);
@@ -556,22 +537,22 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			}
 			c.close();
 		}
-		
+
 		@Override
 		public String getPictureUrl(int pos) {
 			return model.getUrlFromImageId(this.pictures.get(pos), size);
 		}
-		
+
 	}
 
 	@Override
 	public IPictureGallery getPictureGallery(int initialPictureId) {
 		return new PictureGallery(initialPictureId);
 	}
-	
+
 	@Override
 	public void saveCurrentState(int lastRead) {//TODO
-		
+
 	}
 
 	@Override
@@ -582,20 +563,20 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	@Override
 	public int postChat(String msg, Integer pictureID) {
 		if (!model.isConnected()) {
-            err.notLoggedIn();
-            return -1;
-        }
-        try {
+			err.notLoggedIn();
+			return -1;
+		}
+		try {
 			int taskId = nextTaskId++;
-        	model.exec.execute(new JSONObjectRequestExecutor<>(model.factory.chatPostRequest(id, msg, pictureID), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<>(model.factory.chatPostRequest(id, msg, pictureID), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
-        } catch (HttpRequestException e) {
+		} catch (HttpRequestException e) {
 			err.requestException(e);
 			return -1;
-        }
+		}
 
 	}
-	
+
 	private void chatPostResult(RequestExecutor<ChatEntry, ?> r, int postID) {
 		if (r.isSuccessful()) {
 			ChatEntry chat = r.getResult();
@@ -610,20 +591,20 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			model.commError(null);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void executorResult(RequestExecutor<?, AdvTaskId> r, AdvTaskId callbackId) {
 		switch (callbackId.task) {
-		case CHAT_POST:
-			chatPostResult((RequestExecutor<ChatEntry, ?>) r, callbackId.id);
-			break;
-		case CHAT_REFRESH:
-			chatRefreshResult((RequestExecutor<List<ChatEntry>, ?>) r);
-			break;
-		default:
-			Log.e(THIS, "Unknown Executor Callback");
-			break;
+			case CHAT_POST:
+				chatPostResult((RequestExecutor<ChatEntry, ?>) r, callbackId.id);
+				break;
+			case CHAT_REFRESH:
+				chatRefreshResult((RequestExecutor<List<ChatEntry>, ?>) r);
+				break;
+			default:
+				Log.e(THIS, "Unknown Executor Callback");
+				break;
 		}
 	}
 }

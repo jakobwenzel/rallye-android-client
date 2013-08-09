@@ -48,6 +48,7 @@
 			android:layout_gravity="right"
 			android:src="@drawable/send_now_dark"
 			android:layout_alignParentBottom="true"
-			android:layout_alignParentRight="true" />
+			android:layout_alignParentRight="true"
+			android:background="?attr/selectableItemBackground"/>
 
 </RelativeLayout>

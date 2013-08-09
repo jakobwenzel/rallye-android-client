@@ -9,14 +9,9 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.View;
 import android.view.ViewConfiguration;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -29,24 +24,25 @@ import com.google.android.gcm.GCMRegistrar;
 import com.google.zxing.integration.android.IntentIntegrator;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
+import de.rallye.model.structures.Group;
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionStatus;
+import de.stadtrallye.rallyesoft.model.IModel.ConnectionState;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
-import de.stadtrallye.rallyesoft.uimodel.MenuItemImpl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends SherlockFragmentActivity implements IModelActivity,
-																		IModel.IModelListener, IProgressUI, ITabActivity {
+public class MainActivity extends SherlockFragmentActivity implements IModelActivity, IModel.IModelListener, IProgressUI, ITabActivity {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
@@ -137,7 +133,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		super.onStart();
 
 		setSupportProgressBarIndeterminateVisibility(false);
-		onConnectionStatusChange(model.getConnectionStatus());
+		onConnectionStateChange(model.getConnectionState());
 
 		tabManager.showTab();
 	}
@@ -161,12 +157,11 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// If the nav drawer is open, hide action items related to the content view
 		boolean drawerOpen = tabManager.isMenuOpen();
-
 		boolean act = model.isConnected();
-		MenuItem logout = menu.findItem(R.id.menu_logout);
-		logout.setVisible(!drawerOpen).setEnabled(act);
-		MenuItem share = menu.findItem(R.id.menu_share_barcode);
-		share.setVisible(!drawerOpen).setEnabled(act);
+
+		menu.findItem(R.id.menu_logout).setVisible(!drawerOpen).setEnabled(act);
+		menu.findItem(R.id.menu_share_barcode).setVisible(!drawerOpen).setEnabled(act);
+		menu.findItem(R.id.menu_reconnect).setVisible(!drawerOpen && !act);
 
 		return true;
 	}
@@ -186,6 +181,9 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 			case R.id.menu_share_barcode:
 				IntentIntegrator zx = new IntentIntegrator(this);
 				zx.shareText(model.getLogin().toJSON());
+				break;
+			case R.id.menu_reconnect:
+				model.reconnect();
 				break;
 			default:
 				return false;
@@ -275,11 +273,10 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	 * IModelListener
 	 */
 	@Override
-	public void onConnectionStatusChange(ConnectionStatus status) {
+	public void onConnectionStateChange(ConnectionState newState) {
 		ActionBar ab = getSupportActionBar();
-		switch (status) {//TODO: Add "No Network" status to UI (requires Model to have a "No Network" status) [Model has NoNetwork status, but never uses it] [Listen to Network Status Changes]
+		switch (newState) {//TODO: Add "No Network" status to UI (requires Model to have a "No Network" status) [Model has NoNetwork status, but never uses it] [Listen to Network Status Changes]
 			case Disconnecting:
-
 			case Connecting:
 				activateProgressAnimation();
 				break;
@@ -292,7 +289,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 		Drawable d = getResources().getDrawable(R.drawable.ic_launcher);
 
-		switch (status) {
+		switch (newState) {
 			case Connected:
 				d.setColorFilter(null);
 				ab.setIcon(d);
@@ -304,15 +301,25 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	}
 
 	@Override
-	public void onConnectionFailed(Exception e, ConnectionStatus lastStatus) {
-		Toast.makeText(this, getString(R.string.connection_failure), Toast.LENGTH_SHORT).show();
+	public void onConnectionFailed(Exception e, ConnectionState fallbackState) {
+		Toast.makeText(this, getString(R.string.connection_failure) +": "+ e.toString(), Toast.LENGTH_LONG).show();
 
-		onConnectionStatusChange(lastStatus);
+		onConnectionStateChange(fallbackState);
 	}
 
 	@Override
 	public void onServerConfigChange() {
 		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
+	}
+
+	@Override
+	public void onServerInfoChange(ServerInfo info) {
+
+	}
+
+	@Override
+	public void onAvailableGroupsChange(List<Group> groups) {
+
 	}
 
 	/**

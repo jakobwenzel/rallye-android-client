@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +25,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
@@ -50,8 +50,7 @@ public class ChatsFragment extends SherlockFragment {
 		
 		if (savedInstanceState != null)
 			currentTab = savedInstanceState.getInt(Std.TAB);
-		
-		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager());
+
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
 	}
@@ -63,10 +62,6 @@ public class ChatsFragment extends SherlockFragment {
 		pager = (ViewPager) v.findViewById(R.id.pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
-
-		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
-//		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
 		
 		return v;
 	}
@@ -77,17 +72,20 @@ public class ChatsFragment extends SherlockFragment {
 		
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
-//			slidingMenu = ((SlidingFragmentActivity) getActivity()).getSlidingMenu();
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and extend SlidingFragmentActivity");
 		}
+
+		chatrooms = model.getChatrooms();
+		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager());
+		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
+//		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
 	}
 	
 	@Override
 	public void onStart() {
 		super.onStart();
-		
-		chatrooms = model.getChatrooms();
 		
 		pager.setCurrentItem(currentTab);
 	}
@@ -118,6 +116,14 @@ public class ChatsFragment extends SherlockFragment {
 		pictureMenuItem.setIcon(R.drawable.camera);
 		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 	}
+
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		boolean drawerOpen = ((ITabActivity) getActivity()).getTabManager().isMenuOpen();
+
+		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
+		menu.findItem(R.id.picture_menu).setVisible(!drawerOpen);
+	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -145,7 +151,7 @@ public class ChatsFragment extends SherlockFragment {
 	}
 	
 	private class ChatFragmentAdapter extends FragmentPagerAdapter {
-		
+
 		public ChatFragmentAdapter(FragmentManager fm) {
 			super(fm);
 		}
@@ -173,7 +179,7 @@ public class ChatsFragment extends SherlockFragment {
 
 		@Override
 		public int getCount() {
-			return chatrooms.size();
+			return (chatrooms != null)? chatrooms.size() : 0;
 		}
 		
 		@Override

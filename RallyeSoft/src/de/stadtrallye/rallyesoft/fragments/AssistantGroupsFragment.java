@@ -13,6 +13,7 @@ import com.actionbarsherlock.app.SherlockFragment;
 import java.util.List;
 
 import de.rallye.model.structures.Group;
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.GroupAdapter;
@@ -21,7 +22,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 /**
  * Created by Ramon on 19.06.13
  */
-public class AssistantGroupsFragment extends SherlockFragment implements IModel.IListAvailableCallback<Group> {
+public class AssistantGroupsFragment extends SherlockFragment implements IModel.IModelListener {
 
 	private IConnectionAssistant assistant;
 	private ListView list;
@@ -52,12 +53,19 @@ public class AssistantGroupsFragment extends SherlockFragment implements IModel.
 			throw new ClassCastException(getActivity().toString() + " must implement IConnectionAssistant");
 		}
 
-		if (groupAdapter == null) {
-			assistant.getModel().getAvailableGroups(this);
-		} else {
-			initList();
-			restoreChoice();
-		}
+		IModel model = assistant.getModel();
+		groupAdapter = new GroupAdapter(getActivity(), model.getAvailableGroups(), model);
+		list.setAdapter(groupAdapter);
+
+		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				assistant.setGroup((int) id);
+				assistant.next();
+			}
+		});
+
+		restoreChoice();
 	}
 
 	private void restoreChoice() {
@@ -68,30 +76,32 @@ public class AssistantGroupsFragment extends SherlockFragment implements IModel.
 		}
 	}
 
-	private void initList() {
-		list.setAdapter(groupAdapter);
 
-		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				assistant.setGroup((int) id);
-				assistant.next();
-			}
-		});
+	@Override
+	public void onConnectionStateChange(IModel.ConnectionState newState) {
+
 	}
 
 	@Override
-	public void dataAvailable(List<Group> groups) {
-		if (groups != null && groups.size() > 0) {
+	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
+		Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
+		assistant.back();
+	}
 
-			groupAdapter = new GroupAdapter(getActivity(), groups, assistant.getModel());
+	@Override
+	public void onServerConfigChange() {
 
-			initList();
+	}
 
-			restoreChoice();
-		} else {
-			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
-			assistant.back();
-		}
+	@Override
+	public void onServerInfoChange(ServerInfo info) {
+
+	}
+
+	@Override
+	public void onAvailableGroupsChange(List<Group> groups) {
+		groupAdapter.changeGroups(groups);
+
+		restoreChoice();
 	}
 }
