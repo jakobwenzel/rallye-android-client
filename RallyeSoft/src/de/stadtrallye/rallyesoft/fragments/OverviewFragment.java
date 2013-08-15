@@ -14,17 +14,20 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+
+import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
 public class OverviewFragment extends SherlockFragment implements IModel.IModelListener {
 
 	@SuppressWarnings("unused")
 	private static final String THIS = OverviewFragment.class.getSimpleName();
 
-	private IModel model;
 	private TextView connectionState;
 	private TextView serverDesc;
 	private TextView serverName;
+	private TextView serverVer;
+
+	private IModel model;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -40,30 +43,22 @@ public class OverviewFragment extends SherlockFragment implements IModel.IModelL
 		connectionState = (TextView) v.findViewById(R.id.server_status);
 		serverName = (TextView) v.findViewById(R.id.server_name);
 		serverDesc = (TextView) v.findViewById(R.id.server_desc);
+		serverVer = (TextView) v.findViewById(R.id.server_ver);
 
 		return v;
-	}
-
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-
-		try {
-			model = ((IModelActivity) getActivity()).getModel();
-		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
-		}
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
+		model = getModel(getActivity());
+
 		onConnectionStateChange(model.getConnectionState());
 		if (model.getServerInfo() != null)
 			onServerInfoChange(model.getServerInfo());
-		model.addListener(this);
 
+		model.addListener(this);
 	}
 
 	@Override
@@ -72,14 +67,36 @@ public class OverviewFragment extends SherlockFragment implements IModel.IModelL
 		model.removeListener(this);
 	}
 
+	private void showServerInfo(ServerInfo info) {
+		serverName.setText(info.name);
+		serverDesc.setText(info.description);
+		StringBuilder sb = new StringBuilder();
+		for (ServerInfo.Api api: info.api) {
+			sb.append(api.name).append(": ").append(api.version).append('\n');
+		}
+		sb.deleteCharAt(sb.length()-1);
+		serverVer.setText(sb.toString());
+	}
+
+	private void hideServerInfo() {
+		serverName.setText("");
+		serverDesc.setText("");
+		serverVer.setText("");
+	}
+
 	@Override
 	public void onConnectionStateChange(IModel.ConnectionState newState) {
-		connectionState.setText((newState == IModel.ConnectionState.Connected) ? R.string.connected : R.string.notConnected);
+		connectionState.setText(newState.toString());
+
+		if (newState == IModel.ConnectionState.Connected) {
+			showServerInfo(model.getServerInfo());
+		}
 	}
 
 	@Override
 	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
-		connectionState.setText(e.toString());
+		connectionState.setText(fallbackState +"\n"+ e.toString());
+		hideServerInfo();
 	}
 
 	@Override
@@ -89,8 +106,7 @@ public class OverviewFragment extends SherlockFragment implements IModel.IModelL
 
 	@Override
 	public void onServerInfoChange(ServerInfo info) {
-		serverName.setText(info.name);
-		serverDesc.setText(info.description +"\n"+ info.getApiAsString());
+		showServerInfo(info);
 	}
 
 	@Override

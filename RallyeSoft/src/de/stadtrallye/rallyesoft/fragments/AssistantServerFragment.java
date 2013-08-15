@@ -14,9 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.net.MalformedURLException;
 import java.util.List;
@@ -32,7 +30,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * 1. Page of ConnectionAssistant
  * Asks for Server details and tries the Connection (showing ServerInfo)
  */
-public class AssistantServerFragment extends SherlockFragment implements IModel.IModelListener {
+public class AssistantServerFragment extends SherlockFragment implements IModel.IModelListener, View.OnClickListener {
 
 	private IConnectionAssistant assistant;
 
@@ -71,25 +69,14 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				if (actionId == EditorInfo.IME_ACTION_SEND) {
 					test.callOnClick();
+					next.requestFocus();
 				}
 				return false;
 			}
 		});
 
 		test = (Button) v.findViewById(R.id.test);
-		test.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				IModel model = assistant.getModel();
-				try {
-					String server = getServer();
-					assistant.setServer(server);
-					loader.displayImage(model.getServerPictureURL(), srv_image);
-				} catch (MalformedURLException e) {
-					Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
-				}
-			}
-		});
+		test.setOnClickListener(this);
 
 		srv_image = (ImageView) v.findViewById(R.id.server_image);
 		srv_name = (TextView) v.findViewById(R.id.server_name);
@@ -104,12 +91,6 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		});
 
 		loader = ImageLoader.getInstance();
-		DisplayImageOptions disp = new DisplayImageOptions.Builder()
-				.build();
-		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getActivity())
-				.defaultDisplayImageOptions(disp)
-				.build();
-		loader.init(config);
 
 		return v;
 	}
@@ -148,7 +129,7 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		assistant.getModel().removeListener(this);
 	}
 
-	private String getServer() {//TODO: check validity per field
+	private String getServer() {
 		String protocol = this.protocol.getSelectedItem().toString();
 		String server = this.server.getText().toString();
 		String port = this.port.getText().toString();
@@ -162,13 +143,25 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 	}
 
 	@Override
+	public void onClick(View v) {
+		IModel model = assistant.getModel();
+		try {
+			String server = getServer();
+			assistant.setServer(server);
+			loader.displayImage(model.getServerPictureURL(), srv_image);
+		} catch (MalformedURLException e) {
+			Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	@Override
 	public void onConnectionStateChange(IModel.ConnectionState newState) {
 
 	}
 
 	@Override
 	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
-		if (fallbackState == IModel.ConnectionState.ServerNotAvailable) {
+		if (fallbackState == IModel.ConnectionState.TemporaryNotAvailable) {
 			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
 			next.setVisibility(View.GONE);
 		}

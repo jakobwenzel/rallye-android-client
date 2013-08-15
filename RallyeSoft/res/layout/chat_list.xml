@@ -19,17 +19,27 @@
 		android:clickable="true"
 		android:drawSelectorOnTop="true"
 		android:divider="@null"/>
+
+	<ImageView
+			android:id="@+id/picture_chosen"
+			android:layout_width="45dp"
+			android:layout_height="45dp"
+			android:layout_alignTop="@+id/edit_new_message"
+			android:layout_alignBottom="@+id/edit_new_message"
+			android:layout_alignParentLeft="true"
+			android:visibility="gone"/>
 	    
 	<EditText
 		android:id="@+id/edit_new_message"
-		android:layout_width="0dp"
+		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:inputType="textMultiLine"
 		android:layout_gravity="bottom"
 		android:minHeight="45dp"
 		android:layout_alignParentBottom="true"
-		android:layout_alignParentLeft="true"
-		android:layout_toLeftOf="@+id/button_send" />
+		android:layout_alignParentLeft="false"
+		android:layout_toLeftOf="@+id/button_send"
+		android:layout_toRightOf="@+id/picture_chosen"/>
 
 	<ProgressBar
 		android:id="@+id/loading"
@@ -46,7 +56,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_gravity="right"
-			android:src="@drawable/send_now_dark"
+			android:src="@drawable/ic_send_now_dark"
 			android:layout_alignParentBottom="true"
 			android:layout_alignParentRight="true"
 			android:background="?attr/selectableItemBackground"/>

@@ -13,9 +13,10 @@ public final class Paths {
 	public static final String PICS = "pics";
 	public static final String AVATAR = "avatar";
 	public static final String INFO = "system/info";
-	public static final Object SERVER_PICTURE = "system/picture";
+	public static final String SERVER_PICTURE = "system/picture";
 	public static final String USERS = "users";
-	public static final String TASKS = "rallye/tasks";
+	public static final String TASKS = "tasks";
+	public static final String SUBMISSIONS = "tasks/all";
 
 	/**
 	 * return relative path to a picture

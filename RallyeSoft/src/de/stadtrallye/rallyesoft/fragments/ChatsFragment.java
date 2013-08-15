@@ -3,9 +3,6 @@ package de.stadtrallye.rallyesoft.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,32 +21,34 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
+import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
+
+import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
  * @author Ramon
  *
  */
-public class ChatsFragment extends SherlockFragment {
+public class ChatsFragment extends SherlockFragment implements IPictureTakenListener {
 	
 	private static final String THIS = ChatsFragment.class.getSimpleName();
-	
-	private IModel model;
+
+	private List<? extends IChatroom> chatrooms;
 	private ViewPager pager;
 	private PagerSlidingTabStrip indicator;
-	private ChatFragmentAdapter fragmentAdapter;
-	private List<? extends IChatroom> chatrooms;
-	private int currentTab = 0;
-	
-	
+	private ChatroomPagerAdapter fragmentAdapter;
+	private int currentTab;
+	private Picture picture = null;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		if (savedInstanceState != null)
-			currentTab = savedInstanceState.getInt(Std.TAB);
+//		if (savedInstanceState != null)
+//			currentTab = savedInstanceState.getInt(Std.TAB);
 
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
@@ -67,33 +66,35 @@ public class ChatsFragment extends SherlockFragment {
 	}
 	
 	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-		
-		try {
-			model = ((IModelActivity) getActivity()).getModel();
-		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and extend SlidingFragmentActivity");
-		}
-
-		chatrooms = model.getChatrooms();
-		fragmentAdapter = new ChatFragmentAdapter(getChildFragmentManager());
-		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
-//		indicator.setOnPageChangeListener(new SlidingMenuHelper(slidingMenu));
-	}
-	
-	@Override
 	public void onStart() {
 		super.onStart();
-		
-		pager.setCurrentItem(currentTab);
+
+		IModel model = getModel(getActivity());
+		chatrooms = model.getChatrooms();
+
+		fragmentAdapter = new ChatroomPagerAdapter(getChildFragmentManager(), chatrooms);
+		pager.setAdapter(fragmentAdapter);
+		indicator.setViewPager(pager);
+
+
+		Bundle args = getArguments(); // Open specific Chatroom
+		if (args != null) {
+			int room = args.getInt(Std.CHATROOM, -1);
+
+			if (room > -1) {
+				int pos = chatrooms.indexOf(model.getChatroom(room));
+				pager.setCurrentItem(pos);
+			}
+		}
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
-		
+
+		fragmentAdapter = null;
+		chatrooms = null;
+
 		currentTab = pager.getCurrentItem();
 	}
 	
@@ -101,19 +102,34 @@ public class ChatsFragment extends SherlockFragment {
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		
-		outState.putInt(Std.TAB, pager.getCurrentItem());
+//		outState.putInt(Std.TAB, pager.getCurrentItem());
 	}
-	
+
+	@Override
+	public void pictureTaken(Picture picture) {
+		this.picture = picture;
+	}
+
+	@Override
+	public Picture getPicture() {
+		return picture;
+	}
+
+	@Override
+	public void sentPicture() {
+		picture = null;
+	}
+
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
 		
-		refreshMenuItem.setIcon(R.drawable.refresh);
+		refreshMenuItem.setIcon(R.drawable.ic_refresh_light);
 		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 		
-		MenuItem pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.photo);
+		MenuItem pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.take_picture);
 
-		pictureMenuItem.setIcon(R.drawable.camera);
+		pictureMenuItem.setIcon(R.drawable.ic_camera_light);
 		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 	}
 
@@ -149,75 +165,4 @@ public class ChatsFragment extends SherlockFragment {
 			return false;
 		}
 	}
-	
-	private class ChatFragmentAdapter extends FragmentPagerAdapter {
-
-		public ChatFragmentAdapter(FragmentManager fm) {
-			super(fm);
-		}
-		
-		/**
-		 * Needed so the FragmentManager can distinguish tabs of different chatrooms (, if re logging in as different user)
-		 * Default behavior, will name Fragments after their position
-		 */
-		@Override
-		public long getItemId(int position) {
-			return chatrooms.get(position).getID();
-		}
-
-		@Override
-		public Fragment getItem(int pos) {
-			ChatroomFragment f;
-
-			f = new ChatroomFragment();
-			Bundle b = new Bundle();
-			b.putInt(Std.CHATROOM, chatrooms.get(pos).getID());
-			f.setArguments(b);
-
-			return f;
-		}
-
-		@Override
-		public int getCount() {
-			return (chatrooms != null)? chatrooms.size() : 0;
-		}
-		
-		@Override
-		public int getItemPosition(Object object) {
-			return POSITION_UNCHANGED;
-		}
-		
-		@Override
-		public CharSequence getPageTitle(int pos) {
-			return chatrooms.get(pos).getName();
-		}
-
-	}
-	
-//	private class SlidingMenuHelper implements OnPageChangeListener {
-//
-//		private SlidingMenu slidingMenu;
-//
-//		public SlidingMenuHelper(SlidingMenu slidingMenu) {
-//			this.slidingMenu = slidingMenu;
-//		}
-//
-//		@Override
-//		public void onPageScrollStateChanged(int arg0) { }
-//
-//		@Override
-//		public void onPageScrolled(int arg0, float arg1, int arg2) { }
-//
-//		@Override
-//		public void onPageSelected(int position) {
-//			switch (position) {
-//			case 0:
-//				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
-//				break;
-//			default:
-//				slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
-//				break;
-//			}
-//		}
-//	}
 }

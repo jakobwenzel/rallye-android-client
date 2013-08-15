@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.uimodel;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -21,6 +22,7 @@ import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
 import de.stadtrallye.rallyesoft.fragments.TasksOverviewFragment;
 import de.stadtrallye.rallyesoft.fragments.TasksPagerFragment;
 import de.stadtrallye.rallyesoft.fragments.TurnFragment;
+import de.stadtrallye.rallyesoft.fragments.WaitForModelFragment;
 import de.stadtrallye.rallyesoft.fragments.WelcomeFragment;
 import de.stadtrallye.rallyesoft.model.IModel;
 
@@ -37,9 +39,10 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	public static final int TAB_TASKS = 3;
 	public static final int TAB_NEXT_MOVE = 4;
 	public static final int TAB_CHAT = 5;
+	public static final int TAB_WAIT_FOR_MODEL = 6;
 	public static final int TAB_TASKS_DETAILS = 100;
 
-	public static final int[] MENU_ORDER = {TAB_WELCOME, TAB_OVERVIEW, TAB_MAP, TAB_TASKS, TAB_NEXT_MOVE, TAB_CHAT};//TODO: currently cannot change, because the order in which they are in are used as IDs
+	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, TAB_NEXT_MOVE, TAB_TASKS, TAB_MAP};
 
 	private final FragmentActivity activity;
 	protected final IModel model;
@@ -56,7 +59,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		this.model = model;
 		this.drawerLayout = drawerLayout;
 
-		drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, R.drawable.ic_drawer, R.string.menu_drawer_open, R.string.menu_drawer_close) {
+		drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, R.drawable.ic_drawer_light, R.string.menu_drawer_open, R.string.menu_drawer_close) {
 
 			/** Called when a drawer has settled in a completely closed state. */
 			public void onDrawerClosed(View view) {
@@ -68,6 +71,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 			public void onDrawerOpened(View drawerView) {
 				RallyeTabManager.this.activity.getActionBar().setTitle(R.string.dash_menu);
 				RallyeTabManager.this.activity.invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+//				dashboard.inv
 			}
 		};
 
@@ -81,26 +85,26 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		tabs.put(3, new Tab<>("tasks", TasksOverviewFragment.class, R.string.tasks, false));
 		tabs.put(4, new Tab<>("next_move", TurnFragment.class, R.string.next_move, false));
 		tabs.put(5, new Tab<>("chat", ChatsFragment.class, R.string.chat, true));
+		tabs.put(6, new Tab<>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, false));
 
 		tabs.put(100, new Tab<>("tasks_details", TasksPagerFragment.class, R.string.tasks, false));
 
 
 
 		List<String> nav = new ArrayList<>();
-		for (int i: MENU_ORDER) {
+		for (int i: menu) {
 			nav.add(activity.getString(tabs.get(i).titleId));
 		}
 
 		dashboard = (ListView) activity.findViewById(R.id.left_drawer);
-		//TODO: own Adapter to disable elements if offline/highlight current element and set the SlidingMenu selector as soon as the first View has been instantiated
-		ArrayAdapter<String> dashAdapter = new ArrayAdapter<>(activity, R.layout.dashboard_item, android.R.id.text1, nav);
+		ArrayAdapter<String> dashAdapter = new MenuAdapter(activity, nav);
 		dashboard.setAdapter(dashAdapter);
 		dashboard.setOnItemClickListener(this);
 	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		switchToTab(position);
+		switchToTab(menu[position]);
 		drawerLayout.closeDrawer(dashboard);
 	}
 
@@ -111,8 +115,6 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 	@Override
 	protected void setSubMode(boolean subTab) {
-		super.setSubMode(subTab);
-
 		drawerToggle.setDrawerIndicatorEnabled(!subTab);
 		drawerLayout.setDrawerLockMode((subTab)? DrawerLayout.LOCK_MODE_LOCKED_CLOSED : DrawerLayout.LOCK_MODE_UNLOCKED);
 	}
@@ -122,7 +124,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		if (super.onAndroidHome())
 			return true;
 
-		drawerToggle.onOptionsItemSelected(new MenuItemImpl());
+		drawerToggle.onOptionsItemSelected(new HomeMenuItem());
 
 		return true;
 	}
@@ -144,6 +146,8 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 		if (currentTab == null)
 			currentTab = (model.isEmpty())? TAB_WELCOME : TAB_OVERVIEW;
+
+		setSubMode(parentTab != null);
 	}
 
 	@Override
@@ -175,5 +179,22 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	@Override
 	protected void switchFailedNotSupported() {
 		Toast.makeText(context, context.getString(R.string.unsupported_link), Toast.LENGTH_SHORT).show();
+	}
+
+	private class MenuAdapter extends ArrayAdapter<String> {
+
+		public MenuAdapter(Context context, List<String> menu) {
+			super(context, R.layout.dashboard_item, android.R.id.text1, menu);
+		}
+
+		@Override
+		public boolean areAllItemsEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isEnabled(int position) {
+			return checkCondition(tabs.get(menu[position]));
+		}
 	}
 }

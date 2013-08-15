@@ -32,7 +32,7 @@ public class UploadService extends IntentService {
 	public UploadService() {
 		super("RallyePictureUpload");
 		
-		this.model = Model.getModel(this);
+		this.model = Model.getInstance(this);
 	}
 	
 	@Override
@@ -62,7 +62,7 @@ public class UploadService extends IntentService {
 			con.setDoOutput(true);
 
 			NotificationCompat.Builder note = new NotificationCompat.Builder(this)
-					.setSmallIcon(R.drawable.upload)
+					.setSmallIcon(R.drawable.ic_upload_light)
 					.setContentTitle(getString(R.string.uploading) + "...")
 					.setContentText(picture);
 

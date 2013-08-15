@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
@@ -7,7 +8,6 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.view.View;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -137,7 +137,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem scan_qr = menu.add(Menu.NONE, R.id.scan_qr_login, 10, R.string.scan_barcode);
-		scan_qr.setIcon(R.drawable.scan_qr);
+		scan_qr.setIcon(R.drawable.ic_scan_qr_light);
 		scan_qr.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 
 		return true;
@@ -287,14 +287,14 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	@Override
 	public void finish(boolean acceptNewConnection) {
 		if (acceptNewConnection && model.isConnected()) {
-			Model.switchToNew(model);
+			model.acceptModel();
 			model = null;
 		} else {
-			model.onDestroy();
+			model.destroy();
 			model = null;
 		}
 
-		setResult(1);
+		setResult(Activity.RESULT_CANCELED);
 
 		super.finish();
 	}
@@ -302,7 +302,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	@Override
 	protected void onDestroy() {
 		if (model != null)
-			model.onDestroy();
+			model.destroy();
 
 		super.onDestroy();
 	}

@@ -1,6 +1,7 @@
 package de.stadtrallye.rallyesoft;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -21,6 +22,8 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
 import com.google.android.gcm.GCMRegistrar;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
 
 import java.lang.reflect.Field;
@@ -35,6 +38,7 @@ import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
@@ -50,6 +54,8 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	private boolean keepModel = false;
 	private boolean progressCircle = false;
 
+	private Integer lastTab;
+
 	private RallyeTabManager tabManager;
 	private DrawerLayout drawerLayout;
 
@@ -57,35 +63,10 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		initFrame();// Layout, Title, ProgressCircle etc.
-
-		// Ray's INIT
-		PushInit.ensureRegistration(this);
-		model = (IModel) getLastCustomNonConfigurationInstance();
-		if (model == null)
-			model = Model.getModel(getApplicationContext());
-		model.addListener(this);
-		keepModel = false;
-
-		tabManager = new RallyeTabManager(this, model, drawerLayout);
-		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
-
-		// Recover Last State
-		tabManager.restoreState(savedInstanceState);
-
-		forceOverflowMenu();
-
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			initNFC();
-		}
-
-	}
-
-	private ActionBar initFrame() {
-		// Title and Content
+		// Layout, Title, ProgressCircle etc.
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
-		setTitle(R.string.title_main);
+		setTitle(R.string.app_name);
 		setContentView(R.layout.main);
 
 		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -94,7 +75,52 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
 
-		return ab;
+		// Google Cloud Messaging Init
+		PushInit.ensureRegistration(this);
+
+		// Check if Google Play Services is working
+		int errorCode;
+		if ((errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this)) != ConnectionResult.SUCCESS)
+			GooglePlayServicesUtil.getErrorDialog(errorCode, this, 0).show();
+
+		// Initialize Model
+		model = (IModel) getLastCustomNonConfigurationInstance();
+		if (model == null)
+			model = Model.getInstance(getApplicationContext());
+		model.addListener(this);
+		keepModel = false;
+
+		// Manages all fragments that will be displayed as Tabs in this activity
+		tabManager = new RallyeTabManager(this, model, drawerLayout);
+		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
+		// Recover Last State
+		tabManager.restoreState(savedInstanceState);
+
+//		forceOverflowMenu(); // Force devices with hardware menu key to display the modern overflow menu
+
+		// Initialize NFC ability
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			initNFC();
+		}
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		Log.i(THIS, "Receiving Intent");
+
+		if (intent != null && intent.hasExtra(Std.TAB)) {
+			Log.i(THIS, "Receiving Intent with Tab");
+			if (intent.getStringExtra(Std.TAB).equals(Std.CHATROOM)) {
+				int chatroom = intent.getIntExtra(Std.CHATROOM, -1);
+				int chatID = intent.getIntExtra(Std.CHAT_ID, -1);
+				Bundle b = new Bundle();
+				b.putInt(Std.CHATROOM, chatroom);
+				b.putInt(Std.CHAT_ID, chatID);
+				tabManager.setArguments(RallyeTabManager.TAB_CHAT, b);
+				tabManager.switchToTab(RallyeTabManager.TAB_CHAT);
+			}
+		}
 	}
 
 	@TargetApi(14)
@@ -108,18 +134,18 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	/**
 	 * Force the Menu SoftButton even if hardware button present (only for 4.0 and greater)
 	 */
-	private void forceOverflowMenu() {
-		try {
-			ViewConfiguration config = ViewConfiguration.get(this);
-			Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
-			if (menuKeyField != null) {
-				menuKeyField.setAccessible(true);
-				menuKeyField.setBoolean(config, false);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	private void forceOverflowMenu() {
+//		try {
+//			ViewConfiguration config = ViewConfiguration.get(this);
+//			Field menuKeyField = ViewConfiguration.class.getDeclaredField("sHasPermanentMenuKey");
+//			if (menuKeyField != null) {
+//				menuKeyField.setAccessible(true);
+//				menuKeyField.setBoolean(config, false);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
@@ -157,11 +183,11 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// If the nav drawer is open, hide action items related to the content view
 		boolean drawerOpen = tabManager.isMenuOpen();
-		boolean act = model.isConnected();
+		boolean connected = model.isConnected();
 
-		menu.findItem(R.id.menu_logout).setVisible(!drawerOpen).setEnabled(act);
-		menu.findItem(R.id.menu_share_barcode).setVisible(!drawerOpen).setEnabled(act);
-		menu.findItem(R.id.menu_reconnect).setVisible(!drawerOpen && !act);
+		menu.findItem(R.id.menu_logout).setVisible(!drawerOpen && connected);
+		menu.findItem(R.id.menu_share_barcode).setVisible(!drawerOpen).setEnabled(connected);
+		menu.findItem(R.id.menu_reconnect).setVisible(!drawerOpen && model.canReconnect());
 
 		return true;
 	}
@@ -173,6 +199,8 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 				return tabManager.onAndroidHome();
 			case R.id.menu_login:
 				Intent intent = new Intent(this, ConnectionAssistant.class);
+				lastTab = tabManager.getCurrentTab();
+				tabManager.switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
 				startActivityForResult(intent, ConnectionAssistant.REQUEST_CODE);
 				break;
 			case R.id.menu_logout:
@@ -222,7 +250,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		model.removeListener(this);
 
 		if (!keepModel) // Only destroy the model if we do not need it again after the configuration change
-			model.onDestroy();
+			model.destroy();
 
 		GCMRegistrar.onDestroy(this);
 
@@ -232,12 +260,19 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == ConnectionAssistant.REQUEST_CODE) {
-			if (resultCode > 0) {
+			Log.i(THIS, "ConnectionAssistant finished with "+ resultCode);
+			if (resultCode == Activity.RESULT_OK) {
 				model.removeListener(this);
-				model = Model.getModel(getApplicationContext());
+				model = Model.getInstance(getApplicationContext());
 				model.addListener(this);
-				//TODO: force refresh
 			}
+			findViewById(R.id.content_frame).post(new Runnable() {
+				@Override
+				public void run() {
+					tabManager.switchToTab(lastTab);
+					lastTab = null;
+				}
+			});
 		} else if (data != null) {
 			Uri uri = data.getData();
 
@@ -257,9 +292,24 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 					Intent intent = new Intent(this, UploadService.class);
 					intent.putExtra(Std.PIC, imageFilePath);
 					intent.putExtra(Std.MIME, "image/jpeg");
-					String hash = String.valueOf(imageFilePath.hashCode());//TODO: use hash
+					final String hash = String.valueOf(imageFilePath.hashCode());
 					intent.putExtra(Std.HASH, hash);
 					startService(intent);
+
+					if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT) {
+						IPictureTakenListener chatTab = (IPictureTakenListener) tabManager.getActiveFragment();
+						chatTab.pictureTaken(new IPictureTakenListener.Picture() {
+							@Override
+							public String getPath() {
+								return imageFilePath;
+							}
+
+							@Override
+							public String getHash() {
+								return hash;
+							}
+						});
+					}
 				} catch (Exception e) {
 					Log.e(THIS, "Failed to select Picture", e);
 				}

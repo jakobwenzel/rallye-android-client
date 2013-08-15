@@ -8,7 +8,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 /**
  * Represents 1 Chatroom, belonging to a Model
- * Currently refreshes only manually, push-implementation can be external, calling addChat()
+ * Currently refreshes only manually, push-implementation can be external, calling pushChat()
  */
 public interface IChatroom {
 
@@ -31,15 +31,20 @@ public interface IChatroom {
 	void refresh();
 
 	/**
+	 * Clear everything and then execute {@link #refresh()}
+	 */
+	void resync();
+
+	/**
 	 * Save the UI state
 	 * @param lastRead the chatID of the last read chat
 	 */
-	void saveCurrentState(int lastRead);
+	void setLastReadId(int lastRead);
 
 	/**
-	 * @return the last Read saved by {@see saveCurrentState} chatID
+	 * @return the last Read saved by {@see setLastReadId} chatID
 	 */
-	int getLastState();
+	int getLastReadId();
 	
 	void addListener(IChatroomListener l);
 	void removeListener(IChatroomListener l);
@@ -58,9 +63,17 @@ public interface IChatroom {
 	int postChat(String msg, Integer pictureID);
 
 	/**
+	 * Post a new Chat to the Chatroom
+	 * @param msg the Text of the new chat
+	 * @param pictureHash the hash with which the picture is being uploaded in parallel
+	 * @return a unique id, with which to identify the status of the chat
+	 */
+	int postChatWithHash(String msg, String pictureHash);
+
+	/**
 	 * Manually add a chat (e.g. Received via Push)
 	 */
-	void addChat(ChatEntry chatEntry);
+	void pushChat(ChatEntry chatEntry);
 
 	/**
 	 * Manually edit a chat (e.g. Received via Push)
@@ -91,7 +104,7 @@ public interface IChatroom {
 		 * Callback for changes to the Chatrooms State
 		 * @param status the new ChatroomState
 		 */
-		public void onChatStateChanged(ChatroomState status);
+		public void onChatroomStateChanged(ChatroomState status);
 
 		/**
 		 * Callback after trying to post a new message

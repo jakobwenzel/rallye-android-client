@@ -13,9 +13,11 @@ import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 public interface IModel {
 
+	void acceptModel();
+
 	boolean isEmpty();
 
-	enum ConnectionState { NoNetwork, Disconnected, Connecting, Disconnecting, Connected, ServerNotAvailable, InternalConnected }
+	enum ConnectionState { None, Disconnected, Disconnecting, Connecting, InternalConnected, Connected, Invalid, TemporaryNotAvailable }
 
 	/**
 	 * Get the currently logged in User
@@ -92,9 +94,15 @@ public interface IModel {
 	void reconnect();
 
 	/**
+	 * If the Model can retry a connection
+	 * @return true, if we have everything we need to connect to a server
+	 */
+	boolean canReconnect();
+
+	/**
 	 * Download available chatrooms and the newest ServerConfig
 	 */
-	void checkConfiguration();
+	void refreshConfiguration();
 
 	/**
 	 * Get the list of all groups on the server
@@ -146,6 +154,8 @@ public interface IModel {
 	 */
 	String getServerPictureURL();
 
+	PictureIdResolver getPictureIdResolver();
+
 	/**
 	 * Put together the URL for pictureID
 	 * @param pictureID a valid pictureID (e.g. from chats)
@@ -162,7 +172,7 @@ public interface IModel {
 	/**
 	 * Either Disconnecting or Connecting
 	 */
-	boolean isConnectionChanging();
+//	boolean isConnectionChanging();
 
 	/**
 	 * Connected
@@ -170,14 +180,9 @@ public interface IModel {
 	boolean isConnected();
 
 	/**
-	 * Disconnected
-	 */
-	boolean isDisconnected();
-
-	/**
 	 * Terminate all running Tasks and Connections currently held by Model and subsidiaries
 	 */
-	void onDestroy();
+	void destroy();
 
 	/**
 	 * Listener for Model State

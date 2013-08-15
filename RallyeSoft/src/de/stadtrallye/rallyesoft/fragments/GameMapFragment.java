@@ -27,12 +27,13 @@ import java.util.Map.Entry;
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.common.SherlockMapFragment;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 
+import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 
 public class GameMapFragment extends SherlockMapFragment implements IMap.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
@@ -40,18 +41,17 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	private static final String THIS = GameMapFragment.class.getSimpleName();
 	
 	private enum Zoom { ToGame, ToBounds, ZoomCustom }
-	private Zoom zoom;
 	
 	private GoogleMap gmap;
-	private IModel model;
 	private IMap map;
-	private MenuItem refreshMenuItem;
 	private HashMap<Marker, Node> markers = new HashMap<>();
 
 	private LatLngBounds gameBounds;
-	private MenuItem centerMenuItem;
-	
 	private LatLngBounds currentBounds;
+	private Zoom zoom;
+
+	private MenuItem centerMenuItem;
+	private MenuItem refreshMenuItem;
 	
 	
 	@Override
@@ -76,19 +76,6 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	}
 	
 	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-		
-		try {
-			model = ((IModelActivity) getActivity()).getModel();
-			map = model.getMap();
-			
-		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
-		}
-	}
-	
-	@Override
 	public void onStart() {
 		super.onStart();
 		
@@ -99,6 +86,9 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 			gmap.setOnMapClickListener(this);
 			gmap.setOnCameraChangeListener(this);
 		}
+
+		IModel model = getModel(getActivity());
+		map = model.getMap();
 		
 		if (zoom == null) {
 			map.provideMap();
@@ -113,6 +103,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 		super.onStop();
 		
 		map.removeListener(this);
+		map = null;
 	}
 	
 	private void zoomMap() {
@@ -121,7 +112,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 			return;
 		}
 		
-		int padding = getResources().getDimensionPixelOffset(R.dimen.map_center_padding);
+		final int padding = getResources().getDimensionPixelOffset(R.dimen.map_center_padding);
 		
 		switch (zoom) {
 		case ToBounds:
@@ -138,11 +129,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		centerMenuItem = menu.add(Menu.NONE, R.id.center_menu, Menu.NONE, R.string.center);
-		centerMenuItem.setIcon(R.drawable.center);
+		centerMenuItem.setIcon(R.drawable.ic_center_light);
 		centerMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 		
 		refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, Menu.NONE, R.string.refresh);
-		refreshMenuItem.setIcon(R.drawable.refresh);
+		refreshMenuItem.setIcon(R.drawable.ic_refresh_light);
 		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 	}
 
@@ -150,15 +141,15 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	public void onPrepareOptionsMenu(Menu menu) {
 		boolean drawerOpen = ((ITabActivity) getActivity()).getTabManager().isMenuOpen();
 
-		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
-		menu.findItem(R.id.center_menu).setVisible(!drawerOpen);
+		refreshMenuItem.setVisible(!drawerOpen);
+		centerMenuItem.setVisible(!drawerOpen);
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.refresh_menu:
-			map.updateMap();
+			map.refresh();
 			return true;
 		case R.id.center_menu:
 			if (gameBounds != null) {

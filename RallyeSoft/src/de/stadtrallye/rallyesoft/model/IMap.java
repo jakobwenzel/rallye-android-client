@@ -16,7 +16,7 @@ public interface IMap {
 	/**
 	 * Force refresh from server
 	 */
-	void updateMap();
+	void refresh();
 
 	void addListener(IMapListener l);
 	void removeListener(IMapListener l);

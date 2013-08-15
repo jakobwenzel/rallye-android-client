@@ -1,15 +1,18 @@
 package de.stadtrallye.rallyesoft.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import de.rallye.model.structures.PictureSize;
 
-public interface IPictureGallery extends List<Integer> {
+public interface IPictureGallery extends Serializable {
 	
-	public int getInitialPosition();
+	int getInitialPosition();
+
+	int getCount();
 	
-	public PictureSize getImageSize();
-	public void setImageSize(PictureSize size);
+	PictureSize getImageSize();
+	void setImageSize(PictureSize size);
 	
-	public String getPictureUrl(int pos);
+	String getPictureUrl(int pos);
 }

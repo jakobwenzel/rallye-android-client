@@ -8,38 +8,44 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
-import de.stadtrallye.rallyesoft.ImageViewActivity;
+import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
+
+import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
 /**
  * One Chatroom, with input methods
  * @author Ramon
  *
  */
-public class ChatroomFragment extends SherlockFragment implements IChatroom.IChatroomListener, OnClickListener {
+public class ChatroomFragment extends SherlockFragment implements IChatroom.IChatroomListener, OnClickListener, OnItemClickListener, AbsListView.OnScrollListener {
 
 	private static final String THIS = ChatroomFragment.class.getSimpleName();
 	private static final boolean DEBUG = false;
 	
-	
-	private IModel model;
+
+	private int roomID;
+//	private IModel model;
 	private int[] lastPos = null; //[0] = line, [1] = px
 	private IChatroom chatroom;
 	
@@ -50,14 +56,20 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	private ImageButton send;
 	private EditText text;
 	private ProgressBar loading;
+	private ImageView chosen_picture;
+	private IPictureTakenListener parent;
 
-	
+
 	/**
 	 * retain savedInstanceState for when creating the list (ScrollState)
 	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		Bundle args = getArguments();
+		if (args != null)
+			roomID = args.getInt(Std.CHATROOM, -1);
 		
 		if (savedInstanceState != null)
 			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
@@ -72,65 +84,54 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		send = (ImageButton) v.findViewById(R.id.button_send);
 		text = (EditText) v.findViewById(R.id.edit_new_message);
 		loading = (ProgressBar) v.findViewById(R.id.loading);
+		chosen_picture = (ImageView) v.findViewById(R.id.picture_chosen);
 
 		send.setOnClickListener(this);
+		list.setOnItemClickListener(this);
 
 		return v;
 	}
-	
-	/**
-	 * get Model and method to show Progress from Activity
-	 * needs Activity to implement {@link IProgressUI} and {@link IModelActivity}
-	 */
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		
+
 		try {
-			model = ((IModelActivity) getActivity()).getModel();
 			ui = (IProgressUI) getActivity();
 		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
+			Log.i(THIS, "Activity must implement IProgressUI");
+			throw e;
 		}
-		
-		Bundle args = getArguments();
-		int roomId = -1;
-		if (args != null)
-			roomId = args.getInt(Std.CHATROOM, -1);
-		
-		chatroom = model.getChatroom(roomId);
-		
-		if (chatroom == null) {
-			throw new UnsupportedOperationException(THIS +" could not find the Model of Chatroom "+ savedInstanceState.getInt(Std.CHATROOM));
-		}
-
-		chatAdapter = new ChatCursorAdapter(getActivity(), null, model);
-		list.setAdapter(chatAdapter);
-        
-        restoreScrollState();
-        
-        list.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				Integer picID = chatAdapter.getPictureID(pos);
-				if (picID == null)
-					return;
-				
-				Intent intent = new Intent(getActivity(), ImageViewActivity.class);
-				intent.putExtra(Std.CHATROOM, chatroom.getID());
-				intent.putExtra(Std.IMAGE, picID);
-				startActivity(intent);
-			}
-		});
 	}
-	
+
 	/**
 	 * if we are logged in show progress and start asynchronous chat refresh
 	 */
 	@Override
 	public void onStart() {
 		super.onStart();
+
+		IModel model = getModel(getActivity());
+		chatroom = model.getChatroom(roomID);
+
+		if (chatroom == null) {
+			throw new IllegalArgumentException(THIS +" could not find the Model of Chatroom "+ roomID);
+		}
+
+		chatAdapter = new ChatCursorAdapter(getActivity(), null, model);
+		list.setAdapter(chatAdapter);
+		list.setOnScrollListener(this);//TODO: use chatroom.getLastReadId() (wrap cursorAdapter add extra line)
+
+		parent = (IPictureTakenListener) getParentFragment();
+		IPictureTakenListener.Picture pic = parent.getPicture();
+		if (pic != null) {
+			chosen_picture.setVisibility(View.VISIBLE);
+			ImageLoader.getInstance().displayImage("file://"+ pic.getPath(), chosen_picture);
+		} else {
+			chosen_picture.setVisibility(View.GONE);
+		}
+
+//        restoreScrollState();
 		
 		chatroom.addListener(this);
 		chatAdapter.changeCursor(chatroom.getChatCursor());
@@ -140,9 +141,9 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	public void onStop() {
 		super.onStop();
 		
-		saveScrollState();
+//		saveScrollState();
 		
-		chatroom.saveCurrentState(lastPos[0]);
+		chatroom.setLastReadId(lastPos[0]);
 		
 		chatroom.removeListener(this);
 	}
@@ -188,7 +189,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	}
 
 	@Override
-	public void onChatStateChanged(IChatroom.ChatroomState newStatus) {
+	public void onChatroomStateChanged(IChatroom.ChatroomState newStatus) {
 		switch (newStatus) {
 		case Refreshing:
 			ui.activateProgressAnimation();
@@ -207,10 +208,14 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 				text.getText().clear();
 				loading.setVisibility(View.GONE);
 				chatAdapter.changeCursor(chatroom.getChatCursor());
+				chosen_picture.setVisibility(View.GONE);
+				parent.sentPicture();
 				break;
 			case Failure:
 				loading.setVisibility(View.GONE);
 				Toast.makeText(getActivity(), getString(R.string.chat_post_failure), Toast.LENGTH_SHORT).show();
+				chosen_picture.setVisibility(View.GONE);
+				parent.sentPicture();
 				break;
 			case Retrying:
 				break;
@@ -221,8 +226,39 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	public void onClick(View v) {
 		Editable msg = text.getText();
 		if (msg.length() > 0) {
-			chatroom.postChat(msg.toString(), null);
-			loading.setVisibility(View.VISIBLE);
+			IPictureTakenListener.Picture pic = parent.getPicture();
+			if (pic != null) {
+				chatroom.postChatWithHash(msg.toString(), pic.getHash());
+				loading.setVisibility(View.VISIBLE);
+			} else {
+				chatroom.postChat(msg.toString(), null);
+			}
 		}
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+		Integer picID = chatAdapter.getPictureID(pos);
+		if (picID == null)
+			return;
+
+		Intent intent = new Intent(getActivity(), PictureGalleryActivity.class);
+		intent.putExtra(Std.PICTURE_GALLERY, chatroom.getPictureGallery(picID));
+//				intent.putExtra(Std.CHATROOM, chatroom.getID());
+//				intent.putExtra(Std.IMAGE, picID);
+		startActivity(intent);
+	}
+
+	@Override
+	public void onScrollStateChanged(AbsListView view, int scrollState) {
+		if (scrollState == SCROLL_STATE_IDLE) {
+			int lastPos = view.getLastVisiblePosition();
+			chatroom.setLastReadId(chatAdapter.getChatID(lastPos));
+		}
+	}
+
+	@Override
+	public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
 	}
 }

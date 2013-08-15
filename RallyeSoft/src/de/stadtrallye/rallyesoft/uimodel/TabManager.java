@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,8 @@ import de.stadtrallye.rallyesoft.common.Std;
  * Manages all fragments used as Tabs in an activity
  */
 public abstract class TabManager {
+
+	private static final String THIS = TabManager.class.getSimpleName();
 
 	protected final Context context;
 	private final FragmentManager fragmentManager;
@@ -41,9 +44,12 @@ public abstract class TabManager {
 	public void restoreState(Bundle state) {
 		if (state != null) {
 			currentTab = state.getInt(Std.TAB, defaultTab);
+			activeTab = tabs.get(currentTab);
 			parentTab = state.getInt(Std.SUB_TAB, -1);
-			if (parentTab == -1)
+			if (parentTab == -1) {
 				parentTab = null;
+			}
+			setSubMode(parentTab != null);
 		}
 	}
 
@@ -78,6 +84,14 @@ public abstract class TabManager {
 	public abstract void onPostCreate();
 
 	public abstract boolean isMenuOpen();
+
+	public int getCurrentTab() {
+		return currentTab;
+	}
+
+	public Fragment getActiveFragment() {
+		return activeTab.getFragment();
+	}
 
 	/**
 	 * Envelops a Fragment, reuses a already existing Fragment otherwise instantiates a new one
@@ -157,15 +171,18 @@ public abstract class TabManager {
 	protected abstract void switchFailedCondition();
 
 	public boolean openSubTab(int key, Bundle args) {
+		if (tabs.get(currentTab) != activeTab)
+			throw new IllegalStateException("Cannot switch to a Sub Tab before showTab() was executed! (setNextTab was executed!)");
+
 		Tab<?> tab = tabs.get(key);
 		tab.args = args;
 
 		try {
 			startTransaction(tab)
-//				.addToBackStack(null)
 				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
 			.commit();
 
+			parentTab = currentTab;
 			setSubMode(true);
 			setActiveTab(key, tab);
 
@@ -184,6 +201,7 @@ public abstract class TabManager {
 			.commit();
 
 			setActiveTab(parentTab, tab);
+			parentTab = null;
 			setSubMode(false);
 
 			return true;
@@ -192,12 +210,7 @@ public abstract class TabManager {
 		}
 	}
 
-	protected void setSubMode(boolean subTab) {
-		if (subTab)
-			parentTab = currentTab;
-		else
-			parentTab = null;
-	}
+	protected abstract void setSubMode(boolean subTab);
 
 	private FragmentTransaction startTransaction(Tab<?> tab) throws Exception {
 		if (!checkCondition(tab))

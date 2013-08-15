@@ -24,6 +24,7 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 
 	private IConnectionAssistant assistant;
 	private Button next;
+	private Button cancel;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -36,16 +37,10 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.assistant_complete, container, false);
 		next = (Button) v.findViewById(R.id.next);
-
 		next.setOnClickListener(this);
 
-		Button cancel = (Button) v.findViewById(R.id.cancel);
-		cancel.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				assistant.finish(false);
-			}
-		});
+		cancel = (Button) v.findViewById(R.id.cancel);
+		cancel.setOnClickListener(this);
 
 		return v;
 	}
@@ -59,25 +54,30 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IConnectionAssistant");
 		}
+	}
 
-		IModel model = assistant.getModel();
+	@Override
+	public void onStart() {
+		super.onStart();
 
-		model.addListener(this);
+		assistant.getModel().addListener(this);
 		assistant.login();
+
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 
-		if (assistant.getModel() != null)
-			assistant.getModel().removeListener(this);
 	}
 
 	@Override
 	public void onClick(View v) {
 		assistant.getModel().removeListener(this);
-		assistant.finish(true);
+		if (v == next)
+			assistant.finish(true);
+		else
+			assistant.finish(false);
 	}
 
 	@Override

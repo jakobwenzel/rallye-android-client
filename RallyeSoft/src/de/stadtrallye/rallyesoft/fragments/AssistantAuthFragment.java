@@ -26,6 +26,7 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 	private IConnectionAssistant assistant;
 	private EditText name;
 	private EditText pass;
+	private Button next;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -39,7 +40,7 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 		View v = inflater.inflate(R.layout.assistant_auth, container, false);
 		name = (EditText) v.findViewById(R.id.name);
 		pass = (EditText) v.findViewById(R.id.pass);
-		final Button next = (Button) v.findViewById(R.id.next);
+		next = (Button) v.findViewById(R.id.next);
 
 		next.setOnClickListener(this);
 

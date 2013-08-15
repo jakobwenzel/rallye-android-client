@@ -26,7 +26,7 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 	@Override
 	protected Map<Integer, Node> tryRun() throws Exception {
 		
-		nodes = JSONArray.getInstance(new JsonConverters.NodeConverter(), nodeRequest.execute()).toMap(new JsonConverters.NodeIndexer());
+		nodes = JSONArray.getInstance(new JsonConverters.NodeConverter(), nodeRequest.execute()).toMap(new JsonConverters.NodeIndexer(), null);
 		
 		edges = edgeRequest.executeJSONArray(new JsonConverters.EdgeConverter(nodes));
 		

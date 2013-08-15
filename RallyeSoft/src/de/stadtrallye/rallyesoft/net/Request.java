@@ -95,7 +95,7 @@ public class Request {
 		msg = conn.getResponseMessage();
 		
 		if (DEBUG)
-			Log.d(THIS, "Received Response Code: "+code);
+			Log.i(THIS, "Received Response Code: "+code);
 		
 		if (code >= 200 && code < 300) {
 			reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));

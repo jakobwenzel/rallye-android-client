@@ -1,4 +1,4 @@
-package de.stadtrallye.rallyesoft.fragments;
+package de.stadtrallye.rallyesoft.common;
 
 import android.app.Activity;
 
@@ -14,7 +14,7 @@ import static com.actionbarsherlock.app.SherlockFragmentActivity.OnCreateOptions
 import static com.actionbarsherlock.app.SherlockFragmentActivity.OnOptionsItemSelectedListener;
 import static com.actionbarsherlock.app.SherlockFragmentActivity.OnPrepareOptionsMenuListener;
 
-public class SherlockMapFragment extends SupportMapFragment implements OnCreateOptionsMenuListener, OnPrepareOptionsMenuListener, OnOptionsItemSelectedListener {
+public abstract class SherlockMapFragment extends SupportMapFragment implements OnCreateOptionsMenuListener, OnPrepareOptionsMenuListener, OnOptionsItemSelectedListener {
     private SherlockFragmentActivity mActivity;
 
     public SherlockFragmentActivity getSherlockActivity() {

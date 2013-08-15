@@ -1,9 +1,11 @@
 <component name="libraryTable">
   <library name="RallyeLibs">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/RallyeSoft/libs/universal-image-loader-1.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/RallyeSoft/libs/universal-image-loader-1.8.6.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/RallyeSoft/Resources/universal-image-loader-1.8.6-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

@@ -26,25 +26,23 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IChatroom;
-import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
-import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.widget.GalleryPager;
 
-public class ImageViewActivity extends SherlockActivity {
+public class PictureGalleryActivity extends SherlockActivity {
 	
-	private static final String THIS = ImageViewActivity.class.getSimpleName();
+	private static final String THIS = PictureGalleryActivity.class.getSimpleName();
 	
 	private GalleryPager pager;
-	private IModel model;
+//	private IModel model;
 	private ImageAdapter adapter;
 
-	private IChatroom chatroom;
+//	private IChatroom chatroom;
 	private IPictureGallery gallery;
 
 
@@ -63,11 +61,13 @@ public class ImageViewActivity extends SherlockActivity {
 		pager = (GalleryPager)findViewById(R.id.image_pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 
-		model = Model.getModel(getApplicationContext());
+//		model = Model.getInstance(getApplicationContext());
 		
-		Bundle b = getIntent().getExtras();
-		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
-		gallery = chatroom.getPictureGallery(b.getInt(Std.IMAGE));
+//		Bundle b = getIntent().getExtras();
+//		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
+//		gallery = chatroom.getPictureGallery(b.getInt(Std.IMAGE));
+
+		gallery = (IPictureGallery) getIntent().getSerializableExtra(Std.PICTURE_GALLERY);
 		
         adapter = new ImageAdapter();
         pager.setAdapter(adapter);
@@ -90,16 +90,6 @@ public class ImageViewActivity extends SherlockActivity {
 			inflater = getLayoutInflater();
 			
 			loader = ImageLoader.getInstance();
-			DisplayImageOptions disp = new DisplayImageOptions.Builder()
-				.cacheOnDisc()
-				.cacheInMemory() // Still unlimited Cache on Disk
-//				.showImageForEmptyUri(R.drawable.stub_image)
-				.build();
-			ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(ImageViewActivity.this)
-//				.enableLogging()
-				.defaultDisplayImageOptions(disp)
-				.build();
-	        loader.init(config);
 		}
 		
 		@Override
@@ -118,14 +108,20 @@ public class ImageViewActivity extends SherlockActivity {
 
 			loader.displayImage(gallery.getPictureUrl(position), imageView, new SimpleImageLoadingListener() {
 				@Override
-				public void onLoadingStarted() {
+				public void onLoadingStarted(String imageUri, View view) {
 					spinner.setVisibility(View.VISIBLE);
 				}
 
 				@Override
-				public void onLoadingFailed(FailReason failReason) {
+				public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
 					String message = null;
-					switch (failReason) {
+					switch (failReason.getType()) {
+						case DECODING_ERROR:
+							message = "Decoding Error";
+							break;
+						case NETWORK_DENIED:
+							message = "Network Error";
+							break;
 						case IO_ERROR:
 							message = "Input/Output error";
 							break;
@@ -136,14 +132,13 @@ public class ImageViewActivity extends SherlockActivity {
 							message = "Unknown error";
 							break;
 					}
-					Toast.makeText(ImageViewActivity.this, message, Toast.LENGTH_SHORT).show();
+					Toast.makeText(PictureGalleryActivity.this, message, Toast.LENGTH_SHORT).show();
 
 					spinner.setVisibility(View.GONE);
-					imageView.setImageResource(android.R.drawable.ic_delete);
 				}
 
 				@Override
-				public void onLoadingComplete(Bitmap loadedImage) {
+				public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
 					spinner.setVisibility(View.GONE);
 					
 				}
@@ -155,7 +150,7 @@ public class ImageViewActivity extends SherlockActivity {
 
 		@Override
 		public int getCount() {
-			return gallery.size();
+			return gallery.getCount();
 		}
 
 		@Override

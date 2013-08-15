@@ -2,6 +2,11 @@ package de.stadtrallye.rallyesoft.model;
 
 import android.database.Cursor;
 
+import java.util.*;
+import java.util.Map;
+
+import de.rallye.model.structures.Submission;
+
 /**
  * Models CallbackIds for a Rallye-type game
  *
@@ -11,7 +16,11 @@ public interface ITasks {
 	/**
 	 * Refresh the CallbackIds from the server
 	 */
-	void updateTasks();
+	void refresh();
+
+	void refreshSubmissions();
+
+	Map<Integer, List<Submission>> getSubmissions();
 
 	void addListener(ITasksListener l);
 	void removeListener(ITasksListener l);
@@ -38,10 +47,14 @@ public interface ITasks {
 
 	int getTaskPositionInCursor(int id);
 
+	int getLocationSpecificTasksCount();
+
 	/**
 	 * Callbacks
 	 */
 	public interface ITasksListener {
 		void taskUpdate();
+
+		void submissionsUpdate(Map<Integer, List<Submission>> submissions);
 	}
 }

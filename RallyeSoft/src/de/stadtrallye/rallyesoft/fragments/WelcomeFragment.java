@@ -13,7 +13,7 @@ import de.stadtrallye.rallyesoft.ConnectionAssistant;
 import de.stadtrallye.rallyesoft.R;
 
 /**
- * Created by Ramon on 22.06.13.
+ * Shown on first start, hints at ConnectionAssistant
  */
 public class WelcomeFragment extends SherlockFragment {
 

@@ -42,7 +42,7 @@ public class Std {
 	public static final String ROUND_TIME = "round_time";
 	public static final String START_TIME = "start_time";
 	public static final String CONNECTED = "connected";
-	public static final int GCM_NOTIFICATION = 1;
+	public static final int CHAT_NOTIFICATION = 1;
 
 	public static final String USER_ID = "user_id";
 	public static final String MAP_BOUNDS = "map_bounds";
@@ -51,4 +51,7 @@ public class Std {
 	public static final String SUB_TAB = "subTab";
 	public static final String DESCRIPTION = "description";
 	public static final String API = "api";
+	public static final String PICTURE_GALLERY = "pictureGallery";
+
+	public static final String CHAT_ID = "chatID";
 }

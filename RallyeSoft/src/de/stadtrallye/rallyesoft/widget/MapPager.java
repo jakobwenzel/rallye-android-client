@@ -7,7 +7,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * Created by Ramon on 05.08.13.
+ * ViewPager that will ignore TouchEvents above a certain View
  */
 @Deprecated
 public class MapPager extends ViewPager {

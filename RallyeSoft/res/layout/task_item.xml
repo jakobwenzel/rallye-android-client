@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-			  android:orientation="horizontal"
-			  android:layout_width="match_parent"
-			  android:layout_height="match_parent"
-			  android:descendantFocusability="blocksDescendants">
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:descendantFocusability="blocksDescendants"
+		android:padding="8dp">
 
 	<TextView
 			android:layout_width="0dp"
@@ -14,18 +15,12 @@
 			android:layout_gravity="center_vertical"
 			android:layout_weight="1" />
 
-	<View
-			android:layout_width="1dp"
-			android:layout_height="match_parent"
-			android:layout_marginTop="4dp"
-			android:layout_marginBottom="4dp"
-			android:background="@drawable/abs__list_divider_holo_light" /><!-- Fucking ActionBarSherlock!!!!, Supplement ?attr/dividerVertical -->
+	<CheckBox
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/checkBox"
+			android:layout_gravity="center"
+			android:checked="false"
+			android:enabled="false"/>
 
-	<ImageButton
-			android:layout_width="40dp"
-			android:layout_height="40dp"
-			android:id="@+id/locate"
-			android:layout_gravity="center_vertical|right"
-			android:src="@drawable/place_dark"
-			android:background="?attr/selectableItemBackground" />
 </LinearLayout>

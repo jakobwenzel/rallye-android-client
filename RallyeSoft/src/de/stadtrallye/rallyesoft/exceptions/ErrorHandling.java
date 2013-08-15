@@ -34,14 +34,6 @@ public class ErrorHandling {
 	public void notLoggedIn() {
 		Log.e(where, "Aborting, not logged in!");
 	}
-	
-	public void loggedIn() {
-		Log.e(where, "Aborting, still logged in!");
-	}
-	
-	public void loginInvalid(ServerLogin login) {
-		Log.e(where, "Invalid login: "+ login);
-	}
 
 	public void requestException(Exception e) {
 		Log.e(where, "Failed Request", e);
@@ -73,10 +65,6 @@ public class ErrorHandling {
 		Log.e(where, "Failed to insert into DB: "+ string);
 	}
 
-	public void logoutImpossible() {
-		Log.w(where, "Cannot logout: no server specified");
-	}
-
 	public void concurrentConnectionChange(String type) {
 		Log.e(where, "ConnectionState is changing, refusing: "+ type);
 	}
@@ -84,10 +72,6 @@ public class ErrorHandling {
 	public void connectionFailure(Exception e, IModel.ConnectionState fallbackState) {
 		e.printStackTrace();
 		Log.e(where,"fallback: "+ fallbackState);
-	}
-
-	public void serverNotSet() {
-		Log.e(where, "Server was not set");
 	}
 
 	public void concurrentRefresh() {

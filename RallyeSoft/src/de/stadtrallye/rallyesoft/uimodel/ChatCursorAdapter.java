@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import de.rallye.model.structures.GroupUser;
+import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
@@ -28,7 +29,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
 
 /**
- * Created by Ramon on 30.06.13
+ * ListAdapter for Chats from Cursor
  */
 public class ChatCursorAdapter extends CursorAdapter {
 
@@ -47,6 +48,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 		public TextView sender;
 		public TextView time;
 		public LinearLayout layout;
+		public ImageView msg_img;
 	}
 
 	public ChatCursorAdapter(Context context, Cursor cursor, IModel model) {
@@ -60,15 +62,6 @@ public class ChatCursorAdapter extends CursorAdapter {
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		this.loader = ImageLoader.getInstance();
-		DisplayImageOptions disp = new DisplayImageOptions.Builder()
-				.cacheOnDisc()
-				.cacheInMemory() //TODO: Still unlimited Cache on Disk
-				.showStubImage(R.drawable.stub_image)
-				.build();
-		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
-				.defaultDisplayImageOptions(disp)
-				.build();
-		loader.init(config);
 
 		this.converter = SimpleDateFormat.getDateTimeInstance();
 	}
@@ -84,6 +77,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 		mem.sender = (TextView) v.findViewById(R.id.msg_sender);
 		mem.msg = (TextView) v.findViewById(R.id.msg);
 		mem.time = (TextView) v.findViewById(R.id.time_sent);
+		mem.msg_img = (ImageView) v.findViewById(R.id.msg_img);
 
 		v.setTag(mem);
 
@@ -127,14 +121,20 @@ public class ChatCursorAdapter extends CursorAdapter {
 		mem.time.setText(converter.format(new Date(cursor.getLong(c.timestamp) * 1000L)));
 
 		int pictureID = cursor.getInt(c.pictureID);
-		//TODO: show the picture itself
+		if (pictureID != 0) {
+			mem.msg_img.setVisibility(View.VISIBLE);
+			loader.displayImage(model.getUrlFromImageId(pictureID, PictureSize.Mini), mem.msg_img);
+		} else {
+			mem.msg_img.setVisibility(View.GONE);
+//			loader.displayImage(null, mem.msg_img);
+		}
 
 		// ImageLoader jar
 		// ImageLoader must apparently be called for _EVERY_ entry
 		// When called with null or "" as URL, will display empty picture / default resource
 		// Otherwise ImageLoader will not be stable and start swapping images
 		loader.displayImage(model.getAvatarURL(groupID), (me)? mem.img_r : mem.img_l);
-		loader.displayImage(null, (!me)? mem.img_r : mem.img_l);
+//		loader.displayImage(null, (!me)? mem.img_r : mem.img_l);
 	}
 
 	/**
@@ -146,6 +146,12 @@ public class ChatCursorAdapter extends CursorAdapter {
 		Cursor cursor = getCursor();
 		cursor.moveToPosition(pos);
 		return (cursor.isNull(c.pictureID))? null : cursor.getInt(c.pictureID);
+	}
+
+	public int getChatID(int pos) {
+		Cursor cursor = getCursor();
+		cursor.moveToPosition(pos);
+		return (cursor.getInt(c.id));
 	}
 
 	@Override

@@ -59,15 +59,6 @@ public class ChatAdapter extends BaseAdapter {
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		
 		loader = ImageLoader.getInstance();
-		DisplayImageOptions disp = new DisplayImageOptions.Builder()
-			.cacheOnDisc()
-			.cacheInMemory() //TODO: Still unlimited Cache on Disk
-			.showStubImage(R.drawable.stub_image)
-			.build();
-		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
-			.defaultDisplayImageOptions(disp)
-			.build();
-        loader.init(config);
         
         converter = SimpleDateFormat.getDateTimeInstance();
 	}
@@ -89,10 +80,10 @@ public class ChatAdapter extends BaseAdapter {
 		
 //        if (v == null) {
             
-            v = inflator.inflate((s == Sender.Me)? R.layout.chat_item_right : R.layout.chat_item_left, null);
+//            v = inflator.inflate((s == Sender.Me)? R.layout.chat_item_right : R.layout.chat_item_left, null);
             
             mem = new ViewMem();
-			mem.img = (ImageView) v.findViewById(R.id.sender_img);
+//			mem.img = (ImageView) v.findViewById(R.id.sender_img);
             mem.sender = (TextView) v.findViewById(R.id.msg_sender);
             mem.msg = (TextView) v.findViewById(R.id.msg);
             mem.time = (TextView) v.findViewById(R.id.time_sent);

@@ -22,7 +22,7 @@ import de.stadtrallye.rallyesoft.model.IModel;
  * Adapter for showing the Groups available for login on a new server
  * Special customization to pre select a group if user revisits this tab, but already made a choice
  */
-public class GroupAdapter extends BaseAdapter {
+public class GroupListAdapter extends BaseAdapter {
 
 	private final IModel model;
 	private List<Group> groups;
@@ -37,7 +37,7 @@ public class GroupAdapter extends BaseAdapter {
 	}
 
 
-	public GroupAdapter(Context context, List<Group> groups, IModel model) {
+	public GroupListAdapter(Context context, List<Group> groups, IModel model) {
 //		this.context = context;
 		this.groups = groups;
 		this.model = model;
@@ -45,15 +45,6 @@ public class GroupAdapter extends BaseAdapter {
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		loader = ImageLoader.getInstance();
-		DisplayImageOptions disp = new DisplayImageOptions.Builder()
-				.showStubImage(R.drawable.stub_image)
-				.cacheInMemory()
-				.cacheOnDisc()
-				.build();
-		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
-				.defaultDisplayImageOptions(disp)
-				.build();
-		loader.init(config);
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import android.util.Log;
 
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.SimpleChatEntry;
+import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
@@ -129,6 +130,21 @@ public class RequestFactory {
 		}
 	}
 
+	public Request chatPostWithHashRequest(int chatroom, String msg, String pictureHash) throws HttpRequestException {
+		final URL url = getURL(Paths.CHATS+"/"+chatroom);
+		Request r = new Request(url, RequestType.PUT);
+
+		try {
+			r.putPost(new JSONObject()
+					.put(SimpleChatEntry.MESSAGE, msg)
+					.put(SimpleChatEntry.PICTURE_ID, JSONObject.NULL)
+					.put(SimpleChatWithPictureHash.PICTURE_HASH, pictureHash));
+			return r;
+		} catch (JSONException e) {
+			throw err.JSONDuringRequestCreationError(e, url);
+		}
+	}
+
 	public Request serverConfigRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.CONFIG);
 		return new Request(url);
@@ -155,6 +171,11 @@ public class RequestFactory {
 
 	public Request allTasksRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.TASKS);
+		return new Request(url);
+	}
+
+	public Request allSubmissionsRequest(int groupID) throws HttpRequestException {
+		final URL url = getURL(Paths.SUBMISSIONS+"/"+groupID);
 		return new Request(url);
 	}
 }

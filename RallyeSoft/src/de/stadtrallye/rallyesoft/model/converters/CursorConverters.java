@@ -2,19 +2,22 @@ package de.stadtrallye.rallyesoft.model.converters;
 
 import android.database.Cursor;
 
+import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.LatLng;
-import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.structures.Task;
 
+import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Tasks;
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.getBoolean;
 
 /**
- * Created by Ramon on 06.08.13.
+ * Functions to extract one Object from a Cursor, in case not everything can be done with a CursorAdapter
+ * Also contains classes to index a cursor by column names, so the order can change
  */
 public class CursorConverters {
 
 	public static class TaskCursorIds {
-		public int name, locationSpecific, description, latitude, longitude, multiple, submitType, id;
+		public int name, locationSpecific, description, latitude, longitude, multiple, submitType, id, radius, points, additionalResources, submits;
 
 		/**
 		 *
@@ -26,14 +29,18 @@ public class CursorConverters {
 
 			TaskCursorIds c = new TaskCursorIds();
 
-			c.name = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_NAME);
-			c.description = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_DESCRIPTION);
-			c.locationSpecific = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC);
-			c.latitude = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_LAT);
-			c.longitude = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_LON);
-			c.multiple = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_MULTIPLE);
-			c.submitType = cursor.getColumnIndexOrThrow(DatabaseHelper.Tasks.KEY_SUBMIT_TYPE);
+			c.name = cursor.getColumnIndexOrThrow(Tasks.KEY_NAME);
+			c.description = cursor.getColumnIndexOrThrow(Tasks.KEY_DESCRIPTION);
+			c.locationSpecific = cursor.getColumnIndexOrThrow(Tasks.KEY_LOCATION_SPECIFIC);
+			c.latitude = cursor.getColumnIndexOrThrow(Tasks.KEY_LAT);
+			c.longitude = cursor.getColumnIndexOrThrow(Tasks.KEY_LON);
+			c.multiple = cursor.getColumnIndexOrThrow(Tasks.KEY_MULTIPLE);
+			c.submitType = cursor.getColumnIndexOrThrow(Tasks.KEY_SUBMIT_TYPE);
 			c.id = cursor.getColumnIndexOrThrow("_id");
+			c.radius = cursor.getColumnIndexOrThrow(Tasks.KEY_RADIUS);
+			c.points = cursor.getColumnIndexOrThrow(Tasks.KEY_POINTS);
+			c.additionalResources = cursor.getColumnIndexOrThrow(Tasks.KEY_ADDITIONAL_RESOURCES);
+			c.submits = cursor.getColumnIndexOrThrow(Tasks.KEY_SUBMITS);
 
 			return c;
 		}
@@ -46,7 +53,11 @@ public class CursorConverters {
 
 		coords = (cursor.isNull(c.latitude) || cursor.isNull(c.longitude))? null : new LatLng(cursor.getDouble(c.latitude), cursor.getDouble(c.longitude));
 
-		return new Task(cursor.getInt(c.id), getBoolean(cursor, c.locationSpecific), coords, cursor.getString(c.name), cursor.getString(c.description), getBoolean(cursor, c.multiple), cursor.getInt(c.submitType));
+		return new Task(cursor.getInt(c.id), getBoolean(cursor, c.locationSpecific), coords,
+				cursor.getDouble(c.radius), cursor.getString(c.name), cursor.getString(c.description),
+				getBoolean(cursor, c.multiple), cursor.getInt(c.submitType), cursor.getString(c.points),
+				AdditionalResource.additionalResourcesFromString(cursor.getString(c.additionalResources)),
+				cursor.getInt(c.submits));
 	}
 
 	public static class ChatCursorIds {

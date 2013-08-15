@@ -104,10 +104,18 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 		return list;
 	}
 	
-	public <KEY> Map<KEY, T> toMap(IConverter<? super T, KEY> indexer) {
-		HashMap<KEY, T> map = new HashMap<>();
+	public <KEY, TARGET> Map<KEY, TARGET> toMap(IConverter<? super T, KEY> indexer, IConverter<T, TARGET> compressor) {
+		if (compressor == null)
+			compressor = new IConverter<T, TARGET>() {
+				@Override
+				public TARGET convert(T input) {
+					return (TARGET) input;
+				}
+			};
+
+		HashMap<KEY, TARGET> map = new HashMap<>();
 		for (T v: this)
-			map.put(indexer.convert(v), v);
+			map.put(indexer.convert(v), compressor.convert(v));
 		
 		return map;
 	}

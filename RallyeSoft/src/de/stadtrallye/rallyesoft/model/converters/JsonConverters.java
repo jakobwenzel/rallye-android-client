@@ -4,8 +4,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.Map;
 
+import de.rallye.model.structures.AdditionalPicture;
+import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
@@ -13,17 +16,21 @@ import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.Node;
 import de.rallye.model.structures.ServerConfig;
 import de.rallye.model.structures.ServerInfo;
-import de.rallye.model.structures.Task;
+import de.rallye.model.structures.Submission;
+import de.rallye.model.structures.TaskSubmissions;
 import de.rallye.model.structures.User;
 import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.util.IConverter;
+import de.stadtrallye.rallyesoft.util.JSONArrayConverter;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 /**
- * Created by Ramon on 25.06.13
+ * Collection of JSONConverters to create all structures from JSON
+ * Supplement for Jackson on server side (Library would take over 1 mb)
  */
-public class JsonConverters {
+public abstract class JsonConverters {
 
 	public static class ChatroomConverter extends JSONConverter<Chatroom> {
 
@@ -54,6 +61,8 @@ public class JsonConverters {
 
 	public static class TaskConverter extends JSONConverter<Task> {
 
+		private JSONArrayConverter<AdditionalResource> converter = new JSONArrayConverter<>(new AdditionalResourceConverter());
+
 		@Override
 		public Task doConvert(JSONObject o) throws JSONException {
 			LatLng coords;
@@ -64,9 +73,61 @@ public class JsonConverters {
 				coords = new LatLng(p.getDouble(LatLng.LAT), p.getDouble(LatLng.LNG));
 			}
 
+			List<AdditionalResource> res = converter.convert(o.getJSONArray(Task.ADDITIONAL_RESOURCES));
+
 			return new Task(o.getInt(Task.TASK_ID), o.getBoolean(Task.LOCATION_SPECIFIC),
-					coords, o.getString(Task.NAME), o.getString(Task.DESCRIPTION),
-					o.getBoolean(Task.MULTIPLE_SUBMITS), o.getInt(Task.SUBMIT_TYPE));
+					coords, o.getDouble(Task.RADIUS), o.getString(Task.NAME), o.getString(Task.DESCRIPTION),
+					o.getBoolean(Task.MULTIPLE_SUBMITS), o.getInt(Task.SUBMIT_TYPE), o.getString(Task.POINTS),
+					res, Task.SUBMITS_UNKOWN);
+		}
+	}
+
+	public static class TaskSubmissionsIndexer implements IConverter<TaskSubmissions, Integer> {
+		@Override
+		public Integer convert(TaskSubmissions input) {
+			return input.taskID;
+		}
+	}
+
+	public static class TaskSubmissionsCompressor implements IConverter<TaskSubmissions, List<Submission>> {
+		@Override
+		public List<Submission> convert(TaskSubmissions input) {
+			return input.submissions;
+		}
+	}
+
+	public static class TaskSubmissionsConverter extends JSONConverter<TaskSubmissions> {
+
+		private JSONArrayConverter<Submission> converter = new JSONArrayConverter<>(new SubmissionConverter());
+
+		@Override
+		public TaskSubmissions doConvert(JSONObject o) throws JSONException {
+			List<Submission> res = converter.convert(o.getJSONArray(TaskSubmissions.SUBMISSIONS));
+
+			return new TaskSubmissions(o.getInt(TaskSubmissions.TASK_ID), res);
+		}
+	}
+
+	public static class SubmissionConverter extends JSONConverter<Submission> {
+
+		@Override
+		public Submission doConvert(JSONObject o) throws JSONException {
+			Integer intSubmission = (o.isNull(Submission.INT_SUBMISSION))? null : o.getInt(Submission.INT_SUBMISSION);
+
+			return new Submission(o.getInt(Submission.SUBMISSION_ID), o.getInt(Submission.SUBMIT_TYPE),
+					intSubmission, o.getString(Submission.TEXT_SUBMISSION), o.getString(Submission.SCORE));
+		}
+	}
+
+	public static class AdditionalResourceConverter extends JSONConverter<AdditionalResource> {
+
+		@Override
+		public AdditionalResource doConvert(JSONObject o) throws JSONException {
+			if (o.has(AdditionalPicture.PICTURE_ID)) {
+				return new AdditionalPicture(o.getInt(AdditionalPicture.PICTURE_ID));
+			} else {
+				return null;
+			}
 		}
 	}
 
@@ -126,12 +187,15 @@ public class JsonConverters {
 	}
 
 	public static class ServerInfoConverter extends JSONConverter<ServerInfo> {
+
+		private ServerInfoApiConverter converter = new ServerInfoApiConverter();
+
 		@Override
 		public ServerInfo doConvert(JSONObject o) throws JSONException {
 			JSONArray js = o.getJSONArray(ServerInfo.API);
 
 			ServerInfo.Api[] apis = new ServerInfo.Api[js.length()];
-			ServerInfoApiConverter converter = new ServerInfoApiConverter();
+
 			for (int i=0; i<js.length(); i++) {
 				apis[i] = converter.doConvert(js.getJSONObject(i));
 			}

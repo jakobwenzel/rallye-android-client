@@ -2,15 +2,28 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
+import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.common.SherlockMapFragment;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
@@ -38,11 +51,26 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 	private HashMap<Marker, Integer> markers = new HashMap<>();
 	private boolean singleMode;
 	private TabManager tabManager;
+	private boolean isLayouted;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View v = super.onCreateView(inflater, container, savedInstanceState);
+
+		isLayouted = false;
+		v.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				isLayouted = true;
+			}
+		});
+		return v;
 	}
 
 	@Override
@@ -54,7 +82,7 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 			tasks = model.getTasks();
 			tabManager = ((ITabActivity) getActivity()).getTabManager();
 		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
+			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and ITabActivity");
 		}
 	}
 
@@ -77,14 +105,17 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 //		if (tasks.getMapLocation() != null)
 //			gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(toGms(tasks.getMapLocation()), tasks.getZoomLevel()));
 
-		if (!singleMode)
+		if (!singleMode) {
 			populateMap();
+			tasks.addListener(this);
+		}
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 
+		tasks.removeListener(this);
 	}
 
 	@Override
@@ -106,13 +137,31 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 			t = CursorConverters.getTask(i, cursor, c);
 			if (!t.hasLocation())
 				continue;
-			Marker m = gmap.addMarker(new MarkerOptions()
-					.position(toGms(t.location))
-					.title(t.name)
-					.snippet(t.description));
+
+			Marker m = plotTask(t);
+
 			markers.put(m, t.taskID);
-//			markers.add(m);
 		}
+	}
+
+
+	private Marker plotTask(Task t) {
+		LatLng position = toGms(t.location);
+
+		Marker m = gmap.addMarker(new MarkerOptions()
+				.position(position)
+				.title(t.name)
+				.snippet(t.description));
+
+		if (t.radius > 0) {
+			gmap.addCircle(new CircleOptions()
+					.center(position)
+					.strokeWidth(1)
+					.fillColor(0x80FF80A0)
+					.radius(t.radius));
+		}
+
+		return m;
 	}
 
 
@@ -135,22 +184,55 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 	}
 
 	@Override
+	public void submissionsUpdate(Map<Integer, List<Submission>> submissions) {
+
+	}
+
+	@Override
 	public void setTask(Task task) {
 		gmap.clear();
 
 		if (!task.hasLocation())
 			return;
 
-		gmap.addMarker(new MarkerOptions()
-				.position(toGms(task.location))
-				.title(task.name)
-				.snippet(task.description));
+		plotTask(task);
 
-		gmap.animateCamera(CameraUpdateFactory.newLatLngZoom(toGms(task.location), model.getMap().getZoomLevel() + 4));
+		LatLng coords = toGms(task.location);
+
+		final CameraUpdate cu;
+
+		if (task.radius > 0) {
+			final double kmPerLat = 110.6 * 1000; // 1 Latitudinal Degree is about 110.6 km
+			final double kmLat = coords.latitude * kmPerLat;
+			final double radiusLat1 = (kmLat + task.radius) / kmPerLat; // calculate the roundabout coordinates of a point on the radius in latitudinal direction
+			final double radiusLat2 = (kmLat - task.radius) / kmPerLat; // now in the other direction
+			LatLng rad1 = new LatLng(radiusLat1, coords.longitude); //NOTE: we only define a line from north to south as bounds, as long as the maps width is greater than the height this will work out
+			LatLng rad2 = new LatLng(radiusLat2, coords.longitude); //NOTE: longitudinal degrees vary greatly in distance depending on how close one is to the equator!
+
+			int padding = getResources().getDimensionPixelOffset(R.dimen.map_center_padding);
+
+			cu = CameraUpdateFactory.newLatLngBounds(LatLngBounds.builder().include(rad1).include(rad2).build(), padding);
+		} else {
+			cu = CameraUpdateFactory.newLatLngZoom(coords, model.getMap().getZoomLevel() + 4);
+		}
+
+		if (isLayouted)
+			gmap.animateCamera(cu);
+		else {
+			getView().post(new Runnable() { // MapView has not been layouted yet (newLatLngBounds will throw Exception), so post it in the queue
+				@Override
+				public void run() {
+					gmap.animateCamera(cu);
+				}
+			});
+		}
 	}
 
 	@Override
 	public void onInfoWindowClick(Marker marker) {
+		if (singleMode)
+			return;
+
 		int id = markers.get(marker);
 
 //		Intent intent = new Intent(getActivity(), HostActivity.class);

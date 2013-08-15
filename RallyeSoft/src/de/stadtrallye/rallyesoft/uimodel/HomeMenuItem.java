@@ -9,14 +9,13 @@ import android.view.SubMenu;
 import android.view.View;
 
 /**
- * Wrapper to convert the relevant parts of the sherlock MenuItem back to an android MenuItem
- * Needed for DrawerLayout
+ * Wrapper to imitate the relevant parts of the sherlock MenuItem needed for DrawerLayout to detect a homeAsUp press
  */
-public class MenuItemImpl implements MenuItem {
+public class HomeMenuItem implements MenuItem {
 
 //	private com.actionbarsherlock.view.MenuItem base;
 
-//	public MenuItemImpl(com.actionbarsherlock.view.MenuItem base) {
+//	public HomeMenuItem(com.actionbarsherlock.view.MenuItem base) {
 //		this.base = base;
 //	}
 

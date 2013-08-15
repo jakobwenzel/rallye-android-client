@@ -80,6 +80,10 @@ public class ServerLogin {
 		this.name = name;
 	}
 
+	public boolean hasUserAuth() {
+		return userAuth != null;
+	}
+
 	public void setUserAuth(UserAuth userAuth) {
 		this.userAuth = userAuth;
 	}
@@ -96,28 +100,28 @@ public class ServerLogin {
 		return userAuth.password;
 	}
 	
-	public long getLastValidated() {
+	public synchronized long getLastValidated() {
 		return lastValidated;
 	}
 	
-	public boolean isValid() {
+	public synchronized boolean isValid() {
 		return valid == State.Validated;
 	}
 	
-	public boolean isInvalid() {
+	public synchronized boolean isInvalid() {
 		return valid == State.Invalidated;
 	}
 	
-	public void validated() {
+	public synchronized void validated() {
 		validated(System.currentTimeMillis());
 	}
 	
-	public void validated(long timestamp) {
+	public synchronized void validated(long timestamp) {
 		this.lastValidated = timestamp;
 		this.valid = State.Validated;
 	}
 	
-	public void invalidate() {
+	public synchronized void invalidate() {
 		this.valid = State.Invalidated;
 		this.lastValidated = -this.lastValidated;
 	}

@@ -19,6 +19,9 @@ import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Edges;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Nodes;
 import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
 
+import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_EDGES;
+import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_NODES;
+
 public class Map implements IMap, MapUpdateExecutor.Callback {
 	
 	private static final String THIS = Tasks.class.getSimpleName();
@@ -31,11 +34,16 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 	
 	Map(Model model) {
 		this.model = model;
+
+		if ((model.deprecatedTables & EDIT_EDGES) > 0 || (model.deprecatedTables & EDIT_NODES) > 0) {
+			refresh();
+			model.deprecatedTables &= ~EDIT_EDGES | ~EDIT_NODES;
+		}
 	}
 	
 	
 	@Override
-	public void updateMap() {
+	public void refresh() {
 		if (!model.isConnectedInternal()) {
 			err.notLoggedIn();
 			return;
@@ -154,12 +162,12 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 	
 	@Override
 	public LatLng getMapLocation() {
-		return (model.serverConfig != null)? model.serverConfig.location : null;
+		return (model.getServerConfig() != null)? model.getServerConfig().location : null;
 	}
 	
 	@Override
 	public float getZoomLevel() {
-		return (model.serverConfig != null)? model.serverConfig.zoomLevel : 0;
+		return (model.getServerConfig() != null)? model.getServerConfig().zoomLevel : 0;
 	}
 
 }

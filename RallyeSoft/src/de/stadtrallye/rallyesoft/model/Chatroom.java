@@ -1,9 +1,12 @@
 package de.stadtrallye.rallyesoft.model;
 
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.sql.SQLDataException;
@@ -11,6 +14,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import de.stadtrallye.rallyesoft.MainActivity;
+import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.AdvTaskId;
@@ -23,6 +29,8 @@ import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+
+import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATS;
 
 public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> {
 
@@ -43,17 +51,23 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 	}
 
-	// members
+	// Parent Model
 	final private Model model;
+
+	// Identifier
 	final private int id;
 	final private String name;
+
+	// State
+	private ChatroomState state;
 	private long lastRefresh = 0;//Conservative: timestamp of latest ChatEntry
 	private int lastId = 0;
+	private int lastReadId;
 
+	// External Ids for asynchronous tasks (Posting a chat etc.)
 	private int nextTaskId = 0;
 
-	private ChatroomState state;
-
+	//Listeners
 	private ArrayList<IChatroomListener> listeners = new ArrayList<>();
 
 	/**
@@ -65,7 +79,13 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		Cursor c = model.db.query(Chatrooms.TABLE, Chatrooms.COLS, null, null, null, null, null);
 
 		while (c.moveToNext()) {
-			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), model);
+			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), model, c.getLong(2), c.getInt(3));
+
+			if ((model.deprecatedTables & EDIT_CHATS) > 0) {
+				room.resync();
+				model.deprecatedTables &= ~EDIT_CHATS;
+			}
+
 			room.refresh();
 			out.add(room);
 		}
@@ -75,6 +95,9 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	}
 
 	static void saveChatrooms(Model model, List<Chatroom> chatrooms) {
+		if (chatrooms == null)
+			return;
+
 		SQLiteDatabase db = model.db;
 
 		db.delete(Chatrooms.TABLE, null, null);
@@ -84,19 +107,21 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			insert.put(Chatrooms.KEY_ID, c.id);
 			insert.put(Chatrooms.KEY_NAME, c.name);
 			insert.put(Chatrooms.KEY_LAST_REFRESH, c.lastRefresh);
+			insert.put(Chatrooms.KEY_LAST_READ, c.lastReadId);
 			db.insert(Chatrooms.TABLE, null, insert);
 		}
 	}
 
 	public Chatroom(int id, String name, Model model) {
-		this(id, name, model, 0);
+		this(id, name, model, 0, 0);
 	}
 
-	private Chatroom(int id, String name, Model model, long lastRefresh) {
+	private Chatroom(int id, String name, Model model, long lastRefresh, int lastReadId) {
 		this.id = id;
 		this.name = name;
 		this.model = model;
 		this.lastRefresh = lastRefresh;
+		this.lastReadId = lastReadId;
 
 		THIS = CLASS + " " + id;
 
@@ -174,7 +199,38 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	}
 
 	@Override
-	public void addChat(ChatEntry chatEntry) {
+	public synchronized void resync() {
+		lastId = 0;
+		lastRefresh = 0;
+
+		model.db.delete(Chats.TABLE, null, null);
+		refresh();
+	}
+
+	private void showNotification(ChatEntry chatEntry) {
+		Intent intent = new Intent(model.context, MainActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		intent.putExtra(Std.TAB, Std.CHATROOM);
+		intent.putExtra(Std.CHATROOM, id);
+		intent.putExtra(Std.CHAT_ID, chatEntry.chatID);
+
+		NotificationCompat.BigTextStyle big = new NotificationCompat.BigTextStyle(
+				new NotificationCompat.Builder(model.context)
+						.setSmallIcon(android.R.drawable.stat_notify_chat)
+						.setContentTitle(model.context.getString(R.string.new_message_from) +" "+ name)
+						.setContentText(chatEntry.message)
+						.setContentIntent(PendingIntent.getActivity(model.context, chatEntry.chatID, intent, PendingIntent.FLAG_UPDATE_CURRENT)))
+				.bigText(chatEntry.getUserName() +" ("+ chatEntry.getGroupName() +"):\n"+ chatEntry.message);
+
+		model.notificationService.notify(name +":"+ id, Std.CHAT_NOTIFICATION, big.build());
+	}
+
+	private void removeNotification() {
+		model.notificationService.cancel(Std.CHAT_NOTIFICATION);
+	}
+
+	@Override
+	public synchronized void pushChat(ChatEntry chatEntry) {
 		if (chatEntry.chatID <= this.lastId) {
 			Log.w(THIS, "Received Chat via Push that was already in the DB: " + chatEntry.chatID);
 			return;
@@ -190,7 +246,8 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		Log.i(THIS, "Pushed: " + chatEntry);
 
 //		notifyChatsAdded(upd);
-		notifyChatsChanged();
+		if (!notifyChatsChanged())
+			showNotification(chatEntry);
 	}
 
 	@Override
@@ -358,7 +415,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 	}
 
-	private void setState(final ChatroomState newState) {
+	private synchronized void setState(final ChatroomState newState) {
 		state = newState;
 
 		Log.i(THIS, "Status: " + newState);
@@ -367,14 +424,14 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			@Override
 			public void run() {
 				for (IChatroomListener l : listeners) {
-					l.onChatStateChanged(newState);
+					l.onChatroomStateChanged(newState);
 				}
 			}
 		});
 	}
 
 	@Override
-	public ChatroomState getChatStatus() {
+	public synchronized ChatroomState getChatStatus() {
 		return state;
 	}
 
@@ -421,16 +478,26 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 //		});
 //	}
 
-	private void notifyChatsChanged() {
-		model.uiHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				for (IChatroomListener l : listeners) {
-					l.onChatsChanged();
+	/**
+	 * Notify all listeners on UI Thread if any
+	 * @return false if no listeners to notify
+	 */
+	private boolean notifyChatsChanged() {
+		if (listeners.size() > 0) {
+
+			model.uiHandler.post(new Runnable() {
+				@Override
+				public void run() {
+					for (IChatroomListener l : listeners) {
+						l.onChatsChanged();
+					}
 				}
-			}
-		});
+			});
+			return true;
+		} else
+			return false;
 	}
+
 
 	private void notifyChatPostState(final PostState state, final int postID, final ChatEntry chatEntry) {
 		model.uiHandler.post(new Runnable() {
@@ -454,11 +521,11 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		});
 	}
 
-//	/**
-//	 * Retrieve all Chats from DB
-//	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available
-//	 * @return preliminary chatEntries, will be edited if incomplete
-//	 */
+	/**
+	 * Retrieve all Chats from DB
+	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available
+	 * @return preliminary chatEntries, will be edited if incomplete
+	 */
 //	private List<ChatEntry> getAllChats() {
 //		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
 //				new String[]{Chats.KEY_ID, Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
@@ -519,45 +586,67 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		return c;
 	}
 
-	private class PictureGallery extends AbstractPictureGallery {
+	private static class PictureGallery extends de.stadtrallye.rallyesoft.model.PictureGallery {
 
-		public PictureGallery(int initialPictureID) {
-			this.pictures = new ArrayList<>();
+		private final int[] pictures;
+		private final int initialPos;
+		private final PictureIdResolver resolver;
 
-			Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+		public PictureGallery(int initialPos, int[] pictures, PictureIdResolver resolver) {
+			this.resolver = resolver;
+			this.initialPos = initialPos;
+			this.pictures = pictures;
+		}
 
-			int picId, i = 0;
-			while (c.moveToNext()) {
-				picId = c.getInt(0);
-				this.pictures.add(picId);
-				if (picId == initialPictureID) {
-					initialPos = i;
-				}
-				i++;
-			}
-			c.close();
+		@Override
+		public int getInitialPosition() {
+			return initialPos;
+		}
+
+		@Override
+		public int getCount() {
+			return pictures.length;
 		}
 
 		@Override
 		public String getPictureUrl(int pos) {
-			return model.getUrlFromImageId(this.pictures.get(pos), size);
+			return resolver.resolvePictureID(pictures[pos], size);
 		}
 
 	}
 
 	@Override
 	public IPictureGallery getPictureGallery(int initialPictureId) {
-		return new PictureGallery(initialPictureId);
+		Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+		int[] pictures = new int[c.getCount()];
+		int initialPos = 0;
+
+		int picId, i = 0;
+		while (c.moveToNext()) {
+			picId = c.getInt(0);
+			pictures[i] = picId;
+			if (picId == initialPictureId) {
+				initialPos = i;
+			}
+			i++;
+		}
+		c.close();
+
+		return new PictureGallery(initialPos, pictures, model.getPictureIdResolver());
 	}
 
 	@Override
-	public void saveCurrentState(int lastRead) {//TODO
-
+	public void setLastReadId(int lastRead) {
+		if (lastRead >= lastId) {
+			removeNotification();
+		}
+		if (lastReadId < lastRead)
+			lastReadId = lastRead;
 	}
 
 	@Override
-	public int getLastState() {//TODO
-		return 0;
+	public int getLastReadId() {
+		return lastReadId;
 	}
 
 	@Override
@@ -574,7 +663,22 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			err.requestException(e);
 			return -1;
 		}
+	}
 
+	@Override
+	public int postChatWithHash(String msg, String pictureHash) {
+		if (!model.isConnected()) {
+			err.notLoggedIn();
+			return -1;
+		}
+		try {
+			int taskId = nextTaskId++;
+			model.exec.execute(new JSONObjectRequestExecutor<>(model.factory.chatPostWithHashRequest(id, msg, pictureHash), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			return taskId;
+		} catch (HttpRequestException e) {
+			err.requestException(e);
+			return -1;
+		}
 	}
 
 	private void chatPostResult(RequestExecutor<ChatEntry, ?> r, int postID) {
