@@ -44,7 +44,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	
 	private GoogleMap gmap;
 	private IMap map;
-	private HashMap<Marker, Node> markers = new HashMap<>();
+	private HashMap<Marker, Node> markers = new HashMap<Marker, Node>();
 
 	private LatLngBounds gameBounds;
 	private LatLngBounds currentBounds;
@@ -222,7 +222,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 		Node source = markers.get(marker),
 				target;
 		Builder bounds = LatLngBounds.builder();
-		ArrayList<Node> targets = new ArrayList<>();
+		ArrayList<Node> targets = new ArrayList<Node>();
 		
 		bounds.include(toGms(source.location));
 		

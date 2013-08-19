@@ -74,11 +74,11 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		model = Model.createEmptyModel(getApplicationContext());
 
 		//Create FragmentHandlers
-		steps = new ArrayList<>();
-		steps.add(new FragmentHandler<>("server", AssistantServerFragment.class));
-		steps.add(new FragmentHandler<>("groups", AssistantGroupsFragment.class));
-		steps.add(new FragmentHandler<>("auth", AssistantAuthFragment.class));
-		steps.add(new FragmentHandler<>("complete", AssistantCompleteFragment.class));
+		steps = new ArrayList<FragmentHandler<?>>();
+		steps.add(new FragmentHandler<AssistantServerFragment>("server", AssistantServerFragment.class));
+		steps.add(new FragmentHandler<AssistantGroupsFragment>("groups", AssistantGroupsFragment.class));
+		steps.add(new FragmentHandler<AssistantAuthFragment>("auth", AssistantAuthFragment.class));
+		steps.add(new FragmentHandler<AssistantCompleteFragment>("complete", AssistantCompleteFragment.class));
 	}
 
 	@Override

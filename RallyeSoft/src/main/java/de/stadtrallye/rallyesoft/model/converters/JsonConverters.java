@@ -61,7 +61,7 @@ public abstract class JsonConverters {
 
 	public static class TaskConverter extends JSONConverter<Task> {
 
-		private JSONArrayConverter<AdditionalResource> converter = new JSONArrayConverter<>(new AdditionalResourceConverter());
+		private JSONArrayConverter<AdditionalResource> converter = new JSONArrayConverter<AdditionalResource>(new AdditionalResourceConverter());
 
 		@Override
 		public Task doConvert(JSONObject o) throws JSONException {
@@ -98,7 +98,7 @@ public abstract class JsonConverters {
 
 	public static class TaskSubmissionsConverter extends JSONConverter<TaskSubmissions> {
 
-		private JSONArrayConverter<Submission> converter = new JSONArrayConverter<>(new SubmissionConverter());
+		private JSONArrayConverter<Submission> converter = new JSONArrayConverter<Submission>(new SubmissionConverter());
 
 		@Override
 		public TaskSubmissions doConvert(JSONObject o) throws JSONException {

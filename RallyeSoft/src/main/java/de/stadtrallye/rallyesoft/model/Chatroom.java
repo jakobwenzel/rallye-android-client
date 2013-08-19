@@ -68,13 +68,13 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	private int nextTaskId = 0;
 
 	//Listeners
-	private ArrayList<IChatroomListener> listeners = new ArrayList<>();
+	private ArrayList<IChatroomListener> listeners = new ArrayList<IChatroomListener>();
 
 	/**
 	 * @return all available Chatrooms
 	 */
 	static List<Chatroom> getChatrooms(Model model) {
-		List<Chatroom> out = new ArrayList<>();
+		List<Chatroom> out = new ArrayList<Chatroom>();
 
 		Cursor c = model.db.query(Chatrooms.TABLE, Chatrooms.COLS, null, null, null, null, null);
 
@@ -176,7 +176,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		try {
 			setState(ChatroomState.Refreshing);
 
-			model.exec.execute(new JSONArrayRequestExecutor<>(model.factory.chatRefreshRequest(id, lastRefresh), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
+			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatRefreshRequest(id, lastRefresh), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -657,7 +657,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<>(model.factory.chatPostRequest(id, msg, pictureID), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostRequest(id, msg, pictureID), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -673,7 +673,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<>(model.factory.chatPostWithHashRequest(id, msg, pictureHash), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostWithHashRequest(id, msg, pictureHash), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);

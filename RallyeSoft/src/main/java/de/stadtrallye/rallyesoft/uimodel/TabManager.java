@@ -27,7 +27,7 @@ public abstract class TabManager {
 	protected Tab<?> activeTab = null;
 	protected Integer parentTab = null;
 
-	protected final Map<Integer, Tab<?>> tabs = new HashMap<>();
+	protected final Map<Integer, Tab<?>> tabs = new HashMap<Integer, Tab<?>>();
 	private int defaultTab = 0;
 
 	public TabManager(Context context, FragmentManager fragmentManager, int replaceId) {

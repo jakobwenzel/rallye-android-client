@@ -39,7 +39,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 
 	private Map<Integer, List<Submission>> submissions;
 
-	private List<ITasksListener> tasksListeners = new ArrayList<>();
+	private List<ITasksListener> tasksListeners = new ArrayList<ITasksListener>();
 
 	Tasks(Model model) {
 		this.model = model;
@@ -58,7 +58,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 			return;
 		}
 		try {
-			model.exec.execute(new JSONArrayRequestExecutor<>(model.factory.allTasksRequest(), new JsonConverters.TaskConverter(), this, CallbackIds.TASKS_REFRESH));
+			model.exec.execute(new JSONArrayRequestExecutor<Task, CallbackIds>(model.factory.allTasksRequest(), new JsonConverters.TaskConverter(), this, CallbackIds.TASKS_REFRESH));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -153,7 +153,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 			return;
 		}
 		try {
-			model.exec.execute(new JSONArrayToMapRequestExecutor<>(model.factory.allSubmissionsRequest(model.getUser().groupID),
+			model.exec.execute(new JSONArrayToMapRequestExecutor<Integer, de.rallye.model.structures.TaskSubmissions, List<Submission>, CallbackIds>(model.factory.allSubmissionsRequest(model.getUser().groupID),
 					new JsonConverters.TaskSubmissionsConverter(),
 					new JsonConverters.TaskSubmissionsIndexer(),
 					new JsonConverters.TaskSubmissionsCompressor(), this, CallbackIds.SUBMISSIONS_REFRESH));

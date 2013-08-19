@@ -16,7 +16,6 @@ import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
  * 
  * @author Ramon
  *
- * @param <IN> Type contained in this JSONArray, mostly JSONObject, but all standard JSON types are allowed
  * @param <T> Type to get from the Iterator
  */
 public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
@@ -113,7 +112,7 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 				}
 			};
 
-		HashMap<KEY, TARGET> map = new HashMap<>();
+		HashMap<KEY, TARGET> map = new HashMap<KEY, TARGET>();
 		for (T v: this)
 			map.put(indexer.convert(v), compressor.convert(v));
 		

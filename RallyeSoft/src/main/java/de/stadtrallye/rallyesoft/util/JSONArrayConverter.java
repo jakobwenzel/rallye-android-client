@@ -21,7 +21,7 @@ public class JSONArrayConverter<T> implements IConverter<JSONArray, List<T>> {
 	public List<T> convert(JSONArray jr) {
 		if (jr.length() > 0) {
 			try {
-				List<T> res = new ArrayList<>();
+				List<T> res = new ArrayList<T>();
 				for (int i=0; i<jr.length(); i++) {
 					res.add(converter.convert(jr.getJSONObject(i)));
 				}

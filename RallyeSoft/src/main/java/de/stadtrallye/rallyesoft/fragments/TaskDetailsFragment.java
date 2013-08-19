@@ -113,7 +113,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		Intent intent = new Intent(getActivity(), PictureGalleryActivity.class);
 
-		List<Integer> pics = new ArrayList<>();
+		List<Integer> pics = new ArrayList<Integer>();
 		for (AdditionalResource add: task.additionalResources)
 			pics.add(((AdditionalPicture)add).pictureID);
 

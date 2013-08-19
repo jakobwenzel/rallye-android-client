@@ -132,7 +132,7 @@ public class Request {
 		try {
 			prepareConnection();
 			
-			List<String> res = new ArrayList<>();
+			List<String> res = new ArrayList<String>();
 			String line;
 			
 			while((line = reader.readLine()) != null) {

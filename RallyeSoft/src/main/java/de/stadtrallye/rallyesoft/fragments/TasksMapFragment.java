@@ -48,7 +48,7 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 	private IModel model;
 	private ITasks tasks;
 	private GoogleMap gmap;
-	private HashMap<Marker, Integer> markers = new HashMap<>();
+	private HashMap<Marker, Integer> markers = new HashMap<Marker, Integer>();
 	private boolean singleMode;
 	private TabManager tabManager;
 	private boolean isLayouted;

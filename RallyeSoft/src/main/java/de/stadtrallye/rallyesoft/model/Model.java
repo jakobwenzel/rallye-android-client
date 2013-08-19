@@ -88,7 +88,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private final Tasks tasks;
 
 	// Listener
-	private final ArrayList<IModelListener> modelListeners = new ArrayList<>();
+	private final ArrayList<IModelListener> modelListeners = new ArrayList<IModelListener>();
 	
 	// Temp
 	private List<Group> groups;// Needs to be stored here until we have preferences and can save it to Database
@@ -298,7 +298,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 		try {
 			factory.setPushID(GCMRegistrar.getRegistrationId(context));
-			exec.execute(new JSONObjectRequestExecutor<>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
+			exec.execute(new JSONObjectRequestExecutor<UserAuth, CallbackIds>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		} catch (Exception e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -318,7 +318,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		
 		try {
 			factory.setPushID(GCMRegistrar.getRegistrationId(context));// if newly installed GCM_ID has on occasion not been available at first start
-			exec.execute(new JSONObjectRequestExecutor<>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
+			exec.execute(new JSONObjectRequestExecutor<UserAuth, CallbackIds>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		} catch (Exception e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -373,7 +373,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private void refreshServerConfig() {
 		try {
 			Log.d(THIS, "getting Server config");
-			exec.execute(new JSONObjectRequestExecutor<>(factory.serverConfigRequest(), new JsonConverters.ServerConfigConverter(), this, CallbackIds.CONFIG));
+			exec.execute(new JSONObjectRequestExecutor<ServerConfig, CallbackIds>(factory.serverConfigRequest(), new JsonConverters.ServerConfigConverter(), this, CallbackIds.CONFIG));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -411,7 +411,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private void refreshAvailableChatrooms() {
 		try {
 			Log.d(THIS, "getting available chatrooms");
-			exec.execute(new JSONArrayRequestExecutor<>(factory.availableChatroomsRequest(), new JsonConverters.ChatroomConverter(this), this, CallbackIds.AVAILABLE_CHATROOMS));
+			exec.execute(new JSONArrayRequestExecutor<Chatroom, CallbackIds>(factory.availableChatroomsRequest(), new JsonConverters.ChatroomConverter(this), this, CallbackIds.AVAILABLE_CHATROOMS));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -453,7 +453,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 		
 		try {
-			exec.execute(new JSONArrayRequestExecutor<>(factory.availableGroupsRequest(), new JsonConverters.GroupConverter(), this, CallbackIds.GROUP_LIST));
+			exec.execute(new JSONArrayRequestExecutor<Group, CallbackIds>(factory.availableGroupsRequest(), new JsonConverters.GroupConverter(), this, CallbackIds.GROUP_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -484,7 +484,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 
 		try {
-			exec.execute(new JSONArrayRequestExecutor<>(factory.allUsersRequest(), new JsonConverters.GroupUserConverter(), this, CallbackIds.USER_LIST));
+			exec.execute(new JSONArrayRequestExecutor<GroupUser, CallbackIds>(factory.allUsersRequest(), new JsonConverters.GroupUserConverter(), this, CallbackIds.USER_LIST));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -513,7 +513,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 
 		try {
-			exec.execute(new JSONObjectRequestExecutor<>(factory.serverInfoRequest(), new JsonConverters.ServerInfoConverter(), this, CallbackIds.SERVER_INFO));
+			exec.execute(new JSONObjectRequestExecutor<ServerInfo, CallbackIds>(factory.serverInfoRequest(), new JsonConverters.ServerInfoConverter(), this, CallbackIds.SERVER_INFO));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 			connectionFailure(e, ConnectionState.Invalid);
@@ -971,7 +971,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			return groups;
 		else {
 			Cursor c = db.query(Groups.TABLE, new String[]{Groups.KEY_ID, Groups.KEY_NAME, Groups.KEY_DESCRIPTION}, "", null, null, null, Groups.KEY_ID);
-			List<Group> groups = new ArrayList<>();
+			List<Group> groups = new ArrayList<Group>();
 
 			while (c.moveToNext()) {
 				groups.add(new Group(c.getInt(0), c.getString(1), c.getString(2)));
