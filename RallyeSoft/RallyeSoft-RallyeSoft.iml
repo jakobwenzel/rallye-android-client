@@ -68,16 +68,16 @@
     </content>
     <orderEntry type="jdk" jdkName="Android 4.2.2" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="support-v4-18.0.0" level="project" />
-    <orderEntry type="library" exported="" name="ComGoogleAndroidGmsPlayServices3225.aar" level="project" />
     <orderEntry type="module" module-name="SherlockActionBar" exported="" />
     <orderEntry type="module" module-name="ViewPagerIndicator" exported="" />
     <orderEntry type="module" module-name="PagerSlidingTabStrip" exported="" />
     <orderEntry type="module" module-name="RallyeStructures" exported="" />
+    <orderEntry type="library" exported="" name="support-v4-18.0.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-asl-1.9.13" level="project" />
     <orderEntry type="library" exported="" name="jackson-mapper-asl-1.9.13" level="project" />
     <orderEntry type="library" exported="" name="gcm" level="project" />
     <orderEntry type="library" exported="" name="universal-image-loader-1.8.6-with-sources" level="project" />
+    <orderEntry type="library" exported="" name="ComGoogleAndroidGmsPlayServices3225.aar" level="project" />
   </component>
 </module>
 

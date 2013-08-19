@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/PagerSlidingTabStrip/PagerSlidingTabStrip.iml" filepath="$PROJECT_DIR$/PagerSlidingTabStrip/PagerSlidingTabStrip.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RallyeSoft.iml" filepath="$PROJECT_DIR$/RallyeSoft.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RallyeSoft/RallyeSoft-RallyeSoft.iml" filepath="$PROJECT_DIR$/RallyeSoft/RallyeSoft-RallyeSoft.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common/RallyeStructures/RallyeStructures.iml" filepath="$PROJECT_DIR$/common/RallyeStructures/RallyeStructures.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SherlockActionBar/SherlockActionBar.iml" filepath="$PROJECT_DIR$/SherlockActionBar/SherlockActionBar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ViewPagerIndicator/ViewPagerIndicator.iml" filepath="$PROJECT_DIR$/ViewPagerIndicator/ViewPagerIndicator.iml" />
+    </modules>
+  </component>
+</project>
+
