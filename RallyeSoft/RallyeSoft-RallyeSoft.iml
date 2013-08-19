@@ -77,7 +77,7 @@
     <orderEntry type="library" exported="" name="jackson-core-asl-1.9.13" level="project" />
     <orderEntry type="library" exported="" name="jackson-mapper-asl-1.9.13" level="project" />
     <orderEntry type="library" exported="" name="gcm" level="project" />
-    <orderEntry type="library" exported="" name="universal-image-loader-1.7.0" level="project" />
+    <orderEntry type="library" exported="" name="universal-image-loader-1.8.6-with-sources" level="project" />
   </component>
 </module>
 

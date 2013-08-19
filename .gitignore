@@ -9,4 +9,4 @@ out
 Thumbs.db
 local.properties
 .gradle
-build
+*/build
