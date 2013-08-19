@@ -1,5 +1,5 @@
 include ':RallyeSoft'
-include ':google-play-services_lib'
-include ':SlidingMenu'
+include ':ViewPagerIndicator'
 include ':PagerSlidingTabStrip'
 include ':SherlockActionBar'
+include ':common:RallyeStructures'

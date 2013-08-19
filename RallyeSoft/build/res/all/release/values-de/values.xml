@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/values-de/strings.xml -->
+    <string name="app_name">RallyeSoft</string>
+    <string name="assistant_choose_name">Benutzername</string>
+    <string name="assistant_choose_server">Rallye-Server angeben</string>
+    <string name="assistant_group_password">Passwort zur gewählten Gruppe</string>
+    <!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/build/exploded-bundles/ComGoogleAndroidGmsPlayServices3225.aar/res/values-de/strings.xml -->
+    <string name="auth_client_needs_enabling_title" msgid="3983201110833868073">"Anwendung erfordert aktivierte Google Play-Dienste"</string>
+    <string name="auth_client_needs_installation_title" msgid="7999585836145154206">"Anwendung erfordert die Installation von Google Play-Diensten"</string>
+    <string name="auth_client_needs_update_title" msgid="6488605506794595966">"Anwendung erfordert ein Update für Google Play-Dienste"</string>
+    <string name="auth_client_play_services_err_notification_msg" msgid="3635065018897986478">"Fehler bei Google Play-Diensten"</string>
+    <string name="auth_client_requested_by_msg" msgid="6304135633531965756">"Angefordert von <ns1:g id="APP_NAME">%1$s</ns1:g>"</string>
+    <string name="auth_client_using_bad_version_title" msgid="2534454398764507874">"Anwendung versuchte, defekte Google Play-Dienste-Version zu verwenden"</string>
+    <!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/values-de/strings.xml -->
+    <string name="back">Zurück</string>
+    <string name="cancel">Abbruch</string>
+    <string name="center">Zentrieren</string>
+    <string name="chat">Chat</string>
+    <string name="chat_post_failure">Senden der Nachricht fehlgeschlagen...</string>
+    <!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/build/exploded-bundles/ComGoogleAndroidGmsPlayServices3225.aar/res/values-de/strings.xml -->
+    <string name="common_google_play_services_enable_button" msgid="4181637455539816337">"Google Play-Dienste aktivieren"</string>
+    <string name="common_google_play_services_enable_text" msgid="7627896071867667758">"Diese App funktioniert nur, wenn Sie die Google Play-Dienste aktivieren."</string>
+    <string name="common_google_play_services_enable_title" msgid="529078775174559253">"Google Play-Dienste aktivieren"</string>
+    <string name="common_google_play_services_install_button" msgid="8515591849428043265">"Google Play-Dienste installieren"</string>
+    <string name="common_google_play_services_install_text_phone" msgid="8685301130651051380">"Zur Nutzung dieser App sind Google Play-Dienste erforderlich, die auf Ihrem Telefon nicht installiert sind."</string>
+    <string name="common_google_play_services_install_text_tablet" msgid="1589957570365247855">"Zur Nutzung dieser App sind Google Play-Dienste erforderlich, die auf Ihrem Tablet nicht installiert sind."</string>
+    <string name="common_google_play_services_install_title" msgid="26645092511305524">"Google Play-Dienste installieren"</string>
+    <string name="common_google_play_services_unknown_issue" msgid="4762332809710093730">"Unbekanntes Problem mit Google Play-Diensten"</string>
+    <string name="common_google_play_services_unsupported_text" msgid="3542578567569488671">"Google Play-Dienste, auf denen einige Ihrer Apps basieren, werden von diesem Gerät nicht unterstützt. Wenden Sie sich für weitere Informationen an den Hersteller."</string>
+    <string name="common_google_play_services_unsupported_title" msgid="6334768798839376943">"Google Play-Dienste"</string>
+    <string name="common_google_play_services_update_button" msgid="8932944190611227642">"Aktualisieren"</string>
+    <string name="common_google_play_services_update_text" msgid="448354684997260580">"Diese App wird nur ausgeführt, wenn Sie die Google Play-Dienste aktualisieren."</string>
+    <string name="common_google_play_services_update_title" msgid="6006316683626838685">"Google Play-Dienste aktualisieren"</string>
+    <string name="common_signin_button_text" msgid="9071884888741449141">"Anmelden"</string>
+    <string name="common_signin_button_text_long" msgid="2429381841831957106">"Über Google anmelden"</string>
+    <!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/values-de/strings.xml -->
+    <string name="configuration">Konfiguration</string>
+    <string name="connected">Verbunden</string>
+    <string name="connection_assistant">Verbindungs-Assistent</string>
+    <string name="connection_failure">Verbindung Fehlgeschlagen</string>
+    <string name="dash_menu">Menü</string>
+    <string name="description">Beschreibung</string>
+    <string name="finish">Beenden</string>
+    <string name="group">Gruppennummer</string>
+    <string name="image_level">Bild-Größe</string>
+    <string name="image_level_large">Groß</string>
+    <string name="image_level_small">Klein</string>
+    <string name="image_viewer">Image Viewer</string>
+    <string name="invalid">Ungültig</string>
+    <string name="invalid_login">Ungültiger Login</string>
+    <string name="invalid_password">Ungültiges / leeres / zu kurzes Passwort</string>
+    <string name="invalid_server">Kein Server erreichbar</string>
+    <string name="invalid_url">Ungültige Addresse</string>
+    <string name="invalid_username">Ungültiger / leerer / zu kurzer Username</string>
+    <string name="locspecific_tasks">Ortsgebundene Aufgaben</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="map">Karte</string>
+    <string name="menu_drawer_close">Drawer Menü schließen</string>
+    <string name="menu_drawer_open">Drawer Menü öffnen</string>
+    <string name="name">Name</string>
+    <string name="need_connection">Diese Funktion benötigt eine Verbindung zu einem Server</string>
+    <string name="new_message">Neue Nachricht</string>
+    <string name="new_message_from">Neue Nachricht von</string>
+    <string name="next">Weiter</string>
+    <string name="next_move">Nächster Zug</string>
+    <string name="no_nodes">Keine Orte zum Zentrieren!</string>
+    <string name="no_solution_submitted">Keine Lösung eingereicht</string>
+    <string name="notConnected">Getrennt</string>
+    <string name="of">von</string>
+    <string name="ok">OK</string>
+    <string name="overview">Übersicht</string>
+    <string name="overview_welcome">Willkommen zu RallyeSoft</string>
+    <string name="password">Passwort</string>
+    <string name="path">Pfad</string>
+    <string name="picture_taken">Bild gemacht!</string>
+    <string name="port">Port</string>
+    <string name="reconnect">Erneut verbinden</string>
+    <string name="refresh">Aktualisieren</string>
+    <string name="resize">Größe wechseln</string>
+    <string name="scan_barcode">Scan Barcode</string>
+    <string name="select_take_picture">Foto aufnehmen oder auswählen</string>
+    <string name="send">Senden</string>
+    <string name="server">Server</string>
+    <string name="share_barcode">Share Barcode</string>
+    <string name="solution_state_unknown">Lösungstatus unbekannt</string>
+    <string name="solution_submitted">Lösung eingereicht (1/1)</string>
+    <string name="solutions_submitted">Lösung eingereicht (weitere möglich)</string>
+    <string name="ssl">SSL</string>
+    <string name="status">Status</string>
+    <string name="submissions">Eingereichte Lösungen</string>
+    <string name="take_picture">Foto machen</string>
+    <string name="tasks">Aufgaben</string>
+    <string name="test_server">Verbindung testen</string>
+    <string name="ubiquitous_tasks">Nicht Ortsgebundene Aufgaben</string>
+    <string name="unavailable">Nicht verfügbar</string>
+    <string name="unsupported_link">Nicht unterstützte Funktion!</string>
+    <string name="upload_complete">Hochgeladen</string>
+    <string name="uploading">Hochladen</string>
+    <string name="version">Version</string>
+    <string name="waiting_for_model">Warte auf Verbindung...</string>
+    <string name="welcome">Wilkommen</string>
+    <string name="welcome_msg">Willkommen zu RallyeSoft.\nBitte verwenden Sie den Verbindungs-Assistenten um sich mit einem Rallye-Server zu verbinden\n\nViele Funktionen der App stehen erst zur Verfügung wenn die App sich mit mindestens einem Server verbunden hat.</string>
+
+</resources>

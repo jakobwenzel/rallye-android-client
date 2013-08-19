@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item android:id="@+id/menu_login"
+        android:title="@string/connection_assistant"
+        android:showAsAction="collapseActionView" />
+    
+    <item android:id="@+id/menu_logout"
+        android:title="@string/logout"
+        android:showAsAction="collapseActionView" />
+
+	<item android:id="@+id/menu_reconnect"
+		  android:title="@string/reconnect"
+		  android:showAsAction="collapseActionView" />
+    
+    <item android:id="@+id/menu_share_barcode"
+        android:title="@string/share_barcode"
+        android:showAsAction="collapseActionView" />
+    
+</menu>
+<!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/menu/activity_main.xml -->

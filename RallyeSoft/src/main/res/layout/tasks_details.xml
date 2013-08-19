@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:requiresFadingEdge="vertical"
+			  android:fadingEdgeLength="25dp">
+
+	<LinearLayout
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:orientation="vertical"
+			android:padding="8dp">
+
+		<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:id="@+id/task_name"/>
+
+		<TextView
+				android:layout_marginTop="8dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceSmall"
+				android:id="@+id/task_description"/>
+
+		<View
+				android:layout_marginTop="16dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:background="@drawable/abs__list_divider_holo_light"/>
+
+		<GridView
+				android:layout_marginTop="8dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:scrollbars="none"
+				android:numColumns="3"
+				android:horizontalSpacing="5dp"
+				android:verticalSpacing="5dp"
+				android:drawSelectorOnTop="true"
+				android:id="@+id/additional_info"/>
+
+
+		<View
+				android:layout_marginTop="16dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:background="@drawable/abs__list_divider_holo_light"/>
+
+		<TextView
+				android:layout_marginTop="8dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/submissions"/>
+
+		<ListView
+				android:layout_marginTop="16dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:scrollbars="none"
+				android:drawSelectorOnTop="true"
+				android:id="@+id/submissions"/>
+
+	</LinearLayout>
+
+</ScrollView>

@@ -1,0 +1,11 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="RallyeTheme" parent="@style/Theme.Sherlock.Light.DarkActionBar">
+		<item name="vpiTitlePageIndicatorStyle">@null</item>
+    </style>
+    
+    <style name="Dashboard">
+        <item name="android:textColor">@color/abs__primary_text_holo_dark</item>
+    </style>
+
+</resources>

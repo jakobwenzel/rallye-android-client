@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:orientation="horizontal"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent">
+
+	<FrameLayout
+			android:id="@+id/map"
+			android:layout_width="0dp"
+			android:layout_height="match_parent"
+			android:layout_weight="0.5" />
+
+	<ListView
+			android:id="@+id/tasks_list"
+			android:layout_width="0dp"
+			android:layout_height="match_parent"
+			android:layout_weight="0.5"
+			android:requiresFadingEdge="vertical"
+			android:fadingEdgeLength="25dp"
+			android:clickable="true" />
+
+</LinearLayout><!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/layout-land/tasks_overview.xml -->

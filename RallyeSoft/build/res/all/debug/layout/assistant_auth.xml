@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:orientation="vertical"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent"
+			  android:padding="16dp">
+
+	<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/assistant_choose_name"
+			android:layout_gravity="left|center_vertical"/>
+
+	<EditText
+			android:id="@+id/name"
+			android:inputType="textPersonName"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:hint="@string/name"
+			android:layout_marginTop="16dp"/>
+
+	<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/assistant_group_password"
+			android:layout_gravity="left|center_vertical"
+			android:id="@+id/textView"
+			android:layout_marginTop="32dp"/>
+
+	<EditText
+			android:id="@+id/pass"
+			android:inputType="textPassword"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:imeOptions="actionNext"
+			android:hint="@string/password"
+			android:layout_marginTop="16dp"/>
+
+	<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/next"
+			android:layout_gravity="right"
+			android:text="@string/next"
+			android:layout_marginTop="16dp"/>
+</LinearLayout><!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/layout/assistant_auth.xml -->

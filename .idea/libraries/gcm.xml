@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="gcm">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/RallyeSoft/libs/gcm.jar!/" />
+      <root url="jar://$PROJECT_DIR$/RallyeSoft/gcm.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

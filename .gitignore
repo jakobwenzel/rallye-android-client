@@ -8,3 +8,5 @@ out
 .idea/tasks.xml
 Thumbs.db
 local.properties
+.gradle
+build

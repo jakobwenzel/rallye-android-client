@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.viewpagerindicator.TitlePageIndicator
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res/de.stadtrallye.rallyesoft"
+		android:id="@+id/pager_indicator"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:padding="0dp"
+		android:background="@color/abs__bright_foreground_disabled_holo_light"
+		android:textColor="#FFCCCCCC"
+		android:textSize="10sp"
+		app:topPadding="0dp"
+		app:footerLineHeight="0dp"
+		app:footerIndicatorStyle="none"
+		app:selectedColor="#FFFFFFFF"
+		app:selectedBold="true">
+
+</com.viewpagerindicator.TitlePageIndicator><!-- From: file:/C:/Eclipse/RallyeSoft/RallyeSoft/src/main/res/layout/tasks_pager_indicator.xml -->
