@@ -141,7 +141,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	 */
 	private static void switchToNew(Model newModel) {
 		if (model != null) {
-			if (!model.currentLogin.getServer().equals(newModel.currentLogin.getServer()))
+			if (model.currentLogin != null && model.currentLogin.getServer() != null && !model.currentLogin.getServer().equals(newModel.currentLogin.getServer()))
 				model.logout();
 
 			model.destroy();
@@ -155,6 +155,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@Override
 	public void acceptModel() {
 		Model.switchToNew(this);
+		Log.i(THIS, "Switched to new Model");
 	}
 
 	@Override

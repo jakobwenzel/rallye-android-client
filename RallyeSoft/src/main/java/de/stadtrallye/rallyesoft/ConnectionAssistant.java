@@ -294,7 +294,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 			model = null;
 		}
 
-		setResult(Activity.RESULT_CANCELED);
+		setResult((acceptNewConnection)? Activity.RESULT_OK : Activity.RESULT_CANCELED);
 
 		super.finish();
 	}

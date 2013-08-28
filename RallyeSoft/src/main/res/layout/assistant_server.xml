@@ -30,28 +30,6 @@
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:textAppearance="?android:attr/textAppearanceMedium"
-					android:text="@string/port"
-					android:id="@+id/textViewPort"
-					android:layout_alignParentLeft="true"
-					android:layout_alignBaseline="@+id/port"
-					android:layout_alignRight="@+id/textViewServer"/>
-
-			<EditText
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:inputType="number"
-					android:id="@+id/port"
-					android:layout_marginTop="16dp"
-					android:layout_below="@+id/protocol"
-					android:layout_toRightOf="@+id/textViewPort"
-					android:layout_alignParentRight="true"
-					android:layout_marginLeft="16dp"
-					android:focusable="true"/>
-
-			<TextView
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:textAppearance="?android:attr/textAppearanceMedium"
 					android:text="@string/server"
 					android:id="@+id/textViewServer"
 					android:layout_alignParentLeft="true"
@@ -65,11 +43,33 @@
 					android:layout_height="wrap_content"
 					android:layout_gravity="center_vertical"
 					android:layout_marginTop="16dp"
-					android:layout_below="@+id/port"
+					android:layout_below="@+id/protocol"
 					android:layout_alignParentRight="true"
 					android:layout_alignParentLeft="false"
 					android:layout_toRightOf="@+id/textViewServer"
 					android:layout_marginLeft="16dp"/>
+
+			<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:textAppearance="?android:attr/textAppearanceMedium"
+					android:text="@string/port"
+					android:id="@+id/textViewPort"
+					android:layout_alignParentLeft="true"
+					android:layout_alignBaseline="@+id/port"
+					android:layout_alignRight="@+id/textViewServer"/>
+
+			<EditText
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:id="@+id/port"
+					android:layout_marginTop="16dp"
+					android:layout_below="@+id/server"
+					android:layout_toRightOf="@+id/textViewPort"
+					android:layout_alignParentRight="true"
+					android:layout_marginLeft="16dp"
+					android:focusable="true"/>
 
 			<TextView
 					android:layout_width="wrap_content"
@@ -86,7 +86,7 @@
 					android:layout_height="wrap_content"
 					android:inputType="text"
 					android:id="@+id/path"
-					android:layout_below="@+id/server"
+					android:layout_below="@+id/port"
 					android:imeOptions="actionSend"
 					android:layout_marginTop="16dp"
 					android:layout_alignParentRight="true"

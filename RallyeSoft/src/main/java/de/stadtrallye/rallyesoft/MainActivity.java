@@ -152,16 +152,19 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		super.onPostCreate(savedInstanceState);
 
 		tabManager.onPostCreate();
+		initializeState();
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
+		tabManager.showTab();
+	}
+
+	private void initializeState() {
 		setSupportProgressBarIndeterminateVisibility(false);
 		onConnectionStateChange(model.getConnectionState());
-
-		tabManager.showTab();
 	}
 
 	@Override
@@ -262,9 +265,11 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		if (requestCode == ConnectionAssistant.REQUEST_CODE) {
 			Log.i(THIS, "ConnectionAssistant finished with "+ resultCode);
 			if (resultCode == Activity.RESULT_OK) {
+				Log.i(THIS, "New Connection, refresh Model, refresh everything depending on it");
 				model.removeListener(this);
 				model = Model.getInstance(getApplicationContext());
 				model.addListener(this);
+				initializeState();
 			}
 			findViewById(R.id.content_frame).post(new Runnable() {
 				@Override
