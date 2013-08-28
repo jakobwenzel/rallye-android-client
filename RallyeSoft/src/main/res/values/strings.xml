@@ -76,4 +76,5 @@
 	<string name="solutions_submitted">Lösung eingereicht (weitere möglich)</string>
 	<string name="no_solution_submitted">Keine Lösung eingereicht</string>
 	<string name="solution_state_unknown">Lösungstatus unbekannt</string>
+	<string name="apply">Apply</string>
 </resources>
