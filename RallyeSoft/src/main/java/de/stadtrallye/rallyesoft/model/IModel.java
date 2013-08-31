@@ -193,8 +193,6 @@ public interface IModel {
 		void onConnectionStateChange(ConnectionState newState);
 		void onConnectionFailed(Exception e, ConnectionState fallbackState);
 
-		void onServerConfigChange();
-
 		void onServerInfoChange(ServerInfo info);
 
 		void onAvailableGroupsChange(List<Group> groups);

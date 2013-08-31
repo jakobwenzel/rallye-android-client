@@ -26,8 +26,8 @@ import com.google.android.gcm.GCMRegistrar;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
+import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.PictureSize;
-import de.rallye.model.structures.ServerConfig;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
@@ -64,7 +64,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-	enum CallbackIds { LOGIN, LOGOUT, CONFIG, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
+	enum CallbackIds { LOGIN, LOGOUT, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
 
 	// Singleton Pattern
 	private static Model model;
@@ -79,7 +79,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private ConnectionState state;
 //	private int state;
 	private ServerLogin currentLogin;
-	private ServerConfig serverConfig;
 	private ServerInfo serverInfo;
 
 	// Sub Modules
@@ -208,7 +207,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		if (pref != null) {
 			try {
 				restoreLogin();
-				restoreServerConfig();
 				restoreServerInfo();
 				restoreConnectionStatus();
 			} catch (Exception e) {
@@ -368,45 +366,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 
         refreshAvailableChatrooms();
-        refreshServerConfig();
-	}
-	
-	private void refreshServerConfig() {
-		try {
-			Log.d(THIS, "getting Server config");
-			exec.execute(new JSONObjectRequestExecutor<ServerConfig, CallbackIds>(factory.serverConfigRequest(), new JsonConverters.ServerConfigConverter(), this, CallbackIds.CONFIG));
-		} catch (HttpRequestException e) {
-			err.requestException(e);
-			connectionFailure(e, ConnectionState.Invalid);
-		}
-	}
-	
-	private void serverConfigResult(RequestExecutor<ServerConfig, ?> r) {
-		if (r.isSuccessful()) {
-				ServerConfig serverConfig = r.getResult();
-
-				if (!serverConfig.equals(this.serverConfig)) {
-					this.serverConfig = serverConfig;
-					if (pref != null)
-						save().saveServerConfig().commit();
-					Log.d(THIS, "Server Config has changed, replacing");
-
-					uiHandler.post(new Runnable() {
-						@Override
-						public void run() {
-							for (IModelListener l: modelListeners) {
-								l.onServerConfigChange();
-							}
-						}
-					});
-				}
-
-				checkConnectionComplete();
-		} else {
-			Exception e = r.getException();
-			err.asyncTaskResponseError(e);
-			commError(e);
-		}
+        map.refreshMapConfig();
 	}
 	
 	private void refreshAvailableChatrooms() {
@@ -439,7 +399,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	private synchronized void checkConnectionComplete() {
-		if ((state == ConnectionState.Connecting || state == ConnectionState.InternalConnected) && chatrooms != null && chatrooms.size() > 0 && serverConfig != null) {
+		if ((state == ConnectionState.Connecting || state == ConnectionState.InternalConnected) && chatrooms != null && chatrooms.size() > 0) {
 			setConnectionState(ConnectionState.Connected);
 
 			if (pref != null)
@@ -558,7 +518,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		if (pref == null)
 			pref = getDefaultPreferences(context);
 
-		save().saveLogin().saveServerConfig().saveChatrooms().saveConnectionStatus().saveGroups().saveServerInfo().commit();
+		save().saveLogin().saveMapConfig(map.getMapConfig()).saveChatrooms().saveConnectionStatus().saveGroups().saveServerInfo().commit();
 		Log.i(THIS, "Saving Model");
 	}
 
@@ -656,9 +616,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@Override
 	public void executorResult(RequestExecutor<?, CallbackIds> r, CallbackIds callbackId) {
 		switch (callbackId) {
-		case CONFIG:
-			serverConfigResult((RequestExecutor<ServerConfig, ?>) r);
-			break;
 		case LOGOUT:
 			logoutResult((RequestExecutor<String, CallbackIds>) r);
 			break;
@@ -682,6 +639,11 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			break;
 
 		}
+	}
+
+	void trySaveMapConfig(MapConfig mapConfig) {
+		if (model.pref != null)
+			save().saveMapConfig(mapConfig).commit();
 	}
 	
 	private Saver save() {
@@ -724,15 +686,13 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			return this;
 		}
 		
-		public Saver saveServerConfig() {
-			Log.v(THIS, "Saving ServerConfig:"+ serverConfig);
+		public Saver saveMapConfig(MapConfig mapConfig) {
+			Log.v(THIS, "Saving MapConfig:"+ mapConfig);
 
-			edit.putString(Std.LATITUDE, String.valueOf(serverConfig.location.latitude));
-			edit.putString(Std.LONGITUDE, String.valueOf(serverConfig.location.longitude));
-			edit.putString(Std.SERVER+Std.NAME, serverConfig.name);
-			edit.putInt(Std.ROUNDS, serverConfig.rounds);
-			edit.putInt(Std.ROUND_TIME, serverConfig.roundTime);
-			edit.putLong(Std.START_TIME, serverConfig.startTime);
+			edit.putString(Std.LATITUDE, String.valueOf(mapConfig.location.latitude));
+			edit.putString(Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
+			edit.putString(Std.SERVER+Std.NAME, mapConfig.name);
+			edit.putFloat(Std.START_TIME, mapConfig.zoomLevel);
 			return this;
 		}
 		
@@ -780,6 +740,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			edit.putString(Std.SERVER+Std.NAME, serverInfo.name);
 			edit.putString(Std.SERVER+Std.DESCRIPTION, serverInfo.description);
 			edit.putString(Std.SERVER + Std.API, serverInfo.getApiAsString());
+            edit.putString(Std.SERVER+Std.BUILD, serverInfo.build);
 
 			return this;
 		}
@@ -789,7 +750,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		ServerInfo s = ServerInfo.fromSet(
 				pref.getString(Std.SERVER+Std.NAME, null),
 				pref.getString(Std.SERVER+Std.DESCRIPTION, null),
-				pref.getString(Std.SERVER+Std.API, ""));
+				pref.getString(Std.SERVER+Std.API, ""),
+                pref.getString(Std.SERVER+Std.BUILD, "NONE"));
 
 		if (s.name != null && s.api.length > 0) {
 			serverInfo = s;
@@ -803,27 +765,23 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 	}
 	
-	private void restoreServerConfig() {
-		ServerConfig s = new ServerConfig(
-				pref.getString(Std.SERVER+Std.NAME, null),
+	MapConfig restoreMapConfig() {
+		MapConfig s = new MapConfig(
+				pref.getString(Std.SERVER+Std.NAME, ""),
 				Double.valueOf(pref.getString(Std.LATITUDE, "0")),
 				Double.valueOf(pref.getString(Std.LONGITUDE, "0")),
-				pref.getInt(Std.ROUNDS, 0),
-				pref.getInt(Std.ROUND_TIME, 0),
-				pref.getLong(Std.START_TIME, 0));
+				pref.getFloat(Std.ZOOM, 0));
 		
-		if (s.isComplete()) {
-			serverConfig = s;
+        if (s.zoomLevel != 0) {
 			Log.i(THIS, "Server Config recovered");
+            return s;
 		} else {
-			serverConfig = null;
 			Log.e(THIS, "ServerConfig corrupted");
 			Log.v(THIS, pref.getString(Std.SERVER+Std.NAME, null) +"|"+
 					Double.valueOf(pref.getString(Std.LATITUDE, "0")) +"|"+
 					Double.valueOf(pref.getString(Std.LONGITUDE, "0")) +"|"+
-					pref.getInt(Std.ROUNDS, 0) +"|"+
-					pref.getInt(Std.ROUND_TIME, 0) +"|"+
-					pref.getLong(Std.START_TIME, 0));
+					pref.getFloat(Std.ZOOM, 0));
+            return null;
 		}
 	}
 	
@@ -960,10 +918,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@Override
 	public ServerInfo getServerInfo() {
 		return serverInfo;
-	}
-
-	public ServerConfig getServerConfig() {
-		return serverConfig;
 	}
 
 	@Override

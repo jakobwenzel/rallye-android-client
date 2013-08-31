@@ -47,11 +47,6 @@ public class TurnFragment extends SherlockFragment implements IModel.IModelListe
 	}
 
 	@Override
-	public void onServerConfigChange() {
-
-	}
-
-	@Override
 	public void onServerInfoChange(ServerInfo info) {
 
 	}

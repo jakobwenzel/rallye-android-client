@@ -102,7 +102,8 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 		
 		return list;
 	}
-	
+
+    @SuppressWarnings("unchecked")
 	public <KEY, TARGET> Map<KEY, TARGET> toMap(IConverter<? super T, KEY> indexer, IConverter<T, TARGET> compressor) {
 		if (compressor == null)
 			compressor = new IConverter<T, TARGET>() {

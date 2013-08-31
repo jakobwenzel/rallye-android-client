@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
@@ -213,7 +214,8 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 
 			cu = CameraUpdateFactory.newLatLngBounds(LatLngBounds.builder().include(rad1).include(rad2).build(), padding);
 		} else {
-			cu = CameraUpdateFactory.newLatLngZoom(coords, model.getMap().getZoomLevel() + 4);
+			MapConfig mapConfig = model.getMap().getMapConfig();
+			cu = CameraUpdateFactory.newLatLngZoom(coords, (mapConfig != null)? mapConfig.zoomLevel + 4 : 16);
 		}
 
 		if (isLayouted)

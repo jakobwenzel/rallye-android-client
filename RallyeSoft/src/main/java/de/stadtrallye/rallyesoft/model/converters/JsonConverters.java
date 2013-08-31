@@ -13,8 +13,8 @@ import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.LatLng;
+import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
-import de.rallye.model.structures.ServerConfig;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.TaskSubmissions;
@@ -172,17 +172,15 @@ public abstract class JsonConverters {
 		}
 	}
 
-	public static class ServerConfigConverter extends JSONConverter<ServerConfig> {
+	public static class MapConfigConverter extends JSONConverter<MapConfig> {
 		@Override
-		public ServerConfig doConvert(JSONObject o) throws JSONException {
-			JSONObject p = o.getJSONObject(ServerConfig.LOCATION);
+		public MapConfig doConvert(JSONObject o) throws JSONException {
+			JSONObject p = o.getJSONObject(MapConfig.LOCATION);
 
-			return new ServerConfig(o.getString(ServerConfig.NAME),
+			return new MapConfig(o.getString(MapConfig.NAME),
 					p.getDouble(LatLng.LAT),
 					p.getDouble(LatLng.LNG),
-					o.getInt(ServerConfig.ROUNDS),
-					o.getInt(ServerConfig.ROUND_TIME),
-					o.getLong(ServerConfig.START_TIME));
+                    (float) o.getDouble(MapConfig.ZOOM_LEVEL));
 		}
 	}
 
@@ -200,7 +198,7 @@ public abstract class JsonConverters {
 				apis[i] = converter.doConvert(js.getJSONObject(i));
 			}
 
-			return new ServerInfo(o.getString(ServerInfo.NAME), o.getString(ServerInfo.DESCRIPTION), apis);
+			return new ServerInfo(o.getString(ServerInfo.NAME), o.getString(ServerInfo.DESCRIPTION), apis, o.getString(ServerInfo.BUILD));
 		}
 	}
 	public static class ServerInfoApiConverter extends JSONConverter<ServerInfo.Api> {

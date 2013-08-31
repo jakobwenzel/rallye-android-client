@@ -168,11 +168,6 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 	}
 
 	@Override
-	public void onServerConfigChange() {
-
-	}
-
-	@Override
 	public void onServerInfoChange(ServerInfo info) {
 		srv_name.setText(info.name);
 		srv_desc.setText(info.description);

@@ -11,27 +11,33 @@ import android.util.Log;
 
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.LatLng;
+import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
+import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Edges;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Nodes;
+import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
+import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_EDGES;
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_NODES;
 
-public class Map implements IMap, MapUpdateExecutor.Callback {
+public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Callback<Void> {
 	
 	private static final String THIS = Tasks.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 	
 	final private Model model;
+
+	private MapConfig mapConfig;
 	
 	final ArrayList<IMapListener> mapListeners = new ArrayList<IMapListener>();
 
-	
+
 	Map(Model model) {
 		this.model = model;
 
@@ -39,6 +45,10 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 			refresh();
 			model.deprecatedTables &= ~EDIT_EDGES | ~EDIT_NODES;
 		}
+
+        mapConfig = model.restoreMapConfig();
+        if(mapConfig == null)
+			refreshMapConfig();
 	}
 	
 	
@@ -159,15 +169,48 @@ public class Map implements IMap, MapUpdateExecutor.Callback {
 			}
 		});
 	}
-	
-	@Override
-	public LatLng getMapLocation() {
-		return (model.getServerConfig() != null)? model.getServerConfig().location : null;
-	}
-	
-	@Override
-	public float getZoomLevel() {
-		return (model.getServerConfig() != null)? model.getServerConfig().zoomLevel : 0;
-	}
 
+    void refreshMapConfig() {
+        try {
+            Log.d(THIS, "getting Map config");
+            model.exec.execute(new JSONObjectRequestExecutor<MapConfig, Void>(model.factory.serverConfigRequest(), new JsonConverters.MapConfigConverter(), this, null));
+        } catch (HttpRequestException e) {
+            err.requestException(e);
+            model.commError(e);
+        }
+    }
+
+    private void mapConfigResult(RequestExecutor<MapConfig, ?> r) {
+        if (r.isSuccessful()) {
+            MapConfig mapConfig = r.getResult();
+
+            if (!mapConfig.equals(this.mapConfig)) {
+                this.mapConfig = mapConfig;
+                model.trySaveMapConfig(mapConfig);
+                Log.d(THIS, "Server Config has changed, replacing");
+
+                model.uiHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (IMapListener l: mapListeners) {
+                            l.onMapConfigChange(Map.this.mapConfig);
+                        }
+                    }
+                });
+            }
+        } else {
+            Exception e = r.getException();
+            err.asyncTaskResponseError(e);
+            model.commError(e);
+        }
+    }
+
+    @Override
+    public void executorResult(RequestExecutor<?, Void> r, Void callbackId) {
+        mapConfigResult((RequestExecutor<MapConfig, ?>) r);
+    }
+
+    public MapConfig getMapConfig() {
+        return mapConfig;
+    }
 }

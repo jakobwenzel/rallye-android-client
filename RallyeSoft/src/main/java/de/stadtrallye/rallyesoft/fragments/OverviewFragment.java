@@ -100,11 +100,6 @@ public class OverviewFragment extends SherlockFragment implements IModel.IModelL
 	}
 
 	@Override
-	public void onServerConfigChange() {
-
-	}
-
-	@Override
 	public void onServerInfoChange(ServerInfo info) {
 		showServerInfo(info);
 	}

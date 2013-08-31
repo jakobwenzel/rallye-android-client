@@ -54,4 +54,5 @@ public class Std {
 	public static final String PICTURE_GALLERY = "pictureGallery";
 
 	public static final String CHAT_ID = "chatID";
+	public static final String BUILD = "build";
 }

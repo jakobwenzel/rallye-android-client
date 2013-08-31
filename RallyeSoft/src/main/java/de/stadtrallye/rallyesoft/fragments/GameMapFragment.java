@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import de.rallye.model.structures.Edge;
+import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.SherlockMapFragment;
@@ -214,6 +215,11 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 			
 			zoomMap();
 		}
+	}
+
+	@Override
+	public void onMapConfigChange(MapConfig mapConfig) {
+		gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(toGms(mapConfig.location), mapConfig.zoomLevel));
 	}
 
 	@Override

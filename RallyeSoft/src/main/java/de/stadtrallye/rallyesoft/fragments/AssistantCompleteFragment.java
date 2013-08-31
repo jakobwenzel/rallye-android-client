@@ -94,11 +94,6 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 	}
 
 	@Override
-	public void onServerConfigChange() {
-
-	}
-
-	@Override
 	public void onServerInfoChange(ServerInfo info) {
 
 	}

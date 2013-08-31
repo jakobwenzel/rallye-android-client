@@ -362,8 +362,8 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		onConnectionStateChange(fallbackState);
 	}
 
-	@Override
-	public void onServerConfigChange() {
+//	@Override
+	public void onMapConfigChange() {
 		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
 	}
 

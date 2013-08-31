@@ -85,11 +85,6 @@ public class AssistantGroupsFragment extends SherlockListFragment implements IMo
 	}
 
 	@Override
-	public void onServerConfigChange() {
-
-	}
-
-	@Override
 	public void onServerInfoChange(ServerInfo info) {
 
 	}
