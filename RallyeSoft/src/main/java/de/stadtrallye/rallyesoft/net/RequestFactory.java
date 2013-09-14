@@ -145,7 +145,7 @@ public class RequestFactory {
 		}
 	}
 
-	public Request serverConfigRequest() throws HttpRequestException {
+	public Request mapConfigRequest() throws HttpRequestException {
 		final URL url = getURL(Paths.CONFIG);
 		return new Request(url);
 	}

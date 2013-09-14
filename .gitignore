@@ -4,9 +4,9 @@ proguard
 gen
 .settings
 out
-.idea/workspace.xml
-.idea/tasks.xml
+.idea
 Thumbs.db
 local.properties
 .gradle
+*.iml
 */build

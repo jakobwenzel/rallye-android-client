@@ -10,7 +10,6 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import de.rallye.model.structures.Edge;
-import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
@@ -173,7 +172,7 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
     void refreshMapConfig() {
         try {
             Log.d(THIS, "getting Map config");
-            model.exec.execute(new JSONObjectRequestExecutor<MapConfig, Void>(model.factory.serverConfigRequest(), new JsonConverters.MapConfigConverter(), this, null));
+            model.exec.execute(new JSONObjectRequestExecutor<MapConfig, Void>(model.factory.mapConfigRequest(), new JsonConverters.MapConfigConverter(), this, null));
         } catch (HttpRequestException e) {
             err.requestException(e);
             model.commError(e);
