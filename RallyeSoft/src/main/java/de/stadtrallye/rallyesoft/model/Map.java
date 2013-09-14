@@ -10,7 +10,6 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import de.rallye.model.structures.Edge;
-import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;

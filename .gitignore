@@ -8,5 +8,5 @@ out
 Thumbs.db
 local.properties
 .gradle
-*/build
 *.iml
+*/build
