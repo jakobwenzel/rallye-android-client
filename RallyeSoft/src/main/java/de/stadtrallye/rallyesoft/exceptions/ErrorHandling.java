@@ -22,13 +22,13 @@ public class ErrorHandling {
 	public HttpRequestException JSONDuringRequestCreationError(JSONException e, URL url) {
 		Log.e(where, "JSON error before connection");
 		e.printStackTrace();
-		return new HttpRequestException(-2,"JSON error before connection", url, e);
+		return new HttpRequestException(-2,"JSON error before connection", url, null, e);
 	}
 	
 	public HttpRequestException MalformedURLError(MalformedURLException e, URL base, String path) {
 		Log.e(where, "Malformed URL");
 		e.printStackTrace();
-		return new HttpRequestException(-3,"Malformed URL: "+ path, base, e);
+		return new HttpRequestException(-3,"Malformed URL: "+ path, base, null, e);
 	}
 
 	public void notLoggedIn() {

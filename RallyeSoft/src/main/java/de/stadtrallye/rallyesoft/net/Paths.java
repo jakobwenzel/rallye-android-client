@@ -9,7 +9,7 @@ public final class Paths {
 	public static final String CHATS = "chatrooms";
 	public static final String MAP_NODES = "map/nodes";
 	public static final String MAP_EDGES = "map/edges";
-	public static final String CONFIG = "map/config";
+	public static final String MAP_CONFIG = "map/config";
 	public static final String PICS = "pics";
 	public static final String AVATAR = "avatar";
 	public static final String INFO = "system/info";

@@ -64,7 +64,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-	enum CallbackIds { LOGIN, LOGOUT, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
+    enum CallbackIds { LOGIN, LOGOUT, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
 
 	// Singleton Pattern
 	private static Model model;
@@ -316,7 +316,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		currentLogin.setGroupPassword(groupPassword);
 		
 		try {
-			factory.setPushID(GCMRegistrar.getRegistrationId(context));// if newly installed GCM_ID has on occasion not been available at first start
+			factory.setPushID(GCMRegistrar.getRegistrationId(context));// newly installed GCM_ID has on occasion not been available at first start
 			exec.execute(new JSONObjectRequestExecutor<UserAuth, CallbackIds>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		} catch (Exception e) {
 			err.requestException(e);
@@ -764,6 +764,11 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 					pref.getString(Std.SERVER+Std.API, ""));
 		}
 	}
+
+
+    boolean hasPreferencesAttached() {
+        return pref != null;
+    }
 	
 	MapConfig restoreMapConfig() {
 		MapConfig s = new MapConfig(
@@ -845,7 +850,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	public void destroy() {
 		Log.d(THIS, "Destroying Model: Closing DB, killing all tasks");
 
-		save().saveChatrooms().commit();//TODO: maybe move someplace called more often
+        if (pref != null)
+            save().saveChatrooms().commit();//TODO: maybe move someplace called more often
 		
 		db.close();
 		db = null;

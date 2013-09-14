@@ -2,20 +2,24 @@ package de.stadtrallye.rallyesoft.exceptions;
 
 import java.net.URL;
 
+import de.stadtrallye.rallyesoft.net.Request;
+
 public class HttpRequestException extends Exception {
 
 	private static final long serialVersionUID = 1L;
-	
-	private URL url;
+    private final Request request;
+
+    private URL url;
 	private String msg;
 	private int code;
 	private Exception cause;
 
-	public HttpRequestException(int statusCode, String msg, URL url, Exception cause) {
+	public HttpRequestException(int statusCode, String msg, URL url, Request request, Exception cause) {
 		this.url = url;
 		this.code = statusCode;
 		this.msg = msg;
 		this.cause = cause;
+        this.request = request;
 	}
 	
 	public URL getURL() {
@@ -37,9 +41,10 @@ public class HttpRequestException extends Exception {
 	@Override
 	public String toString() {
 		return HttpRequestException.class.getSimpleName() +":\n"+
-				"Url: " +url.toString()+"\n"+
+				"Url: " +url+"\n"+
 				"StatusCode: "+ code +"\n"+
 				"StatusMessage: "+ msg +"\n"+
-				"Root Cause: "+ cause;
+				"Root Cause: "+ cause +"\n"+
+                "Content: "+ request;
 	}
 }

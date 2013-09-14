@@ -77,7 +77,7 @@ public class Request {
 	
 	private int prepareConnection() throws IOException, HttpRequestException {
 		if (DEBUG)
-			Log.i(THIS, "Connecting to: "+url.toString());
+			Log.i(THIS, "Connecting to: "+ url.toString());
 		
 		
 		conn =  (HttpURLConnection) url.openConnection();
@@ -102,7 +102,7 @@ public class Request {
 			if (DEBUG)
 				Log.d(THIS, "Content-Length: "+ conn.getContentLength());
 		} else {
-			throw new HttpRequestException(code, conn.getResponseMessage(), url, null);
+			throw new HttpRequestException(code, conn.getResponseMessage(), url, this, null);
 		}
 		
 		return code;
@@ -122,7 +122,7 @@ public class Request {
 			return reader.readLine();
 		} catch (IOException e) {
 			Log.e(THIS, "Request Failed ("+url.toString()+")", e);
-			throw new HttpRequestException(code, msg, url, e);
+			throw new HttpRequestException(code, msg, url, this, e);
 		} finally {
 			close();
 		}
@@ -141,7 +141,7 @@ public class Request {
 			return res;
 		} catch (IOException e) {
 			Log.e(THIS, "Request Failed ("+url.toString()+")", e);
-			throw new HttpRequestException(code, msg, url, e);
+			throw new HttpRequestException(code, msg, url, this, e);
 		} finally {
 			close();
 		}
@@ -158,4 +158,14 @@ public class Request {
 	public <T> List<T> executeJSONArray(JSONConverter<T> converter) throws JSONException, HttpRequestException {
 		return new JSONArray<T>(converter, execute()).toList();
 	}
+
+    @Override
+    public String toString() {
+        return "Method: "+ requestType+ "\n"+
+                "Target: "+ url +"\n"+
+                "Mime: "+ mime +"\n"+
+                "Post: "+ post +"\n"+
+                "HTTP Code: "+ code +"\n"+
+                "MSG: "+ msg;
+    }
 }

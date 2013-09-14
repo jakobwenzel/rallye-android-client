@@ -45,7 +45,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 			model.deprecatedTables &= ~EDIT_EDGES | ~EDIT_NODES;
 		}
 
-        mapConfig = model.restoreMapConfig();
+        if (model.hasPreferencesAttached())
+            mapConfig = model.restoreMapConfig();
         if(mapConfig == null)
 			refreshMapConfig();
 	}
@@ -170,6 +171,11 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 	}
 
     void refreshMapConfig() {
+        if (!model.isConnectedInternal()) {
+            Log.d(THIS, "Skipping MapConfig: Not logged in");
+            return;
+        }
+
         try {
             Log.d(THIS, "getting Map config");
             model.exec.execute(new JSONObjectRequestExecutor<MapConfig, Void>(model.factory.mapConfigRequest(), new JsonConverters.MapConfigConverter(), this, null));
