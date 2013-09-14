@@ -45,7 +45,7 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 			model.deprecatedTables &= ~EDIT_EDGES | ~EDIT_NODES;
 		}
 
-        if (model.hasPreferencesAttached())
+        if (!model.isTemporary())
             mapConfig = model.restoreMapConfig();
         if(mapConfig == null)
 			refreshMapConfig();
@@ -191,7 +191,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 
             if (!mapConfig.equals(this.mapConfig)) {
                 this.mapConfig = mapConfig;
-                model.trySaveMapConfig(mapConfig);
+                if (!model.isTemporary())
+					model.save().saveMapConfig(mapConfig).commit();
                 Log.d(THIS, "Server Config has changed, replacing");
 
                 model.uiHandler.post(new Runnable() {

@@ -13,7 +13,15 @@ import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 public interface IModel {
 
-	void acceptModel();
+	/**
+	 * Make this Model the new "Main" Model, make the Model NOT temporary
+	 */
+	void acceptTemporaryModel();
+
+	/**
+	 * Is the current Model a temporary one, without the ability to save its config
+	 */
+	boolean isTemporary();
 
 	boolean isEmpty();
 

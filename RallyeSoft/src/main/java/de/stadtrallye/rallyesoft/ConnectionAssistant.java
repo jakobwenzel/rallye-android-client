@@ -71,7 +71,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 			name = savedInstanceState.getString(Std.NAME);
 		}
 
-		model = Model.createEmptyModel(getApplicationContext());
+		model = Model.createTemporaryModel(getApplicationContext());
 
 		//Create FragmentHandlers
 		steps = new ArrayList<FragmentHandler<?>>();
@@ -287,7 +287,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	@Override
 	public void finish(boolean acceptNewConnection) {
 		if (acceptNewConnection && model.isConnected()) {
-			model.acceptModel();
+			model.acceptTemporaryModel();
 			model = null;
 		} else {
 			model.destroy();

@@ -116,11 +116,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	 * @param context needed for Database, Preferences etc
 	 * @return a new completely empty Model, ready to connect to a new server
 	 */
-	public static IModel createEmptyModel(Context context) {
+	public static IModel createTemporaryModel(Context context) {
 		return new Model(context, null);
 	}
 
 	/**
+	 * Helper Method to get the Model from a parent Activity
 	 * @param modelActivity the parent Activity who must initialize the Model
 	 * @return the current Model
 	 */
@@ -134,7 +135,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 
 	/**
-	 * Switch the new Model from {@link #createEmptyModel(android.content.Context)} in to the Singleton Pattern of Model after it has been tested
+	 * Switch the new Model from {@link #createTemporaryModel(android.content.Context)} in to the Singleton Pattern of Model after it has been tested
 	 * Will kill and terminate the old Model immediately
 	 * @param newModel a Model whose connection to a new server was successful
 	 */
@@ -152,9 +153,14 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 
 	@Override
-	public void acceptModel() {
+	public void acceptTemporaryModel() {
 		Model.switchToNew(this);
 		Log.i(THIS, "Switched to new Model");
+	}
+
+	@Override
+	public boolean isTemporary() {
+		return pref == null;
 	}
 
 	@Override
@@ -224,6 +230,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		factory = new RequestFactory(currentLogin, uniqueID);
 		factory.setPushID(GCMRegistrar.getRegistrationId(context));
 
+		map = new Map(this);
+		tasks = new Tasks(this);
+
 		if (state == ConnectionState.Connected) {
 			if ((deprecatedTables & EDIT_CHATROOMS) > 0) {
 				refreshAvailableChatrooms();
@@ -246,9 +255,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			}
 			refreshConfiguration();
 		}
-
-		map = new Map(this);
-		tasks = new Tasks(this);
 	}
 	
 	@Override
@@ -640,17 +646,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 		}
 	}
-
-	void trySaveMapConfig(MapConfig mapConfig) {
-		if (model.pref != null)
-			save().saveMapConfig(mapConfig).commit();
-	}
 	
-	private Saver save() {
+	Saver save() {
 		return new Saver();
 	}
 	
-	private class Saver {
+	class Saver {
 		private Editor edit;
 		
 		public Saver() {
@@ -764,11 +765,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 					pref.getString(Std.SERVER+Std.API, ""));
 		}
 	}
-
-
-    boolean hasPreferencesAttached() {
-        return pref != null;
-    }
 	
 	MapConfig restoreMapConfig() {
 		MapConfig s = new MapConfig(
@@ -850,7 +846,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	public void destroy() {
 		Log.d(THIS, "Destroying Model: Closing DB, killing all tasks");
 
-        if (pref != null)
+        if (!isTemporary())// save everything that changes without explicit refreshing originiating here
             save().saveChatrooms().commit();//TODO: maybe move someplace called more often
 		
 		db.close();
