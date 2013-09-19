@@ -3,17 +3,14 @@ package de.stadtrallye.rallyesoft.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceCategory;
+import android.support.v7.widget.GridLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -38,6 +35,8 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.PictureIdResolver;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.widget.GridView;
+import de.stadtrallye.rallyesoft.widget.ListView;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
@@ -78,7 +77,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 
 		gridAdapter = new AdditionalGridAdapter();
 		additionalGrid.setAdapter(gridAdapter);
-		additionalGrid.setOnItemClickListener(this);
+//		additionalGrid.setOnItemClickListener(this);
 
 		submissionAdapter = new SubmissionListAdapter();
 		submissionsList.setAdapter(submissionAdapter);
@@ -140,6 +139,11 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		}
 
 		@Override
+		public boolean hasStableIds() {
+			return true;
+		}
+
+		@Override
 		public int getCount() {
 			return (task.additionalResources != null)? task.additionalResources.size() : 0;
 		}
@@ -162,7 +166,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 
 			if (v == null) {
 				v = new SquareImageView(getActivity());
-				v.setLayoutParams(new GridView.LayoutParams(-1,-1));
+//				v.setLayoutParams(new GridLayout.LayoutParams(-1,-1));
 				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
 
@@ -185,6 +189,11 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		public SubmissionListAdapter() {
 			this.loader = ImageLoader.getInstance();
 			this.inflator = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		}
+
+		@Override
+		public boolean hasStableIds() {
+			return true;
 		}
 
 		public void changeList(List<Submission> submissions) {

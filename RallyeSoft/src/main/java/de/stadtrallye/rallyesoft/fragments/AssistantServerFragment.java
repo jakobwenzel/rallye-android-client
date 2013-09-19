@@ -9,6 +9,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +45,7 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 	private EditText port;
 	private Button test;
 	private EditText path;
+	private ScrollView scrollView;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,8 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.assistant_server, container, false);
+
+		scrollView = (ScrollView)v.findViewById(R.id.scrollView);
 
 		protocol = (Spinner) v.findViewById(R.id.protocol);
 		server = (EditText) v.findViewById(R.id.server);
@@ -69,7 +73,6 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				if (actionId == EditorInfo.IME_ACTION_SEND) {
 					test.callOnClick();
-					next.requestFocus();
 				}
 				return false;
 			}
@@ -142,6 +145,7 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		return protocol +"://"+ server +":"+ port +"/"+ path;
 	}
 
+	// "Test"
 	@Override
 	public void onClick(View v) {
 		IModel model = assistant.getModel();
@@ -149,6 +153,8 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			String server = getServer();
 			assistant.setServer(server);
 			loader.displayImage(model.getServerPictureURL(), srv_image);
+			scrollView.smoothScrollTo(0, next.getBottom());
+			next.requestFocus();
 		} catch (MalformedURLException e) {
 			Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 		}
@@ -172,6 +178,7 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		srv_name.setText(info.name);
 		srv_desc.setText(info.description);
 		next.setVisibility(View.VISIBLE);
+		next.requestFocusFromTouch();
 	}
 
 	@Override

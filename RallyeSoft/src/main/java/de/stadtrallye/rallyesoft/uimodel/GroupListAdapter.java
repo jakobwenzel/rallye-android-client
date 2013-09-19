@@ -98,6 +98,14 @@ public class GroupListAdapter extends BaseAdapter {
 		return groups.get(position).groupID;
 	}
 
+	public Integer findPosition(int group) {
+		for (int i=0; i<groups.size(); i++) {
+			if (groups.get(i).groupID == group)
+				return i;
+		}
+		return null;
+	}
+
 	public void changeGroups(List<Group> groups) {
 		this.groups = groups;
 		notifyDataSetChanged();

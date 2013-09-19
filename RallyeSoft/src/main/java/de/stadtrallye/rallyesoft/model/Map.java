@@ -192,8 +192,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
             if (!mapConfig.equals(this.mapConfig)) {
                 this.mapConfig = mapConfig;
                 if (!model.isTemporary())
-					model.save().saveMapConfig(mapConfig).commit();
-                Log.d(THIS, "Server Config has changed, replacing");
+					model.save().saveMapConfig().commit();
+                Log.d(THIS, "Map Config has changed, replacing");
 
                 model.uiHandler.post(new Runnable() {
                     @Override

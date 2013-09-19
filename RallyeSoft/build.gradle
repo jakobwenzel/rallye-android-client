@@ -20,16 +20,17 @@ dependencies {
 	compile project(':ViewPagerIndicator')
 	compile project(':PagerSlidingTabStrip')
 	compile project(':common:RallyeStructures')
-    compile 'com.android.support:support-v4:18.0.0'
-    compile 'com.google.android.gms:play-services:3.2.25'
+    compile 'com.android.support:support-v4:18.0.+'
+    compile 'com.google.android.gms:play-services:3.2.+'
+	compile 'com.android.support:gridlayout-v7:18.0.+'
 }
 
 android {
     compileSdkVersion 18
-    buildToolsVersion "18.0.1"
+	buildToolsVersion "18.1"
 
     defaultConfig {
         minSdkVersion 10
-        targetSdkVersion 17
+        targetSdkVersion 18
     }
 }

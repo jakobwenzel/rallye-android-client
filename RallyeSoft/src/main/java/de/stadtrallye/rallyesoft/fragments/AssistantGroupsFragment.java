@@ -45,10 +45,11 @@ public class AssistantGroupsFragment extends SherlockListFragment implements IMo
 	}
 
 	private void restoreChoice(ListView list) {
-		int g = assistant.getGroup();
-		if (g > 0) {
+		Integer pos = groupAdapter.findPosition(assistant.getGroup());
+
+		if (pos != null) {
 			list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-			list.setItemChecked(g-1, true);
+			list.setItemChecked(pos, true);
 		}
 	}
 

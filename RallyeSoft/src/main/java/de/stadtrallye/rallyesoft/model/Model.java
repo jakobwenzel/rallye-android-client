@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -216,7 +217,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 				restoreServerInfo();
 				restoreConnectionStatus();
 			} catch (Exception e) {
-				Log.e(THIS, "Corrupted Login-Data: staying offline, Please send me a Bug-Report!!", e);
+				Log.e(THIS, "Corrupted / Incomplete Login-Data: staying offline", e);
 				if (currentLogin == null)
 					currentLogin = new ServerLogin();
 				setConnectionState(ConnectionState.None);
@@ -430,6 +431,13 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private void availableGroupsResult(RequestExecutor<List<Group>, ?> r) {
 		if (r.isSuccessful()) {
 			groups = r.getResult();
+			Collections.sort(groups, new Comparator<Group>() {
+				@Override
+				public int compare(Group lhs, Group rhs) {
+					return (lhs.groupID > rhs.groupID)? 1 : (lhs.groupID < rhs.groupID)? -1 : 0;
+				}
+			});
+
 
 			if (pref != null)
 				save().saveGroups().commit();
@@ -524,7 +532,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		if (pref == null)
 			pref = getDefaultPreferences(context);
 
-		save().saveLogin().saveMapConfig(map.getMapConfig()).saveChatrooms().saveConnectionStatus().saveGroups().saveServerInfo().commit();
+		save().saveLogin().saveMapConfig().saveChatrooms().saveConnectionStatus().saveGroups().saveServerInfo().commit();
 		Log.i(THIS, "Saving Model");
 	}
 
@@ -687,12 +695,16 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			return this;
 		}
 		
-		public Saver saveMapConfig(MapConfig mapConfig) {
+		public Saver saveMapConfig() {
+			MapConfig mapConfig = map.getMapConfig();
 			Log.v(THIS, "Saving MapConfig:"+ mapConfig);
+
+			if (mapConfig == null)
+				Log.e(THIS, "MapConfig still null during Save!");
 
 			edit.putString(Std.LATITUDE, String.valueOf(mapConfig.location.latitude));
 			edit.putString(Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
-			edit.putString(Std.SERVER+Std.NAME, mapConfig.name);
+			edit.putString(Std.MAP_BOUNDS+Std.NAME, mapConfig.name);
 			edit.putFloat(Std.START_TIME, mapConfig.zoomLevel);
 			return this;
 		}
@@ -748,6 +760,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 
 	private void restoreServerInfo() {
+		if (!pref.contains(Std.SERVER+Std.NAME)) {
+			serverInfo = null;
+			Log.w(THIS, "No Server Info found");
+			return;
+		}
+
 		ServerInfo s = ServerInfo.fromSet(
 				pref.getString(Std.SERVER+Std.NAME, null),
 				pref.getString(Std.SERVER+Std.DESCRIPTION, null),
@@ -767,8 +785,13 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	MapConfig restoreMapConfig() {
+		if (!pref.contains(Std.MAP_BOUNDS+Std.NAME)) {
+			Log.w(THIS, "No Map Config found");
+			return null;
+		}
+
 		MapConfig s = new MapConfig(
-				pref.getString(Std.SERVER+Std.NAME, ""),
+				pref.getString(Std.MAP_BOUNDS+Std.NAME, ""),
 				Double.valueOf(pref.getString(Std.LATITUDE, "0")),
 				Double.valueOf(pref.getString(Std.LONGITUDE, "0")),
 				pref.getFloat(Std.ZOOM, 0));
@@ -787,6 +810,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	private void restoreLogin() {
+		if (!pref.contains(Std.SERVER)) {
+			Log.w(THIS, "No Login found");
+			currentLogin = new ServerLogin();
+			return;
+		}
+
 		UserAuth auth = new UserAuth(pref.getInt(Std.USER_ID, 0), pref.getString(Std.USER+Std.PASSWORD, null));
 		if (auth.password == null)
 			auth = null;

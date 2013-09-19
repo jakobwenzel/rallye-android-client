@@ -7,9 +7,11 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	private final ActionBarDrawerToggle drawerToggle;
 	private final DrawerLayout drawerLayout;
 	private final ListView dashboard;
+	private final MenuAdapter dashAdapter;
 
 	public RallyeTabManager(FragmentActivity activity, IModel model, DrawerLayout drawerLayout) {
 		super(activity, activity.getSupportFragmentManager(), R.id.content_frame);
@@ -97,7 +100,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		}
 
 		dashboard = (ListView) activity.findViewById(R.id.left_drawer);
-		ArrayAdapter<String> dashAdapter = new MenuAdapter(activity, nav);
+		dashAdapter = new MenuAdapter(activity, nav);
 		dashboard.setAdapter(dashAdapter);
 		dashboard.setOnItemClickListener(this);
 	}
@@ -159,6 +162,8 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	public void conditionChange() {
 		if (!checkCondition(tabs.get(currentTab)))
 			switchToTab(TAB_OVERVIEW);
+
+		dashAdapter.notifyDataSetChanged();
 	}
 
 	public boolean isMenuOpen() {
@@ -185,6 +190,17 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 		public MenuAdapter(Context context, List<String> menu) {
 			super(context, R.layout.dashboard_item, android.R.id.text1, menu);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			TextView v = (TextView) super.getView(position, convertView, parent);
+			if (isEnabled(position)) {
+				v.setTextColor(0xFFFFFFFF);
+			} else {
+				v.setTextColor(0xFF777777);
+			}
+			return v;
 		}
 
 		@Override

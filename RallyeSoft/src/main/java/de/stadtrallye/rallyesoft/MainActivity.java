@@ -255,7 +255,9 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		if (!keepModel) // Only destroy the model if we do not need it again after the configuration change
 			model.destroy();
 
-		GCMRegistrar.onDestroy(this);
+		try {
+			GCMRegistrar.onDestroy(this);
+		} catch (Exception e) {}
 
 		super.onDestroy();
 	}
@@ -270,14 +272,19 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 				model = Model.getInstance(getApplicationContext());
 				model.addListener(this);
 				initializeState();
+			} else {
 			}
-			findViewById(R.id.content_frame).post(new Runnable() {
+			findViewById(R.id.content_frame).postDelayed(new Runnable() {
 				@Override
 				public void run() {
+					if (lastTab == null)
+						lastTab = RallyeTabManager.TAB_OVERVIEW;
 					tabManager.switchToTab(lastTab);
+					Log.w(THIS, "switching back to tab: "+ lastTab);
 					lastTab = null;
+					onConnectionStateChange(model.getConnectionState());
 				}
-			});
+			}, 1000);
 		} else if (data != null) {
 			Uri uri = data.getData();
 
@@ -336,11 +343,12 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 				activateProgressAnimation();
 				break;
 			case Disconnected:
-				tabManager.conditionChange();
 			case Connected:
 			default:
 				deactivateProgressAnimation();
 		}
+
+		tabManager.conditionChange();
 
 		Drawable d = getResources().getDrawable(R.drawable.ic_launcher);
 
