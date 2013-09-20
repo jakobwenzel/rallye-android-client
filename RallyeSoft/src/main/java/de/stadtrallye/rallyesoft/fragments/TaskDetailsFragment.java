@@ -10,7 +10,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -35,8 +37,6 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.PictureIdResolver;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
-import de.stadtrallye.rallyesoft.widget.GridView;
-import de.stadtrallye.rallyesoft.widget.ListView;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
