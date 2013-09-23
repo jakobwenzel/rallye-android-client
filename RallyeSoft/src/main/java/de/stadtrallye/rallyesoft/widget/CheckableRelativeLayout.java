@@ -7,7 +7,9 @@ import android.widget.Checkable;
 import android.widget.RelativeLayout;
 
 /**
- * Created by Ramon on 20.06.13.
+ * Alternative for a regular RelativeLayout as parent for Views returned by an ListAdapter
+ * That way a specific Entry can be highlighted (same look as if pressed) using the standard selection api of ListAdapter
+ * Main Use: The Group Picker of ConnectionAssistant: we would like to highlight the previously selected group if the user returns to that page by using the 'back' key
  */
 public class CheckableRelativeLayout extends RelativeLayout implements Checkable {
 

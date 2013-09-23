@@ -65,11 +65,11 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 
 	}
 
-	@Override
-	public void onStop() {
-		super.onStop();
-
-	}
+//	@Override
+//	public void onStop() {
+//		super.onStop();
+//
+//	}
 
 	@Override
 	public void onClick(View v) {

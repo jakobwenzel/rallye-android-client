@@ -49,16 +49,16 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 	private IModel model;
 	private ITasks tasks;
 	private GoogleMap gmap;
-	private HashMap<Marker, Integer> markers = new HashMap<Marker, Integer>();
+	private final HashMap<Marker, Integer> markers = new HashMap<Marker, Integer>();
 	private boolean singleMode;
 	private TabManager tabManager;
 	private boolean isLayouted;
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-	}
+//	@Override
+//	public void onCreate(Bundle savedInstanceState) {
+//		super.onCreate(savedInstanceState);
+//
+//	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -119,13 +119,13 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 		tasks.removeListener(this);
 	}
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
+//	@Override
+//	public void onSaveInstanceState(Bundle outState) {
+//		super.onSaveInstanceState(outState);
+//
+//	}
 
-	}
-
-	public void populateMap() {
+	private void populateMap() {
 
 		markers.clear();
 		gmap.clear();

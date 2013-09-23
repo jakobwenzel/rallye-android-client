@@ -133,11 +133,11 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 		listAdapter = null;
 	}
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-
-	}
+//	@Override
+//	public void onSaveInstanceState(Bundle outState) {
+//		super.onSaveInstanceState(outState);
+//
+//	}
 
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
@@ -230,7 +230,7 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 			case Task.SUBMITS_NONE:
 				resId = R.string.no_solution_submitted;
 				break;
-			case Task.SUBMITS_UNKOWN:
+			case Task.SUBMITS_UNKNOWN:
 			default:
 				resId = R.string.solution_state_unknown;
 		}

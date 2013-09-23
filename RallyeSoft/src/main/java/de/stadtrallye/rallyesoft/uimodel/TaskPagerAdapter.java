@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.util.Log;
 import android.view.ViewGroup;
 
 import de.stadtrallye.rallyesoft.R;
@@ -16,21 +15,20 @@ import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 
 /**
  * Adapter to use a Cursor to page through all Tasks in detail
- *
  */
 public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 
-	private final Context context;
+//	private final Context context;
 	private final ITasksMapControl mapControl;
 	private Cursor cursor;
-	private String ofStr;
+	private final String ofStr; // Translation placeholder
 
 	private CursorConverters.TaskCursorIds c;
 
 	public TaskPagerAdapter(FragmentManager fm, Context context, Cursor cursor, ITasksMapControl mapControl) {
 		super(fm);
 		this.cursor = cursor;
-		this.context = context;
+//		this.context = context;
 		this.mapControl = mapControl;
 
 		this.ofStr = context.getString(R.string.of);

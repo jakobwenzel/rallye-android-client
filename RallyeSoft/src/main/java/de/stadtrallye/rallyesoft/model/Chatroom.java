@@ -20,6 +20,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.AdvTaskId;
+import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chats;
@@ -68,7 +69,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	private int nextTaskId = 0;
 
 	//Listeners
-	private ArrayList<IChatroomListener> listeners = new ArrayList<IChatroomListener>();
+	private final ArrayList<IChatroomListener> listeners = new ArrayList<IChatroomListener>();
 
 	/**
 	 * @return all available Chatrooms
@@ -176,7 +177,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		try {
 			setState(ChatroomState.Refreshing);
 
-			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatRefreshRequest(id, lastRefresh), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
+			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatRefreshRequest(id, lastRefresh), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -657,7 +658,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostRequest(id, msg, pictureID), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostRequest(id, msg, pictureID), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -673,7 +674,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostWithHashRequest(id, msg, pictureHash), new ChatEntry.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostWithHashRequest(id, msg, pictureHash), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);

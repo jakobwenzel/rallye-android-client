@@ -29,11 +29,6 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 		
 		this.converter = converter;
 	}
-	
-	@Deprecated
-	public JSONArray(JSONConverter<T> converter, org.json.JSONArray arr) throws JSONException {
-		this(converter, arr.toString());
-	}
 
 	@Override
 	public Iterator<T> iterator() {
@@ -72,21 +67,11 @@ public class JSONArray<T> extends org.json.JSONArray implements Iterable<T> {
 	
 	/**
 	 * Written to block JSONException, which Java does not allow in Constructors
-	 * @param converter
-	 * @param js
-	 * @return
+	 * @param converter an IConverter that can convert each JSONObject inside this JSONArray to T
+	 * @param js the JSONArray as String (as org.json.JSONArray uses it)
+	 * @return an iterable JSONArray
 	 */
 	public static <T> JSONArray<T> getInstance(JSONConverter<T> converter, String js) {
-		try {
-			return new JSONArray<T>(converter, js);
-		} catch (JSONException e) {
-			err.jsonError(e);
-			return null;
-		}
-	}
-
-	@Deprecated
-	public static <T> JSONArray<T> getInstance(JSONConverter<T> converter, org.json.JSONArray js) {
 		try {
 			return new JSONArray<T>(converter, js);
 		} catch (JSONException e) {

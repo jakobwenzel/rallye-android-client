@@ -1,24 +1,24 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.animation.LayoutTransition;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,8 @@ import de.stadtrallye.rallyesoft.model.PictureGallery;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.PictureIdResolver;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.widget.GridView;
+import de.stadtrallye.rallyesoft.widget.ListView;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
@@ -165,7 +166,8 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 			ImageView v = (ImageView) convertView;
 
 			if (v == null) {
-				v = new SquareImageView(getActivity());
+				v = new ImageView(getActivity());
+//				v.setAdjustViewBounds(true);
 //				v.setLayoutParams(new GridLayout.LayoutParams(-1,-1));
 				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
@@ -270,18 +272,6 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		@Override
 		public String getPictureUrl(int pos) {
 			return resolver.resolvePictureID(pictures.get(pos), this.size);
-		}
-	}
-
-	private static class SquareImageView extends ImageView {
-
-		public SquareImageView(Context context) {
-			super(context);
-		}
-
-		@Override
-		protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-			super.onMeasure(widthMeasureSpec, widthMeasureSpec);
 		}
 	}
 }

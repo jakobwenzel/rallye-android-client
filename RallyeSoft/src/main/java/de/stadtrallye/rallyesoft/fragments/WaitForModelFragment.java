@@ -10,7 +10,8 @@ import com.actionbarsherlock.app.SherlockFragment;
 import de.stadtrallye.rallyesoft.R;
 
 /**
- * Created by Ramon on 11.08.13.
+ * Placeholder that can be shown whenever there is no other applicable fragment
+ * Specifically during loading and closing the ConnectionAssistant, to force all other fragments that depend on Model to refresh
  */
 public class WaitForModelFragment extends SherlockFragment {
 

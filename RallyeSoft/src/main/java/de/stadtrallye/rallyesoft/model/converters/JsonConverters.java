@@ -21,6 +21,7 @@ import de.rallye.model.structures.TaskSubmissions;
 import de.rallye.model.structures.User;
 import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONArrayConverter;
@@ -32,9 +33,22 @@ import de.stadtrallye.rallyesoft.util.JSONConverter;
  */
 public abstract class JsonConverters {
 
+	public static class ChatConverter extends JSONConverter<ChatEntry> {
+
+		@Override
+		public ChatEntry doConvert(JSONObject o) throws JSONException {
+			return new ChatEntry(o.getInt(ChatEntry.CHAT_ID),
+					o.getString(ChatEntry.MESSAGE),
+					o.getInt(ChatEntry.TIMESTAMP),
+					o.getInt(ChatEntry.GROUP_ID),
+					o.getInt(ChatEntry.USER_ID),
+					o.optInt(ChatEntry.PICTURE_ID));
+		}
+	}
+
 	public static class ChatroomConverter extends JSONConverter<Chatroom> {
 
-		private Model model;
+		private final Model model;
 
 		public ChatroomConverter(Model model) {
 			this.model = model;
@@ -61,7 +75,7 @@ public abstract class JsonConverters {
 
 	public static class TaskConverter extends JSONConverter<Task> {
 
-		private JSONArrayConverter<AdditionalResource> converter = new JSONArrayConverter<AdditionalResource>(new AdditionalResourceConverter());
+		private final JSONArrayConverter<AdditionalResource> converter = new JSONArrayConverter<AdditionalResource>(new AdditionalResourceConverter());
 
 		@Override
 		public Task doConvert(JSONObject o) throws JSONException {
@@ -78,7 +92,7 @@ public abstract class JsonConverters {
 			return new Task(o.getInt(Task.TASK_ID), o.getBoolean(Task.LOCATION_SPECIFIC),
 					coords, o.getDouble(Task.RADIUS), o.getString(Task.NAME), o.getString(Task.DESCRIPTION),
 					o.getBoolean(Task.MULTIPLE_SUBMITS), o.getInt(Task.SUBMIT_TYPE), o.getString(Task.POINTS),
-					res, Task.SUBMITS_UNKOWN);
+					res, Task.SUBMITS_UNKNOWN);
 		}
 	}
 
@@ -98,7 +112,7 @@ public abstract class JsonConverters {
 
 	public static class TaskSubmissionsConverter extends JSONConverter<TaskSubmissions> {
 
-		private JSONArrayConverter<Submission> converter = new JSONArrayConverter<Submission>(new SubmissionConverter());
+		private final JSONArrayConverter<Submission> converter = new JSONArrayConverter<Submission>(new SubmissionConverter());
 
 		@Override
 		public TaskSubmissions doConvert(JSONObject o) throws JSONException {
@@ -133,7 +147,7 @@ public abstract class JsonConverters {
 
 	public static class EdgeConverter extends JSONConverter<Edge> {
 
-		final private Map<Integer, Node> nodes;
+		private final Map<Integer, Node> nodes;
 
 		public EdgeConverter(Map<Integer, Node> nodes) {
 			this.nodes = nodes;
@@ -150,19 +164,17 @@ public abstract class JsonConverters {
 	}
 
 	public static class NodeConverter extends JSONConverter<Node> {
+		private final JSONConverter<LatLng> converter = new LatLngConverter();
 
 		@Override
 		public Node doConvert(JSONObject o) throws JSONException {
-			JSONObject p = o.getJSONObject(Node.LOCATION);
 
 			return new Node(
 					o.getInt(Node.NODE_ID),
 					o.getString(Node.NAME),
-					p.getDouble(LatLng.LAT),
-					p.getDouble(LatLng.LNG),
+					converter.convert(o.getJSONObject(Node.LOCATION)),
 					o.getString(Node.DESCRIPTION));
 		}
-
 	}
 
 	public static class NodeIndexer implements IConverter<Node, Integer> {
@@ -172,33 +184,43 @@ public abstract class JsonConverters {
 		}
 	}
 
+	public static class LatLngConverter extends JSONConverter<LatLng> {
+
+		@Override
+		public LatLng doConvert(JSONObject o) throws JSONException {
+			return new LatLng(o.getDouble(LatLng.LAT), o.getDouble(LatLng.LNG));
+		}
+	}
+
 	public static class MapConfigConverter extends JSONConverter<MapConfig> {
+		private final JSONConverter<LatLng> converter = new LatLngConverter();
+		private final JSONArrayConverter<LatLng> arrayConverter = new JSONArrayConverter<LatLng>(converter);
+
 		@Override
 		public MapConfig doConvert(JSONObject o) throws JSONException {
-			JSONObject p = o.getJSONObject(MapConfig.LOCATION);
 
 			return new MapConfig(o.getString(MapConfig.NAME),
-					p.getDouble(LatLng.LAT),
-					p.getDouble(LatLng.LNG),
-                    (float) o.getDouble(MapConfig.ZOOM_LEVEL));
+					converter.convert(o.getJSONObject(MapConfig.LOCATION)),
+                    (float) o.getDouble(MapConfig.ZOOM_LEVEL),
+					arrayConverter.convert(o.getJSONArray(MapConfig.BOUNDS)));
 		}
 	}
 
 	public static class ServerInfoConverter extends JSONConverter<ServerInfo> {
 
-		private ServerInfoApiConverter converter = new ServerInfoApiConverter();
+		private final JSONArrayConverter<ServerInfo.Api> converter = new JSONArrayConverter<ServerInfo.Api>(new ServerInfoApiConverter());
 
 		@Override
 		public ServerInfo doConvert(JSONObject o) throws JSONException {
 			JSONArray js = o.getJSONArray(ServerInfo.API);
 
-			ServerInfo.Api[] apis = new ServerInfo.Api[js.length()];
+//			ServerInfo.Api[] apis = new ServerInfo.Api[js.length()];
+//
+//			for (int i=0; i<js.length(); i++) {
+//				apis[i] = converter.doConvert(js.getJSONObject(i));
+//			}
 
-			for (int i=0; i<js.length(); i++) {
-				apis[i] = converter.doConvert(js.getJSONObject(i));
-			}
-
-			return new ServerInfo(o.getString(ServerInfo.NAME), o.getString(ServerInfo.DESCRIPTION), apis, o.getString(ServerInfo.BUILD));
+			return new ServerInfo(o.getString(ServerInfo.NAME), o.getString(ServerInfo.DESCRIPTION), converter.convert(js).toArray(new ServerInfo.Api[js.length()]), o.getString(ServerInfo.BUILD));
 		}
 	}
 	public static class ServerInfoApiConverter extends JSONConverter<ServerInfo.Api> {

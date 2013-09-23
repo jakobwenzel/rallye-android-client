@@ -7,12 +7,12 @@ import de.stadtrallye.rallyesoft.net.Request;
 public class HttpRequestException extends Exception {
 
 	private static final long serialVersionUID = 1L;
-    private final Request request;
 
-    private URL url;
-	private String msg;
-	private int code;
-	private Exception cause;
+    private final URL url;
+	private final String msg;
+	private final int code;
+	private final Exception cause;
+	private final Request request;
 
 	public HttpRequestException(int statusCode, String msg, URL url, Request request, Exception cause) {
 		this.url = url;

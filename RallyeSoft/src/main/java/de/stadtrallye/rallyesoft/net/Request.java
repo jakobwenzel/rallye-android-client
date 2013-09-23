@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.json.JSONException;
@@ -25,7 +26,7 @@ public class Request {
 	
 	public enum RequestType { GET, POST, PUT, DELETE }
 	
-	private URL url;
+	private final URL url;
 	private HttpURLConnection conn;
 	private BufferedReader reader;
 	private int code = 0;
@@ -53,7 +54,7 @@ public class Request {
 		this.requestType = requestType;
 	}
 	
-	public Request putPost(byte[] post, Mime mime) {
+	Request putPost(byte[] post, Mime mime) {
 		this.post = post;
 		this.mime = mime;
 		
@@ -75,7 +76,7 @@ public class Request {
 		conn.getOutputStream().write(post);
 	}
 	
-	private int prepareConnection() throws IOException, HttpRequestException {
+	private void prepareConnection() throws IOException, HttpRequestException {
 		if (DEBUG)
 			Log.i(THIS, "Connecting to: "+ url.toString());
 		
@@ -104,15 +105,17 @@ public class Request {
 		} else {
 			throw new HttpRequestException(code, conn.getResponseMessage(), url, this, null);
 		}
-		
-		return code;
 	}
 	
 	private void close() {
 		try {
 			reader.close();
 			conn.disconnect();
-		} catch (Exception e) {}
+		} catch (NullPointerException e) {
+			Log.w(THIS, "HTTPConnection was NULL during close()");
+		} catch (Exception e) {
+			Log.e(THIS, "HTTPConnection failed to disconnect", e);
+		}
 	}
 	
 	public String execute() throws HttpRequestException {
@@ -164,7 +167,7 @@ public class Request {
         return "Method: "+ requestType+ "\n"+
                 "Target: "+ url +"\n"+
                 "Mime: "+ mime +"\n"+
-                "Post: "+ post +"\n"+
+                "Post: "+ Arrays.toString(post) +"\n"+
                 "HTTP Code: "+ code +"\n"+
                 "MSG: "+ msg;
     }

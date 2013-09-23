@@ -2,16 +2,12 @@ package de.stadtrallye.rallyesoft;
 
 import android.app.Application;
 
-import com.nostra13.universalimageloader.cache.disc.impl.TotalSizeLimitedDiscCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.utils.StorageUtils;
-
-import java.io.File;
 
 /**
- * Created by Ramon on 11.08.13.
+ * Configures the UniversalImageLoader for the entire Application (particularly the caching configuration)
  */
 public class RallyeApplication extends Application {
 

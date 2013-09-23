@@ -1,11 +1,13 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -153,8 +155,13 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			String server = getServer();
 			assistant.setServer(server);
 			loader.displayImage(model.getServerPictureURL(), srv_image);
-			scrollView.smoothScrollTo(0, next.getBottom());
-			next.requestFocus();
+
+			View focus = getActivity().getCurrentFocus();
+			if (focus != null) {
+				InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+				inputMethodManager.hideSoftInputFromWindow(focus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+			}
+//			getActivity().getCurrentFocus().clearFocus();
 		} catch (MalformedURLException e) {
 			Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 		}
@@ -178,7 +185,13 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		srv_name.setText(info.name);
 		srv_desc.setText(info.description);
 		next.setVisibility(View.VISIBLE);
-		next.requestFocusFromTouch();
+		getView().post(new Runnable() {
+			@Override
+			public void run() {
+				scrollView.scrollTo(0, next.getTop());
+				next.requestFocus();
+			}
+		});
 	}
 
 	@Override

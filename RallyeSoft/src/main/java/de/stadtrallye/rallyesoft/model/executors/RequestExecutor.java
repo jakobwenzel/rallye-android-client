@@ -5,11 +5,11 @@ import de.stadtrallye.rallyesoft.util.IConverter;
 
 public class RequestExecutor<T, ID> extends MyRunnable<T> {
 		
-	protected Request r;
-	protected int code;
-	private IConverter<String, T> converter;
-	private Callback<ID> callback;
-	private ID callbackId;
+	private final Request r;
+	private int code;
+	private final IConverter<String, T> converter;
+	private final Callback<ID> callback;
+	private final ID callbackId;
 	
 	public RequestExecutor(Request req, IConverter<String, T> converter, Callback<ID> callback, ID callbackId) {
 		this.r = req;

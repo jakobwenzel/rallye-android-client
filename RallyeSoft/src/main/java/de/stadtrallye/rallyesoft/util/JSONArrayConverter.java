@@ -11,7 +11,7 @@ import org.json.JSONArray;
  */
 public class JSONArrayConverter<T> implements IConverter<JSONArray, List<T>> {
 
-	private JSONConverter<T> converter;
+	private final JSONConverter<T> converter;
 
 	public JSONArrayConverter(JSONConverter<T> converter) {
 		this.converter = converter;

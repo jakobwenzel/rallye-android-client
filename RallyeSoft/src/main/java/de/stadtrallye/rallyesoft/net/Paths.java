@@ -22,13 +22,13 @@ public final class Paths {
 	 * return relative path to a picture
 	 * @param picId PictureID
 	 * @param size approximate Size of the requested Picture
-	 * @return
+	 * @return a RallyeServer compliant relative path (without the base URL)
 	 */
-	public static final String getPic(int picId, PictureSize size) {
+	public static String getPic(int picId, PictureSize size) {
 		return PICS +"/"+ picId +"/"+ size.toShortString();
 	}
 
-	public static final String getAvatar(int groupID) {
+	public static String getAvatar(int groupID) {
 		return GROUPS +"/"+ groupID +"/"+ AVATAR;
 	}
 }

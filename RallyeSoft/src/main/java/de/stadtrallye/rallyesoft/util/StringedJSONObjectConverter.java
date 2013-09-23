@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public class StringedJSONObjectConverter<T> implements IConverter<String, T> {
 
-	private JSONConverter<T> converter;
+	private final JSONConverter<T> converter;
 
 	public StringedJSONObjectConverter(JSONConverter<T> converter) {
 		this.converter = converter;

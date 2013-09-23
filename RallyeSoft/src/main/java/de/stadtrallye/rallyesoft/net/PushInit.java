@@ -11,7 +11,7 @@ public class PushInit {
 
 	/**
 	 * Make sure there is a GCM ID available to use
-	 * @param context
+	 * @param context the context which to register
 	 */
 	public static void ensureRegistration(Context context) {
 		// Register with GCM

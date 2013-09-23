@@ -1,7 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
 import java.io.Serializable;
-import java.util.List;
 
 import de.rallye.model.structures.PictureSize;
 

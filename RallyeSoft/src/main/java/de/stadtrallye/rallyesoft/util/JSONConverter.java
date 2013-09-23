@@ -13,6 +13,7 @@ import org.json.JSONObject;
  */
 public abstract class JSONConverter<T> implements IConverter<JSONObject, T> {
 	
+	@SuppressWarnings("SameReturnValue")
 	public T fallback() {
 		return null;
 	}

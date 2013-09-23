@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import de.rallye.model.structures.Edge;
+import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
@@ -132,7 +133,7 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 		Cursor c = model.db.query(Nodes.TABLE, Nodes.COLS, null, null, null, null, null);
 		
 		while (c.moveToNext()) {
-			nodes.put((int) c.getLong(0), new Node((int) c.getLong(0), c.getString(1), c.getDouble(2), c.getDouble(3), c.getString(4)));
+			nodes.put((int) c.getLong(0), new Node((int) c.getLong(0), c.getString(1), new LatLng(c.getDouble(2), c.getDouble(3)), c.getString(4)));
 		}
 		c.close();
 		
@@ -211,7 +212,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
         }
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void executorResult(RequestExecutor<?, Void> r, Void callbackId) {
         mapConfigResult((RequestExecutor<MapConfig, ?>) r);
     }

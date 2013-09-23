@@ -47,7 +47,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, TAB_NEXT_MOVE, TAB_TASKS, TAB_MAP};
 
 	private final FragmentActivity activity;
-	protected final IModel model;
+	protected IModel model;
 	private final ActionBarDrawerToggle drawerToggle;
 	private final DrawerLayout drawerLayout;
 	private final ListView dashboard;
@@ -103,6 +103,10 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		dashAdapter = new MenuAdapter(activity, nav);
 		dashboard.setAdapter(dashAdapter);
 		dashboard.setOnItemClickListener(this);
+	}
+
+	public void setModel(IModel model) {
+		this.model = model;
 	}
 
 	@Override

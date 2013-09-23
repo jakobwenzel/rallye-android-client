@@ -31,16 +31,15 @@
 				android:layout_height="wrap_content"
 				android:background="@drawable/abs__list_divider_holo_light"/>
 
-		<GridView
+		<de.stadtrallye.rallyesoft.widget.GridView
+				android:id="@+id/additional_info"
 				android:layout_marginTop="8dp"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:scrollbars="none"
-				android:numColumns="3"
+				android:columnWidth="90dp"
 				android:horizontalSpacing="5dp"
 				android:verticalSpacing="5dp"
-				android:drawSelectorOnTop="true"
-				android:id="@+id/additional_info"/>
+				android:drawSelectorOnTop="true"/>
 
 
 		<View
@@ -56,13 +55,13 @@
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/submissions"/>
 
-		<ListView
+		<de.stadtrallye.rallyesoft.widget.ListView
+				android:id="@+id/submissions"
 				android:layout_marginTop="16dp"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:scrollbars="none"
 				android:drawSelectorOnTop="true"
-				android:id="@+id/submissions"/>
+				android:verticalSpacing="5dp"/>
 
 	</LinearLayout>
 

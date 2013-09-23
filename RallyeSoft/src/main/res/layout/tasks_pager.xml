@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout
-		xmlns:android="http://schemas.android.com/apk/res/android"
-		xmlns:app="http://schemas.android.com/apk/res/de.stadtrallye.rallyesoft"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:orientation="vertical">
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
 
 	<FrameLayout
 		android:id="@+id/map"
@@ -13,15 +12,22 @@
 		android:layout_height="0dp"
 		android:layout_weight="0.5" />
 
+	<LinearLayout
+		android:id="@+id/task_details"
+		android:orientation="vertical"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="0.5">
 
-	<android.support.v4.view.ViewPager
+		<android.support.v4.view.ViewPager
 			android:id="@+id/tasks_pager"
 			android:layout_width="match_parent"
 			android:layout_height="0dp"
-			android:layout_weight="0.5" />
+			android:layout_weight="1"/>
 
-	<include
+		<include
 			layout="@layout/tasks_pager_indicator"/>
 
+	</LinearLayout>
 
 </LinearLayout>

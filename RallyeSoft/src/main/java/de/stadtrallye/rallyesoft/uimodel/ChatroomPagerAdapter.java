@@ -25,9 +25,11 @@ public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 		this.chatrooms = chatrooms;
 	}
 
-	public ChatroomFragment getCurrentFragment() {
-		return current;
-	}
+// --Commented out by Inspection START (22.09.13 02:46):
+//	public ChatroomFragment getCurrentFragment() {
+//		return current;
+//	}
+// --Commented out by Inspection STOP (22.09.13 02:46)
 
 	/**
 	 * Needed so the FragmentManager can distinguish tabs of different chatrooms (, if re logging in as different user)

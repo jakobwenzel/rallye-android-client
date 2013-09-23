@@ -39,7 +39,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 
 	private Map<Integer, List<Submission>> submissions;
 
-	private List<ITasksListener> tasksListeners = new ArrayList<ITasksListener>();
+	private final List<ITasksListener> tasksListeners = new ArrayList<ITasksListener>();
 
 	Tasks(Model model) {
 		this.model = model;
@@ -117,7 +117,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 					List<Submission> subs = submissions.get(t.taskID);
 					taskIn.bindLong(12, Task.getSubmitsFromList(subs, t.multipleSubmits));
 				} else {
-					taskIn.bindLong(12, Task.SUBMITS_UNKOWN);
+					taskIn.bindLong(12, Task.SUBMITS_UNKNOWN);
 				}
 				taskIn.executeInsert();
 			}

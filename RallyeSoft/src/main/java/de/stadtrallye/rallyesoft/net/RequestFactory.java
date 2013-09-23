@@ -23,8 +23,8 @@ public class RequestFactory {
 	private static final String THIS = RequestFactory.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 
-	private ServerLogin login;
-	private String devId;
+	private final ServerLogin login;
+	private final String devId;
 	private String pushId;
 	
 	public RequestFactory(ServerLogin login, String devId) {
@@ -74,13 +74,11 @@ public class RequestFactory {
 		Request r = new Request(url, RequestType.PUT);
 		
 		try {
-			JSONObject post = new JSONObject()
-				.put(LoginInfo.NAME, login.getName())
-				.put(LoginInfo.UNIQUE_ID, devId)
-				.put(LoginInfo.PUSH_MODE, "gcm")
-				.put(LoginInfo.PUSH_ID, pushId);
-			r.putPost(post);
-			return r;
+			return r.putPost(new JSONObject()
+					.put(LoginInfo.NAME, login.getName())
+					.put(LoginInfo.UNIQUE_ID, devId)
+					.put(LoginInfo.PUSH_MODE, "gcm")
+					.put(LoginInfo.PUSH_ID, pushId));
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
 		}
@@ -121,10 +119,9 @@ public class RequestFactory {
 		Request r = new Request(url, RequestType.PUT);
 		
 		try {
-			r.putPost(new JSONObject()
-				.put(SimpleChatEntry.MESSAGE, msg)
-				.put(SimpleChatEntry.PICTURE_ID, (pictureID == null)? pictureID : JSONObject.NULL));
-			return r;
+			return r.putPost(new JSONObject()
+					.put(SimpleChatEntry.MESSAGE, msg)
+					.put(SimpleChatEntry.PICTURE_ID, (pictureID == null)? pictureID : JSONObject.NULL));
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
 		}
@@ -135,11 +132,10 @@ public class RequestFactory {
 		Request r = new Request(url, RequestType.PUT);
 
 		try {
-			r.putPost(new JSONObject()
+			return r.putPost(new JSONObject()
 					.put(SimpleChatEntry.MESSAGE, msg)
 					.put(SimpleChatEntry.PICTURE_ID, JSONObject.NULL)
 					.put(SimpleChatWithPictureHash.PICTURE_HASH, pictureHash));
-			return r;
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
 		}

@@ -40,7 +40,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 	private ViewPager pager;
 	private PagerSlidingTabStrip indicator;
 	private ChatroomPagerAdapter fragmentAdapter;
-	private int currentTab;
+//	private int currentTab;
 	private Picture picture = null;
 
 	@Override
@@ -95,15 +95,15 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 		fragmentAdapter = null;
 		chatrooms = null;
 
-		currentTab = pager.getCurrentItem();
+//		currentTab = pager.getCurrentItem();
 	}
 	
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		
-//		outState.putInt(Std.TAB, pager.getCurrentItem());
-	}
+//	@Override
+//	public void onSaveInstanceState(Bundle outState) {
+//		super.onSaveInstanceState(outState);
+//
+////		outState.putInt(Std.TAB, pager.getCurrentItem());
+//	}
 
 	@Override
 	public void pictureTaken(Picture picture) {

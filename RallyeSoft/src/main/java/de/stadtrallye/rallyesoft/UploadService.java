@@ -26,7 +26,7 @@ public class UploadService extends IntentService {
 
 	private static final String NOTE_TAG = ":uploader";
 
-	private IModel model;
+	private final IModel model;
 	private NotificationManager notes;
 
 	public UploadService() {

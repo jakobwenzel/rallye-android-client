@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class StringedJSONArrayConverter<T> implements IConverter<String, List<T>> {
 
-	private JSONConverter<T> converter;
+	private final JSONConverter<T> converter;
 
 	public StringedJSONArrayConverter(JSONConverter<T> converter) {
 		this.converter = converter;

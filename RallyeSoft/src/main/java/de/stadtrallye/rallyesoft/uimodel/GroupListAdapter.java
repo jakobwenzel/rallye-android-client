@@ -8,9 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.util.List;
 
@@ -26,9 +24,9 @@ public class GroupListAdapter extends BaseAdapter {
 
 	private final IModel model;
 	private List<Group> groups;
-	private ImageLoader loader;
+	private final ImageLoader loader;
 //	private Context context;
-	private LayoutInflater inflator;
+	private final LayoutInflater inflator;
 
 	private class ViewMem {
 		public ImageView img;

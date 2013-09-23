@@ -10,12 +10,11 @@ import de.stadtrallye.rallyesoft.net.Request;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 
 public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
-	
-	private Map<Integer, Node> nodes;
+
 	private List<Edge> edges;
-	private Callback model;
-	private Request edgeRequest;
-	private Request nodeRequest;
+	private final Callback model;
+	private final Request edgeRequest;
+	private final Request nodeRequest;
 	
 	public MapUpdateExecutor(Request nodeRequest, Request edgeRequest, Callback model) {
 		this.model = model;
@@ -25,8 +24,8 @@ public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {
 
 	@Override
 	protected Map<Integer, Node> tryRun() throws Exception {
-		
-		nodes = JSONArray.getInstance(new JsonConverters.NodeConverter(), nodeRequest.execute()).toMap(new JsonConverters.NodeIndexer(), null);
+
+		Map<Integer, Node> nodes = JSONArray.getInstance(new JsonConverters.NodeConverter(), nodeRequest.execute()).toMap(new JsonConverters.NodeIndexer(), null);
 		
 		edges = edgeRequest.executeJSONArray(new JsonConverters.EdgeConverter(nodes));
 		

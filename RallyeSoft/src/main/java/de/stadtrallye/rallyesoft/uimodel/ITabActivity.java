@@ -1,7 +1,7 @@
 package de.stadtrallye.rallyesoft.uimodel;
 
 /**
- * Created by Ramon on 08.08.13.
+ * An Activity that uses a {@link de.stadtrallye.rallyesoft.uimodel.TabManager} to show some type of menu (preferably the sliding kind) and manages the Fragments for the activity
  */
 public interface ITabActivity {
 

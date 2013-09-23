@@ -2,8 +2,6 @@ package de.stadtrallye.rallyesoft.model;
 
 import android.database.Cursor;
 
-import java.util.List;
-
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 /**

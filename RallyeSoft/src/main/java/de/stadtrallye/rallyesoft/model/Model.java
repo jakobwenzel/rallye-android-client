@@ -27,11 +27,13 @@ import com.google.android.gcm.GCMRegistrar;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
+import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.PictureSize;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
+import de.stadtrallye.rallyesoft.model.converters.PreferenceConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
@@ -148,7 +150,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			model.destroy();
 		}
 
-		Model.model = (Model) newModel;
+		Model.model = newModel;
 
 		model.saveModel();
 	}
@@ -332,7 +334,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		
 	}
 	
-	public void loginResult(RequestExecutor<UserAuth, ?> r) {
+	void loginResult(RequestExecutor<UserAuth, ?> r) {
 		if (r.isSuccessful()) {
 			
 			currentLogin.setUserAuth(r.getResult());
@@ -660,7 +662,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	class Saver {
-		private Editor edit;
+		private final Editor edit;
 		
 		public Saver() {
 			this.edit = pref.edit();
@@ -706,6 +708,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			edit.putString(Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
 			edit.putString(Std.MAP_BOUNDS+Std.NAME, mapConfig.name);
 			edit.putFloat(Std.START_TIME, mapConfig.zoomLevel);
+            edit.putString(Std.MAP_BOUNDS + Std.MAP_BOUNDS, PreferenceConverters.toSingleString(mapConfig.getBoundsAsSet()));
 			return this;
 		}
 		
@@ -792,9 +795,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 		MapConfig s = new MapConfig(
 				pref.getString(Std.MAP_BOUNDS+Std.NAME, ""),
-				Double.valueOf(pref.getString(Std.LATITUDE, "0")),
-				Double.valueOf(pref.getString(Std.LONGITUDE, "0")),
-				pref.getFloat(Std.ZOOM, 0));
+                new LatLng(Double.valueOf(pref.getString(Std.LATITUDE, "0")), Double.valueOf(pref.getString(Std.LONGITUDE, "0"))),
+				pref.getFloat(Std.ZOOM, 0),
+                MapConfig.getBounds(PreferenceConverters.fromSingleString(pref.getString(Std.MAP_BOUNDS + Std.MAP_BOUNDS, ""))));
 		
         if (s.zoomLevel != 0) {
 			Log.i(THIS, "Server Config recovered");

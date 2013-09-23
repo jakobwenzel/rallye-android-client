@@ -2,10 +2,8 @@ package de.stadtrallye.rallyesoft.uimodel;
 
 import java.net.MalformedURLException;
 
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
-
 /**
- * Created by Ramon on 19.06.13.
+ * Parent of fragments that guide through the various steps
  */
 public interface IConnectionAssistant extends IProgressUI, IModelActivity {
 

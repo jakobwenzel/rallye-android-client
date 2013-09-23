@@ -22,11 +22,8 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 
 import de.rallye.model.structures.PictureSize;
@@ -83,8 +80,8 @@ public class PictureGalleryActivity extends SherlockActivity {
 	
 	private class ImageAdapter extends PagerAdapter {
 
-		private LayoutInflater inflater;
-		private ImageLoader loader;
+		private final LayoutInflater inflater;
+		private final ImageLoader loader;
 
 		public ImageAdapter() {
 			inflater = getLayoutInflater();
@@ -193,7 +190,7 @@ public class PictureGalleryActivity extends SherlockActivity {
 		return false;
 	}
 	
-	public void toggleActionBar() {
+	void toggleActionBar() {
 		if (getSupportActionBar().isShowing())
 			getSupportActionBar().hide();
 		else
@@ -206,7 +203,7 @@ public class PictureGalleryActivity extends SherlockActivity {
 	
 		private PointF pLast = new PointF();
 		
-		private GestureDetector tap = new GestureDetector(getApplicationContext(), this);
+		private final GestureDetector tap = new GestureDetector(getApplicationContext(), this);
 		
 		private PointF pImg;
 		private PointF pView;
@@ -266,7 +263,8 @@ public class PictureGalleryActivity extends SherlockActivity {
 			case MotionEvent.ACTION_POINTER_DOWN:
 				mode = Mode.Zoom;
 //				Log.d(THIS, "scaling, blocking pager");
-				pager.setInterceptTouch(false);
+//				pager.setInterceptTouch(false);
+				pager.requestDisallowInterceptTouchEvent(true);
 //				Log.d(THIS, "Zoom");
 				
 				dLast = distance(e);
@@ -276,7 +274,8 @@ public class PictureGalleryActivity extends SherlockActivity {
 				mode = Mode.Drag;
 				
 				if (currentScale <= baseScale) {
-					pager.setInterceptTouch(true);
+//					pager.setInterceptTouch(true);
+					pager.requestDisallowInterceptTouchEvent(false);
 				}
 				int i = (e.getActionIndex() == 1)? 0 : 1; // multi touch proof, works if more than 2 fingers were on the screen (worst case: jump)
 				pLast.set(e.getX(i), e.getY(i));

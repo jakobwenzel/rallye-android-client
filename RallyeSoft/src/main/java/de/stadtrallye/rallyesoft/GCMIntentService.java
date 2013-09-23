@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import de.rallye.model.structures.Chatroom;
 import de.rallye.model.structures.PushEntity;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.net.PushInit;
 
@@ -38,12 +39,12 @@ public class GCMIntentService extends GCMBaseIntentService {
 
 			switch (type) {
 				case newMessage:
-					ChatEntry chat = new ChatEntry.ChatConverter().doConvert(payload);
+					ChatEntry chat = new JsonConverters.ChatConverter().doConvert(payload);
 					int roomID = payload.getInt(Chatroom.CHATROOM_ID);
 					Model.getInstance(context).getChatroom(roomID).pushChat(chat);
 					break;
 				case messageChanged:
-					chat = new ChatEntry.ChatConverter().doConvert(payload);
+					chat = new JsonConverters.ChatConverter().doConvert(payload);
 					roomID = payload.getInt(Chatroom.CHATROOM_ID);
 					Model.getInstance(context).getChatroom(roomID).editChat(chat);
 					break;

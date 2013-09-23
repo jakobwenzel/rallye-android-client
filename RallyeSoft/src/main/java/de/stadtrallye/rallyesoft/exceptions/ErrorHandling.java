@@ -7,13 +7,12 @@ import java.util.concurrent.ExecutionException;
 import org.json.JSONException;
 
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 import android.util.Log;
 
 public class ErrorHandling {
 	
-	private String where;
+	private final String where;
 
 	public ErrorHandling(String where) {
 		this.where = where;
@@ -59,14 +58,6 @@ public class ErrorHandling {
 
 	public void jsonCastError(ClassCastException e) {
 		Log.e(where, "During JSON Conversion, Object could not be casted to source class", e);
-	}
-
-	public void dbInsertError(String string) {
-		Log.e(where, "Failed to insert into DB: "+ string);
-	}
-
-	public void concurrentConnectionChange(String type) {
-		Log.e(where, "ConnectionState is changing, refusing: "+ type);
 	}
 
 	public void connectionFailure(Exception e, IModel.ConnectionState fallbackState) {

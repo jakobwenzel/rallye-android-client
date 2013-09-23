@@ -12,7 +12,6 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.ViewConfiguration;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -26,7 +25,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 import de.rallye.model.structures.Group;
@@ -57,7 +55,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	private Integer lastTab;
 
 	private RallyeTabManager tabManager;
-	private DrawerLayout drawerLayout;
+//	private DrawerLayout drawerLayout;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -69,7 +67,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		setTitle(R.string.app_name);
 		setContentView(R.layout.main);
 
-		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
 		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
@@ -164,6 +162,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 	private void initializeState() {
 		setSupportProgressBarIndeterminateVisibility(false);
+		tabManager.setModel(model);
 		onConnectionStateChange(model.getConnectionState());
 	}
 
@@ -257,7 +256,9 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 		try {
 			GCMRegistrar.onDestroy(this);
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			Log.e(THIS, "GCMRegistrar failed to destroy", e);
+		}
 
 		super.onDestroy();
 	}
@@ -272,7 +273,6 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 				model = Model.getInstance(getApplicationContext());
 				model.addListener(this);
 				initializeState();
-			} else {
 			}
 			findViewById(R.id.content_frame).postDelayed(new Runnable() {
 				@Override

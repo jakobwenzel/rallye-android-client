@@ -1,8 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/log_list"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" >
-    
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent">
 
-</ListView>
+	<LinearLayout
+		android:orientation="vertical"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+
+		<de.stadtrallye.rallyesoft.widget.ListView
+			android:id="@+id/grid_comp"
+			android:layout_marginTop="8dp"
+			android:layout_marginLeft="8dp"
+			android:layout_marginRight="8dp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:verticalSpacing="5dp"
+			android:drawSelectorOnTop="true"/>
+
+		<TextView
+				android:text="Hallo"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"/>
+
+		<de.stadtrallye.rallyesoft.widget.GridView
+			android:id="@+id/log_list"
+			android:layout_marginTop="8dp"
+			android:layout_marginLeft="8dp"
+			android:layout_marginRight="8dp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:columnWidth="90dp"
+			android:horizontalSpacing="5dp"
+			android:verticalSpacing="5dp"
+			android:drawSelectorOnTop="true" />
+
+	</LinearLayout>
+
+</ScrollView>

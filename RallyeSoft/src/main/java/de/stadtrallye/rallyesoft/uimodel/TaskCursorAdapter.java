@@ -10,7 +10,6 @@ import android.widget.CursorAdapter;
 import android.widget.TextView;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 
@@ -20,7 +19,7 @@ import de.stadtrallye.rallyesoft.model.structures.Task;
 public class TaskCursorAdapter extends CursorAdapter {
 
 	private final LayoutInflater inflator;
-	private final Context context;
+//	private final Context context;
 
 	private int headerPos = -1;
 
@@ -35,7 +34,7 @@ public class TaskCursorAdapter extends CursorAdapter {
 	public TaskCursorAdapter(Context context, Cursor cursor) {
 		super(context, cursor, false);
 
-		this.context = context;
+//		this.context = context;
 
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -69,13 +68,13 @@ public class TaskCursorAdapter extends CursorAdapter {
 
 	private void fillTaskView(ViewMem mem, final Cursor cursor) {
 		String name = cursor.getString(c.name);
-		final double lat = cursor.getDouble(c.latitude);
-		final double lon = cursor.getDouble(c.longitude);
+//		final double lat = cursor.getDouble(c.latitude);
+//		final double lon = cursor.getDouble(c.longitude);
 		final int submits = cursor.getInt(c.submits);
 
 		mem.name.setText(name);
 		switch (submits) {
-			case Task.SUBMITS_UNKOWN:
+			case Task.SUBMITS_UNKNOWN:
 			case Task.SUBMITS_NONE:
 				mem.check.setVisibility(View.INVISIBLE);
 				break;

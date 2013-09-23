@@ -3,7 +3,6 @@ package de.stadtrallye.rallyesoft.model;
 import java.util.List;
 
 import de.rallye.model.structures.Edge;
-import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 

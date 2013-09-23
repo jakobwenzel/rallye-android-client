@@ -32,7 +32,8 @@ import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
- * Created by Ramon on 19.06.13.
+ * Activity that hosts an IConnectionAssistant and several Fragments containing the guided login
+ * User inputs and server configurations are saved here, so they can be accessed from all pages of the assistant
  */
 public class ConnectionAssistant extends SherlockFragmentActivity implements IConnectionAssistant {
 
@@ -53,7 +54,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		// Titel und Inhalt
+		// Title and Content
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setTitle(R.string.connection_assistant);
@@ -103,8 +104,8 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	 */
 	private class FragmentHandler<T extends Fragment> {
 
-		private String tag;
-		private Class<T> clz;
+		private final String tag;
+		private final Class<T> clz;
 		private Bundle arg;
 
 		public FragmentHandler(String tag, Class<T> clz) {
@@ -112,9 +113,11 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 			this.clz = clz;
 		}
 
-		public void setArguments(Bundle arg) {
-			this.arg = arg;
-		}
+// --Commented out by Inspection START (22.09.13 02:46):
+//		public void setArguments(Bundle arg) {
+//			this.arg = arg;
+//		}
+// --Commented out by Inspection STOP (22.09.13 02:46)
 
 		public Fragment getFragment() {
 			Fragment f = getSupportFragmentManager().findFragmentByTag(tag);
@@ -184,7 +187,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	}
 
 	private void setServerLoginJSON(String login) {
-		ServerLogin l = null;
+		ServerLogin l;
 		try {
 			l = ServerLogin.fromJSON(login);
 
@@ -271,6 +274,10 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 
 	@Override
 	public void setServer(String server) throws MalformedURLException {
+		if (model.getLogin().hasServer()) {
+			model.destroy();// Model can only have setServer called once!!
+			model = Model.createTemporaryModel(getApplicationContext());
+		}
 		this.server = model.setServer(server);
 	}
 

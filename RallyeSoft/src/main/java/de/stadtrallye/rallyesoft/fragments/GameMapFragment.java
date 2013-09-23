@@ -45,7 +45,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 	
 	private GoogleMap gmap;
 	private IMap map;
-	private HashMap<Marker, Node> markers = new HashMap<Marker, Node>();
+	private final HashMap<Marker, Node> markers = new HashMap<Marker, Node>();
 
 	private LatLngBounds gameBounds;
 	private LatLngBounds currentBounds;
@@ -166,7 +166,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 		}
 	}
 	
-	public static int getColor(Edge.Type t) {
+	private static int getColor(Edge.Type t) {
 		switch (t) {
 		case Bike:
 			return 0xbb00ff00;

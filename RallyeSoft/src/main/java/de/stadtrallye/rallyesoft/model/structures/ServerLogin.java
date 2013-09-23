@@ -3,8 +3,6 @@ package de.stadtrallye.rallyesoft.model.structures;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 import java.net.MalformedURLException;
@@ -23,7 +21,7 @@ public class ServerLogin {
 	public static final String GROUP_PASSWORD = "groupPassword";
 	public static final String VERSION = "version";
 
-	public enum State {Unknown, Validated, Invalidated};
+	public enum State {Unknown, Validated, Invalidated}
 	
 	private State valid;
 	private long lastValidated;

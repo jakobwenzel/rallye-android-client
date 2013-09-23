@@ -249,7 +249,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public static boolean getBoolean(Cursor c, int row) {
-		return (c.getInt(row) == 0)? false : true;
+		return (c.getInt(row) != 0);
 	}
 
 }

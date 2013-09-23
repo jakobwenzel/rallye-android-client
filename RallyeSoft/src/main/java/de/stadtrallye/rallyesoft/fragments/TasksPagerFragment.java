@@ -1,14 +1,20 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.animation.LayoutTransition;
+import android.annotation.TargetApi;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.viewpagerindicator.TitlePageIndicator;
 
 import java.util.List;
@@ -37,25 +43,36 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 	private ViewPager pager;
 	private TaskPagerAdapter fragmentAdapter;
 	private ITasks tasks;
-	private ITasksMapControl mapControl;
+//	private ITasksMapControl mapControl;
 	private TitlePageIndicator indicator;
+	private byte size = 0;
+	private ViewGroup details;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setRetainInstance(true);
+		setHasOptionsMenu(true);
+	}
+
+	@TargetApi(11)
+	private void setLayoutTransition(ViewGroup vg) {
+		vg.setLayoutTransition(new LayoutTransition());
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.tasks_pager, container, false);
 
-
+		details = (ViewGroup) v.findViewById(R.id.task_details);
 		pager = (ViewPager) v.findViewById(R.id.tasks_pager);
 		indicator = (TitlePageIndicator) v.findViewById(R.id.pager_indicator);
 
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
+
+		if (android.os.Build.VERSION.SDK_INT >= 11)
+			setLayoutTransition((ViewGroup) v);
 
 		return v;
 	}
@@ -83,7 +100,7 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 			fm.beginTransaction().replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();
 		}
 
-		mapControl = (ITasksMapControl) mapFragment;
+		ITasksMapControl mapControl = (ITasksMapControl) mapFragment;
 
 		fragmentAdapter = new TaskPagerAdapter(getChildFragmentManager(), getActivity(), tasks.getTasksCursor(), mapControl);
 		pager.setAdapter(fragmentAdapter);
@@ -102,6 +119,7 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		super.onStart();
 
 		tasks.addListener(this);
+		setSize(size);
 	}
 
 	@Override
@@ -109,6 +127,41 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		super.onStop();
 
 		tasks.removeListener(this);
+	}
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		MenuItem resize = menu.add(Menu.NONE, R.id.resize_menu, 40, R.string.resize);
+		resize.setIcon(R.drawable.ic_center_light);
+		resize.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+	}
+
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.resize_menu:
+				setSize((byte)((size+1) % 3));
+				return true;
+			default:
+				Log.d(THIS, "No hit on menu item " + item);
+				return false;
+		}
+	}
+
+	private void setSize(byte newSize) {
+		switch (newSize) {
+			case 1:
+				details.setVisibility(View.GONE);
+				break;
+			case 2:
+				details.setVisibility(View.VISIBLE);
+				getView().findViewById(R.id.map).setVisibility(View.GONE);
+				break;
+			case 0:
+				details.setVisibility(View.VISIBLE);
+				getView().findViewById(R.id.map).setVisibility(View.VISIBLE);
+		}
+		size = newSize;
 	}
 
 	@Override
@@ -120,11 +173,11 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 		fragmentAdapter = null;
 	}
 
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-
-	}
+//	@Override
+//	public void onSaveInstanceState(Bundle outState) {
+//		super.onSaveInstanceState(outState);
+//
+//	}
 
 	@Override
 	public void taskUpdate() {
