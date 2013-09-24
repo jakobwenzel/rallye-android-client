@@ -33,7 +33,7 @@
 			android:inputType="textPassword"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:imeOptions="actionNext"
+			android:imeOptions="actionSend"
 			android:hint="@string/password"
 			android:layout_marginTop="16dp"/>
 

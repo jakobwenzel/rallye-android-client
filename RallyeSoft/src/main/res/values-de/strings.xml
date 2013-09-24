@@ -30,8 +30,8 @@
     <string name="image_level_small">Klein</string>
     <string name="select_take_picture">Foto aufnehmen oder auswählen</string>
     <string name="invalid">Ungültig</string>
-    <string name="share_barcode">Share Barcode</string>
-    <string name="scan_barcode">Scan Barcode</string>
+    <string name="share_barcode">Login via QR-Code teilen</string>
+    <string name="scan_barcode">QR-Code scannen</string>
     <string name="center">Zentrieren</string>
 	<string name="next">Weiter</string>
 	<string name="back">Zurück</string>
@@ -52,7 +52,8 @@
 	<string name="welcome_msg">Willkommen zu RallyeSoft.\nBitte verwenden Sie den Verbindungs-Assistenten um sich mit einem Rallye-Server zu verbinden\n\nViele Funktionen der App stehen erst zur Verfügung wenn die App sich mit mindestens einem Server verbunden hat.</string>
 	<string name="connection_failure">Verbindung Fehlgeschlagen</string>
     <string name="ssl">SSL</string>
-    <string name="port">Port</string><string name="path">Pfad</string>
+    <string name="port">Port</string>
+	<string name="path">Pfad</string>
 	<string name="chat_post_failure">Senden der Nachricht fehlgeschlagen...</string>
 	<string name="locspecific_tasks">Ortsgebundene Aufgaben</string>
 	<string name="ubiquitous_tasks">Nicht Ortsgebundene Aufgaben</string>
@@ -65,7 +66,8 @@
 	<string name="of">von</string>
 	<string name="menu_drawer_open">Drawer Menü öffnen</string>
 	<string name="menu_drawer_close">Drawer Menü schließen</string>
-	<string name="reconnect">Erneut verbinden</string><string name="description">Beschreibung</string>
+	<string name="reconnect">Erneut verbinden</string>
+	<string name="description">Beschreibung</string>
 	<string name="version">Version</string>
 	<string name="submissions">Eingereichte Lösungen</string>
 	<string name="new_message">Neue Nachricht</string>
@@ -76,5 +78,7 @@
 	<string name="no_solution_submitted">Keine Lösung eingereicht</string>
 	<string name="solution_state_unknown">Lösungstatus unbekannt</string>
 	<string name="apply">Übernehmen</string>
+	<string name="test_server_connection">Teste Verbindung zu Server</string>
+	<string name="connection_test_failed">Verbindungstest fehlgeschlagen! Bitte überprüfe die Einstellungen</string>
 
 </resources>

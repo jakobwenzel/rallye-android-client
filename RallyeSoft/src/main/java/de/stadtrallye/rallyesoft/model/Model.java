@@ -1,15 +1,5 @@
 package de.stadtrallye.rallyesoft.model;
 
-import java.net.ConnectException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.ContentValues;
@@ -25,6 +15,16 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMRegistrar;
 
+import java.net.ConnectException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.LatLng;
@@ -32,18 +32,18 @@ import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.PictureSize;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
+import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
+import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.converters.PreferenceConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
-import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
-import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
+import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.net.RequestFactory;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
@@ -289,12 +289,14 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		if (!server.endsWith("/"))
 			server = server +"/";
 
-		if (state != ConnectionState.None)
+		if (!(state == ConnectionState.None || state == ConnectionState.Invalid))
 			throw new IllegalStateException("This Model already has a Server");
 
 		this.currentLogin.setServer(new URL(server));
 
 //		setConnectionState(ConnectionState.Disconnected);
+
+		Log.i(THIS, "Model has now a Server, getting information...");
 
 		refreshServerInfo();
 		refreshAvailableGroups();
@@ -499,6 +501,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 	private void serverInfoResult(RequestExecutor<ServerInfo, ?> r) {
 		if (r.isSuccessful()) {
+			Log.i(THIS, "Successfully received ServerInfo");
 			serverInfo = r.getResult();
 
 			if (pref != null)

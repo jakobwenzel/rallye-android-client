@@ -186,9 +186,9 @@ public class GridView extends AdapterView {
 			currentLeft = col * columnWidth + col * horizontalSpacing;
 			currentTop = row * columnWidth + row * verticalSpacing;
 
-			Log.i(THIS, "placing view"+ i +" into "+ col +","+ row +" at "+ currentLeft +", "+ currentTop +" size: "+ v.getMeasuredWidth() +", "+ v.getMeasuredHeight());
+			Log.i(THIS, "placing view"+ i +" into "+ col +","+ row +" at "+ currentLeft +", "+ currentTop +" size: "+ columnWidth +", "+ columnWidth);
 
-			v.layout(currentLeft, currentTop, currentLeft + v.getMeasuredWidth(), currentTop + v.getMeasuredHeight());
+			v.layout(currentLeft, currentTop, currentLeft + columnWidth, currentTop + columnWidth);
 
 			if (++col >= numColumns) {
 				col = 0;

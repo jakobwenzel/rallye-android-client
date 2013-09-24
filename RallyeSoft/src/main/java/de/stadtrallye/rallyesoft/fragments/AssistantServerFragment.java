@@ -1,7 +1,12 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.animation.LayoutTransition;
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +23,8 @@ import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 
 import java.net.MalformedURLException;
 import java.util.List;
@@ -33,7 +40,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * 1. Page of ConnectionAssistant
  * Asks for Server details and tries the Connection (showing ServerInfo)
  */
-public class AssistantServerFragment extends SherlockFragment implements IModel.IModelListener, View.OnClickListener {
+public class AssistantServerFragment extends SherlockFragment {
 
 	private IConnectionAssistant assistant;
 
@@ -48,12 +55,21 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 	private Button test;
 	private EditText path;
 	private ScrollView scrollView;
+	private InfoManager infoManager;
+	private ViewGroup server_info_manager;
+	private ViewGroup server_info;
+	private ViewGroup server_loading;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setRetainInstance(true);
+	}
+
+	@TargetApi(11)
+	private void setLayoutTransition(ViewGroup vg) {
+		vg.setLayoutTransition(new LayoutTransition());
 	}
 
 	@Override
@@ -74,15 +90,28 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				if (actionId == EditorInfo.IME_ACTION_SEND) {
-					test.callOnClick();
+					infoManager.startTest();
 				}
 				return false;
 			}
 		});
 
 		test = (Button) v.findViewById(R.id.test);
-		test.setOnClickListener(this);
+		test.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				View focus = getActivity().getCurrentFocus();
+				if (focus != null) {
+					InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+					inputMethodManager.hideSoftInputFromWindow(focus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+				}
+				infoManager.startTest();
+			}
+		});
 
+		server_info_manager = (ViewGroup) v.findViewById(R.id.info_manager);
+		server_info = (ViewGroup) v.findViewById(R.id.server_info);
+		server_loading = (ViewGroup) v.findViewById(R.id.loading);
 		srv_image = (ImageView) v.findViewById(R.id.server_image);
 		srv_name = (TextView) v.findViewById(R.id.server_name);
 		srv_desc = (TextView) v.findViewById(R.id.server_desc);
@@ -96,6 +125,12 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		});
 
 		loader = ImageLoader.getInstance();
+
+		if (android.os.Build.VERSION.SDK_INT >= 11)
+			setLayoutTransition((ViewGroup) v);
+
+		if (infoManager == null)
+			infoManager = new InfoManager(savedInstanceState);
 
 		return v;
 	}
@@ -124,14 +159,41 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 			path.setText(parts[3]);
 		}
 
-		assistant.getModel().addListener(this);
+		infoManager.restore();
+
+		assistant.getModel().addListener(infoManager);
+	}
+
+	@Override
+	public void onResume() {
+		server.addTextChangedListener(infoManager);
+		port.addTextChangedListener(infoManager);
+		path.addTextChangedListener(infoManager);
+
+		super.onResume();
+	}
+
+	@Override
+	public void onPause() {
+		server.removeTextChangedListener(infoManager);
+		port.removeTextChangedListener(infoManager);
+		path.removeTextChangedListener(infoManager);
+
+		super.onPause();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 
-		assistant.getModel().removeListener(this);
+		assistant.getModel().removeListener(infoManager);
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		infoManager.onSaveInstanceState(outState);
+
+		super.onSaveInstanceState(outState);
 	}
 
 	private String getServer() {
@@ -147,55 +209,169 @@ public class AssistantServerFragment extends SherlockFragment implements IModel.
 		return protocol +"://"+ server +":"+ port +"/"+ path;
 	}
 
-	// "Test"
-	@Override
-	public void onClick(View v) {
-		IModel model = assistant.getModel();
-		try {
-			String server = getServer();
-			assistant.setServer(server);
-			loader.displayImage(model.getServerPictureURL(), srv_image);
+//	private enum InfoState { clear, loading, complete }
 
-			View focus = getActivity().getCurrentFocus();
-			if (focus != null) {
-				InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-				inputMethodManager.hideSoftInputFromWindow(focus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+	private class InfoManager implements IModel.IModelListener, ImageLoadingListener, TextWatcher {
+
+//		private InfoState state;
+
+		private boolean hasInfo, hasImage;
+
+		public InfoManager(Bundle savedInstanceState) {
+			if (savedInstanceState != null) {
+				hasInfo = savedInstanceState.getBoolean(Std.SERVER+Std.CONNECTED, false);
+				hasImage = savedInstanceState.getBoolean(Std.SERVER+Std.IMAGE, false);
+				if (hasInfo && hasImage) {
+					refresh();
+//					state = InfoState.complete;
+				} else {
+					hide();
+//					state = InfoState.clear;
+				}
+			} else {
+				hasInfo = hasImage = false;
+//				state = InfoState.clear;
+				hide();
 			}
-//			getActivity().getCurrentFocus().clearFocus();
-		} catch (MalformedURLException e) {
-			Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 		}
-	}
 
-	@Override
-	public void onConnectionStateChange(IModel.ConnectionState newState) {
+		public void onSaveInstanceState(Bundle out) {
+			out.putBoolean(Std.SERVER+Std.CONNECTED, hasInfo);
+			out.putBoolean(Std.SERVER+Std.IMAGE, hasImage);
+		}
 
-	}
+		public void reset() {
+			hasInfo = hasImage = false;
+//			state = InfoState.clear;
+			hide();
+		}
 
-	@Override
-	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
-		if (fallbackState == IModel.ConnectionState.TemporaryNotAvailable) {
-			Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
+		public void restore() {
+			if (hasImage && hasInfo) {
+				displayServerInfo();
+				IModel model = assistant.getModel();
+				loader.displayImage(model.getServerPictureURL(), srv_image);
+				onServerInfoChange(model.getServerInfo());
+			} else
+				hide();
+		}
+
+		public void startTest() {
+//			state = InfoState.loading;
+			try {
+				displayLoadingState();
+				String server = getServer();
+				assistant.setServer(server);
+				IModel model = assistant.getModel();
+				loader.displayImage(model.getServerPictureURL(), srv_image, infoManager);
+			} catch (MalformedURLException e) {
+				Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
+				hide();
+			}
+		}
+
+		private void displayServerInfo() {
+			server_info_manager.setVisibility(View.VISIBLE);
+			server_loading.setVisibility(View.GONE);
+			server_info.setVisibility(View.VISIBLE);
+			test.setVisibility(View.GONE);
+			next.setVisibility(View.VISIBLE);
+			getView().post(new Runnable() {
+				@Override
+				public void run() {
+					scrollView.scrollTo(0, next.getTop());
+					next.requestFocus();
+				}
+			});
+		}
+
+		private void displayLoadingState() {
+			server_info_manager.setVisibility(View.VISIBLE);
+			server_loading.setVisibility(View.VISIBLE);
+			server_info.setVisibility(View.GONE);
+			test.setVisibility(View.GONE);
 			next.setVisibility(View.GONE);
 		}
-	}
 
-	@Override
-	public void onServerInfoChange(ServerInfo info) {
-		srv_name.setText(info.name);
-		srv_desc.setText(info.description);
-		next.setVisibility(View.VISIBLE);
-		getView().post(new Runnable() {
-			@Override
-			public void run() {
-				scrollView.scrollTo(0, next.getTop());
-				next.requestFocus();
+		private void hide() {
+			server_info_manager.setVisibility(View.GONE);
+			test.setVisibility(View.VISIBLE);
+			next.setVisibility(View.GONE);
+		}
+
+		private void refresh() {
+			if (hasInfo && hasImage) {
+				displayServerInfo();
+//				state = InfoState.complete;
 			}
-		});
-	}
+		}
 
-	@Override
-	public void onAvailableGroupsChange(List<Group> groups) {
+		private void failed() {
+			loader.cancelDisplayTask(srv_image);
+//			state = InfoState.clear;
+			hide();
+			Toast.makeText(getActivity(), R.string.connection_test_failed, Toast.LENGTH_SHORT).show();
+			server.requestFocus();
+		}
 
+		@Override
+		public void onConnectionStateChange(IModel.ConnectionState newState) {
+
+		}
+
+		@Override
+		public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
+			hasInfo = false;
+			failed();
+		}
+
+		@Override
+		public void onServerInfoChange(ServerInfo info) {
+			srv_name.setText(info.name);
+			srv_desc.setText(info.description);
+
+			hasInfo = true;
+			refresh();
+		}
+
+		@Override
+		public void onAvailableGroupsChange(List<Group> groups) {
+		}
+
+		@Override
+		public void onLoadingStarted(String s, View view) {
+
+		}
+
+		@Override
+		public void onLoadingFailed(String s, View view, FailReason failReason) {
+			hasImage = false;
+			failed();
+		}
+
+		@Override
+		public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+			hasImage = true;
+			refresh();
+		}
+
+		@Override
+		public void onLoadingCancelled(String s, View view) {
+		}
+
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+		}
+
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before, int count) {
+//			state = InfoState.clear;
+			hasImage = hasInfo = false;
+			reset();
+		}
+
+		@Override
+		public void afterTextChanged(Editable s) {
+		}
 	}
 }

@@ -1,11 +1,13 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -20,7 +22,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * 3. Page of ConnectionAssistant
  * Asks for Username and Group Password
  */
-public class AssistantAuthFragment extends SherlockFragment implements View.OnClickListener {
+public class AssistantAuthFragment extends SherlockFragment {
 
 
 	private IConnectionAssistant assistant;
@@ -42,13 +44,23 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 		pass = (EditText) v.findViewById(R.id.pass);
 		next = (Button) v.findViewById(R.id.next);
 
-		next.setOnClickListener(this);
+		next.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				View focus = getActivity().getCurrentFocus();
+				if (focus != null) {
+					InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+					inputMethodManager.hideSoftInputFromWindow(focus.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+				}
+				onNext();
+			}
+		});
 
 		pass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				if (actionId == EditorInfo.IME_ACTION_NEXT) {
-					next.callOnClick();
+				if (actionId == EditorInfo.IME_ACTION_SEND) {
+					onNext();
 				}
 				return false;
 			}
@@ -77,8 +89,7 @@ public class AssistantAuthFragment extends SherlockFragment implements View.OnCl
 		}
 	}
 
-	@Override
-	public void onClick(View v) {
+	private void onNext() {
 		String n = name.getText().toString(), p = pass.getText().toString();
 
 		if (n == null || n.length() < 3) {

@@ -247,7 +247,7 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		setSelector(getResources().getDrawable(android.R.drawable.list_selector_background));
 	}
 
-	private void positionSelector(int position, View sel) {
+	protected void positionSelector(int position, View sel) {
 
 		selectorRect.set(sel.getLeft(), sel.getTop(), sel.getRight(), sel.getBottom());
 //		if (sel instanceof AbsListView.SelectionBoundsAdjuster) {

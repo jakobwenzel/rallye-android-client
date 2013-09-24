@@ -274,10 +274,10 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 
 	@Override
 	public void setServer(String server) throws MalformedURLException {
-		if (model.getLogin().hasServer()) {
-			model.destroy();// Model can only have setServer called once!!
-			model = Model.createTemporaryModel(getApplicationContext());
-		}
+//		if (!model.isEmpty()) {
+//			model.destroy();// Model can only have setServer called once!!
+//			model = Model.createTemporaryModel(getApplicationContext());
+//		}
 		this.server = model.setServer(server);
 	}
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
 	<string name="app_name">RallyeSoft</string>
 	<string name="dash_menu">Menu</string>
 	<string name="overview">Overview</string>
@@ -72,9 +73,12 @@
 	<string name="new_message">New message</string>
 	<string name="new_message_from">New message from</string>
 	<string name="waiting_for_model">Waiting for connection...</string>
-	<string name="solution_submitted">Lösung eingereicht (1/1)</string>
-	<string name="solutions_submitted">Lösung eingereicht (weitere möglich)</string>
-	<string name="no_solution_submitted">Keine Lösung eingereicht</string>
-	<string name="solution_state_unknown">Lösungstatus unbekannt</string>
+	<string name="solution_submitted">Solution submitted (1/1)</string>
+	<string name="solutions_submitted">Solution submitted (further solutions possible)</string>
+	<string name="no_solution_submitted">No solutions submitted</string>
+	<string name="solution_state_unknown">Solution status unknown</string>
 	<string name="apply">Apply</string>
+	<string name="test_server_connection">Test server connection</string>
+	<string name="connection_test_failed">Connection test failed! Please review the configuration</string>
+
 </resources>
