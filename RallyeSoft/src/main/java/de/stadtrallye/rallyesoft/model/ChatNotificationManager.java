@@ -4,6 +4,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.text.Html;
 
@@ -108,25 +111,16 @@ public class ChatNotificationManager {
 
 				builder.setContentIntent(pendingIntent).setStyle(inboxStyle);
 
-
 			}
-
 
 			builder.setNumber(count)
 					.setSmallIcon(android.R.drawable.stat_notify_chat)
 					.setContentTitle(heading)
-					//.setContentText(summary);
-					.setSubText(summary);
+					.setSubText(summary)
+                    .setLights(Color.CYAN, 500, 500);
 
-
-
-//			NotificationCompat.InboxStyle big = new NotificationCompat.InboxStyle(
-//					new NotificationCompat.Builder(context)
-//							.setSmallIcon(android.R.drawable.stat_notify_chat)
-//							.setContentTitle(heading)
-//							.setContentText(summary)
-//							.setContentIntent(pendingIntent))
-//					.addLine().setSummaryText(summary);
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            builder.setSound(alarmSound);
 
 			notificationService.notify("chat notification", Std.CHAT_NOTIFICATION, builder.build());
 		} else
