@@ -118,7 +118,7 @@ public abstract class JsonConverters {
 		public TaskSubmissions doConvert(JSONObject o) throws JSONException {
 			List<Submission> res = converter.convert(o.getJSONArray(TaskSubmissions.SUBMISSIONS));
 
-			return new TaskSubmissions(o.getInt(TaskSubmissions.TASK_ID), res);
+			return new TaskSubmissions(o.getInt(TaskSubmissions.TASK_ID), o.getInt(TaskSubmissions.GROUP_ID), res, o.getInt(TaskSubmissions.SCORE), o.getInt(TaskSubmissions.BONUS), o.getBoolean(TaskSubmissions.SCORE_OUTDATED));
 		}
 	}
 
@@ -129,7 +129,7 @@ public abstract class JsonConverters {
 			Integer intSubmission = (o.isNull(Submission.INT_SUBMISSION))? null : o.getInt(Submission.INT_SUBMISSION);
 
 			return new Submission(o.getInt(Submission.SUBMISSION_ID), o.getInt(Submission.SUBMIT_TYPE),
-					intSubmission, o.getString(Submission.TEXT_SUBMISSION), o.getString(Submission.SCORE));
+					intSubmission, o.getString(Submission.TEXT_SUBMISSION));
 		}
 	}
 

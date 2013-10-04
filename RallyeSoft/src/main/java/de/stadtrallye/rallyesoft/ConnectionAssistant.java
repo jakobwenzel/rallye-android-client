@@ -191,9 +191,9 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		try {
 			l = ServerLogin.fromJSON(login);
 
-			server = l.getServer().toString();
-			groupID = l.getGroupID();
-			pass = l.getGroupPassword();
+			setServer(l.getServer().toString());
+			setGroup(l.getGroupID());
+			this.pass = l.getGroupPassword();
 
 			fastForward = true;
 		} catch (Exception e) {

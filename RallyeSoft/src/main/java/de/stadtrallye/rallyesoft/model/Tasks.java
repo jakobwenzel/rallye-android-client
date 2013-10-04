@@ -106,7 +106,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 				taskIn.bindDouble(7, t.radius);
 				taskIn.bindLong(8, (t.multipleSubmits) ? 1 : 0);
 				taskIn.bindLong(9, t.submitType);
-				taskIn.bindString(10, t.points);
+				taskIn.bindString(10, t.maxPoints);
 				String add = AdditionalResource.additionalResourcesToString(t.additionalResources);
 				if (add == null) {
 					taskIn.bindNull(11);
