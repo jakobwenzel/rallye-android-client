@@ -25,6 +25,15 @@
 			android:layout_marginTop="3dp"
 			android:layout_marginBottom="3dp">
 
+		<TextView
+			android:id="@+id/msg_sender"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textColor="@color/abs__bright_foreground_disabled_holo_light"
+			android:textStyle="bold"
+			android:textSize="12sp"
+			android:typeface="monospace"/>
+
 		<ImageView
 				android:id="@+id/msg_img"
 				android:layout_width="wrap_content"
@@ -34,18 +43,7 @@
 				android:maxWidth="160dp"
 				android:maxHeight="160dp"
 				android:scaleType="centerInside"
-				android:layout_marginLeft="16dp"
-				android:layout_marginRight="16dp"
-				android:layout_marginBottom="16dp"/>
-
-		<TextView
-				android:id="@+id/msg_sender"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:textColor="@color/abs__bright_foreground_disabled_holo_light"
-				android:textStyle="bold"
-				android:textSize="12sp"
-				android:typeface="monospace"/>
+				android:layout_margin="16dp"/>
 
 		<TextView
 				android:id="@+id/msg"
