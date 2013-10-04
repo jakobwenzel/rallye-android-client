@@ -151,6 +151,16 @@ public class ChatCursorAdapter extends CursorAdapter {
 		return (cursor.getInt(c.id));
 	}
 
+	public int findPos(int chatId) {
+		Cursor cursor = getCursor();
+		for (int i=0; i<cursor.getCount(); i++) {
+			cursor.moveToPosition(i);
+			if (cursor.getInt(c.id) == chatId)
+				return i;
+		}
+		return 0;
+	}
+
 	@Override
 	public void changeCursor(Cursor cursor) {
 		c = CursorConverters.ChatCursorIds.read(cursor);

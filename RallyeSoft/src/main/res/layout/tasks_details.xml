@@ -63,6 +63,13 @@
 				android:drawSelectorOnTop="true"
 				android:verticalSpacing="5dp"/>
 
+		<Button
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/submit_new_solution"
+			android:id="@+id/submit"
+			android:layout_gravity="center"/>
+
 	</LinearLayout>
 
 </ScrollView>

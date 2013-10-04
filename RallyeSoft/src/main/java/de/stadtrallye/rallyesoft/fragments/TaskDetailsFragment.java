@@ -8,10 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.ArrayList;
@@ -25,6 +29,7 @@ import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.SubmitNewSolution;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
@@ -51,12 +56,14 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	private AdditionalGridAdapter gridAdapter;
 	private IModel model;
 	private SubmissionListAdapter submissionAdapter;
+	private Button submit;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		task = (Task) getArguments().getSerializable(Std.TASK);//TODO: only pipe taskID? (on the other hand: if whole ids are changed, no use + the adapter will reload anything anyway)
+		hasOptionsMenu();
 	}
 
 	@Override
@@ -77,6 +84,14 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 
 		submissionAdapter = new SubmissionListAdapter();
 		submissionsList.setAdapter(submissionAdapter);
+
+		submit = (Button) v.findViewById(R.id.submit);
+		submit.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				submitNewSolution();
+			}
+		});
 
 		return v;
 	}
@@ -102,6 +117,29 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		super.onStop();
 
 		model.getTasks().removeListener(this);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		MenuItem submitItem = menu.add(Menu.NONE, R.id.submit_menu, Menu.NONE, R.string.submit_new_solution);
+		submitItem.setIcon(R.drawable.ic_send_now_light);
+		submitItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.submit_menu:
+				submitNewSolution();
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	private void submitNewSolution() {
+		Intent intent = new Intent(getActivity(), SubmitNewSolution.class);
+		startActivityForResult(intent, Std.SUBMIT_NEW_SOLUTION_REQUESTCODE);
 	}
 
 	@Override

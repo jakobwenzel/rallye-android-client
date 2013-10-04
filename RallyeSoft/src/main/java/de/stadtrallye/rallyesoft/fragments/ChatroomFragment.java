@@ -130,24 +130,27 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		} else {
 			chosen_picture.setVisibility(View.GONE);
 		}
-
-//        restoreScrollState();
 		
 		chatroom.addListener(this);
 		chatAdapter.changeCursor(chatroom.getChatCursor());
+
+		restoreLastReadId(chatroom.getLastReadId());
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
+
+		saveScrollState();
 		
-//		saveScrollState();
-		
-		chatroom.setLastReadId(lastPos[0]);
+		chatroom.setLastReadId(chatAdapter.getChatID(lastPos[0]));
 		
 		chatroom.removeListener(this);
 	}
-	
+
+	/**
+	 * save into lastPos[]: 0: nr, 1: pixel
+	 */
 	private void saveScrollState() {
 		lastPos[0] = list.getFirstVisiblePosition(); 
 		
@@ -158,6 +161,10 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			lastPos[1] = v.getTop(); 
 		}
 	}
+
+	private void restoreLastReadId(int chatId) {
+		list.setSelectionFromTop(chatAdapter.findPos(chatId), 0);
+	}
 	
 	private void restoreScrollState() {
 		if (lastPos != null) {
@@ -166,21 +173,6 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 				Log.v(THIS, "ScrollState restored: "+ lastPos[0]);
         } else
         	list.setSelection(list.getCount()-1);
-	}
-	
-	/**
-	 * Save the current scroll position
-	 */
-	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		
-		saveScrollState();
-		
-		if (DEBUG)
-			Log.v(THIS, "ScrollState saved: "+ lastPos[0]);
-		
-		outState.putSerializable(Std.LAST_POS, lastPos);
 	}
 
 	@Override

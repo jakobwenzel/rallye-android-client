@@ -80,5 +80,6 @@
 	<string name="apply">Übernehmen</string>
 	<string name="test_server_connection">Teste Verbindung zu Server</string>
 	<string name="connection_test_failed">Verbindungstest fehlgeschlagen! Bitte überprüfe die Einstellungen</string>
+	<string name="submit_new_solution">Lösung einreichen</string>
 
 </resources>
