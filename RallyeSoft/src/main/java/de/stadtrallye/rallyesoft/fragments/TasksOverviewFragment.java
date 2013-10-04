@@ -27,13 +27,12 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.structures.Task;
-import de.stadtrallye.rallyesoft.uimodel.TaskCursorWrapper;
-import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
-import de.stadtrallye.rallyesoft.uimodel.TabManager;
 import de.stadtrallye.rallyesoft.uimodel.TaskCursorAdapter;
+import de.stadtrallye.rallyesoft.uimodel.TaskCursorWrapper;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
+import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
 /**
@@ -48,7 +47,6 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 	private ListView list;
 	private TaskCursorWrapper listAdapter;
 	private byte size = 0;
-	private TabManager tabManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -77,17 +75,6 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 //		list.setFastScrollEnabled(true);
 
 		return v;
-	}
-
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-
-		try {
-			tabManager = ((ITabActivity) getActivity()).getTabManager();
-		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement ITabActivity");
-		}
 	}
 
 	@Override
@@ -129,7 +116,6 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 
 		model = null; //are generally retained during Configuration changes, but since we are refreshing it anyway in onActivityCreated
 		tasks = null; //same here
-		tabManager = null; //Do NOT LEAK
 		listAdapter = null;
 	}
 
@@ -141,7 +127,7 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		boolean drawerOpen = tabManager.isMenuOpen();
+		boolean drawerOpen = getTabManager(getActivity()).isMenuOpen();
 
 		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
 		menu.findItem(R.id.resize_menu).setVisible(!drawerOpen);
@@ -208,7 +194,7 @@ public class TasksOverviewFragment extends SherlockFragment implements ITasks.IT
 		Bundle args = new Bundle();
 		args.putInt(Std.TASK_ID, (int)id);
 
-		tabManager.openSubTab(RallyeTabManager.TAB_TASKS_DETAILS, args);
+		getTabManager(getActivity()).openSubTab(RallyeTabManager.TAB_TASKS_DETAILS, args);
 	}
 
 	@Override

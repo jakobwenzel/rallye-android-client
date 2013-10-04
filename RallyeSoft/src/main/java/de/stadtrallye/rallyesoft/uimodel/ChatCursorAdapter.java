@@ -48,7 +48,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 		public ImageView msg_img;
 	}
 
-	public ChatCursorAdapter(Context context, Cursor cursor, IModel model) {
+	public ChatCursorAdapter(Context context, IModel model, Cursor cursor) {
 		super(context, cursor, false);
 
 		c = CursorConverters.ChatCursorIds.read(cursor);

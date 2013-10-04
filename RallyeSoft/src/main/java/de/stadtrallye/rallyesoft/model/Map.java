@@ -34,6 +34,8 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 	final private Model model;
 
 	private MapConfig mapConfig;
+	private boolean refreshingMap = false;
+	private boolean refreshingConfig = false;
 	
 	final ArrayList<IMapListener> mapListeners = new ArrayList<IMapListener>();
 
@@ -59,6 +61,14 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 			err.notLoggedIn();
 			return;
 		}
+		synchronized (this) {
+			if (refreshingMap) {
+				Log.w(THIS, "Preventing concurrent Map refreshes");
+				return;
+			}
+			refreshingMap = true;
+		}
+
 		try {
 			model.exec.execute(new MapUpdateExecutor(model.factory.mapNodesRequest(), model.factory.mapEdgesRequest(), this));
 		} catch (HttpRequestException e) {
@@ -80,6 +90,10 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
 			}
 		} else
 			err.asyncTaskResponseError(r.getException());
+
+		synchronized (this) {
+			refreshingMap = false;
+		}
 	}
 	
 	@Override
@@ -177,6 +191,14 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
             return;
         }
 
+		synchronized (this) {
+			if (refreshingConfig) {
+				Log.w(THIS, "Preventing concurrent Config refreshes");
+				return;
+			}
+			refreshingConfig = true;
+		}
+
         try {
             Log.d(THIS, "getting Map config");
             model.exec.execute(new JSONObjectRequestExecutor<MapConfig, Void>(model.factory.mapConfigRequest(), new JsonConverters.MapConfigConverter(), this, null));
@@ -210,6 +232,10 @@ public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Ca
             err.asyncTaskResponseError(e);
             model.commError(e);
         }
+
+		synchronized (this) {
+			refreshingConfig = false;
+		}
     }
 
     @SuppressWarnings("unchecked")

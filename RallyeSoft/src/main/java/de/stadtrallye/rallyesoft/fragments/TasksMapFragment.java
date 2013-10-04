@@ -30,12 +30,12 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
-import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
 
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
+import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
  * Map of all location specific tasks, combined with a list for direct selection
@@ -81,7 +81,7 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 		try {
 			model = ((IModelActivity) getActivity()).getModel();
 			tasks = model.getTasks();
-			tabManager = ((ITabActivity) getActivity()).getTabManager();
+			tabManager = getTabManager(getActivity());
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and ITabActivity");
 		}

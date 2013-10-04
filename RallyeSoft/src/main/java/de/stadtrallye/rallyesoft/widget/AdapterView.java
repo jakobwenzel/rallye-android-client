@@ -11,6 +11,7 @@ import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
 import android.view.View;
@@ -18,6 +19,8 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ListAdapter;
+
+import com.actionbarsherlock.R;
 
 public abstract class AdapterView extends ViewGroup implements GestureDetector.OnGestureListener {
 
@@ -41,6 +44,8 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 	private boolean drawSelectorOnTop;
 	protected int verticalSpacing;
 	protected int touchPos;
+
+	private GestureDetector gestureDetector;
 
 	/**
 	 * Rectangle used for hit testing children
@@ -74,7 +79,7 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		int vSpacing = a.getDimensionPixelOffset(0, 0);
 		setVerticalSpacing(vSpacing);
 
-		boolean selectorOnTop = a.getBoolean(1, false);
+		boolean selectorOnTop = a.getBoolean(1, true);
 		setDrawSelectorOnTop(selectorOnTop);
 
 		Drawable d = a.getDrawable(2);
@@ -85,6 +90,9 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		}
 
 		a.recycle();
+
+		gestureDetector = new GestureDetector(getContext(), this);
+//		gestureDetector.setIsLongpressEnabled(false);
 	}
 
 	public void setVerticalSpacing(int verticalSpacing) {
@@ -209,6 +217,12 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		updateSelectorState();
 	}
 
+	@Override
+	protected void drawableStateChanged() {
+		super.drawableStateChanged();
+		updateSelectorState();
+	}
+
 	private void updateSelectorState() {
 		selector.setState(getDrawableState());
 	}
@@ -233,6 +247,11 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		}
 	}
 
+	@Override
+	protected void dispatchSetPressed(boolean pressed) {
+
+	}
+
 	/**
 	 * Returns the selector {@link android.graphics.drawable.Drawable} that is used to draw the
 	 * selection in the list.
@@ -244,7 +263,7 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 	}
 
 	private void useDefaultSelector() {
-		setSelector(getResources().getDrawable(android.R.drawable.list_selector_background));
+		setSelector(getResources().getDrawable(R.drawable.abs__list_selector_background_transition_holo_light));
 	}
 
 	protected void positionSelector(int position, View sel) {
@@ -280,8 +299,6 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		itemCount = (adapter == null) ? 0 : adapter.getCount();
 	}
 
-	private GestureDetector gestureDetector = new GestureDetector(getContext(), this);
-
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
 		if (!isEnabled()) {
@@ -302,7 +319,16 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		final int y = (int) ev.getY();
 		touchPos = pointToPosition(x, y);
 
-		return gestureDetector.onTouchEvent(ev);
+		gestureDetector.onTouchEvent(ev);
+
+		switch (ev.getAction()) {
+			case MotionEvent.ACTION_CANCEL:
+			case MotionEvent.ACTION_UP:
+				cancelSelector();
+				break;
+		}
+
+		return true;
 	}
 
 	/**
@@ -380,7 +406,7 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 	 * @return True if there was an assigned OnItemClickListener that was
 	 *         called, false otherwise is returned.
 	 */
-	public boolean performItemClick(View view, int position, long id) {
+	private boolean performItemClick(View view, int position, long id) {
 		if (onItemClickListener != null) {
 			playSoundEffect(SoundEffectConstants.CLICK);
 			if (view != null) {
@@ -436,23 +462,41 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 		return onItemLongClickListener;
 	}
 
-	@Override
-	public boolean onDown(MotionEvent e) {
-		Log.d(THIS, "Touch Down "+ touchPos);
-		return false;
+	private boolean performLongPress(final View child, final int longPressPosition, final long longPressId) {
+		// CHOICE_MODE_MULTIPLE_MODAL takes over long press.
+//		if (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
+//			if (mChoiceActionMode == null &&
+//					(mChoiceActionMode = startActionMode(mMultiChoiceModeCallback)) != null) {
+//				setItemChecked(longPressPosition, true);
+//				performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+//			}
+//			return true;
+//		}
+
+		boolean handled = false;
+		if (onItemLongClickListener != null) {
+			handled = onItemLongClickListener.onItemLongClick(this, child,
+					longPressPosition, longPressId);
+		}
+		if (!handled) {
+//			mContextMenuInfo = createContextMenuInfo(child, longPressPosition, longPressId);
+			handled = super.showContextMenuForChild(this);
+		}
+		if (handled) {
+			performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+		}
+		return handled;
 	}
 
 	@Override
-	public void onShowPress(MotionEvent ev) {
-		if (touchPos == INVALID_POSITION)
-			return;
-		Log.d(THIS, "pressed "+ touchPos);
+	public boolean onDown(MotionEvent e) {
+		Log.d(THIS, "down "+ touchPos);
 		View child = getChildAt(touchPos);
-		child.setPressed(true);
+		if (child != null) {
+			positionSelector(touchPos, child);
+			child.setPressed(true);
+		}
 		setPressed(true);
-//		layoutChildren();
-		positionSelector(touchPos, child);
-		refreshDrawableState();
 
 		final int longPressTimeout = ViewConfiguration.getLongPressTimeout();
 		final boolean longClickable = isLongClickable();
@@ -466,8 +510,16 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 					((TransitionDrawable) d).resetTransition();
 				}
 			}
+//			refreshDrawableState();
 		}
-		invalidate();
+//		invalidate();
+		return true;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent ev) {
+		Log.d(THIS, "pressed "+ touchPos);
+
 	}
 
 	@Override
@@ -477,34 +529,43 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 
 		performItemClick(getChildAt(touchPos), touchPos, adapter.getItemId(touchPos));
 
-		invalidate();
-		return false;
+		return true;
 	}
 
 	private void cancelSelector() {
-		if (selector != null) {
-			Drawable d = selector.getCurrent();
-			if (d != null && d instanceof TransitionDrawable) {
-				((TransitionDrawable) d).resetTransition();
-			}
+		View child = getChildAt(touchPos);
+		if (child != null) {
+			child.setPressed(false);
 		}
+		setPressed(false);
+//		selectorRect.setEmpty();
+//		if (selector != null) {
+//			Drawable d = selector.getCurrent();
+//			if (d != null && d instanceof TransitionDrawable) {
+//				((TransitionDrawable) d).resetTransition();
+//			}
+////			refreshDrawableState();
+//		}
+//		invalidate();
 	}
 
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-		Log.d(THIS, "scrolled "+ touchPos);
-		cancelSelector();
+		Log.d(THIS, "scroll");
 		return false;
 	}
 
 	@Override
 	public void onLongPress(MotionEvent e) {
 		Log.d(THIS, "long pressed "+ touchPos);
+		cancelSelector();
+
+		performLongPress(getChildAt(touchPos), touchPos, adapter.getItemId(touchPos));
 	}
 
 	@Override
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-		cancelSelector();
+		Log.d(THIS, "fling");
 		return false;
 	}
 }

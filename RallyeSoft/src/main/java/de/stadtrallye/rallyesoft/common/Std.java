@@ -55,4 +55,5 @@ public class Std {
 
 	public static final String CHAT_ID = "chatID";
 	public static final String BUILD = "build";
+	public static final String CONFIG_UI = "de.stadtrallye.rallyesoft.ui";
 }

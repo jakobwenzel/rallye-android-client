@@ -1,7 +1,5 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.animation.LayoutTransition;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,15 +7,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.ArrayList;
@@ -32,10 +26,11 @@ import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.PictureGallery;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
+import de.stadtrallye.rallyesoft.model.PictureGallery;
 import de.stadtrallye.rallyesoft.model.PictureIdResolver;
+import de.stadtrallye.rallyesoft.widget.AdapterView;
 import de.stadtrallye.rallyesoft.widget.GridView;
 import de.stadtrallye.rallyesoft.widget.ListView;
 
@@ -78,7 +73,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 
 		gridAdapter = new AdditionalGridAdapter();
 		additionalGrid.setAdapter(gridAdapter);
-//		additionalGrid.setOnItemClickListener(this);
+		additionalGrid.setOnItemClickListener(this);
 
 		submissionAdapter = new SubmissionListAdapter();
 		submissionsList.setAdapter(submissionAdapter);
@@ -110,7 +105,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	}
 
 	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+	public void onItemClick(AdapterView parent, View view, int position, long id) {
 		Intent intent = new Intent(getActivity(), PictureGalleryActivity.class);
 
 		List<Integer> pics = new ArrayList<Integer>();
@@ -223,25 +218,34 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		public View getView(int position, View convertView, ViewGroup parent) {
 			Submission sub = submissions.get(position);
 
-			View v;
-			ViewMem mem;
+//			View v;
+//			ViewMem mem;
 
-			if (convertView == null) {
-				v = inflator.inflate(R.layout.submission_item, null);
-				mem = new ViewMem();
-				mem.img = (ImageView) v.findViewById(R.id.image);
-				v.setTag(mem);
-			} else {
-				v = convertView;
-				mem = (ViewMem) v.getTag();
+			ImageView v = (ImageView) convertView;
+
+			if (v == null) {
+				v = new ImageView(getActivity());
+//				v.setAdjustViewBounds(true);
+//				v.setLayoutParams(new GridLayout.LayoutParams(-1,-1));
+				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
 
-			if ((sub.submitType & Task.TYPE_PICTURE) != Task.TYPE_PICTURE)//TODO: fork depending on type
-				return v;
+//			if (convertView == null) {
+//				v = inflator.inflate(R.layout.submission_item, null);
+//				mem = new ViewMem();
+//				mem.img = (ImageView) v.findViewById(R.id.image);
+//				v.setTag(mem);
+//			} else {
+//				v = convertView;
+//				mem = (ViewMem) v.getTag();
+//			}
+
+//			if ((sub.submitType & Task.TYPE_PICTURE) != Task.TYPE_PICTURE)//TODO: fork depending on type
+//				return v;
 
 			int picID = sub.intSubmission;
 
-			loader.displayImage(model.getUrlFromImageId(picID, PictureSize.Mini), mem.img);
+			loader.displayImage(model.getUrlFromImageId(picID, PictureSize.Mini), v);
 
 			return v;
 		}

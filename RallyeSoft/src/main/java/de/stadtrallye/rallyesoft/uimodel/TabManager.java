@@ -1,11 +1,13 @@
 package de.stadtrallye.rallyesoft.uimodel;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +35,20 @@ public abstract class TabManager {
 		this.context = context;
 		this.fragmentManager = fragmentManager;
 		this.replaceId = replaceId;
+	}
+
+	/**
+	 * Helper Method to get the TabManager from a parent Activity
+	 * @param tabActivity the parent Activity who must initialize the TabManager
+	 * @return the current TabManager
+	 */
+	public static TabManager getTabManager(Activity tabActivity) {
+		try {
+			return ((ITabActivity) tabActivity).getTabManager();
+		} catch (ClassCastException e) {
+			Log.e(THIS, "The Activity " + tabActivity + " must implement ITabActivity", e);
+			throw new IllegalArgumentException("The Activity must implement ITabActivity");
+		}
 	}
 
 

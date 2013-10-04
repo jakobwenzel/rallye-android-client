@@ -23,9 +23,9 @@ import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
-import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
+import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
@@ -135,7 +135,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		boolean drawerOpen = ((ITabActivity) getActivity()).getTabManager().isMenuOpen();
+		boolean drawerOpen = getTabManager(getActivity()).isMenuOpen();
 
 		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
 		menu.findItem(R.id.picture_menu).setVisible(!drawerOpen);

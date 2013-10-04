@@ -58,6 +58,18 @@ public class TurnFragment extends SherlockFragment implements IModel.IModelListe
 		AdditionalGridAdapter adapter = new AdditionalGridAdapter(task.additionalResources);
 		grid.setAdapter(adapter);
 		list.setAdapter(new AdditionalGridAdapter(task.additionalResources));
+		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView parent, View view, int position, long id) {
+
+			}
+		});
+		list.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+			@Override
+			public boolean onItemLongClick(AdapterView parent, View view, int position, long id) {
+				return true;
+			}
+		});
 
 //		ArrayAdapter<Object> adapter = new ArrayAdapter<Object>(context, textViewResourceId, objects);
 	}

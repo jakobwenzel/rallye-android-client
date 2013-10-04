@@ -118,7 +118,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			throw new IllegalArgumentException(THIS +" could not find the Model of Chatroom "+ roomID);
 		}
 
-		chatAdapter = new ChatCursorAdapter(getActivity(), null, model);
+		chatAdapter = new ChatCursorAdapter(getActivity(), model, chatroom.getChatCursor());
 		list.setAdapter(chatAdapter);
 		list.setOnScrollListener(this);//TODO: use chatroom.getLastReadId() (wrap cursorAdapter add extra line)
 

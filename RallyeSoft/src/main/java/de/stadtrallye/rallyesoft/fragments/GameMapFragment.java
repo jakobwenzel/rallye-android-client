@@ -32,10 +32,10 @@ import de.stadtrallye.rallyesoft.common.SherlockMapFragment;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
+import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 public class GameMapFragment extends SherlockMapFragment implements IMap.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
@@ -140,7 +140,7 @@ public class GameMapFragment extends SherlockMapFragment implements IMap.IMapLis
 
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		boolean drawerOpen = ((ITabActivity) getActivity()).getTabManager().isMenuOpen();
+		boolean drawerOpen = getTabManager(getActivity()).isMenuOpen();
 
 		refreshMenuItem.setVisible(!drawerOpen);
 		centerMenuItem.setVisible(!drawerOpen);

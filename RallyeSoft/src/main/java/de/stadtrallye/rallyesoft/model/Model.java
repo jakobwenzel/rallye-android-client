@@ -80,6 +80,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 	// State
 	private ConnectionState state;
+	private boolean refreshingGroups = false;
+	private boolean refreshingUsers = false;
+	private boolean refreshingChatrooms = false;
 //	private int state;
 	private ServerLogin currentLogin;
 	private ServerInfo serverInfo;
@@ -245,8 +248,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 					chatrooms = Chatroom.getChatrooms(this);
 				} catch (Exception e) {
 					Log.e(THIS, "Chatrooms could not be restored");
+					refreshAvailableChatrooms();
 				}
-				refreshAvailableChatrooms();
 			}
 			if ((deprecatedTables & EDIT_USERS) > 0) {
 				refreshAllUsers();
@@ -256,7 +259,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 				refreshAvailableGroups();
 				deprecatedTables &= ~EDIT_GROUPS;
 			}
-			refreshConfiguration();
 		}
 	}
 	
@@ -377,10 +379,18 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 
         refreshAvailableChatrooms();
-        map.refreshMapConfig();
+//        map.refreshMapConfig();
 	}
 	
 	private void refreshAvailableChatrooms() {
+		synchronized(this) {
+			if (refreshingChatrooms) {
+				Log.w(THIS, "Preventing concurrent Chatroom refreshes");
+				return;
+			}
+			refreshingChatrooms = true;
+		}
+
 		try {
 			Log.d(THIS, "getting available chatrooms");
 			exec.execute(new JSONArrayRequestExecutor<Chatroom, CallbackIds>(factory.availableChatroomsRequest(), new JsonConverters.ChatroomConverter(this), this, CallbackIds.AVAILABLE_CHATROOMS));
@@ -407,6 +417,10 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			err.asyncTaskResponseError(e);
 			commError(e);
 		}
+
+		synchronized (this) {
+			refreshingChatrooms = false;
+		}
 	}
 	
 	private synchronized void checkConnectionComplete() {
@@ -423,6 +437,14 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		if (!currentLogin.hasServer()) {
 			throw new IllegalStateException("Cannot request available groups without setServer() first");
 		}
+
+		synchronized(this) {
+			if (refreshingGroups) {
+				Log.w(THIS, "Preventing concurrent Group refreshes");
+				return;
+			}
+			refreshingGroups = true;
+		}
 		
 		try {
 			exec.execute(new JSONArrayRequestExecutor<Group, CallbackIds>(factory.availableGroupsRequest(), new JsonConverters.GroupConverter(), this, CallbackIds.GROUP_LIST));
@@ -435,6 +457,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private void availableGroupsResult(RequestExecutor<List<Group>, ?> r) {
 		if (r.isSuccessful()) {
 			groups = r.getResult();
+			Log.d(THIS, "Received available groups: "+ groups);
 			Collections.sort(groups, new Comparator<Group>() {
 				@Override
 				public int compare(Group lhs, Group rhs) {
@@ -455,11 +478,23 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 				}
 			});
 		}
+
+		synchronized (this) {
+			refreshingGroups = false;
+		}
 	}
 
 	private synchronized void refreshAllUsers() {
 		if (state != ConnectionState.Connected) {
 			throw new IllegalStateException("Need to be connected to a server");
+		}
+
+		synchronized(this) {
+			if (refreshingUsers) {
+				Log.w(THIS, "Preventing concurrent User refreshes");
+				return;
+			}
+			refreshingUsers = true;
 		}
 
 		try {
@@ -483,6 +518,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			Exception e = r.getException();
 			err.asyncTaskResponseError(e);
 			commError(e);
+		}
+		synchronized (this) {
+			refreshingUsers = false;
 		}
 	}
 
@@ -519,6 +557,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			Exception e = r.getException();
 			err.asyncTaskResponseError(e);
 			commError(e);
+		}
+		synchronized (this) {
+			refreshingUsers = false;
 		}
 	}
 
@@ -707,10 +748,10 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			if (mapConfig == null)
 				Log.e(THIS, "MapConfig still null during Save!");
 
-			edit.putString(Std.LATITUDE, String.valueOf(mapConfig.location.latitude));
-			edit.putString(Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
+			edit.putString(Std.MAP_BOUNDS+Std.LATITUDE, String.valueOf(mapConfig.location.latitude));
+			edit.putString(Std.MAP_BOUNDS+Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
 			edit.putString(Std.MAP_BOUNDS+Std.NAME, mapConfig.name);
-			edit.putFloat(Std.START_TIME, mapConfig.zoomLevel);
+			edit.putFloat(Std.MAP_BOUNDS+ Std.ZOOM, mapConfig.zoomLevel);
             edit.putString(Std.MAP_BOUNDS + Std.MAP_BOUNDS, PreferenceConverters.toSingleString(mapConfig.getBoundsAsSet()));
 			return this;
 		}
@@ -798,19 +839,20 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 		MapConfig s = new MapConfig(
 				pref.getString(Std.MAP_BOUNDS+Std.NAME, ""),
-                new LatLng(Double.valueOf(pref.getString(Std.LATITUDE, "0")), Double.valueOf(pref.getString(Std.LONGITUDE, "0"))),
-				pref.getFloat(Std.ZOOM, 0),
-                MapConfig.getBounds(PreferenceConverters.fromSingleString(pref.getString(Std.MAP_BOUNDS + Std.MAP_BOUNDS, ""))));
+                new LatLng(Double.valueOf(pref.getString(Std.MAP_BOUNDS+Std.LATITUDE, "0")), Double.valueOf(pref.getString(Std.MAP_BOUNDS+Std.LONGITUDE, "0"))),
+				pref.getFloat(Std.MAP_BOUNDS+Std.ZOOM, 0),
+                MapConfig.getBounds(PreferenceConverters.fromSingleString(pref.getString(Std.MAP_BOUNDS+Std.MAP_BOUNDS, ""))));
 		
         if (s.zoomLevel != 0) {
 			Log.i(THIS, "Server Config recovered");
             return s;
 		} else {
 			Log.e(THIS, "ServerConfig corrupted");
-			Log.v(THIS, pref.getString(Std.SERVER+Std.NAME, null) +"|"+
-					Double.valueOf(pref.getString(Std.LATITUDE, "0")) +"|"+
-					Double.valueOf(pref.getString(Std.LONGITUDE, "0")) +"|"+
-					pref.getFloat(Std.ZOOM, 0));
+			Log.v(THIS, pref.getString(Std.MAP_BOUNDS+Std.NAME, null) +"|"+
+					pref.getString(Std.MAP_BOUNDS+Std.LATITUDE, null) +"|"+
+					pref.getString(Std.MAP_BOUNDS+Std.LONGITUDE, null) +"|"+
+					pref.getFloat(Std.MAP_BOUNDS+Std.ZOOM, 0) +"|"+
+					pref.getString(Std.MAP_BOUNDS+Std.MAP_BOUNDS, null));
             return null;
 		}
 	}

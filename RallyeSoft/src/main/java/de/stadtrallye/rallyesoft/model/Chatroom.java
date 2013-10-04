@@ -511,7 +511,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		});
 	}
 
-	public void onDbChange() {
+	void onDbChange() {
 		model.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
