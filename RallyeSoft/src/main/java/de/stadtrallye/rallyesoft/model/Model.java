@@ -921,6 +921,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		else
 			connectionFailure(exception, ConnectionState.Invalid);
 	}
+
+	@Override
+	public void saveState() {
+		if (!isTemporary())// save everything that changes without explicit refreshing originiating here
+			save().saveChatrooms().commit();
+	}
 	
 	/**
 	 * shutdown Executor (prevent it from accepting new CallbackIds but complete all previously accepted ones)
@@ -928,9 +934,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@Override
 	public void destroy() {
 		Log.d(THIS, "Destroying Model: Closing DB, killing all tasks");
-
-        if (!isTemporary())// save everything that changes without explicit refreshing originiating here
-            save().saveChatrooms().commit();//TODO: maybe move someplace called more often
 		
 		db.close();
 		db = null;

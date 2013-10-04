@@ -187,6 +187,12 @@ public interface IModel {
 	 */
 	boolean isConnected();
 
+
+	/**
+	 * Save all changed state to database.
+	 */
+	void saveState();
+
 	/**
 	 * Terminate all running Tasks and Connections currently held by Model and subsidiaries
 	 */

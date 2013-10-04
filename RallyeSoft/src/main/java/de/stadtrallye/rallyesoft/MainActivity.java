@@ -242,7 +242,15 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		return model;
 	}
 
-	/**
+	@Override
+	protected void onPause() {
+		model.saveState();
+
+		super.onPause();
+	}
+
+	/**git status
+	 * 
 	 * Passed-Through to Model (if not kept for ConfigurationChange) and GCMRegistrar
 	 */
 	@Override
