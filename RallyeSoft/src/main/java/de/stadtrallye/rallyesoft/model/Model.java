@@ -1,7 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -76,7 +75,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private SharedPreferences pref;
 	final Context context;
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
-	final NotificationManager notificationService;
 
 	// State
 	private ConnectionState state;
@@ -210,7 +208,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		this.pref = pref;
 		this.context = context;
 
-		notificationService = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		
 		initDatabase();
 

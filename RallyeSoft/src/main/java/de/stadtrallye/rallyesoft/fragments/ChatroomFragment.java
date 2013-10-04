@@ -26,6 +26,7 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
@@ -118,7 +119,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			throw new IllegalArgumentException(THIS +" could not find the Model of Chatroom "+ roomID);
 		}
 
-		chatAdapter = new ChatCursorAdapter(getActivity(), model, chatroom.getChatCursor());
+		chatAdapter = new ChatCursorAdapter(getActivity(), model, chatroom);
 		list.setAdapter(chatAdapter);
 		list.setOnScrollListener(this);//TODO: use chatroom.getLastReadId() (wrap cursorAdapter add extra line)
 

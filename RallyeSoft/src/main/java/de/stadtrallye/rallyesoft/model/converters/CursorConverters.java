@@ -5,6 +5,7 @@ import android.database.Cursor;
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.LatLng;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Tasks;
@@ -46,9 +47,7 @@ public class CursorConverters {
 		}
 	}
 
-	public static Task getTask(int pos, Cursor cursor, TaskCursorIds c) {
-		cursor.moveToPosition(pos);
-
+	public static Task getTask(Cursor cursor, TaskCursorIds c) {
 		LatLng coords;
 
 		coords = (cursor.isNull(c.latitude) || cursor.isNull(c.longitude))? null : new LatLng(cursor.getDouble(c.latitude), cursor.getDouble(c.longitude));
@@ -58,6 +57,44 @@ public class CursorConverters {
 				getBoolean(cursor, c.multiple), cursor.getInt(c.submitType), cursor.getString(c.points),
 				AdditionalResource.additionalResourcesFromString(cursor.getString(c.additionalResources)),
 				cursor.getInt(c.submits));
+	}
+
+	public static Task getTask(int pos, Cursor cursor, TaskCursorIds c) {
+		cursor.moveToPosition(pos);
+
+		return getTask(cursor,c);
+	}
+
+	public static ChatEntry getChatEntry(Cursor cursor, ChatCursorIds c) {
+		return new ChatEntry(cursor.getInt(c.id),cursor.getString(c.message),cursor.getLong(c.timestamp),
+				cursor.getInt(c.groupID),cursor.getString(c.groupName),cursor.getInt(c.userID),
+				cursor.getString(c.userName),cursor.getInt(c.pictureID));
+	}
+
+
+	/**
+	 * Move a Cursor to a id
+	 * This assumes that the cursor is sorted by id
+	 * @return true if the element could be found.
+ 	 */
+	public static boolean moveCursorToId(Cursor cursor, int column, int id) {
+		int left = 0;
+		int right = cursor.getCount()-1;
+
+		while (left <= right) {
+			int middle = (left+right) / 2;
+
+			cursor.moveToPosition(middle);
+			int val = cursor.getInt(column);
+			if (val==id)
+				return true;
+			if (val > id)
+				right = middle-1;
+			else
+				left = middle +1;
+		}
+
+		return false;
 	}
 
 	public static class ChatCursorIds {

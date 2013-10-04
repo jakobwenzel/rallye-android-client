@@ -71,7 +71,10 @@
 	<string name="version">Version</string>
 	<string name="submissions">Eingereichte Lösungen</string>
 	<string name="new_message">Neue Nachricht</string>
-	<string name="new_message_from">Neue Nachricht von</string>
+	<string name="new_messages">Neue Nachrichten</string>
+	<string name="x_new_messages">neue Nachrichten</string>
+	<string name="new_messages_in">Neue Nachrichten in</string>
+	<string name="x_new_messages_in_y_chatrooms">%1$d Nachrichten in %2$d Chaträumen</string>
 	<string name="waiting_for_model">Warte auf Verbindung...</string>
 	<string name="solution_submitted">Lösung eingereicht (1/1)</string>
 	<string name="solutions_submitted">Lösung eingereicht (weitere möglich)</string>

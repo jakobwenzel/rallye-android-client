@@ -2,6 +2,8 @@ package de.stadtrallye.rallyesoft.model;
 
 import android.database.Cursor;
 
+import java.util.List;
+
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 /**
@@ -9,6 +11,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
  * Currently refreshes only manually, push-implementation can be external, calling pushChat()
  */
 public interface IChatroom {
+
 
 	enum ChatroomState { Ready, Refreshing }
 	enum PostState { Success, Failure, Retrying }
@@ -43,6 +46,11 @@ public interface IChatroom {
 	 * @return the last Read saved by {@see setLastReadId} chatID
 	 */
 	int getLastReadId();
+
+	/**
+	 * @return all chat entries posted after the saved last read chatID
+	 */
+	List<ChatEntry> getUnreadEntries();
 	
 	void addListener(IChatroomListener l);
 	void removeListener(IChatroomListener l);
