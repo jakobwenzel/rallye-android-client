@@ -346,6 +346,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			setConnectionState(ConnectionState.InternalConnected);
 			
 			refreshConfiguration();
+			map.refreshMapConfig();
 			map.refresh();
 			tasks.refresh();
 		} else {
@@ -747,12 +748,15 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 			if (mapConfig == null)
 				Log.e(THIS, "MapConfig still null during Save!");
+			else {
 
-			edit.putString(Std.MAP_BOUNDS+Std.LATITUDE, String.valueOf(mapConfig.location.latitude));
-			edit.putString(Std.MAP_BOUNDS+Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
-			edit.putString(Std.MAP_BOUNDS+Std.NAME, mapConfig.name);
-			edit.putFloat(Std.MAP_BOUNDS+ Std.ZOOM, mapConfig.zoomLevel);
-            edit.putString(Std.MAP_BOUNDS + Std.MAP_BOUNDS, PreferenceConverters.toSingleString(mapConfig.getBoundsAsSet()));
+				edit.putString(Std.MAP_BOUNDS+Std.LATITUDE, String.valueOf(mapConfig.location.latitude));
+				edit.putString(Std.MAP_BOUNDS+Std.LONGITUDE, String.valueOf(mapConfig.location.longitude));
+				edit.putString(Std.MAP_BOUNDS+Std.NAME, mapConfig.name);
+				edit.putFloat(Std.MAP_BOUNDS+ Std.ZOOM, mapConfig.zoomLevel);
+				edit.putString(Std.MAP_BOUNDS + Std.MAP_BOUNDS, PreferenceConverters.toSingleString(mapConfig.getBoundsAsSet()));
+			}
+
 			return this;
 		}
 		
