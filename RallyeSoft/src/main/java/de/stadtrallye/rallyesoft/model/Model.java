@@ -308,6 +308,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private synchronized void login() {
 		setConnectionState(ConnectionState.Connecting);
 
+		Log.i(THIS, "Reconnecting");
+
 		try {
 			factory.setPushID(GCMRegistrar.getRegistrationId(context));
 			exec.execute(new JSONObjectRequestExecutor<UserAuth, CallbackIds>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
@@ -322,6 +324,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		if (state != ConnectionState.None) {
 			throw new IllegalStateException("Already connected");
 		}
+
+		Log.i(THIS, "Logging in");
 
 		setConnectionState(ConnectionState.Connecting);
 		currentLogin.setName(username);
@@ -424,7 +428,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	private synchronized void checkConnectionComplete() {
-		if ((state == ConnectionState.Connecting || state == ConnectionState.InternalConnected) && chatrooms != null && chatrooms.size() > 0) {
+		if ((state == ConnectionState.Connecting || state == ConnectionState.InternalConnected) && chatrooms != null) {
 			setConnectionState(ConnectionState.Connected);
 
 			if (pref != null)
