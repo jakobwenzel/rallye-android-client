@@ -575,7 +575,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 	@Override
 	public void onMissingUserName(int userID) {
-		refreshAvailableGroups();
+		Log.i(THIS,"Missing User name for "+userID);
+		refreshAllUsers();
 	}
 
 	@Override
