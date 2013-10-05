@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -16,7 +17,9 @@ import de.stadtrallye.rallyesoft.net.Request;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -51,9 +54,8 @@ public class UploadService extends IntentService {
         long size, current = 0;
 
         try {
-			File f = new File(picture);
-            size = f.length();
-            FileInputStream fIn = new FileInputStream(f);
+			InputStream fIn = getContentResolver().openInputStream(Uri.parse(picture));
+			size = fIn.available();
 
 			URL url = model.getPictureUploadURL(hash);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();

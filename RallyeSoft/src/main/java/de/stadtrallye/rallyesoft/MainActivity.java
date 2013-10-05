@@ -3,6 +3,7 @@ package de.stadtrallye.rallyesoft;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
@@ -10,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.widget.Toast;
@@ -293,21 +295,33 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 					onConnectionStateChange(model.getConnectionState());
 				}
 			}, 1000);
-		} else if (data != null) {
-			Uri uri = data.getData();
+		} else
+		if (resultCode==RESULT_OK) {
+			//Find uri
+			Uri uri=null;
+			//It can either be returned with the intent parameter:
+			if (data != null) {
+				uri = data.getData();
+			} else {//else we use the saved value
+				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+				String uriString = prefs.getString(Std.CAMERA_OUTPUT_FILENAME,null);
+				if (uriString!=null)
+					uri = Uri.parse(uriString);
+			}
 
 			if (uri != null) {
 				try {
 					//User has picked an image.
-					Cursor cursor = getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
+					/*Cursor cursor = getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
 					cursor.moveToFirst();
-
+*/
 					//Link to the image
-					final String imageFilePath = cursor.getString(0);
+					final String imageFilePath = uri.toString();//cursor.getString(0);
 
 					Log.i(THIS, "Picture taken/selected: " + imageFilePath);
 
-					cursor.close();
+
+					//cursor.close();
 
 					Intent intent = new Intent(this, UploadService.class);
 					intent.putExtra(Std.PIC, imageFilePath);
@@ -318,10 +332,11 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 					if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT) {
 						IPictureTakenListener chatTab = (IPictureTakenListener) tabManager.getActiveFragment();
+						final Uri finalUri = uri;
 						chatTab.pictureTaken(new IPictureTakenListener.Picture() {
 							@Override
-							public String getPath() {
-								return imageFilePath;
+							public Uri getPath() {
+								return finalUri;
 							}
 
 							@Override

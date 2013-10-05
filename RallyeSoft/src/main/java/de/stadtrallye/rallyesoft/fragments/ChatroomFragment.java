@@ -127,7 +127,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		IPictureTakenListener.Picture pic = parent.getPicture();
 		if (pic != null) {
 			chosen_picture.setVisibility(View.VISIBLE);
-			ImageLoader.getInstance().displayImage("file://"+ pic.getPath(), chosen_picture);
+			ImageLoader.getInstance().displayImage(pic.getPath().toString(), chosen_picture);
 		} else {
 			chosen_picture.setVisibility(View.GONE);
 		}
@@ -153,14 +153,16 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	 * save into lastPos[]: 0: nr, 1: pixel
 	 */
 	private void saveScrollState() {
-		lastPos[0] = list.getFirstVisiblePosition(); 
-		
-		if (lastPos[0] == 0) {
-			lastPos[1] = 0;
-		} else {
-			View v = list.getChildAt(0);
-			lastPos[1] = v.getTop(); 
-		}
+        if (lastPos==null)
+            lastPos = new int[2];
+        lastPos[0] = list.getFirstVisiblePosition();
+
+        if (lastPos[0] == 0) {
+            lastPos[1] = 0;
+        } else {
+            View v = list.getChildAt(0);
+            lastPos[1] = v.getTop();
+        }
 	}
 
 	private void restoreLastReadId(int chatId) {
@@ -218,14 +220,13 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();
-		if (msg.length() > 0) {
-			IPictureTakenListener.Picture pic = parent.getPicture();
-			if (pic != null) {
-				chatroom.postChatWithHash(msg.toString(), pic.getHash());
-				loading.setVisibility(View.VISIBLE);
-			} else {
-				chatroom.postChat(msg.toString(), null);
-			}
+        IPictureTakenListener.Picture pic = parent.getPicture();
+        if (pic != null) {
+            chatroom.postChatWithHash(msg.toString(), pic.getHash());
+            loading.setVisibility(View.VISIBLE);
+        } else if (msg.length() > 0 ) {{
+            chatroom.postChat(msg.toString(), null);
+        }
 		}
 	}
 
