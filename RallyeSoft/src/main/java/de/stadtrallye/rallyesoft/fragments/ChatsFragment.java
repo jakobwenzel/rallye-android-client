@@ -1,7 +1,10 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -23,6 +26,7 @@ import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
+import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
@@ -155,7 +159,16 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 
 			Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-			Intent chooserIntent = Intent.createChooser(pickIntent, getString(R.string.select_take_picture));
+            Uri fileUri = ImageLocation.getOutputMediaFileUri(ImageLocation.MEDIA_TYPE_IMAGE); // create a file to save the image
+            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+
+			SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).edit();
+			editor.putString(Std.CAMERA_OUTPUT_FILENAME,fileUri.toString());
+			editor.commit();
+
+			takePhotoIntent.putExtra("return-data", true);
+
+            Intent chooserIntent = Intent.createChooser(pickIntent, getString(R.string.select_take_picture));
 			chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePhotoIntent});
 
 			startActivityForResult(chooserIntent, Std.PICK_IMAGE);
