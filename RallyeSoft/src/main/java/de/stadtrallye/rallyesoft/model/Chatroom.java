@@ -191,7 +191,13 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			List<ChatEntry> res = r.getResult();
 
 			if (res.size() > 0) {
+
+				boolean isFirstRefresh = this.lastRefresh==0;
+
 				saveChats(res);
+
+				if (isFirstRefresh)
+					this.setLastReadId(this.lastId);
 			} else
 				Log.i(THIS, "No new Entries");
 			setState(ChatroomState.Ready);
