@@ -46,6 +46,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 	private ChatroomPagerAdapter fragmentAdapter;
 //	private int currentTab;
 	private Picture picture = null;
+	private IModel model;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,15 +66,19 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 		pager = (ViewPager) v.findViewById(R.id.pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
-		
+
 		return v;
 	}
-	
-	@Override
-	public void onStart() {
-		super.onStart();
 
-		IModel model = getModel(getActivity());
+	@Override
+	public void onActivityCreated(Bundle savedBundle) {
+		super.onActivityCreated(savedBundle);
+		loadChatrooms();
+
+	}
+
+	private void loadChatrooms() {
+		model = getModel(getActivity());
 		chatrooms = model.getChatrooms();
 
 		fragmentAdapter = new ChatroomPagerAdapter(getChildFragmentManager(), chatrooms);
@@ -91,13 +96,22 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 			}
 		}
 	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+
+		if (model!=getModel(getActivity()))
+			loadChatrooms();
+
+	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
 
-		fragmentAdapter = null;
-		chatrooms = null;
+//		fragmentAdapter = null;
+//		chatrooms = null;
 
 //		currentTab = pager.getCurrentItem();
 	}
@@ -112,6 +126,16 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 	@Override
 	public void pictureTaken(Picture picture) {
 		this.picture = picture;
+		updateFragments();
+
+
+	}
+
+	private void updateFragments() {
+		//Display picture in ChatroomFragments
+		for (int i=0;i<chatrooms.size();i++) {
+			fragmentAdapter.getItem(i).loadImagePreview();
+		}
 	}
 
 	@Override
@@ -122,6 +146,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 	@Override
 	public void sentPicture() {
 		picture = null;
+		updateFragments();
 	}
 
 	@Override

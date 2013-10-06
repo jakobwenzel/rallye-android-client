@@ -26,7 +26,6 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
@@ -59,6 +58,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	private ProgressBar loading;
 	private ImageView chosen_picture;
 	private IPictureTakenListener parent;
+	private IModel model;
 
 
 	/**
@@ -76,6 +76,9 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 			lastPos = savedInstanceState.getIntArray(Std.LAST_POS);
 		else
 			lastPos = new int[2];
+
+
+
 	}
 	
 	@Override
@@ -93,12 +96,46 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 		return v;
 	}
 
+	private void loadChats() {
+		model = getModel(getActivity());
+		chatroom = model.getChatroom(roomID);
+
+		if (chatroom == null) {
+			throw new IllegalArgumentException(THIS +" could not find the Model of Chatroom "+ roomID);
+		}
+
+		chatAdapter = new ChatCursorAdapter(getActivity(), model, chatroom);
+		list.setAdapter(chatAdapter);
+		list.setOnScrollListener(this);//TODO: use chatroom.getLastReadId() (wrap cursorAdapter add extra line)
+
+		loadImagePreview();
+
+		chatroom.addListener(this);
+		chatAdapter.changeCursor(chatroom.getChatCursor());
+
+		restoreLastReadId(chatroom.getLastReadId());
+	}
+
+	public void loadImagePreview() {
+		parent = (IPictureTakenListener) getParentFragment();
+		IPictureTakenListener.Picture pic = parent.getPicture();
+		if (pic != null) {
+			chosen_picture.setVisibility(View.VISIBLE);
+			ImageLoader.getInstance().displayImage(pic.getPath().toString(), chosen_picture);
+		} else {
+			chosen_picture.setVisibility(View.GONE);
+		}
+	}
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
 		try {
 			ui = (IProgressUI) getActivity();
+
+			loadChats();
+
 		} catch (ClassCastException e) {
 			Log.i(THIS, "Activity must implement IProgressUI");
 			throw e;
@@ -112,30 +149,8 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	public void onStart() {
 		super.onStart();
 
-		IModel model = getModel(getActivity());
-		chatroom = model.getChatroom(roomID);
-
-		if (chatroom == null) {
-			throw new IllegalArgumentException(THIS +" could not find the Model of Chatroom "+ roomID);
-		}
-
-		chatAdapter = new ChatCursorAdapter(getActivity(), model, chatroom);
-		list.setAdapter(chatAdapter);
-		list.setOnScrollListener(this);//TODO: use chatroom.getLastReadId() (wrap cursorAdapter add extra line)
-
-		parent = (IPictureTakenListener) getParentFragment();
-		IPictureTakenListener.Picture pic = parent.getPicture();
-		if (pic != null) {
-			chosen_picture.setVisibility(View.VISIBLE);
-			ImageLoader.getInstance().displayImage(pic.getPath().toString(), chosen_picture);
-		} else {
-			chosen_picture.setVisibility(View.GONE);
-		}
-		
-		chatroom.addListener(this);
-		chatAdapter.changeCursor(chatroom.getChatCursor());
-
-		restoreLastReadId(chatroom.getLastReadId());
+		if (model!=getModel(getActivity()))
+			loadChats();
 	}
 	
 	@Override
