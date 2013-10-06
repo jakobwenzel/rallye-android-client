@@ -407,7 +407,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 				List<Chatroom> chatrooms = r.getResult();
 
                 if (!chatrooms.equals(this.chatrooms)) {
-                    this.chatrooms = chatrooms;
+                    this.chatrooms = chatrooms; //TODO this overwrites stuff like lastReadId
 					if (pref != null)
 						save().saveChatrooms().commit();
 					Log.d(THIS, "Chatroom Config has changed, replacing");

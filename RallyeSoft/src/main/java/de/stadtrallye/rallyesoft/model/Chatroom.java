@@ -194,6 +194,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 				boolean isFirstRefresh = this.lastRefresh==0;
 
+				Log.i(THIS,"Refresh first: "+isFirstRefresh);
 				saveChats(res);
 
 				if (isFirstRefresh)
