@@ -6,7 +6,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.ChatroomFragment;
@@ -40,14 +42,18 @@ public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 		return chatrooms.get(position).getID();
 	}
 
+	Map<Integer,ChatroomFragment> fragments = new HashMap<Integer,ChatroomFragment>();
+
 	@Override
-	public Fragment getItem(int pos) {
-		ChatroomFragment f;
+	public ChatroomFragment getItem(int pos) {
+		ChatroomFragment f = fragments.get(pos);
+		if (f!=null) return f;
 
 		f = new ChatroomFragment();
 		Bundle b = new Bundle();
 		b.putInt(Std.CHATROOM, chatrooms.get(pos).getID());
 		f.setArguments(b);
+		fragments.put(pos,f);
 
 		return f;
 	}

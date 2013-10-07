@@ -16,31 +16,25 @@ public class ChatEntry extends de.rallye.model.structures.ChatEntry {
 	private String groupName;
 
 	public enum Sender { Me, MyGroup, SomeoneElse}
-	
-// --Commented out by Inspection START (22.09.13 02:44):
-//	public ChatEntry(int chatID, String message, long timestamp, int groupID, String groupName, int userID, String userName, Integer pictureID) {
-//		this(chatID, message, timestamp, groupID, userID, pictureID);
-//
-//		this.groupName = groupName;
-//		this.userName = userName;
-//	}
-// --Commented out by Inspection STOP (22.09.13 02:44)
+
+	public ChatEntry(int chatID, String message, long timestamp, int groupID, String groupName, int userID, String userName, Integer pictureID) {
+		this(chatID, message, timestamp, groupID, userID, pictureID);
+
+		this.groupName = groupName;
+		this.userName = userName;
+	}
 
 	public ChatEntry(int chatID, String message, long timestamp, int groupID, int userID, Integer pictureID) {
 		super(chatID, message, timestamp, groupID, userID, (pictureID == 0)? null : pictureID);
 	}
 
-// --Commented out by Inspection START (22.09.13 02:44):
-//	public void setUserName(String userName) {
-//		this.userName = userName;
-//	}
-// --Commented out by Inspection STOP (22.09.13 02:44)
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
 
-// --Commented out by Inspection START (22.09.13 02:44):
-//	public void setGroupName(String groupName) {
-//		this.groupName = groupName;
-//	}
-// --Commented out by Inspection STOP (22.09.13 02:44)
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
 
 	public String getUserName() {
 		return (userName != null)? userName : String.valueOf(userID);

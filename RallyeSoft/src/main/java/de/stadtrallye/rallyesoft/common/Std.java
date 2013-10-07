@@ -58,4 +58,5 @@ public class Std {
 	public static final String CONFIG_UI = "de.stadtrallye.rallyesoft.ui";
 	public static final int SUBMIT_NEW_SOLUTION_REQUESTCODE = 7;
 	public static final String SUBMIT_TYPE = "submit_type";
+	public static final String CAMERA_OUTPUT_FILENAME = "image filename";
 }

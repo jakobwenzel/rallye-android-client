@@ -20,6 +20,8 @@ import java.util.Date;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.model.Chatroom;
+import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
@@ -36,6 +38,8 @@ public class ChatCursorAdapter extends CursorAdapter {
 	private final GroupUser user;
 	private final IModel model;
 
+	private IChatroom chatroom;
+
 	private CursorConverters.ChatCursorIds c;
 
 	private class ViewMem {
@@ -48,10 +52,10 @@ public class ChatCursorAdapter extends CursorAdapter {
 		public ImageView msg_img;
 	}
 
-	public ChatCursorAdapter(Context context, IModel model, Cursor cursor) {
-		super(context, cursor, false);
+	public ChatCursorAdapter(Context context, IModel model, IChatroom chatroom) {
+		super(context, chatroom.getChatCursor(), false);
 
-		c = CursorConverters.ChatCursorIds.read(cursor);
+		c = CursorConverters.ChatCursorIds.read(getCursor());
 
 		this.user = model.getUser();
 		this.model = model;
@@ -61,6 +65,8 @@ public class ChatCursorAdapter extends CursorAdapter {
 		this.loader = ImageLoader.getInstance();
 
 		this.converter = SimpleDateFormat.getDateTimeInstance();
+
+		this.chatroom = chatroom;
 	}
 
 	@Override
@@ -132,6 +138,10 @@ public class ChatCursorAdapter extends CursorAdapter {
 		// Otherwise ImageLoader will not be stable and start swapping images
 		loader.displayImage(model.getAvatarURL(groupID), (me)? mem.img_r : mem.img_l);
 //		loader.displayImage(null, (!me)? mem.img_r : mem.img_l);
+
+		//Set read id on chatroom
+		int id = cursor.getInt(c.id);
+		chatroom.setLastReadId(id);
 	}
 
 	/**
@@ -151,13 +161,14 @@ public class ChatCursorAdapter extends CursorAdapter {
 		return (cursor.getInt(c.id));
 	}
 
+	/**
+	 * Find the position of a chatId
+	 * @param chatId
+	 * @return the position, 0 if not found
+	 */
 	public int findPos(int chatId) {
-		Cursor cursor = getCursor();
-		for (int i=0; i<cursor.getCount(); i++) {
-			cursor.moveToPosition(i);
-			if (cursor.getInt(c.id) == chatId)
-				return i;
-		}
+		if (CursorConverters.moveCursorToId(getCursor(), c.id,chatId))
+			return getCursor().getPosition();
 		return 0;
 	}
 

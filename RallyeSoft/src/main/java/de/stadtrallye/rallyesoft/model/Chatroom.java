@@ -12,6 +12,7 @@ import android.util.Log;
 import java.sql.SQLDataException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.MainActivity;
@@ -20,6 +21,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.AdvTaskId;
+import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
@@ -30,6 +32,7 @@ import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATS;
 
@@ -188,7 +191,14 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			List<ChatEntry> res = r.getResult();
 
 			if (res.size() > 0) {
+
+				boolean isFirstRefresh = this.lastRefresh==0;
+
+				Log.i(THIS,"Refresh first: "+isFirstRefresh);
 				saveChats(res);
+
+				if (isFirstRefresh)
+					this.setLastReadId(this.lastId);
 			} else
 				Log.i(THIS, "No new Entries");
 			setState(ChatroomState.Ready);
@@ -208,27 +218,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		refresh();
 	}
 
-	private void showNotification(ChatEntry chatEntry) {
-		Intent intent = new Intent(model.context, MainActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		intent.putExtra(Std.TAB, Std.CHATROOM);
-		intent.putExtra(Std.CHATROOM, id);
-		intent.putExtra(Std.CHAT_ID, chatEntry.chatID);
-
-		NotificationCompat.BigTextStyle big = new NotificationCompat.BigTextStyle(
-				new NotificationCompat.Builder(model.context)
-						.setSmallIcon(android.R.drawable.stat_notify_chat)
-						.setContentTitle(model.context.getString(R.string.new_message_from) +" "+ name)
-						.setContentText(chatEntry.message)
-						.setContentIntent(PendingIntent.getActivity(model.context, chatEntry.chatID, intent, PendingIntent.FLAG_UPDATE_CURRENT)))
-				.bigText(chatEntry.getUserName() +" ("+ chatEntry.getGroupName() +"):\n"+ chatEntry.message);
-
-		model.notificationService.notify(name +":"+ id, Std.CHAT_NOTIFICATION, big.build());
-	}
-
-	private void removeNotification() {
-		model.notificationService.cancel(Std.CHAT_NOTIFICATION);
-	}
 
 	@Override
 	public synchronized void pushChat(ChatEntry chatEntry) {
@@ -247,8 +236,9 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		Log.i(THIS, "Pushed: " + chatEntry);
 
 //		notifyChatsAdded(upd);
+		//Only show notification if chatroom is not currently visible
 		if (!notifyChatsChanged())
-			showNotification(chatEntry);
+			ChatNotificationManager.getInstance(model.context).updateNotification();
 	}
 
 	@Override
@@ -582,7 +572,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	@Override
 	public Cursor getChatCursor() {
 		Cursor c = model.db.query(Chats.TABLE + " AS c LEFT JOIN " + Groups.TABLE + " AS g USING(" + Chats.FOREIGN_GROUP + ") LEFT JOIN " + Users.TABLE + " AS u USING(" + Chats.FOREIGN_USER + ")",
-				new String[]{Chats.KEY_ID + " AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c." + Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID + "=" + id, null, null, null, Chats.KEY_TIME);
+				new String[]{Chats.KEY_ID + " AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c." + Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID + "=" + id, null, null, null, Chats.KEY_ID);
 		Log.i(THIS, "new Cursor: " + c.getCount() + " rows");
 		return c;
 	}
@@ -636,18 +626,47 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		return new PictureGallery(initialPos, pictures, model.getPictureIdResolver());
 	}
 
+	boolean needPost = true;
 	@Override
 	public void setLastReadId(int lastRead) {
-		if (lastRead >= lastId) {
-			removeNotification();
-		}
-		if (lastReadId < lastRead)
+		if (lastReadId < lastRead) {
 			lastReadId = lastRead;
+			if (needPost) {
+				needPost = false;
+				model.uiHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						needPost = true;
+						ChatNotificationManager.getInstance(model.context).updateNotification();
+					}
+				});
+			}
+		}
 	}
 
 	@Override
 	public int getLastReadId() {
 		return lastReadId;
+	}
+
+	@Override
+	public List<ChatEntry> getUnreadEntries() {
+		Cursor cursor = getChatCursor();
+
+		CursorConverters.ChatCursorIds c = CursorConverters.ChatCursorIds.read(cursor);
+
+		CursorConverters.moveCursorToId(cursor,c.id,lastReadId);
+
+		List<ChatEntry> res = new ArrayList<ChatEntry>();
+
+		cursor.moveToNext();
+		while (!cursor.isAfterLast()) {
+			res.add(CursorConverters.getChatEntry(cursor,c));
+			cursor.moveToNext();
+		}
+		return res;
+
+
 	}
 
 	@Override

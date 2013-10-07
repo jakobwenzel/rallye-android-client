@@ -1,7 +1,6 @@
 package de.stadtrallye.rallyesoft.model;
 
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -76,7 +75,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	private SharedPreferences pref;
 	final Context context;
 	final Handler uiHandler = new Handler(Looper.getMainLooper());
-	final NotificationManager notificationService;
 
 	// State
 	private ConnectionState state;
@@ -210,7 +208,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		this.pref = pref;
 		this.context = context;
 
-		notificationService = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		
 		initDatabase();
 
@@ -410,7 +407,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 				List<Chatroom> chatrooms = r.getResult();
 
                 if (!chatrooms.equals(this.chatrooms)) {
-                    this.chatrooms = chatrooms;
+                    this.chatrooms = chatrooms; //TODO this overwrites stuff like lastReadId
 					if (pref != null)
 						save().saveChatrooms().commit();
 					Log.d(THIS, "Chatroom Config has changed, replacing");
@@ -924,6 +921,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		else
 			connectionFailure(exception, ConnectionState.Invalid);
 	}
+
+	@Override
+	public void saveState() {
+		if (!isTemporary())// save everything that changes without explicit refreshing originiating here
+			save().saveChatrooms().commit();
+	}
 	
 	/**
 	 * shutdown Executor (prevent it from accepting new CallbackIds but complete all previously accepted ones)
@@ -931,9 +934,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@Override
 	public void destroy() {
 		Log.d(THIS, "Destroying Model: Closing DB, killing all tasks");
-
-        if (!isTemporary())// save everything that changes without explicit refreshing originiating here
-            save().saveChatrooms().commit();//TODO: maybe move someplace called more often
 		
 		db.close();
 		db = null;

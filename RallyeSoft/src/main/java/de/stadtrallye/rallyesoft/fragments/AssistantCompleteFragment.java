@@ -25,6 +25,7 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 	private IConnectionAssistant assistant;
 	private Button next;
 	private Button cancel;
+	private boolean started = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -60,8 +61,11 @@ public class AssistantCompleteFragment extends SherlockFragment implements View.
 	public void onStart() {
 		super.onStart();
 
-		assistant.getModel().addListener(this);
-		assistant.login();
+		if (!started) {
+			assistant.getModel().addListener(this);
+			assistant.login();
+			started=true;
+		}
 
 	}
 
