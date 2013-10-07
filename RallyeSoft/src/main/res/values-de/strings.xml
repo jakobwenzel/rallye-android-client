@@ -81,5 +81,8 @@
 	<string name="test_server_connection">Teste Verbindung zu Server</string>
 	<string name="connection_test_failed">Verbindungstest fehlgeschlagen! Bitte überprüfe die Einstellungen</string>
 	<string name="submit_new_solution">Lösung einreichen</string>
+	<string name="enter_text">Text eingeben:</string>
+	<string name="enter_number">Zahl eingeben:</string>
+	<string name="choose_picture">Foto auswählen:</string>
 
 </resources>

@@ -302,6 +302,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 					cursor.close();
 
 					Intent intent = new Intent(this, UploadService.class);
+					intent.put
 					intent.putExtra(Std.PIC, imageFilePath);
 					intent.putExtra(Std.MIME, "image/jpeg");
 					final String hash = String.valueOf(imageFilePath.hashCode());

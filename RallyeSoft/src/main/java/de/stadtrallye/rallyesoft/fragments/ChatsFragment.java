@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -125,7 +126,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
 		
 		refreshMenuItem.setIcon(R.drawable.ic_refresh_light);
-		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		
 		MenuItem pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.take_picture);
 

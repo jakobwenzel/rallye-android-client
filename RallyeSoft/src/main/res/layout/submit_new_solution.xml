@@ -1,45 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="vertical"
-	android:padding="16dp"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
 
 	<LinearLayout
-		android:id="@+id/tab_picture"
 		android:orientation="vertical"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
+		android:padding="16dp"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
 
-		<TextView
+		<LinearLayout
+			android:id="@+id/tab_picture"
+			android:orientation="vertical"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:textAppearance="?android:attr/textAppearanceLarge"
-			android:text="@string/select_take_picture" />
+			android:layout_marginBottom="16dp">
 
-		<ImageView
-			android:layout_marginTop="16dp"
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/choose_picture" />
+
+			<de.stadtrallye.rallyesoft.widget.SquareImageView
+				android:padding="16dp"
+				android:layout_marginTop="16dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:src="@drawable/ic_action_camera_dark"
+				android:background="@android:drawable/editbox_background_normal"
+				android:scaleType="centerInside"/>
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:id="@+id/tab_text"
+			android:orientation="vertical"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:src="@drawable/ic_action_camera_dark"
-			android:background="@drawable/"
-			android:scaleType="centerInside">
+			android:layout_marginBottom="16dp">
 
-		</ImageView>
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/enter_text" />
+
+			<EditText
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:id="@+id/text_submission"
+				android:layout_marginTop="16dp"/>
+
+
+		</LinearLayout>
+
+		<LinearLayout
+			android:id="@+id/tab_number"
+			android:orientation="vertical"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="16dp">
+
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/enter_number"
+				android:id="@+id/textView"/>
+
+			<EditText
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:id="@+id/number_submission"
+				android:layout_marginTop="16dp"/>
+
+		</LinearLayout>
+
 	</LinearLayout>
 
-	<LinearLayout
-		android:id="@+id/tab_text"
-		android:orientation="vertical"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
-	</LinearLayout>
-
-	<LinearLayout
-		android:id="@+id/tab_number"
-		android:orientation="vertical"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
-	</LinearLayout>
-</LinearLayout>
+</ScrollView>

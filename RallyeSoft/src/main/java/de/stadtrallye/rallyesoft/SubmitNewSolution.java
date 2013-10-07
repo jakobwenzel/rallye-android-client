@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft;
 
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
+import android.view.View;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -13,8 +14,10 @@ import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 
@@ -46,6 +49,15 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 		// Initialize Model
 		model = Model.getInstance(getApplicationContext());
 		model.addListener(this);
+
+		int type = getIntent().getIntExtra(Std.SUBMIT_TYPE, Integer.MAX_VALUE);
+		if ((type & Task.TYPE_PICTURE) == 0)
+			findViewById(R.id.tab_picture).setVisibility(View.GONE);
+		if ((type & Task.TYPE_TEXT) == 0)
+			findViewById(R.id.tab_text).setVisibility(View.GONE);
+		if ((type & Task.TYPE_NUMBER) == 0)
+			findViewById(R.id.tab_number).setVisibility(View.GONE);
+
 	}
 
 	@Override
