@@ -140,7 +140,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	private void submitNewSolution() {
 		Intent intent = new Intent(getActivity(), SubmitNewSolution.class);
 		intent.putExtra(Std.SUBMIT_TYPE, task.submitType);
-		startActivityForResult(intent, Std.SUBMIT_NEW_SOLUTION_REQUESTCODE);
+		startActivityForResult(intent, SubmitNewSolution.REQUEST_CODE);
 	}
 
 	@Override

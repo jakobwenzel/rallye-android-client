@@ -17,9 +17,11 @@ import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayToMapRequestExecutor;
+import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_TASKS;
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.getBoolean;
@@ -190,6 +192,19 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 			ContentValues vals = new ContentValues();
 			vals.put(DatabaseHelper.Tasks.KEY_SUBMITS, submits);
 			model.db.update(DatabaseHelper.Tasks.TABLE, vals, DatabaseHelper.Tasks.KEY_ID +"="+ taskID, null);
+		}
+	}
+
+	@Override
+	public void submitSolution(int taskID, int type, IPictureTakenListener.Picture picture, String text, String number) {
+		if (!model.isConnected()) {
+			err.notLoggedIn();
+			return;
+		}
+		try {
+			model.exec.execute(new JSONObjectRequestExecutor<>(model.factory., this, CallbackIds.SUBMIT_SOLUTION));
+		} catch (HttpRequestException e) {
+			err.requestException(e);
 		}
 	}
 

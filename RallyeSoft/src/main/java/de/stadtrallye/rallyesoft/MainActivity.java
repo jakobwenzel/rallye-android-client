@@ -43,6 +43,7 @@ import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
+import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
@@ -295,59 +296,17 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 					onConnectionStateChange(model.getConnectionState());
 				}
 			}, 1000);
-		} else
-		if (resultCode==RESULT_OK) {
-			//Find uri
-			Uri uri=null;
-			//It can either be returned with the intent parameter:
-			if (data != null) {
-				uri = data.getData();
-			} else {//else we use the saved value
-				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-				String uriString = prefs.getString(Std.CAMERA_OUTPUT_FILENAME,null);
-				if (uriString!=null)
-					uri = Uri.parse(uriString);
+		} else if (requestCode == SubmitNewSolution.REQUEST_CODE) {
+			Log.i(THIS, "Task Submission");
+			if (resultCode == Activity.RESULT_OK) {
+
 			}
+		} else {
+			final IPictureTakenListener.Picture picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
 
-			if (uri != null) {
-				try {
-					//User has picked an image.
-					/*Cursor cursor = getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
-					cursor.moveToFirst();
-*/
-					//Link to the image
-					final String imageFilePath = uri.toString();//cursor.getString(0);
-
-					Log.i(THIS, "Picture taken/selected: " + imageFilePath);
-
-
-					//cursor.close();
-
-					Intent intent = new Intent(this, UploadService.class);
-					intent.putExtra(Std.PIC, imageFilePath);
-					intent.putExtra(Std.MIME, "image/jpeg");
-					final String hash = String.valueOf(imageFilePath.hashCode());
-					intent.putExtra(Std.HASH, hash);
-					startService(intent);
-
-					if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT) {
-						IPictureTakenListener chatTab = (IPictureTakenListener) tabManager.getActiveFragment();
-						final Uri finalUri = uri;
-						chatTab.pictureTaken(new IPictureTakenListener.Picture() {
-							@Override
-							public Uri getPath() {
-								return finalUri;
-							}
-
-							@Override
-							public String getHash() {
-								return hash;
-							}
-						});
-					}
-				} catch (Exception e) {
-					Log.e(THIS, "Failed to select Picture", e);
-				}
+			if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT && picture != null) {
+				IPictureTakenListener chatTab = (IPictureTakenListener) tabManager.getActiveFragment();
+				chatTab.pictureTaken(picture);
 			}
 		}
 
