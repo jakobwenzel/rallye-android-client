@@ -13,10 +13,13 @@ import android.util.Log;
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.SimpleChatWithPictureHash;
+import de.rallye.model.structures.SimpleSubmission;
+import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Request.RequestType;
+import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 
 public class RequestFactory {
 	
@@ -173,5 +176,21 @@ public class RequestFactory {
 	public Request allSubmissionsRequest(int groupID) throws HttpRequestException {
 		final URL url = getURL(Paths.SUBMISSIONS+"/"+groupID);
 		return new Request(url);
+	}
+
+	public Request submitSolutionRequest(int taskID, int type, IPictureTakenListener.Picture picture, String text, String number) throws HttpRequestException {
+		final URL url = getURL(Paths.TASKS+"/"+taskID);
+
+		Request r = new Request(url, RequestType.PUT);
+
+		try {
+			JSONObject obj = new JSONObject()
+					.put(SimpleSubmission.SUBMIT_TYPE, type)
+					.put(SimpleSubmission.TEXT_SUBMISSION, text);
+					.put(SimpleSubmission.INT_SUBMISSION, ((type & Task.TYPE_PICTURE) == Task.TYPE_PICTURE)? picture.
+			r.putPost();
+		} catch (JSONException e) {
+			throw err.JSONDuringRequestCreationError(e, url);
+		}
 	}
 }

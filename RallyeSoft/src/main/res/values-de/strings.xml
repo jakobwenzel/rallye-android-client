@@ -87,5 +87,6 @@
 	<string name="enter_text">Text eingeben:</string>
 	<string name="enter_number">Zahl eingeben:</string>
 	<string name="choose_picture">Foto auswählen:</string>
+	<string name="picture_selection_failed">Interner Fehler bei der Bildauswahl!</string>
 
 </resources>

@@ -177,26 +177,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 			chatrooms.get(pager.getCurrentItem()).refresh();
 			return true;
 		case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
-			//Attention: Our RequestCode will not be used for the result, if a jpeg is picked, data.getType will contain image/jpeg, if the picture was just taken with the camera it will be null
-			Intent pickIntent = new Intent();
-			pickIntent.setType("image/jpeg");
-			pickIntent.setAction(Intent.ACTION_GET_CONTENT);
-
-			Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-            Uri fileUri = ImageLocation.getOutputMediaFileUri(ImageLocation.MEDIA_TYPE_IMAGE); // create a file to save the image
-            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
-
-			SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext()).edit();
-			editor.putString(Std.CAMERA_OUTPUT_FILENAME,fileUri.toString());
-			editor.commit();
-
-			takePhotoIntent.putExtra("return-data", true);
-
-            Intent chooserIntent = Intent.createChooser(pickIntent, getString(R.string.select_take_picture));
-			chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePhotoIntent});
-
-			startActivityForResult(chooserIntent, Std.PICK_IMAGE);
+			ImageLocation.startPictureTakeOrSelect(getActivity());
 			return true;
 		default:
 			Log.d(THIS, "No hit on menu item "+ item);
