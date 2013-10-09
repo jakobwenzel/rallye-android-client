@@ -44,7 +44,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	public static final int TAB_WAIT_FOR_MODEL = 6;
 	public static final int TAB_TASKS_DETAILS = 100;
 
-	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, TAB_NEXT_MOVE, TAB_TASKS, TAB_MAP};
+	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, /*TAB_NEXT_MOVE,*/ TAB_TASKS/*, TAB_MAP*/};
 
 	private final FragmentActivity activity;
 	protected IModel model;
