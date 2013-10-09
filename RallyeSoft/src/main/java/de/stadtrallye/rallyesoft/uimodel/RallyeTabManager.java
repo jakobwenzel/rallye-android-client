@@ -82,15 +82,15 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		drawerLayout.setDrawerListener(drawerToggle);
 
 
-		tabs.put(0, new Tab<WelcomeFragment>("welcome", WelcomeFragment.class, R.string.welcome, false));
-		tabs.put(1, new Tab<OverviewFragment>("overview", OverviewFragment.class, R.string.overview, false));
-		tabs.put(2, new Tab<GameMapFragment>("map", GameMapFragment.class, R.string.map, false));
-		tabs.put(3, new Tab<TasksOverviewFragment>("tasks", TasksOverviewFragment.class, R.string.tasks, false));
-		tabs.put(4, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, false));
-		tabs.put(5, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, true));
-		tabs.put(6, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, false));
+		tabs.put(TAB_WELCOME, new Tab<WelcomeFragment>("welcome", WelcomeFragment.class, R.string.welcome, false));
+		tabs.put(TAB_OVERVIEW, new Tab<OverviewFragment>("overview", OverviewFragment.class, R.string.overview, false));
+		tabs.put(TAB_MAP, new Tab<GameMapFragment>("map", GameMapFragment.class, R.string.map, false));
+		tabs.put(TAB_TASKS, new Tab<TasksOverviewFragment>("tasks", TasksOverviewFragment.class, R.string.tasks, false));
+		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, false));
+		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, true));
+		tabs.put(TAB_WAIT_FOR_MODEL, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, false));
 
-		tabs.put(100, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, false));
+		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, false));
 
 
 
