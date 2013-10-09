@@ -70,6 +70,8 @@ public class UploadService extends IntentService {
 			int h = (int)Math.round(img.getHeight()*factor);
 			Bitmap scaled = img.createScaledBitmap(img,w,h,true);
 
+			Log.i(THIS,"scaled bitmap. it now is "+w+"x"+h);
+
 			ByteArrayOutputStream outTemp = new ByteArrayOutputStream();
 			scaled.compress(Bitmap.CompressFormat.JPEG,80,outTemp);
 
@@ -96,6 +98,11 @@ public class UploadService extends IntentService {
 				int currentStep = (step>size-current)?size-current:step;
 				out.write(buf,current,currentStep);
 				current+=currentStep;
+
+				try {
+					Thread.sleep(1000);
+				} catch(InterruptedException ex) {
+				}
 
 				notes.notify(NOTE_TAG, R.id.uploader, note.setProgress((int) size / 1000, (int) current / 1000, false).build());
 			}

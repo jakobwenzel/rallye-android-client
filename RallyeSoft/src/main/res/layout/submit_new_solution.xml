@@ -24,6 +24,7 @@
 				android:text="@string/choose_picture" />
 
 			<de.stadtrallye.rallyesoft.widget.SquareImageView
+				android:id="@+id/picture_submission"
 				android:padding="16dp"
 				android:layout_marginTop="16dp"
 				android:layout_width="match_parent"
@@ -74,6 +75,7 @@
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:id="@+id/number_submission"
+				android:inputType="number"
 				android:layout_marginTop="16dp"/>
 
 		</LinearLayout>

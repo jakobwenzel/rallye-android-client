@@ -35,7 +35,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 	private static final String THIS = Tasks.class.getSimpleName();
 	private static final ErrorHandling err = new ErrorHandling(THIS);
 
-	enum CallbackIds {SUBMISSIONS_REFRESH, TASKS_REFRESH }
+	enum CallbackIds {SUBMISSIONS_REFRESH, SUBMIT_SOLUTION, TASKS_REFRESH }
 
 	private final Model model;
 
@@ -202,7 +202,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 			return;
 		}
 		try {
-			model.exec.execute(new JSONObjectRequestExecutor<>(model.factory., this, CallbackIds.SUBMIT_SOLUTION));
+			model.exec.execute(new JSONObjectRequestExecutor<Submission, CallbackIds>(model.factory.submitSolutionRequest(taskID,type,picture,text,number), new JsonConverters.SubmissionConverter(), this, CallbackIds.SUBMIT_SOLUTION));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}

@@ -138,13 +138,13 @@ public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.O
 		while (!cursor.isAfterLast()) {
 		//for (int i = 0; i < cursor.getCount(); i++) {
 			t = CursorConverters.getTask(cursor, c);
+			cursor.moveToNext();
 			if (!t.hasLocation())
 				continue;
 
 			Marker m = plotTask(t);
 
 			markers.put(m, t.taskID);
-			cursor.moveToNext();
 		}
 	}
 

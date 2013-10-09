@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import de.rallye.model.structures.AdditionalPicture;
 import de.rallye.model.structures.AdditionalResource;
@@ -140,6 +142,7 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	private void submitNewSolution() {
 		Intent intent = new Intent(getActivity(), SubmitNewSolution.class);
 		intent.putExtra(Std.SUBMIT_TYPE, task.submitType);
+		intent.putExtra(Std.TASK_ID, task.taskID);
 		startActivityForResult(intent, SubmitNewSolution.REQUEST_CODE);
 	}
 
@@ -158,6 +161,17 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	@Override
 	public void taskUpdate() {
 
+	}
+
+
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.v(THIS, "got result: " + resultCode);
+		if (resultCode== Activity.RESULT_OK) {
+
+			Log.v(THIS, "need to update submissions");
+		}
 	}
 
 	@Override
@@ -218,9 +232,9 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		private List<Submission> submissions;
 		private final ImageLoader loader;
 
-		private class ViewMem {
+		/*private class ViewMem {
 			public ImageView img;
-		}
+		}*/
 
 		public SubmissionListAdapter() {
 			this.loader = ImageLoader.getInstance();
@@ -260,14 +274,6 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 //			View v;
 //			ViewMem mem;
 
-			ImageView v = (ImageView) convertView;
-
-			if (v == null) {
-				v = new ImageView(getActivity());
-//				v.setAdjustViewBounds(true);
-//				v.setLayoutParams(new GridLayout.LayoutParams(-1,-1));
-				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-			}
 
 //			if (convertView == null) {
 //				v = inflator.inflate(R.layout.submission_item, null);
@@ -279,14 +285,35 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 //				mem = (ViewMem) v.getTag();
 //			}
 
-//			if ((sub.submitType & Task.TYPE_PICTURE) != Task.TYPE_PICTURE)//TODO: fork depending on type
-//				return v;
+			//Is it image?
+			if ((sub.submitType & Task.TYPE_PICTURE) >0) {
+				ImageView v = (ImageView) convertView;
 
-			int picID = sub.intSubmission;
+				if (v == null) {
+					v = new ImageView(getActivity());
+//				v.setAdjustViewBounds(true);
+//				v.setLayoutParams(new GridLayout.LayoutParams(-1,-1));
+					v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+				}
 
-			loader.displayImage(model.getUrlFromImageId(picID, PictureSize.Mini), v);
+				Integer picID = sub.intSubmission;
+				if (picID==null)
+					return v;
 
-			return v;
+				loader.displayImage(model.getUrlFromImageId(picID, PictureSize.Mini), v);
+				return v;
+			} else { //We currently only support text and num,bers
+				TextView v = (TextView) convertView;
+
+				if (v == null) {
+					v = new TextView(getActivity());
+				}
+				if (sub.intSubmission!=null)
+					v.setText(sub.intSubmission.toString());
+				else
+					v.setText(sub.textSubmission);
+				return v;
+			}
 		}
 	}
 

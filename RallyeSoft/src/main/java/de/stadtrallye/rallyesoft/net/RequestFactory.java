@@ -14,6 +14,7 @@ import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.rallye.model.structures.SimpleSubmission;
+import de.rallye.model.structures.SimpleSubmissionWithPictureHash;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
@@ -186,9 +187,12 @@ public class RequestFactory {
 		try {
 			JSONObject obj = new JSONObject()
 					.put(SimpleSubmission.SUBMIT_TYPE, type)
-					.put(SimpleSubmission.TEXT_SUBMISSION, text);
-					.put(SimpleSubmission.INT_SUBMISSION, ((type & Task.TYPE_PICTURE) == Task.TYPE_PICTURE)? picture.
-			r.putPost();
+					.put(SimpleSubmission.TEXT_SUBMISSION, text)
+					.put(SimpleSubmission.INT_SUBMISSION, number);
+			if (picture!=null)
+					obj.put(SimpleSubmissionWithPictureHash.PICTURE_HASH,picture.getHash());
+			r.putPost(obj);
+			return r;
 		} catch (JSONException e) {
 			throw err.JSONDuringRequestCreationError(e, url);
 		}

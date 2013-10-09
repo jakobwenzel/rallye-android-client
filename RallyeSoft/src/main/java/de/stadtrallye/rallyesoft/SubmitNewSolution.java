@@ -2,17 +2,20 @@ package de.stadtrallye.rallyesoft;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.List;
 
@@ -41,6 +44,10 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 	private IPictureTakenListener.Picture picture;
 	private EditText editText;
 	private EditText editNumber;
+
+	private LinearLayout tabPicture;
+	private LinearLayout tabText;
+	private LinearLayout tabNumber;
 	private int taskID;
 
 	@Override
@@ -63,9 +70,14 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 		model = Model.getInstance(getApplicationContext());
 //		model.addListener(this);
 
-		imageView = (ImageView) findViewById(R.id.tab_picture);
-		editText = (EditText) findViewById(R.id.tab_text);
-		editNumber = (EditText) findViewById(R.id.tab_number);
+
+		tabPicture = (LinearLayout) findViewById(R.id.tab_picture);
+		tabText = (LinearLayout) findViewById(R.id.tab_text);
+		tabNumber = (LinearLayout) findViewById(R.id.tab_number);
+
+		imageView = (ImageView) findViewById(R.id.picture_submission);
+		editText = (EditText) findViewById(R.id.text_submission);
+		editNumber = (EditText) findViewById(R.id.number_submission);
 
 		TextWatcher textWatcher = new TextWatcher() {
 			@Override
@@ -92,7 +104,9 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 		taskID = intent.getIntExtra(Std.TASK_ID, -1);
 
 		if ((type & Task.TYPE_PICTURE) == 0) {
-			imageView.setVisibility(View.GONE);
+			tabPicture.setVisibility(View.GONE);
+		} else {
+			imageView.setClickable(true);
 			imageView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -101,11 +115,11 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 			});
 		}
 		if ((type & Task.TYPE_TEXT) == 0)
-			editText.setVisibility(View.GONE);
+			tabText.setVisibility(View.GONE);
 		if ((type & Task.TYPE_NUMBER) == 0)
-			editNumber.setVisibility(View.GONE);
+			tabNumber.setVisibility(View.GONE);
 
-		if (type == Task.TYPE_PICTURE) // If we only have to tak a imageView fast track users to imageView selection
+		if (type == Task.TYPE_PICTURE) // If there is only a picture to send, open action selection right away
 			imageView.post(new Runnable() {
 				@Override
 				public void run() {
@@ -151,7 +165,7 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 			case R.id.send_menu:
 				Intent result = new Intent();
 				if (picture != null)
-					result.putExtra(Std.PIC, picture);
+					result.putExtra(Std.PIC, picture.getHash());
 				String text = editText.getText().toString();
 				if (text != null && text.length() > 0)
 					result.putExtra(Std.TEXT, text);
@@ -161,6 +175,13 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 				setResult(RESULT_OK, result);
 				model.getTasks().submitSolution(taskID, type, picture, text, number);
 				finish();
+				//TODO: This is ugly, but for some reason onActivityResult does not get called.
+				// Maybe it's because of https://code.google.com/p/android/issues/detail?id=40537
+				// we should use push so that the other clients in the group get notified as well
+				model.getTasks().refreshSubmissions();
+				return true;
+			case android.R.id.home: //Up button
+				NavUtils.navigateUpFromSameTask(this);
 				return true;
 			default:
 				return false;
@@ -172,8 +193,8 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 		picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
 
 		if (picture != null) {
-			this.imageView.setImageURI(picture.getPath());
 
+			ImageLoader.getInstance().displayImage(picture.getPath().toString(), this.imageView);
 			invalidateOptionsMenu();
 		}
 

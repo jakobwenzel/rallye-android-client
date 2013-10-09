@@ -2,6 +2,8 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -48,6 +50,15 @@ public class TasksPagerFragment extends SherlockFragment implements ITasks.ITask
 	private byte size = 0;
 	private ViewGroup details;
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.v(THIS, "we are in "+getClass().getName());
+		Log.v(THIS, "got result: " + resultCode);
+		if (resultCode== Activity.RESULT_OK) {
+
+			Log.v(THIS, "need to update submissions");
+		}
+	}
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

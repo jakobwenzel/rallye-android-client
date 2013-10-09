@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.Map;
 
 import de.rallye.model.structures.Submission;
+import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 
 /**
  * Models CallbackIds for a Rallye-type game
@@ -19,6 +20,8 @@ public interface ITasks {
 	void refresh();
 
 	void refreshSubmissions();
+
+	void submitSolution(int taskID, int type, IPictureTakenListener.Picture picture, String text, String number);
 
 	Map<Integer, List<Submission>> getSubmissions();
 
