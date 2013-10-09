@@ -1,11 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +20,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
+import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
 
@@ -45,7 +41,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 	private PagerSlidingTabStrip indicator;
 	private ChatroomPagerAdapter fragmentAdapter;
 //	private int currentTab;
-	private Picture picture = null;
+	private IPicture picture = null;
 	private IModel model;
 
 	@Override
@@ -124,7 +120,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 //	}
 
 	@Override
-	public void pictureTaken(Picture picture) {
+	public void pictureTaken(IPicture picture) {
 		this.picture = picture;
 		updateFragments();
 
@@ -139,7 +135,7 @@ public class ChatsFragment extends SherlockFragment implements IPictureTakenList
 	}
 
 	@Override
-	public Picture getPicture() {
+	public IPicture getPicture() {
 		return picture;
 	}
 

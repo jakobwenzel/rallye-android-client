@@ -28,6 +28,7 @@ import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
+import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 
@@ -118,7 +119,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 
 	public void loadImagePreview() {
 		parent = (IPictureTakenListener) getParentFragment();
-		IPictureTakenListener.Picture pic = parent.getPicture();
+		IPicture pic = parent.getPicture();
 		if (pic != null) {
 			chosen_picture.setVisibility(View.VISIBLE);
 			ImageLoader.getInstance().displayImage(pic.getPath().toString(), chosen_picture);
@@ -235,7 +236,7 @@ public class ChatroomFragment extends SherlockFragment implements IChatroom.ICha
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();
-        IPictureTakenListener.Picture pic = parent.getPicture();
+        IPicture pic = parent.getPicture();
         if (pic != null) {
             chatroom.postChatWithHash(msg.toString(), pic.getHash());
             loading.setVisibility(View.VISIBLE);

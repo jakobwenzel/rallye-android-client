@@ -157,8 +157,10 @@ public class ChatCursorAdapter extends CursorAdapter {
 
 	public int getChatID(int pos) {
 		Cursor cursor = getCursor();
-		cursor.moveToPosition(pos);
-		return (cursor.getInt(c.id));
+		if (cursor.moveToPosition(pos))
+			return (cursor.getInt(c.id));
+		else
+			return 0;
 	}
 
 	/**

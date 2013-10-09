@@ -21,7 +21,7 @@ import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.structures.Task;
-import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
+import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_TASKS;
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.getBoolean;
@@ -196,7 +196,7 @@ public class Tasks implements ITasks, RequestExecutor.Callback<Tasks.CallbackIds
 	}
 
 	@Override
-	public void submitSolution(int taskID, int type, IPictureTakenListener.Picture picture, String text, String number) {
+	public void submitSolution(int taskID, int type, IPicture picture, String text, String number) {
 		if (!model.isConnected()) {
 			err.notLoggedIn();
 			return;

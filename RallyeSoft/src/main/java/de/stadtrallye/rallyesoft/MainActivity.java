@@ -3,15 +3,11 @@ package de.stadtrallye.rallyesoft;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.widget.Toast;
@@ -26,6 +22,7 @@ import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
+import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.List;
 
@@ -38,6 +35,7 @@ import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
@@ -302,12 +300,14 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 			}
 		} else {
-			final IPictureTakenListener.Picture picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
+			final IPicture picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
 
 			if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT && picture != null) {
 				IPictureTakenListener chatTab = (IPictureTakenListener) tabManager.getActiveFragment();
 				chatTab.pictureTaken(picture);
 			}
+
+//			ImageLoader.getInstance().handleSlowNetwork();
 		}
 
 		super.onActivityResult(requestCode, resultCode, data);

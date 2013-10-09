@@ -19,8 +19,7 @@ import java.io.File;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.UploadService;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
-import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
+import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
 /**
  * Created by Jakob Wenzel on 05.10.13.
@@ -107,7 +106,7 @@ public class ImageLocation {
 	 * @param autoUpload weather the selected Picture should be automatically uploaded using the Service {@link de.stadtrallye.rallyesoft.UploadService}
 	 * @return null if no picture was selected
 	 */
-	public static IPictureTakenListener.Picture imageResult(int requestCode, int resultCode, Intent data, Context context, boolean autoUpload) {
+	public static IPicture imageResult(int requestCode, int resultCode, Intent data, Context context, boolean autoUpload) {
 		if (resultCode== Activity.RESULT_OK) {
 			//Find uri
 			Uri uri=null;
@@ -157,7 +156,7 @@ public class ImageLocation {
 	}
 }
 
-class Picture implements IPictureTakenListener.Picture {
+class Picture implements IPicture {
 
 	private final Uri path;
 	private final String hash;

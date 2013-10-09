@@ -25,7 +25,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.structures.Task;
-import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
+import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 /**
@@ -41,7 +41,7 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 	private ImageView imageView;
 	private int type;
 
-	private IPictureTakenListener.Picture picture;
+	private IPicture picture;
 	private EditText editText;
 	private EditText editNumber;
 
