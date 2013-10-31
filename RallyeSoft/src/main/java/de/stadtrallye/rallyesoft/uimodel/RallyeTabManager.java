@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
 import de.stadtrallye.rallyesoft.fragments.ChatsFragment;
 import de.stadtrallye.rallyesoft.fragments.GameMapFragment;
 import de.stadtrallye.rallyesoft.fragments.OverviewFragment;
@@ -42,6 +43,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	public static final int TAB_NEXT_MOVE = 4;
 	public static final int TAB_CHAT = 5;
 	public static final int TAB_WAIT_FOR_MODEL = 6;
+//	public static final int TAB_ABOUT = 7;
 	public static final int TAB_TASKS_DETAILS = 100;
 
 	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, /*TAB_NEXT_MOVE,*/ TAB_TASKS/*, TAB_MAP*/};
@@ -89,6 +91,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, false));
 		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, true));
 		tabs.put(TAB_WAIT_FOR_MODEL, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, false));
+//		tabs.put(TAB_ABOUT, new Tab<AboutDialogFragment>("about", AboutDialogFragment.class, R.string.about, false));
 
 		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, false));
 

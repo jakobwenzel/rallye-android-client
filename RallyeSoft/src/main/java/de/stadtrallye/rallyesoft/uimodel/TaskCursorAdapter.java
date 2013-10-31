@@ -79,9 +79,9 @@ public class TaskCursorAdapter extends CursorAdapter {
 				mem.check.setVisibility(View.INVISIBLE);
 				break;
 			case Task.SUBMITS_SOME:
-				mem.check.setVisibility(View.VISIBLE);
-				mem.check.setChecked(false);
-				break;
+//				mem.check.setVisibility(View.VISIBLE);
+//				mem.check.setChecked(true);
+//				break;
 			case Task.SUBMITS_COMPLETE:
 				mem.check.setVisibility(View.VISIBLE);
 				mem.check.setChecked(true);

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:padding="8dp">
+
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:text="@string/concept_by" />
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/about_concept"
+		android:layout_marginLeft="16dp"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:text="@string/code_by" />
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/about_code"
+		android:layout_marginLeft="16dp"
+		android:linksClickable="true"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:text="@string/code_available_at" />
+
+	<TextView
+		android:id="@+id/about_github"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/about_github"
+		android:layout_marginLeft="16dp"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:text="@string/libraries_used" />
+
+	<TextView
+		android:id="@+id/about_libs"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/about_libraries"
+		android:layout_marginLeft="16dp"/>
+
+</LinearLayout>

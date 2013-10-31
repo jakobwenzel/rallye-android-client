@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
@@ -22,13 +23,13 @@ import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
-import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionState;
 import de.stadtrallye.rallyesoft.model.Model;
@@ -216,6 +217,9 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 			case R.id.menu_reconnect:
 				model.reconnect();
 				break;
+			case R.id.menu_about:
+				SherlockDialogFragment dialog = new AboutDialogFragment();
+				dialog.show(getSupportFragmentManager(), "about");
 			default:
 				return false;
 		}

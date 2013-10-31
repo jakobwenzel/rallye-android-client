@@ -88,5 +88,11 @@
 	<string name="enter_number">Zahl eingeben:</string>
 	<string name="choose_picture">Foto auswählen:</string>
 	<string name="picture_selection_failed">Interner Fehler bei der Bildauswahl!</string>
+	<string name="unread_from_here_on">Ungelesene Nachrichten ab hier</string>
+	<string name="about">Über...</string>
+	<string name="concept_by">Idee von</string>
+	<string name="code_by">Code von</string>
+	<string name="code_available_at">Code verfügbar bei</string>
+	<string name="libraries_used">Verwendete Bibliotheken</string>
 
 </resources>

@@ -20,7 +20,6 @@ import java.util.Date;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.Chatroom;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
@@ -43,12 +42,10 @@ public class ChatCursorAdapter extends CursorAdapter {
 	private CursorConverters.ChatCursorIds c;
 
 	private class ViewMem {
-		public ImageView img_l;
-		public ImageView img_r;
+		public ImageView img;
 		public TextView msg;
 		public TextView sender;
 		public TextView time;
-		public LinearLayout layout;
 		public ImageView msg_img;
 	}
 
@@ -70,13 +67,29 @@ public class ChatCursorAdapter extends CursorAdapter {
 	}
 
 	@Override
+	public int getViewTypeCount() {
+		return 2; //TODO: implement header-like viewType to show "read until here/new from here"
+	}
+
+	@Override
+	public int getItemViewType(int position) {
+		Cursor cursor = getCursor();
+		cursor.moveToPosition(position);
+		return isMe(cursor)? 1 : 0;
+	}
+
+	private boolean isMe(Cursor cursor) {
+		ChatEntry.Sender s = ChatEntry.getSender(user, cursor.getInt(c.groupID), cursor.getInt(c.userID));
+		boolean me = (s == Sender.Me);
+		return me;
+	}
+
+	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-		View v = inflator.inflate(R.layout.chat_item, null);
+		View v = inflator.inflate((isMe(cursor))? R.layout.chat_item_right : R.layout.chat_item_left, null);
 
 		ViewMem mem = new ViewMem();
-		mem.layout = (LinearLayout) v.findViewById(R.id.chat_row);
-		mem.img_l = (ImageView) v.findViewById(R.id.sender_img_l);
-		mem.img_r = (ImageView) v.findViewById(R.id.sender_img_r);
+		mem.img = (ImageView) v.findViewById(R.id.sender_img);
 		mem.sender = (TextView) v.findViewById(R.id.msg_sender);
 		mem.msg = (TextView) v.findViewById(R.id.msg);
 		mem.time = (TextView) v.findViewById(R.id.time_sent);
@@ -99,13 +112,6 @@ public class ChatCursorAdapter extends CursorAdapter {
 	private void fillView(ViewMem mem, Cursor cursor) {
 		int groupID = cursor.getInt(c.groupID);
 		int userID = cursor.getInt(c.userID);
-
-		ChatEntry.Sender s = ChatEntry.getSender(user, groupID, userID);
-		boolean me = (s == Sender.Me);
-
-		mem.layout.setGravity((me)? Gravity.RIGHT : Gravity.LEFT);
-		mem.img_r.setVisibility((me)? View.VISIBLE : View.GONE);
-		mem.img_l.setVisibility((me)? View.GONE : View.VISIBLE);
 
 		String userName = cursor.getString(c.userName);
 		if (userName == null) {
@@ -136,7 +142,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 		// ImageLoader must apparently be called for _EVERY_ entry
 		// When called with null or "" as URL, will display empty picture / default resource
 		// Otherwise ImageLoader will not be stable and start swapping images
-		loader.displayImage(model.getAvatarURL(groupID), (me)? mem.img_r : mem.img_l);
+		loader.displayImage(model.getAvatarURL(groupID), mem.img);
 //		loader.displayImage(null, (!me)? mem.img_r : mem.img_l);
 
 		//Set read id on chatroom

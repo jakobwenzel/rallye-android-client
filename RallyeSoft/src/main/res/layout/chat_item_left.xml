@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:background="@android:drawable/picture_frame">
+
+	<ImageView
+		android:id="@+id/sender_img"
+		android:layout_width="60dp"
+		android:layout_height="60dp"
+		android:maxWidth="60dp"
+		android:maxHeight="60dp"
+		android:layout_marginLeft="3dp"
+		android:layout_marginTop="3dp"
+		android:layout_marginBottom="3dp"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
+		android:layout_marginRight="8dp" />
+
+	<TextView
+		android:id="@+id/msg_sender"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textColor="@color/abs__bright_foreground_disabled_holo_light"
+		android:textStyle="bold"
+		android:textSize="12sp"
+		android:typeface="monospace"
+		android:layout_alignParentTop="true"
+		android:layout_alignTop="@+id/sender_img"
+		android:layout_toRightOf="@+id/sender_img" />
+
+	<ImageView
+		android:id="@+id/msg_img"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:adjustViewBounds="true"
+		android:layout_gravity="center_vertical"
+		android:maxWidth="160dp"
+		android:maxHeight="160dp"
+		android:scaleType="centerInside"
+		android:layout_below="@+id/msg_sender"
+		android:layout_toRightOf="@+id/sender_img"
+		android:layout_marginLeft="16dp"
+		android:layout_marginRight="16dp"
+		android:layout_marginTop="4dp" />
+
+	<TextView
+		android:id="@+id/msg"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textSize="17sp"
+		android:textIsSelectable="false"
+		android:layout_toRightOf="@+id/sender_img"
+		android:layout_below="@+id/msg_img"
+		android:layout_marginTop="4dp" />
+
+	<TextView
+		android:id="@+id/time_sent"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textColor="@color/abs__bright_foreground_disabled_holo_light"
+		android:typeface="monospace"
+		android:textSize="12sp"
+		android:layout_alignParentBottom="true"
+		android:layout_toRightOf="@+id/sender_img"
+		android:layout_below="@+id/msg"
+		android:layout_marginTop="4dp" />
+
+</RelativeLayout>

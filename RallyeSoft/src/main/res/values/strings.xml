@@ -83,5 +83,20 @@
 	<string name="apply">Apply</string>
 	<string name="test_server_connection">Test server connection</string>
 	<string name="connection_test_failed">Connection test failed! Please review the configuration</string>
+	<string name="about">About...</string>
+	<string name="concept_by">Concept by</string>
+	<string name="code_by">Code by</string>
+	<string name="code_available_at">Code available at</string>
+	<string name="libraries_used">Libraries used</string>
+	<string translatable="false" name="about_concept">Felix Hübner\nRamon Wirsch</string>
+	<string translatable="false" name="about_code">Jakob Wenzel\nRamon Wirsch</string>
+	<string translatable="false" name="about_github">Server: <a href="https://github.com/antidau/rallye-server">GitHub</a>\nAndroid-Client: <a href="https://github.com/antidau/rallye-android-client">GitHub</a></string>
+	<string translatable="false" name="about_libraries"><a href="https://github.com/nostra13/Android-Universal-Image-Loader">Universal Image Loader</a> (c) 2011-2013, by Sergey Tarasevich\n<a href="http://actionbarsherlock.com">ActionBarSherlock</a>, by Jake Wharton\n<a href="https://github.com/JakeWharton/Android-ViewPagerIndicator">ViewPagerIndicator</a>, by Jake Wharton\n<a href="https://github.com/astuetz/PagerSlidingTabStrip">PagerSlidingTabStrip</a>, by Andreas Stuetz</string>
+	<string name="submit_new_solution">Submit solution</string>
+	<string name="enter_text">Enter text:</string>
+	<string name="enter_number">Enter number:</string>
+	<string name="choose_picture">Choose picture:</string>
+	<string name="picture_selection_failed">Internal error during picture selection!</string>
+	<string name="unread_from_here_on">Unread from her on</string>
 
 </resources>

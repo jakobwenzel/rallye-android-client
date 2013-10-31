@@ -59,13 +59,14 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 	private IModel model;
 	private SubmissionListAdapter submissionAdapter;
 	private Button submit;
+	private TextView type;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		task = (Task) getArguments().getSerializable(Std.TASK);//TODO: only pipe taskID? (on the other hand: if whole ids are changed, no use + the adapter will reload anything anyway)
-		hasOptionsMenu();
+		setHasOptionsMenu(true);
 	}
 
 	@Override
@@ -73,12 +74,14 @@ public class TaskDetailsFragment extends SherlockFragment implements AdapterView
 		View v = inflater.inflate(R.layout.tasks_details, container, false);
 
 		name = (TextView) v.findViewById(R.id.task_name);
+		type = (TextView) v.findViewById(R.id.task_type);
 		desc = (TextView) v.findViewById(R.id.task_description);
 		additionalGrid = (GridView) v.findViewById(R.id.additional_info);
 		submissionsList = (ListView) v.findViewById(R.id.submissions);
 
 		name.setText(task.name);
 		desc.setText(task.description);
+//		type.setText();
 
 		gridAdapter = new AdditionalGridAdapter();
 		additionalGrid.setAdapter(gridAdapter);

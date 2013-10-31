@@ -19,6 +19,12 @@
 				android:id="@+id/task_name"/>
 
 		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:id="@+id/task_type"/>
+
+		<TextView
 				android:layout_marginTop="8dp"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -49,7 +55,7 @@
 				android:background="@drawable/abs__list_divider_holo_light"/>
 
 		<TextView
-				android:layout_marginTop="8dp"
+				android:layout_marginTop="20dp"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
