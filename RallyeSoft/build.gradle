@@ -11,14 +11,15 @@ dependencies {
 	compile project(':ViewPagerIndicator')
 	compile project(':PagerSlidingTabStrip')
 	compile project(':common:RallyeStructures')
-    compile 'com.android.support:support-v4:18.0.+'
-    compile 'com.google.android.gms:play-services:3.2.+'
-	compile 'com.android.support:gridlayout-v7:18.0.+'
+    compile 'com.android.support:support-v4:19.+'
+    compile 'com.google.android.gms:play-services:4.+'
+	compile 'com.android.support:gridlayout-v7:19.+'
 }
 
 android {
-    compileSdkVersion 18
-	buildToolsVersion "18.1"
+
+	compileSdkVersion 19
+	buildToolsVersion "19.0.0"
 
     defaultConfig {
         minSdkVersion 10
@@ -53,5 +54,9 @@ android {
             proguardFile getDefaultProguardFile('proguard-android.txt')
 			proguardFile 'proguard.txt'
         }
+	
+	compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
 }
