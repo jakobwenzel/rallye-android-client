@@ -14,6 +14,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,14 +50,14 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, /*TAB_NEXT_MOVE,*/ TAB_TASKS/*, TAB_MAP*/};
 
-	private final FragmentActivity activity;
+	private final SherlockFragmentActivity activity;
 	protected IModel model;
 	private final ActionBarDrawerToggle drawerToggle;
 	private final DrawerLayout drawerLayout;
 	private final ListView dashboard;
 	private final MenuAdapter dashAdapter;
 
-	public RallyeTabManager(FragmentActivity activity, IModel model, DrawerLayout drawerLayout) {
+	public RallyeTabManager(SherlockFragmentActivity activity, IModel model, DrawerLayout drawerLayout) {
 		super(activity, activity.getSupportFragmentManager(), R.id.content_frame);
 
 		setDefaultTab(TAB_OVERVIEW);
@@ -68,14 +70,14 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 			/** Called when a drawer has settled in a completely closed state. */
 			public void onDrawerClosed(View view) {
-				RallyeTabManager.this.activity.getActionBar().setTitle(activeTab.titleId);
-				RallyeTabManager.this.activity.invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+				RallyeTabManager.this.activity.getSupportActionBar().setTitle(activeTab.titleId);
+				RallyeTabManager.this.activity.supportInvalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
 			}
 
 			/** Called when a drawer has settled in a completely open state. */
 			public void onDrawerOpened(View drawerView) {
-				RallyeTabManager.this.activity.getActionBar().setTitle(R.string.dash_menu);
-				RallyeTabManager.this.activity.invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+				RallyeTabManager.this.activity.getSupportActionBar().setTitle(R.string.dash_menu);
+				RallyeTabManager.this.activity.supportInvalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
 //				dashboard.inv
 			}
 		};

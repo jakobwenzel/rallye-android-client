@@ -123,9 +123,9 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 			imageView.post(new Runnable() {
 				@Override
 				public void run() {
-					imageView.callOnClick();
+					imageView.performClick();
 				}
-			});
+			});//TODO: use callOnClick or similar (but only defined since API 15)
 	}
 
 	@Override

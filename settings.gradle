@@ -1,5 +1,4 @@
 include ':RallyeSoft'
 include ':ViewPagerIndicator'
 include ':PagerSlidingTabStrip'
-include ':SherlockActionBar'
 include ':common:RallyeStructures'
