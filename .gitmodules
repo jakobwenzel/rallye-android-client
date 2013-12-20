@@ -1,3 +1,9 @@
 [submodule "common"]
 	path = common
 	url = git@github.com:antidau/rallye-common.git
+[submodule "PagerSlidingTabStrip"]
+	path = PagerSlidingTabStrip
+	url = git@github.com:astuetz/PagerSlidingTabStrip.git
+[submodule "ViewPagerIndicator"]
+	path = ViewPagerIndicator
+	url = git@github.com:JakeWharton/Android-ViewPagerIndicator.git

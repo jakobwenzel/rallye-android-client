@@ -7,14 +7,13 @@ apply plugin: 'android'
 dependencies {
 	compile files('gcm.jar')
 	compile files('universal-image-loader-1.8.6-with-sources.jar')
-	compile project(':ViewPagerIndicator')
-	compile project(':PagerSlidingTabStrip')
+	compile project(':ViewPagerIndicator:library')
+	compile project(':PagerSlidingTabStrip:library')
 	compile project(':common:RallyeStructures')
     compile 'com.android.support:support-v4:19.+'
     compile 'com.google.android.gms:play-services:4.+'
 	compile 'com.android.support:gridlayout-v7:19.+'
     compile 'com.actionbarsherlock:actionbarsherlock:4.4.+@aar'
-    //compile 'com.viewpagerindicator:library:2.4.+'
 }
 
 android {
@@ -24,7 +23,7 @@ android {
 
     defaultConfig {
         minSdkVersion 10
-        targetSdkVersion 18
+        targetSdkVersion 19
     }
 	
     packagingOptions {

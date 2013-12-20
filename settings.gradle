@@ -1,4 +1,4 @@
 include ':RallyeSoft'
-include ':ViewPagerIndicator'
-include ':PagerSlidingTabStrip'
+include ':PagerSlidingTabStrip:library'
 include ':common:RallyeStructures'
+include ':ViewPagerIndicator:library'
