@@ -35,6 +35,7 @@ public class Std {
 	public static final int PICK_IMAGE = 1337;
 	public static final String APP_MIME = "application/de.stadtrallye.rallyesoft";
 	public static final String CONFIG_MAIN = "de.stadtrallye.rallyesoft.server";
+	public static final String CONFIG_GCM = "de.stadtrallye.rallyesoft.gcm";
 	public static final String LATITUDE = "latitude";
 	public static final String LONGITUDE = "longitude";
 	public static final String USER = "user";
@@ -60,4 +61,6 @@ public class Std {
 	public static final String CAMERA_OUTPUT_FILENAME = "image filename";
 	public static final String NUMBER = "number";
 	public static final String TEXT = "text";
+	public static final String GCM_ID = "gcm_id";
+	public static final String APP_VERSION = "app_version";
 }

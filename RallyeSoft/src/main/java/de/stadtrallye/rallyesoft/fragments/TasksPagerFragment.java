@@ -3,20 +3,19 @@ package de.stadtrallye.rallyesoft.fragments;
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.viewpagerindicator.TitlePageIndicator;
 
 import java.util.List;
@@ -37,7 +36,7 @@ import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
  * Fragment to show the details of tasks, similar to the mail-view in GMail
  * Enhanced by a GMap
  */
-public class TasksPagerFragment extends SherlockFragment implements ITasks.ITasksListener {
+public class TasksPagerFragment extends Fragment implements ITasks.ITasksListener {
 
 	private static final String THIS = TasksPagerFragment.class.getSimpleName();
 

@@ -4,7 +4,7 @@
 	android:orientation="horizontal"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:background="@drawable/abs__ab_solid_shadow_holo">
+	android:background="@android:drawable/bottom_bar">
 
 	<TextView
 		android:layout_width="match_parent"

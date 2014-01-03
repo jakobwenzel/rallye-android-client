@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.support.v4.app.Fragment;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,7 +10,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockFragment;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.List;
@@ -30,7 +30,7 @@ import de.stadtrallye.rallyesoft.widget.ListView;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
-public class TurnFragment extends SherlockFragment implements IModel.IModelListener, GridView.OnItemClickListener {
+public class TurnFragment extends Fragment implements IModel.IModelListener, GridView.OnItemClickListener {
 
 	private GridView grid;
 	private ListView list;

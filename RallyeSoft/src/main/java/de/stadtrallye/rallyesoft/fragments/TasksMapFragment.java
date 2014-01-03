@@ -10,6 +10,7 @@ import android.view.ViewTreeObserver;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -24,7 +25,6 @@ import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.common.SherlockMapFragment;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
@@ -41,7 +41,7 @@ import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
  * Map of all location specific tasks, combined with a list for direct selection
  * Possibly ability to maximize the map to fullsize
  */
-public class TasksMapFragment extends SherlockMapFragment implements GoogleMap.OnMarkerClickListener, ITasks.ITasksListener, GoogleMap.OnInfoWindowClickListener,
+public class TasksMapFragment extends SupportMapFragment implements GoogleMap.OnMarkerClickListener, ITasks.ITasksListener, GoogleMap.OnInfoWindowClickListener,
 																		ITasksMapControl {
 
 	public static final String TAG = "taskMap";

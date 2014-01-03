@@ -1,13 +1,12 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
-
-import com.actionbarsherlock.app.SherlockFragment;
 
 import java.util.List;
 
@@ -20,7 +19,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 /**
  * Created by Ramon on 19.06.13
  */
-public class AssistantCompleteFragment extends SherlockFragment implements View.OnClickListener, IModel.IModelListener {
+public class AssistantCompleteFragment extends Fragment implements View.OnClickListener, IModel.IModelListener {
 
 	private IConnectionAssistant assistant;
 	private Button next;

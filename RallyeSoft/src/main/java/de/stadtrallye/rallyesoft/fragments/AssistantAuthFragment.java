@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +14,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockFragment;
-
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
@@ -22,7 +21,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * 3. Page of ConnectionAssistant
  * Asks for Username and Group Password
  */
-public class AssistantAuthFragment extends SherlockFragment {
+public class AssistantAuthFragment extends Fragment {
 
 
 	private IConnectionAssistant assistant;

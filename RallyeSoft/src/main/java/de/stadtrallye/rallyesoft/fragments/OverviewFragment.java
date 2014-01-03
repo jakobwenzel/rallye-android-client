@@ -1,12 +1,11 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
-import com.actionbarsherlock.app.SherlockFragment;
 
 import java.util.List;
 
@@ -17,7 +16,7 @@ import de.stadtrallye.rallyesoft.model.IModel;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
-public class OverviewFragment extends SherlockFragment implements IModel.IModelListener {
+public class OverviewFragment extends Fragment implements IModel.IModelListener {
 
 	@SuppressWarnings("unused")
 	private static final String THIS = OverviewFragment.class.getSimpleName();

@@ -1,20 +1,20 @@
 package de.stadtrallye.rallyesoft;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.List;
@@ -31,7 +31,7 @@ import de.stadtrallye.rallyesoft.util.ImageLocation;
 /**
  * Created by Ramon on 04.10.13.
  */
-public class SubmitNewSolution extends SherlockFragmentActivity implements IModel.IModelListener {
+public class SubmitNewSolution extends FragmentActivity implements IModel.IModelListener {
 
 	public static final int REQUEST_CODE = 7;
 
@@ -62,7 +62,7 @@ public class SubmitNewSolution extends SherlockFragmentActivity implements IMode
 
 //		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-		ActionBar ab = getSupportActionBar();
+		ActionBar ab = getActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
 

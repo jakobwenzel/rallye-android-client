@@ -1,13 +1,12 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-
-import com.actionbarsherlock.app.SherlockFragment;
 
 import de.stadtrallye.rallyesoft.ConnectionAssistant;
 import de.stadtrallye.rallyesoft.R;
@@ -18,7 +17,7 @@ import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 /**
  * Shown on first start, hints at ConnectionAssistant
  */
-public class WelcomeFragment extends SherlockFragment {
+public class WelcomeFragment extends Fragment {
 
 
 	@Override

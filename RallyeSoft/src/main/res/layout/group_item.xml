@@ -28,7 +28,7 @@
 			android:layout_height="wrap_content"
 			android:layout_below="@id/name"
 			android:layout_toRightOf="@id/group_img"
-			android:textColor="@color/abs__bright_foreground_disabled_holo_light"
+			android:textColor="@color/text_grey"
 			android:textStyle="bold"/>
 
 </de.stadtrallye.rallyesoft.widget.CheckableRelativeLayout>

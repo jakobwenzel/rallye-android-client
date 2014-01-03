@@ -12,17 +12,8 @@
 
 	</FrameLayout>
 
-	<ListView
-			android:id="@+id/left_drawer"
-			android:layout_width="200dp"
-			android:layout_height="match_parent"
-			android:layout_gravity="start"
-			android:choiceMode="singleChoice"
-			android:divider="@android:color/black"
-			android:dividerHeight="1dp"
-			android:background="@drawable/abs__ab_solid_dark_holo"
-			android:paddingLeft="8dp"
-			android:paddingRight="8dp"/>
+	<include
+		layout="@layout/drawer" />
 
 	<!--<ListView
 			android:id="@+id/right_drawer"

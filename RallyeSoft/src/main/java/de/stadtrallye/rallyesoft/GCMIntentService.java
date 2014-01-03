@@ -1,12 +1,8 @@
 package de.stadtrallye.rallyesoft;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-
-import com.google.android.gcm.GCMBaseIntentService;
-import com.google.android.gcm.GCMRegistrar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,26 +12,20 @@ import de.rallye.model.structures.PushEntity;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.net.PushInit;
+import de.wirsch.gcm.GcmBaseIntentService;
 
-public class GCMIntentService extends GCMBaseIntentService {
+public class GcmIntentService extends GcmBaseIntentService {
 	
-	private static final String THIS = GCMIntentService.class.getSimpleName();
+	private static final String THIS = GcmIntentService.class.getSimpleName();
 
-	public GCMIntentService()
-	{
-		super(PushInit.gcm);
-	}
-	
 	@Override
-	protected void onMessage(Context context, Intent intent) {
-		Bundle extras = intent.getExtras();
-
-		Log.i(THIS, "Received Push: " +extras);
+	protected void onMessage(Bundle message) {
+		Log.i(THIS, "Received Push: " +message);
+		Context context = getApplicationContext();
 
 		try {
-			PushEntity.Type type = PushEntity.Type.valueOf(extras.getString(PushEntity.TYPE));
-			JSONObject payload = new JSONObject(extras.getString(PushEntity.PAYLOAD));
+			PushEntity.Type type = PushEntity.Type.valueOf(message.getString(PushEntity.TYPE));
+			JSONObject payload = new JSONObject(message.getString(PushEntity.PAYLOAD));
 
 			switch (type) {
 				case newMessage:
@@ -56,11 +46,16 @@ public class GCMIntentService extends GCMBaseIntentService {
 	}
 
 	@Override
-	protected void onError(Context context, String errorId) {
-		Log.e(THIS, errorId);
+	protected void onError(String errorId) {
+		Log.e(THIS, "Error: "+ errorId);
 	}
 
 	@Override
+	protected void onDeleted(String message) {
+		Log.e(THIS, "Deleted: "+ message);
+	}
+
+	/*@Override
 	protected void onRegistered(Context context, String registrationId) {
 		Log.i(THIS, "Registered GCM!");
 		
@@ -73,6 +68,6 @@ public class GCMIntentService extends GCMBaseIntentService {
 //		GCMRegistrar.setRegisteredOnServer(getApplicationContext(), false);
 		
 		Model.getInstance(getApplicationContext()).logout();
-	}
+	}*/
 
 }

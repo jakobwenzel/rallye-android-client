@@ -1,24 +1,22 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
-
-import com.actionbarsherlock.app.SherlockDialogFragment;
-import com.actionbarsherlock.app.SherlockFragment;
 
 import de.stadtrallye.rallyesoft.R;
 
 /**
  * Created by Ramon on 16.10.13.
  */
-public class AboutDialogFragment extends SherlockDialogFragment {
+public class AboutDialogFragment extends DialogFragment {
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {

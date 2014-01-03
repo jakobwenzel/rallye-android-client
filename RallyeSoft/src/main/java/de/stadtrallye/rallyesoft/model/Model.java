@@ -12,8 +12,6 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 
-import com.google.android.gcm.GCMRegistrar;
-
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -46,6 +44,8 @@ import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.net.RequestFactory;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.util.PreferencesUtil;
+import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATROOMS;
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_GROUPS;
@@ -66,7 +66,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	@SuppressWarnings("unused")
 	final private static boolean DEBUG = false;
 
-    enum CallbackIds { LOGIN, LOGOUT, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
+	enum CallbackIds { LOGIN, LOGOUT, GROUP_LIST, SERVER_INFO, USER_LIST, AVAILABLE_CHATROOMS }
 
 	// Singleton Pattern
 	private static Model model;
@@ -84,6 +84,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 //	private int state;
 	private ServerLogin currentLogin;
 	private ServerInfo serverInfo;
+	private boolean hasGcm;
 
 	// Sub Modules
 	private List<Chatroom> chatrooms;
@@ -109,9 +110,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	 */
 	public static IModel getInstance(Context context) {
 		if (model != null) {
-			return model.reuse();
+			return model.reuse(); //TODO: render unnecessary
 		} else {
-			return model = new Model(context, getDefaultPreferences(context));
+			return model = new Model(context, PreferencesUtil.getDefaultPreferences(context));
 		}
 	}
 
@@ -171,10 +172,6 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	public boolean isEmpty() {
 		return !currentLogin.hasServer();
 	}
-	
-	private static SharedPreferences getDefaultPreferences(Context context) {
-		return context.getSharedPreferences(Std.CONFIG_MAIN, Context.MODE_PRIVATE);
-	}
 
 	/**
 	 * Ensure that this Model has a working DB Connection and Executor (if for some reason the model was destroyed, but the context (and static model with it) survived)
@@ -182,11 +179,11 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	 */
 	private Model reuse() {
 		if (db == null) {
-			Log.w(THIS, "Reusing old Model: reopening DB");
+			Log.e(THIS, "Reusing old Model: reopening DB");
 			initDatabase();
 		}
 		if (exec == null) {
-			Log.w(THIS, "Reusing old Model: restarting Executor");
+			Log.e(THIS, "Reusing old Model: restarting Executor");
 			initExecutor();
 		}
 		
@@ -231,7 +228,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 		String uniqueID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
 		factory = new RequestFactory(currentLogin, uniqueID);
-		factory.setPushID(GCMRegistrar.getRegistrationId(context));
+		String gcm = GcmHelper.getGcmId();
+
+		hasGcm = gcm != null;
+		if (hasGcm) {
+			factory.setPushID(gcm);
+		}
 
 		map = new Map(this);
 		tasks = new Tasks(this);
@@ -308,7 +310,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		Log.i(THIS, "Reconnecting");
 
 		try {
-			factory.setPushID(GCMRegistrar.getRegistrationId(context));
+//			factory.setPushID(GCMRegistrar.getRegistrationId(context));
 			exec.execute(new JSONObjectRequestExecutor<UserAuth, CallbackIds>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		} catch (Exception e) {
 			err.requestException(e);
@@ -317,12 +319,23 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	@Override
-	public synchronized void login(String username, int groupID, String groupPassword) {
+	public synchronized void login(final String username, final int groupID, final String groupPassword) {
 		if (state != ConnectionState.None) {
 			throw new IllegalStateException("Already connected");
 		}
 
 		Log.i(THIS, "Logging in");
+
+		if (!hasGcm) {
+			Log.w(THIS, "GCM ID still empty... delaying until ready...");
+			GcmHelper.setGcmListener(new GcmHelper.IGcmListener() {
+				@Override
+				public void onDelayedGcmId(String gcmId) {
+					Log.i(THIS, "GCM ID ready!");
+					login(username, groupID, groupPassword);
+				}
+			});
+		}
 
 		setConnectionState(ConnectionState.Connecting);
 		currentLogin.setName(username);
@@ -330,7 +343,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		currentLogin.setGroupPassword(groupPassword);
 		
 		try {
-			factory.setPushID(GCMRegistrar.getRegistrationId(context));// newly installed GCM_ID has on occasion not been available at first start
+//			factory.setPushID(GCMRegistrar.getRegistrationId(context));// newly installed GCM_ID has on occasion not been available at first start
 			exec.execute(new JSONObjectRequestExecutor<UserAuth, CallbackIds>(factory.loginRequest(), new ServerLogin.AuthConverter(), this, CallbackIds.LOGIN));
 		} catch (Exception e) {
 			err.requestException(e);
@@ -578,8 +591,10 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 	@Override
 	public void saveModel() {
-		if (pref == null)
-			pref = getDefaultPreferences(context);
+		if (pref == null) {
+			//throw new RuntimeException("No Preferences to save to...");
+			pref = PreferencesUtil.getDefaultPreferences(context);
+		}
 
 		save().saveLogin().saveMapConfig().saveChatrooms().saveConnectionStatus().saveGroups().saveServerInfo().commit();
 		Log.i(THIS, "Saving Model");

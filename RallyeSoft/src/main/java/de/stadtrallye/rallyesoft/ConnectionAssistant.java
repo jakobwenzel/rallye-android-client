@@ -1,5 +1,6 @@
 package de.stadtrallye.rallyesoft;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.nfc.NdefMessage;
@@ -7,14 +8,13 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.Window;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -35,7 +35,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * Activity that hosts an IConnectionAssistant and several Fragments containing the guided login
  * User inputs and server configurations are saved here, so they can be accessed from all pages of the assistant
  */
-public class ConnectionAssistant extends SherlockFragmentActivity implements IConnectionAssistant {
+public class ConnectionAssistant extends FragmentActivity implements IConnectionAssistant {
 
 	public static final int REQUEST_CODE = 1336;
 
@@ -60,7 +60,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 		setTitle(R.string.connection_assistant);
 		setContentView(R.layout.connection_assistant);
 
-		ActionBar ab = getSupportActionBar();
+		ActionBar ab = getActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
 
@@ -319,7 +319,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	 */
 	@Override
 	public void activateProgressAnimation() {
-		setSupportProgressBarIndeterminateVisibility(true);
+		setProgressBarIndeterminateVisibility(true);
 	}
 
 	/**
@@ -327,7 +327,7 @@ public class ConnectionAssistant extends SherlockFragmentActivity implements ICo
 	 */
 	@Override
 	public void deactivateProgressAnimation() {
-		setSupportProgressBarIndeterminateVisibility(false);
+		setProgressBarIndeterminateVisibility(false);
 	}
 
 }

@@ -35,7 +35,7 @@
 				android:layout_marginTop="16dp"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:background="@drawable/abs__list_divider_holo_light"/>
+				android:background="@android:drawable/divider_horizontal_dark"/>
 
 		<de.stadtrallye.rallyesoft.widget.GridView
 				android:id="@+id/additional_info"
@@ -52,7 +52,7 @@
 				android:layout_marginTop="16dp"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:background="@drawable/abs__list_divider_holo_light"/>
+				android:background="@android:drawable/divider_horizontal_dark"/>
 
 		<TextView
 				android:layout_marginTop="20dp"

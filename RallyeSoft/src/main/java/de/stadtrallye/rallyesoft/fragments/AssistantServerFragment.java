@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -21,7 +22,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockFragment;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
@@ -40,7 +40,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * 1. Page of ConnectionAssistant
  * Asks for Server details and tries the Connection (showing ServerInfo)
  */
-public class AssistantServerFragment extends SherlockFragment {
+public class AssistantServerFragment extends Fragment {
 
 	private IConnectionAssistant assistant;
 

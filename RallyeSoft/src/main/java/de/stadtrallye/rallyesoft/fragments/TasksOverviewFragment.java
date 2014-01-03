@@ -9,16 +9,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +38,7 @@ import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 /**
  * Fragment that contains a ViewPager sorting the Tasks in location specific and ubiquitous
  */
-public class TasksOverviewFragment extends SherlockFragment implements ITasks.ITasksListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class TasksOverviewFragment extends Fragment implements ITasks.ITasksListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 

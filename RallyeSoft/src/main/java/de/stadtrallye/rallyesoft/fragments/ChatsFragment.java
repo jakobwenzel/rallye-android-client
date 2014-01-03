@@ -1,16 +1,16 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.astuetz.PagerSlidingTabStrip;
 
 import java.util.List;
@@ -32,7 +32,7 @@ import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
  * @author Ramon
  *
  */
-public class ChatsFragment extends SherlockFragment implements IPictureTakenListener {
+public class ChatsFragment extends Fragment implements IPictureTakenListener {
 	
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 

@@ -1,25 +1,24 @@
 package de.stadtrallye.rallyesoft;
 
 import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.Activity;
+import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.Drawable;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.Window;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockDialogFragment;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
-import com.google.android.gcm.GCMRegistrar;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -34,7 +33,6 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionState;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
-import de.stadtrallye.rallyesoft.net.PushInit;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
@@ -43,12 +41,15 @@ import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
+import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends SherlockFragmentActivity implements IModelActivity, IModel.IModelListener, IProgressUI, ITabActivity {
+public class MainActivity extends FragmentActivity implements IModelActivity, IModel.IModelListener, IProgressUI, ITabActivity {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
+
+	private ActionBar actionBar;
 
 	private IModel model;
 	private boolean keepModel = false;
@@ -57,7 +58,6 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	private Integer lastTab;
 
 	private RallyeTabManager tabManager;
-//	private DrawerLayout drawerLayout;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -71,12 +71,13 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-		ActionBar ab = getSupportActionBar();
-		ab.setDisplayHomeAsUpEnabled(true);
-		ab.setDisplayShowTitleEnabled(true);
+		actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(true);
+		actionBar.setDisplayShowTitleEnabled(true);
 
 		// Google Cloud Messaging Init
-		PushInit.ensureRegistration(this);
+		//PushInit.ensureRegistration(this);
+		GcmHelper.ensureRegistration(getApplicationContext());
 
 		// Check if Google Play Services is working
 		int errorCode;
@@ -163,7 +164,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	}
 
 	private void initializeState() {
-		setSupportProgressBarIndeterminateVisibility(false);
+		setProgressBarIndeterminateVisibility(false);
 		tabManager.setModel(model);
 		onConnectionStateChange(model.getConnectionState());
 	}
@@ -177,7 +178,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getSupportMenuInflater();
+		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.activity_main, menu);
 
 		return true;
@@ -218,7 +219,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 				model.reconnect();
 				break;
 			case R.id.menu_about:
-				SherlockDialogFragment dialog = new AboutDialogFragment();
+				DialogFragment dialog = new AboutDialogFragment();
 				dialog.show(getSupportFragmentManager(), "about");
 			default:
 				return false;
@@ -266,12 +267,6 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 
 		if (!keepModel) // Only destroy the model if we do not need it again after the configuration change
 			model.destroy();
-
-		try {
-			GCMRegistrar.onDestroy(this);
-		} catch (Exception e) {
-			Log.e(THIS, "GCMRegistrar failed to destroy", e);
-		}
 
 		super.onDestroy();
 	}
@@ -322,7 +317,6 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	 */
 	@Override
 	public void onConnectionStateChange(ConnectionState newState) {
-		ActionBar ab = getSupportActionBar();
 		switch (newState) {//TODO: Add "No Network" status to UI (requires Model to have a "No Network" status) [Model has NoNetwork status, but never uses it] [Listen to Network Status Changes]
 			case Disconnecting:
 			case Connecting:
@@ -341,11 +335,11 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 		switch (newState) {
 			case Connected:
 				d.setColorFilter(null);
-				ab.setIcon(d);
+				actionBar.setIcon(d);
 				break;
 			default:
 				d.setColorFilter(0x66666666, Mode.MULTIPLY);
-				ab.setIcon(d);
+				actionBar.setIcon(d);
 		}
 	}
 
@@ -393,7 +387,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	@Override
 	public void activateProgressAnimation() {
 		progressCircle = true;
-		setSupportProgressBarIndeterminateVisibility(true);
+		setProgressBarIndeterminateVisibility(true);
 	}
 
 	/**
@@ -403,7 +397,7 @@ public class MainActivity extends SherlockFragmentActivity implements IModelActi
 	public void deactivateProgressAnimation() {
 		if (progressCircle) {
 			progressCircle = false;
-			setSupportProgressBarIndeterminateVisibility(false);
+			setProgressBarIndeterminateVisibility(false);
 		}
 	}
 

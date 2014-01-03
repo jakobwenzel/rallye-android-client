@@ -1,5 +1,7 @@
 package de.stadtrallye.rallyesoft;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.PointF;
@@ -9,19 +11,18 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.view.Window;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
@@ -31,9 +32,11 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
 import de.stadtrallye.rallyesoft.widget.GalleryPager;
 
-public class PictureGalleryActivity extends SherlockActivity {
+public class PictureGalleryActivity extends Activity {
 	
 	private static final String THIS = PictureGalleryActivity.class.getSimpleName();
+
+	private ActionBar actionBar;
 	
 	private GalleryPager pager;
 //	private IModel model;
@@ -52,7 +55,8 @@ public class PictureGalleryActivity extends SherlockActivity {
 		setContentView(R.layout.activity_image_view);
 		
 		// Show the Up button in the action bar.
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(true);
 		
 		
 		pager = (GalleryPager)findViewById(R.id.image_pager);
@@ -75,7 +79,7 @@ public class PictureGalleryActivity extends SherlockActivity {
 	protected void onStart() {
 		super.onStart();
 		
-		getSupportActionBar().hide();
+		actionBar.hide();
 	}
 	
 	private class ImageAdapter extends PagerAdapter {
@@ -159,7 +163,7 @@ public class PictureGalleryActivity extends SherlockActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getSupportMenuInflater().inflate(R.menu.activity_image_view, menu);
+		getMenuInflater().inflate(R.menu.activity_image_view, menu);
 		return true;
 	}
 	
@@ -191,10 +195,10 @@ public class PictureGalleryActivity extends SherlockActivity {
 	}
 	
 	void toggleActionBar() {
-		if (getSupportActionBar().isShowing())
-			getSupportActionBar().hide();
+		if (actionBar.isShowing())
+			actionBar.hide();
 		else
-			getSupportActionBar().show();
+			actionBar.show();
 	}
 	
 	private enum Mode { None, Drag, Zoom }

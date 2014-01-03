@@ -5,12 +5,13 @@ repositories {
 apply plugin: 'android'
 
 dependencies {
-	compile files('gcm.jar')
+	//compile files('gcm.jar')
 	compile files('universal-image-loader-1.8.6-with-sources.jar')
 	compile project(':ViewPagerIndicator:library')
 	compile project(':PagerSlidingTabStrip:library')
 	compile project(':common:RallyeStructures')
     compile 'com.android.support:support-v4:19.+'
+    //compile 'com.android.support:support-v13:19.+'
     compile 'com.google.android.gms:play-services:4.+'
 	//compile 'com.android.support:gridlayout-v7:19.+'
 }
@@ -21,7 +22,7 @@ android {
 	buildToolsVersion '19.0.1'
 
     defaultConfig {
-        minSdkVersion 10
+        minSdkVersion 14
         targetSdkVersion 19
     }
 	

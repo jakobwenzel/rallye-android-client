@@ -3,13 +3,14 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -28,7 +29,6 @@ import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.common.SherlockMapFragment;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IMap;
 import de.stadtrallye.rallyesoft.model.IModel;
@@ -37,7 +37,7 @@ import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
-public class GameMapFragment extends SherlockMapFragment implements IMap.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
+public class GameMapFragment extends SupportMapFragment implements IMap.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
 	

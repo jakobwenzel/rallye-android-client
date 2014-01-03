@@ -20,8 +20,6 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ListAdapter;
 
-import com.actionbarsherlock.R;
-
 public abstract class AdapterView extends ViewGroup implements GestureDetector.OnGestureListener {
 
 	private static final String THIS = AdapterView.class.getSimpleName();
@@ -263,7 +261,7 @@ public abstract class AdapterView extends ViewGroup implements GestureDetector.O
 	}
 
 	private void useDefaultSelector() {
-		setSelector(getResources().getDrawable(R.drawable.abs__list_selector_background_transition_holo_light));
+		setSelector(getResources().getDrawable(android.R.drawable.list_selector_background));
 	}
 
 	protected void positionSelector(int position, View sel) {

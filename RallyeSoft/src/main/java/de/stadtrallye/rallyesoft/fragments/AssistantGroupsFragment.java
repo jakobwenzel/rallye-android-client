@@ -1,12 +1,11 @@
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.support.v4.app.ListFragment;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import com.actionbarsherlock.app.SherlockListFragment;
 
 import java.util.List;
 
@@ -21,7 +20,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * Page of ConnectionAssistant: choose a group to login to
  * If the Assistant already knows the group, highlight it
  */
-public class AssistantGroupsFragment extends SherlockListFragment implements IModel.IModelListener, AdapterView.OnItemClickListener {
+public class AssistantGroupsFragment extends ListFragment implements IModel.IModelListener, AdapterView.OnItemClickListener {
 
 	private IConnectionAssistant assistant;
 	private GroupListAdapter groupAdapter;

@@ -1,11 +1,15 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.app.Activity;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -13,10 +17,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ import static de.stadtrallye.rallyesoft.model.Model.getModel;
 /**
  * List of all Tasks that have no location attached to them
  */
-public class TaskDetailsFragment extends SherlockFragment implements AdapterView.OnItemClickListener, ITasks.ITasksListener {
+public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemClickListener, ITasks.ITasksListener {
 
 	private static final String THIS = TaskDetailsFragment.class.getSimpleName();
 

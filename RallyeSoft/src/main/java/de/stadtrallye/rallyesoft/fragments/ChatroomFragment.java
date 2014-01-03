@@ -2,6 +2,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,7 +19,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.actionbarsherlock.app.SherlockFragment;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
@@ -39,7 +39,7 @@ import static de.stadtrallye.rallyesoft.model.Model.getModel;
  * @author Ramon
  *
  */
-public class ChatroomFragment extends SherlockFragment implements IChatroom.IChatroomListener, OnClickListener, OnItemClickListener, AbsListView.OnScrollListener {
+public class ChatroomFragment extends Fragment implements IChatroom.IChatroomListener, OnClickListener, OnItemClickListener, AbsListView.OnScrollListener {
 
 	private static final String THIS = ChatroomFragment.class.getSimpleName();
 	private static final boolean DEBUG = false;
