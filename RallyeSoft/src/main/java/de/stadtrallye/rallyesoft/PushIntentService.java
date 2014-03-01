@@ -14,9 +14,9 @@ import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.wirsch.gcm.GcmBaseIntentService;
 
-public class GcmIntentService extends GcmBaseIntentService {
+public class PushIntentService extends GcmBaseIntentService {
 	
-	private static final String THIS = GcmIntentService.class.getSimpleName();
+	private static final String THIS = PushIntentService.class.getSimpleName();
 
 	@Override
 	protected void onMessage(Bundle message) {
