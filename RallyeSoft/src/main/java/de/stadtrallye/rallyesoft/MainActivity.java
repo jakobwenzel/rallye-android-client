@@ -273,7 +273,10 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == ConnectionAssistant.REQUEST_CODE) {
+		// Android changes the upper 16 bits of a request generated from a fragment, so that
+		// it can deliver the result back to the fragment.
+		// We want to handle the result here, so we only look at the lower bits
+		if ((requestCode&0xffff) == ConnectionAssistant.REQUEST_CODE) {
 			Log.i(THIS, "ConnectionAssistant finished with "+ resultCode);
 			if (resultCode == Activity.RESULT_OK) {
 				Log.i(THIS, "New Connection, refresh Model, refresh everything depending on it");
