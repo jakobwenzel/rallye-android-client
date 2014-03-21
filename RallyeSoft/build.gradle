@@ -1,14 +1,21 @@
 repositories {
+    maven { url "http://dl.bintray.com/populov/maven" }
+
 	mavenCentral()
 }
 
 apply plugin: 'android'
 
 dependencies {
+
+
 	//compile files('gcm.jar')
 	compile files('universal-image-loader-1.8.6-with-sources.jar')
-	compile project(':ViewPagerIndicator:library')
-	compile project(':PagerSlidingTabStrip:library')
+	//compile project(':ViewPagerIndicator:library')
+	compile 'com.viewpagerindicator:library:2.4.1@aar'
+	//compile project(':PagerSlidingTabStrip:library')
+	compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
+
 	compile project(':common:RallyeStructures')
 	compile 'com.android.support:support-v4:19.+'
 	//compile 'com.android.support:support-v13:19.+'
@@ -19,7 +26,7 @@ dependencies {
 android {
 
 	compileSdkVersion 19
-	buildToolsVersion '19.0.1'
+	buildToolsVersion '19.0.3'
 
     defaultConfig {
         minSdkVersion 14
