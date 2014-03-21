@@ -3,6 +3,6 @@
     <color name="foreground_grey">#666666</color>
     <color name="indicator_accent">#33B5E5</color>
 	
-	<color name="text_grey">@android:color/primary_text_dark</color>
+	<color name="text_grey">@android:color/secondary_text_light</color>
 	<color name="drawer_background">#ff333333</color>
 </resources>
