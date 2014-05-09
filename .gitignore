@@ -9,5 +9,5 @@ Thumbs.db
 local.properties
 .gradle
 *.iml
-*/build
+build
 *.jks
