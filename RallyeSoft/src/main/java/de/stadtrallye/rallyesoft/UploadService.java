@@ -1,8 +1,34 @@
+/*
+ * Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+ *
+ * This file is part of RallySoft.
+ *
+ * RallyeSoft is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.stadtrallye.rallyesoft;
 
+import android.app.IntentService;
+import android.app.NotificationManager;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,16 +41,6 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.Request;
-
-import android.app.IntentService;
-import android.app.NotificationManager;
-import android.content.ContentResolver;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 public class UploadService extends IntentService {
 

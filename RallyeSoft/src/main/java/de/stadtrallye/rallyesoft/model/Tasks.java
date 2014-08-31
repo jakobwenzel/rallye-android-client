@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+ *
+ * This file is part of RallySoft.
+ *
+ * RallyeSoft is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.stadtrallye.rallyesoft.model;
 
 import android.content.ContentValues;
@@ -14,12 +33,12 @@ import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.Submission;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
+import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayToMapRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
-import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 

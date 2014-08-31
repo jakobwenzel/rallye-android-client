@@ -1,13 +1,32 @@
-package de.stadtrallye.rallyesoft.model;
+/*
+ * Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+ *
+ * This file is part of RallySoft.
+ *
+ * RallyeSoft is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+package de.stadtrallye.rallyesoft.model;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.LatLng;

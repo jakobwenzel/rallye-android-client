@@ -1,23 +1,35 @@
+/*
+ * Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+ *
+ * This file is part of RallySoft.
+ *
+ * RallyeSoft is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.stadtrallye.rallyesoft.model;
 
-import android.app.PendingIntent;
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.sql.SQLDataException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
-import de.stadtrallye.rallyesoft.MainActivity;
-import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.Chatroom.AdvTaskId;
@@ -32,7 +44,6 @@ import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATS;
 
