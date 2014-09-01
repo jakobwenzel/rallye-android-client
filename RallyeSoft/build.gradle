@@ -7,20 +7,12 @@ repositories {
 apply plugin: 'android'
 
 dependencies {
-
-
-	//compile files('gcm.jar')
-	compile files('universal-image-loader-1.8.6-with-sources.jar')
-	//compile project(':ViewPagerIndicator:library')
+	compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
 	compile 'com.viewpagerindicator:library:2.4.1@aar'
-	//compile project(':PagerSlidingTabStrip:library')
 	compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
-
 	compile project(':common:RallyeStructures')
-	compile 'com.android.support:support-v4:19.+'
-	//compile 'com.android.support:support-v13:19.+'
-	compile 'com.google.android.gms:play-services:4.+'
-	//compile 'com.android.support:gridlayout-v7:19.+'
+	compile 'com.android.support:support-v4:20.+'
+	compile 'com.google.android.gms:play-services:5.+'
 }
 
 android {
@@ -84,5 +76,8 @@ android {
 	}else {
 		println 'signing.properties not found'
 		android.buildTypes.release.signingConfig = null
+	}
+	dexOptions {
+		incremental true
 	}
 }
