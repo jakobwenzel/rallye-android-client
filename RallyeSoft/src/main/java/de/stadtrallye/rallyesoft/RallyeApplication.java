@@ -38,16 +38,15 @@ public class RallyeApplication extends Application {
 
 		DisplayImageOptions disp = new DisplayImageOptions.Builder()
 				.showImageOnFail(R.drawable.ic_empty)
-				.showStubImage(R.drawable.ic_stub)
+				.showImageOnLoading(R.drawable.ic_stub)
 				.cacheInMemory(true)
-				.cacheOnDisc(true)
+				.cacheOnDisk(true)
 				.build();
 
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
 //				.discCache(new TotalSizeLimitedDiscCache(cacheDir, 100 * 1024 * 1024))
-				.discCacheSize(100 * 1024 * 1024)
+				.diskCacheSize(100 * 1024 * 1024)
 				.defaultDisplayImageOptions(disp)
-
 				.build();
 
 		ImageLoader.getInstance().init(config);

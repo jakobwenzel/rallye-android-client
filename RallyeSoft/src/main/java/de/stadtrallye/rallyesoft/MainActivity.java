@@ -195,6 +195,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		tabManager.saveState(outState);
 	}
 
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();

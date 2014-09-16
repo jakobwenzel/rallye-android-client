@@ -22,11 +22,9 @@ package de.stadtrallye.rallyesoft.fragments;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -41,10 +39,8 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
-import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
-import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
@@ -166,37 +162,10 @@ public class ChatsFragment extends Fragment implements IPictureTakenListener {
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
-		
-		refreshMenuItem.setIcon(R.drawable.ic_refresh_light);
-		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-		
-		MenuItem pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.take_picture);
 
-		pictureMenuItem.setIcon(R.drawable.ic_camera_light);
-		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 	}
 
-	@Override
-	public void onPrepareOptionsMenu(Menu menu) {
-		boolean drawerOpen = getTabManager(getActivity()).isMenuOpen();
 
-		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
-		menu.findItem(R.id.picture_menu).setVisible(!drawerOpen);
-	}
 	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.refresh_menu:
-			chatrooms.get(pager.getCurrentItem()).refresh();
-			return true;
-		case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
-			ImageLocation.startPictureTakeOrSelect(getActivity());
-			return true;
-		default:
-			Log.d(THIS, "No hit on menu item "+ item);
-			return false;
-		}
-	}
+
 }

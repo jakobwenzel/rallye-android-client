@@ -12,13 +12,19 @@ dependencies {
 	compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
 	compile project(':common:RallyeStructures')
 	compile 'com.android.support:support-v4:20.+'
-	compile 'com.google.android.gms:play-services:5.+'
+	compile 'com.google.android.gms:play-services:5.0.+'
+	compile('org.glassfish.jersey.core:jersey-client:2.12') {
+		exclude group:'org.glassfish.hk2.external', module:'javax.inject'
+	}
+	compile('org.glassfish.jersey.media:jersey-media-json-jackson:2.12') {
+		exclude group:'org.glassfish.hk2.external', module:'javax.inject'
+	}
 }
 
 android {
 
 	compileSdkVersion 19
-	buildToolsVersion '19.1'
+	buildToolsVersion '20'
 
     defaultConfig {
         minSdkVersion 14
@@ -38,20 +44,22 @@ android {
 	signingConfigs {
 		release
 	}
-	
+
 	buildTypes {
-        debugSigned {
-            debuggable true
-            jniDebugBuild true
-            signingConfig signingConfigs.release
-        }
-	
-        release {
-            runProguard false
-            proguardFile getDefaultProguardFile('proguard-android.txt')
+		debugSigned {
+			debuggable true
+			jniDebugBuild true
+			signingConfig signingConfigs.release
+		}
+		release {
+			runProguard false
+			proguardFile getDefaultProguardFile('proguard-android.txt')
 			proguardFile 'proguard.txt'
 			signingConfig signingConfigs.release
-        }
+		}
+		debug {
+			signingConfig signingConfigs.release
+		}
 	}
 	
 	compileOptions {
@@ -78,6 +86,5 @@ android {
 		android.buildTypes.release.signingConfig = null
 	}
 	dexOptions {
-		incremental true
 	}
 }

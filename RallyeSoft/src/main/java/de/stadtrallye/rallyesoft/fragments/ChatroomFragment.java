@@ -25,6 +25,9 @@ import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -50,8 +53,10 @@ import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
+import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
+import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
  * One Chatroom, with input methods
@@ -97,10 +102,45 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 		else
 			lastPos = new int[2];
 
-
+		setHasOptionsMenu(true);
 
 	}
-	
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		MenuItem refreshMenuItem = menu.add(Menu.NONE, R.id.refresh_menu, 30, R.string.refresh);
+
+		refreshMenuItem.setIcon(R.drawable.ic_refresh_light);
+		refreshMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+
+		MenuItem pictureMenuItem = menu.add(Menu.NONE, R.id.picture_menu, 10, R.string.take_picture);
+
+		pictureMenuItem.setIcon(R.drawable.ic_camera_light);
+		pictureMenuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+	}
+
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		boolean drawerOpen = getTabManager(getActivity()).isMenuOpen();
+
+		menu.findItem(R.id.refresh_menu).setVisible(!drawerOpen);
+		menu.findItem(R.id.picture_menu).setVisible(!drawerOpen);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.refresh_menu:
+				chatroom.refresh();
+				return true;
+			case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
+				ImageLocation.startPictureTakeOrSelect(getActivity());
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.chat_list, container, false);

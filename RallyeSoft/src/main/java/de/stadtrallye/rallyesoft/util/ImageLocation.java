@@ -109,7 +109,7 @@ public class ImageLocation {
 
 		takePhotoIntent.putExtra("return-data", true);
 
-		Intent chooserIntent = Intent.createChooser(pickIntent, activity.getString(R.string.select_take_picture));
+		Intent chooserIntent = Intent.createChooser(pickIntent, activity.getString(R.string.select_take_picture));//TODO: !!! attach chatroom to picturerequest
 		chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takePhotoIntent});
 
 		activity.startActivityForResult(chooserIntent, Std.PICK_IMAGE);

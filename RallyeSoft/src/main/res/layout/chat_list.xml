@@ -72,12 +72,12 @@
 
 	<ImageButton
 			android:id="@+id/button_send"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
 			android:layout_gravity="right"
-			android:src="@drawable/ic_send_now_dark"
+			android:src="@drawable/ic_action_send_now"
 			android:layout_alignParentBottom="true"
 			android:layout_alignParentRight="true"
-			android:background="?android:attr/selectableItemBackground"/>
+			android:background="@drawable/btn_default_holo_light"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"/>
 
 </RelativeLayout>
