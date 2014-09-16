@@ -38,7 +38,6 @@ import de.stadtrallye.rallyesoft.model.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
-import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
@@ -47,7 +46,7 @@ import static de.stadtrallye.rallyesoft.model.Model.getModel;
  * @author Ramon
  *
  */
-public class ChatsFragment extends Fragment implements IPictureTakenListener {
+public class ChatsFragment extends Fragment {
 	
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 
@@ -134,22 +133,22 @@ public class ChatsFragment extends Fragment implements IPictureTakenListener {
 ////		outState.putInt(Std.TAB, pager.getCurrentItem());
 //	}
 
-	@Override
+	/*@Override
 	public void pictureTaken(IPicture picture) {
 		this.picture = picture;
 		updateFragments();
 
 
-	}
+	}*/
 
-	private void updateFragments() {
+	/*private void updateFragments() {// do not push picture, fragment will need to find it itself
 		//Display picture in ChatroomFragments
 		for (int i=0;i<chatrooms.size();i++) {
 			fragmentAdapter.getItem(i).loadImagePreview();
 		}
-	}
+	}*/
 
-	@Override
+	/*@Override
 	public IPicture getPicture() {
 		return picture;
 	}
@@ -158,7 +157,7 @@ public class ChatsFragment extends Fragment implements IPictureTakenListener {
 	public void sentPicture() {
 		picture = null;
 		updateFragments();
-	}
+	}*/
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {

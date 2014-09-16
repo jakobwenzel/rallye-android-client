@@ -54,7 +54,7 @@ import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
-import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
+import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
@@ -64,7 +64,7 @@ import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends FragmentActivity implements IModelActivity, IModel.IModelListener, IProgressUI, ITabActivity {
+public class MainActivity extends FragmentActivity implements IModelActivity, IModel.IModelListener, IProgressUI, ITabActivity, IPictureHandler {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
@@ -77,6 +77,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	private Integer lastTab;
 
 	private RallyeTabManager tabManager;
+	private IPicture picture = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -221,7 +222,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case android.R.id.home:
-				return tabManager.onAndroidHome();
+				return tabManager.onAndroidHome(item);
 			case R.id.menu_login:
 				Intent intent = new Intent(this, ConnectionAssistant.class);
 				lastTab = tabManager.getCurrentTab();
@@ -319,15 +320,17 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		} else if (requestCode == SubmitNewSolution.REQUEST_CODE) {
 			Log.i(THIS, "Task Submission");
 			if (resultCode == Activity.RESULT_OK) {
-
+				Log.i(THIS, "Submitted: "+ data.getExtras());
 			}
 		} else {
-			final IPicture picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
+			picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
 
-			if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT && picture != null) {
+
+
+			/*if (tabManager.getCurrentTab() == RallyeTabManager.TAB_CHAT && picture != null) {
 				IPictureTakenListener chatTab = (IPictureTakenListener) tabManager.getActiveFragment();
 				chatTab.pictureTaken(picture);
-			}
+			}*/
 
 //			ImageLoader.getInstance().handleSlowNetwork();
 		}
@@ -425,4 +428,18 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	}
 
 
+	@Override
+	public IPicture getPicture() {
+		return picture;
+	}
+
+	@Override
+	public boolean hasPicture() {
+		return picture != null;
+	}
+
+	@Override
+	public void discardPicture() {
+		picture = null;
+	}
 }

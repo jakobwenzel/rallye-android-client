@@ -27,6 +27,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
+import android.view.MenuItem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +98,7 @@ public abstract class TabManager {
 		tabs.get(key).args = args;
 	}
 
-	public boolean onAndroidHome() {
+	public boolean onAndroidHome(MenuItem item) {
 		if (parentTab != null) {
 			closeSubTab();
 			return true;

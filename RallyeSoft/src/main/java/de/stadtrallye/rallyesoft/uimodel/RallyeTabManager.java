@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -148,11 +149,11 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	}
 
 	@Override
-	public boolean onAndroidHome() {
-		if (super.onAndroidHome())
+	public boolean onAndroidHome(MenuItem item) {
+		if (super.onAndroidHome(item))
 			return true;
 
-		drawerToggle.onOptionsItemSelected(new HomeMenuItem());
+		drawerToggle.onOptionsItemSelected(item);
 
 		return true;
 	}

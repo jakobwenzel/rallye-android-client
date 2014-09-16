@@ -53,6 +53,7 @@ import de.stadtrallye.rallyesoft.util.ImageLocation;
 public class SubmitNewSolution extends FragmentActivity implements IModel.IModelListener {
 
 	public static final int REQUEST_CODE = 7;
+	public static final int PICTURE_REQUEST_SOURCE = -100;
 
 	private static final String THIS = SubmitNewSolution.class.getSimpleName();
 	private IModel model;
@@ -129,7 +130,7 @@ public class SubmitNewSolution extends FragmentActivity implements IModel.IModel
 			imageView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					ImageLocation.startPictureTakeOrSelect(SubmitNewSolution.this);
+					requestPicture();
 				}
 			});
 		}
@@ -142,9 +143,9 @@ public class SubmitNewSolution extends FragmentActivity implements IModel.IModel
 			imageView.post(new Runnable() {
 				@Override
 				public void run() {
-					imageView.performClick();
+					requestPicture();
 				}
-			});//TODO: use callOnClick or similar (but only defined since API 15)
+			});
 	}
 
 	@Override
@@ -223,6 +224,10 @@ public class SubmitNewSolution extends FragmentActivity implements IModel.IModel
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+	}
+
+	private void requestPicture() {
+		ImageLocation.startPictureTakeOrSelect(this, PICTURE_REQUEST_SOURCE);
 	}
 
 	@Override

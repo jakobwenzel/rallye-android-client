@@ -21,12 +21,17 @@ package de.stadtrallye.rallyesoft.uimodel;
 
 import android.net.Uri;
 
-import java.io.Serializable;
-
 /**
 * Created by Ramon on 09.10.13.
 */
-public interface IPicture extends Serializable {
+public interface IPicture {
+	enum UploadState { NotUploaded, Uploading, UploadComplete }
+
 	Uri getPath();
 	String getHash();
+	int getSource();
+
+	UploadState getUploadState();
+	void setStartUpload();
+	void setUploadComplete();
 }

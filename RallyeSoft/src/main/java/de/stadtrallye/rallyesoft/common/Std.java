@@ -82,4 +82,5 @@ public class Std {
 	public static final String TEXT = "text";
 	public static final String GCM_ID = "gcm_id";
 	public static final String APP_VERSION = "app_version";
+	public static final String PICTURE_REQUEST_SOURCE = "picture_request_source";
 }

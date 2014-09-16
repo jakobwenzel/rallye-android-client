@@ -49,6 +49,8 @@ public class ImageLocation {
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
 
+
+
     /** Create a file Uri for saving an image or video */
     public static Uri getOutputMediaFileUri(int type){
         return Uri.fromFile(getOutputMediaFile(type));
@@ -92,7 +94,7 @@ public class ImageLocation {
 	 * Start a intent to either take a picture with the camera app or select a app that can pick an existing picture
 	 * @param activity Activity that will receive the Intent result and should process by calling {@link #imageResult(int, int, android.content.Intent, android.content.Context, boolean)}
 	 */
-	public static void startPictureTakeOrSelect(Activity activity) {
+	public static void startPictureTakeOrSelect(Activity activity, int source) {
 		//Attention: Our RequestCode will not be used for the result, if a jpeg is picked, data.getType will contain image/jpeg, if the picture was just taken with the camera it will be null
 		Intent pickIntent = new Intent();
 		pickIntent.setType("image/jpeg");
@@ -105,6 +107,7 @@ public class ImageLocation {
 
 		SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext()).edit();
 		editor.putString(Std.CAMERA_OUTPUT_FILENAME,fileUri.toString());
+		editor.putInt(Std.PICTURE_REQUEST_SOURCE, source);
 		editor.commit();
 
 		takePhotoIntent.putExtra("return-data", true);
@@ -128,12 +131,14 @@ public class ImageLocation {
 		if (resultCode== Activity.RESULT_OK) {
 			//Find uri
 			Uri uri=null;
+			int source = -1;
 			//It can either be returned with the intent parameter:
 			if (data != null) {
 				uri = data.getData();
 			} else {//else we use the saved value
 				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 				String uriString = prefs.getString(Std.CAMERA_OUTPUT_FILENAME,null);
+				source = prefs.getInt(Std.PICTURE_REQUEST_SOURCE, -1);
 				if (uriString!=null)
 					uri = Uri.parse(uriString);
 			}
@@ -141,17 +146,14 @@ public class ImageLocation {
 			if (uri != null) {
 				try {
 					//User has picked an image.
-					/*Cursor cursor = getContentResolver().query(uri, new String[]{android.provider.MediaStore.Images.ImageColumns.DATA}, null, null, null);
-					cursor.moveToFirst();
-*/
+
 					//Link to the image
 					final String imageFilePath = uri.toString();//cursor.getString(0);
 					final String hash = String.valueOf(imageFilePath.hashCode());
 
 					Log.i(THIS, "Picture taken/selected: " + imageFilePath);
 
-
-					//cursor.close();
+					Picture picture = new Picture(uri, hash, source);
 
 					if (autoUpload) {
 						Intent intent = new Intent(context, UploadService.class);
@@ -161,7 +163,7 @@ public class ImageLocation {
 						context.startService(intent);
 					}
 
-					return new Picture(uri, hash);
+					return picture;
 				} catch (Exception e) {
 					Log.e(THIS, "Failed to select Picture", e);
 					Toast.makeText(context, R.string.picture_selection_failed, Toast.LENGTH_SHORT).show();
@@ -178,11 +180,19 @@ class Picture implements IPicture {
 
 	private final Uri path;
 	private final String hash;
+	private final int source;
 
-	public Picture(Uri path, String hash) {
+	private UploadState uploadState;
+
+	public Picture(Uri path, String hash, int source) {
 		this.path = path;
 		this.hash = hash;
+		this.source = source;
+
+		uploadState = UploadState.NotUploaded;
 	}
+
+
 
 	@Override
 	public Uri getPath() {
@@ -192,5 +202,25 @@ class Picture implements IPicture {
 	@Override
 	public String getHash() {
 		return hash;
+	}
+
+	@Override
+	public int getSource() {
+		return source;
+	}
+
+	@Override
+	public synchronized UploadState getUploadState() {
+		return null;
+	}
+
+	@Override
+	public synchronized void setStartUpload() {
+		uploadState = UploadState.Uploading;
+	}
+
+	@Override
+	public synchronized void setUploadComplete() {
+		uploadState = UploadState.UploadComplete;
 	}
 }

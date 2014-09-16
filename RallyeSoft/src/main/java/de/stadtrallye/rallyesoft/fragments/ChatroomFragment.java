@@ -51,7 +51,7 @@ import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
-import de.stadtrallye.rallyesoft.uimodel.IPictureTakenListener;
+import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
 
@@ -82,8 +82,8 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	private EditText text;
 	private ProgressBar loading;
 	private ImageView chosen_picture;
-	private IPictureTakenListener parent;
 	private IModel model;
+	private IPictureHandler pictureHandler;
 
 
 	/**
@@ -134,7 +134,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 				chatroom.refresh();
 				return true;
 			case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
-				ImageLocation.startPictureTakeOrSelect(getActivity());
+				ImageLocation.startPictureTakeOrSelect(getActivity(), chatroom.getID());
 				return true;
 			default:
 				return false;
@@ -176,10 +176,9 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 		restoreLastReadId(chatroom.getLastReadId());
 	}
 
-	public void loadImagePreview() {
-		parent = (IPictureTakenListener) getParentFragment();
-		IPicture pic = parent.getPicture();
-		if (pic != null) {
+	private void loadImagePreview() {
+		IPicture pic = pictureHandler.getPicture();
+		if (pic != null && pic.getSource() == chatroom.getID()) {//TODO: use IPicture.UploadState
 			chosen_picture.setVisibility(View.VISIBLE);
 			ImageLoader.getInstance().displayImage(pic.getPath().toString(), chosen_picture);
 		} else {
@@ -193,11 +192,12 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 
 		try {
 			ui = (IProgressUI) getActivity();
+			pictureHandler = (IPictureHandler) getActivity();
 
 			loadChats();
 
 		} catch (ClassCastException e) {
-			Log.i(THIS, "Activity must implement IProgressUI");
+			Log.i(THIS, "Activity must implement IProgressUI and IPictureHandler");
 			throw e;
 		}
 	}
@@ -211,6 +211,8 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 
 		if (model!=getModel(getActivity()))
 			loadChats();
+
+		loadImagePreview();
 	}
 	
 	@Override
@@ -279,13 +281,13 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 				loading.setVisibility(View.GONE);
 				chatAdapter.changeCursor(chatroom.getChatCursor());
 				chosen_picture.setVisibility(View.GONE);
-				parent.sentPicture();
+				pictureHandler.discardPicture();
 				break;
 			case Failure:
 				loading.setVisibility(View.GONE);
 				Toast.makeText(getActivity(), getString(R.string.chat_post_failure), Toast.LENGTH_SHORT).show();
 				chosen_picture.setVisibility(View.GONE);
-				parent.sentPicture();
+				pictureHandler.discardPicture();
 				break;
 			case Retrying:
 				break;
@@ -295,14 +297,13 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();
-        IPicture pic = parent.getPicture();
+        IPicture pic = pictureHandler.getPicture();
         if (pic != null) {
             chatroom.postChatWithHash(msg.toString(), pic.getHash());
             loading.setVisibility(View.VISIBLE);
-        } else if (msg.length() > 0 ) {{
+        } else if (msg.length() > 0 ) {
             chatroom.postChat(msg.toString(), null);
         }
-		}
 	}
 
 	@Override
