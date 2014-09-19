@@ -143,6 +143,6 @@ public abstract class GcmHelper {
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putString(Std.GCM_ID, gcmId);
 		editor.putInt(Std.APP_VERSION, appVersion);
-		editor.commit();
+		editor.apply();
 	}
 }

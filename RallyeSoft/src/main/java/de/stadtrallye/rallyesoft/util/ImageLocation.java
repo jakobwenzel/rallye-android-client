@@ -108,7 +108,7 @@ public class ImageLocation {
 		SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext()).edit();
 		editor.putString(Std.CAMERA_OUTPUT_FILENAME,fileUri.toString());
 		editor.putInt(Std.PICTURE_REQUEST_SOURCE, source);
-		editor.commit();
+		editor.apply();
 
 		takePhotoIntent.putExtra("return-data", true);
 

@@ -118,8 +118,8 @@ public class PictureGalleryActivity extends Activity {
 		}
 		
 		@Override
-		public Object instantiateItem(ViewGroup view, int position) {
-			final View imageLayout = inflater.inflate(R.layout.image_pager_item, null);
+		public Object instantiateItem(ViewGroup container, int position) {
+			final View imageLayout = inflater.inflate(R.layout.image_pager_item, container, false);
 			final ImageView imageView = (ImageView) imageLayout.findViewById(R.id.image);
 			final ProgressBar spinner = (ProgressBar) imageLayout.findViewById(R.id.loading);
 			
@@ -164,7 +164,7 @@ public class PictureGalleryActivity extends Activity {
 				}
 			});
 
-			view.addView(imageLayout, 0);
+			container.addView(imageLayout, 0);
 			return imageLayout;
 		}
 

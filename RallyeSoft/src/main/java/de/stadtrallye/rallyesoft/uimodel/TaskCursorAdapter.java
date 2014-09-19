@@ -61,9 +61,9 @@ public class TaskCursorAdapter extends CursorAdapter {
 	}
 
 	@Override
-	public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+	public View newView(Context context, Cursor cursor, ViewGroup parent) {
 
-		View v = inflator.inflate(R.layout.task_item, null);
+		View v = inflator.inflate(R.layout.task_item, parent, false);
 
 		ViewMem mem = new ViewMem();
 		mem.name = (TextView) v.findViewById(R.id.name);

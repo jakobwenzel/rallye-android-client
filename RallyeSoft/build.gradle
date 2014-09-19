@@ -1,4 +1,4 @@
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 repositories {
     maven { url "http://dl.bintray.com/populov/maven" }

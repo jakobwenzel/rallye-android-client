@@ -72,7 +72,7 @@ public class GroupListAdapter extends BaseAdapter {
 		ViewMem mem;
 
 		if (v == null) {
-			v = inflator.inflate(R.layout.group_item, null);
+			v = inflator.inflate(R.layout.group_item, parent, false);
 
 			mem = new ViewMem();
 

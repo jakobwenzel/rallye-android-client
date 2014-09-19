@@ -110,7 +110,7 @@
 	<string translatable="false" name="about_concept">Felix Hübner\nRamon Wirsch</string>
 	<string translatable="false" name="about_code">Jakob Wenzel\nRamon Wirsch</string>
 	<string translatable="false" name="about_github">Server: <a href="https://github.com/antidau/rallye-server">GitHub</a>\nAndroid-Client: <a href="https://github.com/antidau/rallye-android-client">GitHub</a></string>
-	<string translatable="false" name="about_libraries"><a href="https://github.com/nostra13/Android-Universal-Image-Loader">Universal Image Loader</a> (c) 2011-2013, by Sergey Tarasevich\n<a href="http://actionbarsherlock.com">ActionBarSherlock</a>, by Jake Wharton\n<a href="https://github.com/JakeWharton/Android-ViewPagerIndicator">ViewPagerIndicator</a>, by Jake Wharton\n<a href="https://github.com/astuetz/PagerSlidingTabStrip">PagerSlidingTabStrip</a>, by Andreas Stuetz</string>
+	<string translatable="false" name="about_libraries"><a href="https://github.com/nostra13/Android-Universal-Image-Loader">Universal Image Loader</a> © 2011-2013, by Sergey Tarasevich\n<a href="http://actionbarsherlock.com">ActionBarSherlock</a>, by Jake Wharton\n<a href="https://github.com/JakeWharton/Android-ViewPagerIndicator">ViewPagerIndicator</a>, by Jake Wharton\n<a href="https://github.com/astuetz/PagerSlidingTabStrip">PagerSlidingTabStrip</a>, by Andreas Stuetz</string>
 	<string name="submit_new_solution">Submit solution</string>
 	<string name="enter_text">Enter text:</string>
 	<string name="enter_number">Enter number:</string>
