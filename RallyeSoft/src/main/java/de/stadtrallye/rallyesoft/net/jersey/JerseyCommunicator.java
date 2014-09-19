@@ -17,7 +17,7 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.net;
+package de.stadtrallye.rallyesoft.net.jersey;
 
 import java.util.List;
 import java.util.concurrent.Future;
@@ -33,6 +33,7 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
+import de.stadtrallye.rallyesoft.net.Paths;
 
 /**
  * Created by Ramon on 18.09.2014.
