@@ -1,23 +1,24 @@
 repositories {
-    maven { url "http://dl.bintray.com/populov/maven" }
+	maven { url "http://dl.bintray.com/populov/maven" }
 	mavenCentral()
 }
 
 apply plugin: 'android'
 
 dependencies {
+	compile project(':common:RallyeStructures')
+	compile('org.glassfish.jersey.core:jersey-client:2.12') {
+		exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+	}
+	compile('org.glassfish.jersey.media:jersey-media-json-jackson:2.12') {
+		exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+	}
 	compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
 	compile 'com.viewpagerindicator:library:2.4.1@aar'
 	compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
-	compile project(':common:RallyeStructures')
-	compile 'com.android.support:support-v4:20.+'
+	compile 'com.android.support:support-v4:20.0.0'
+	compile 'com.android.support:support-v13:20.0.0'
 	compile 'com.google.android.gms:play-services:5.0.+'
-	compile('org.glassfish.jersey.core:jersey-client:2.12') {
-		exclude group:'org.glassfish.hk2.external', module:'javax.inject'
-	}
-	compile('org.glassfish.jersey.media:jersey-media-json-jackson:2.12') {
-		exclude group:'org.glassfish.hk2.external', module:'javax.inject'
-	}
 }
 
 android {
@@ -25,20 +26,20 @@ android {
 	compileSdkVersion 19
 	buildToolsVersion '20'
 
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 19
-    }
-	
-    packagingOptions {
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/NOTICE'
-    }
+	defaultConfig {
+		minSdkVersion 14
+		targetSdkVersion 19
+	}
 
-    /*lintOptions {
-        abortOnError false
-    }*/
+	packagingOptions {
+		exclude 'META-INF/ASL2.0'
+		exclude 'META-INF/LICENSE'
+		exclude 'META-INF/NOTICE'
+	}
+
+	/*lintOptions {
+		abortOnError false
+	}*/
 
 	signingConfigs {
 		release
@@ -60,18 +61,18 @@ android {
 			signingConfig signingConfigs.release
 		}
 	}
-	
+
 	compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
+		sourceCompatibility JavaVersion.VERSION_1_7
+		targetCompatibility JavaVersion.VERSION_1_7
+	}
 
 	def Properties props = new Properties()
 	def propFile = new File('signing.properties')
-	if (propFile.canRead()){
+	if (propFile.canRead()) {
 		props.load(new FileInputStream(propFile))
-		if (props!=null && props.containsKey('STORE_FILE') && props.containsKey('STORE_PASSWORD') &&
-			props.containsKey('KEY_ALIAS') && props.containsKey('KEY_PASSWORD')) {
+		if (props != null && props.containsKey('STORE_FILE') && props.containsKey('STORE_PASSWORD') &&
+				props.containsKey('KEY_ALIAS') && props.containsKey('KEY_PASSWORD')) {
 			android.signingConfigs.release.storeFile = file(props['STORE_FILE'])
 			android.signingConfigs.release.storePassword = props['STORE_PASSWORD']
 			android.signingConfigs.release.keyAlias = props['KEY_ALIAS']
@@ -80,7 +81,7 @@ android {
 			println 'signing.properties found but some entries are missing'
 			android.buildTypes.release.signingConfig = null
 		}
-	}else {
+	} else {
 		println 'signing.properties not found'
 		android.buildTypes.release.signingConfig = null
 	}

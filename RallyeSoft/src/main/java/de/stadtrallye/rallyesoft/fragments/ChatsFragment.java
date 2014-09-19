@@ -19,8 +19,8 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <!--
   ~ Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
   ~
@@ -18,18 +19,28 @@
   ~ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<resources>
-    <string-array name="protocols" translatable="false">
-        <item>http</item>
-        <item>https</item>
-    </string-array>
-	<string-array name="daysOfWeek">
-		<item>Monday</item>
-		<item>Tuesday</item>
-		<item>Wednesday</item>
-		<item>Thursday</item>
-		<item>Friday</item>
-		<item>Saturday</item>
-		<item>Sunday</item>
-	</string-array>
-</resources>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/lib/com.astuetz.pagerslidingtabstrip"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/chat_frame"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+
+	<com.astuetz.PagerSlidingTabStrip
+		android:id="@+id/indicator"
+		android:layout_height="36dp"
+		android:layout_width="match_parent"
+		app:indicatorColor="@color/indicator_accent"
+		/>
+
+	<android.support.v4.view.ViewPager
+		android:id="@+id/pager"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		tools:layout="@layout/calendar_day_fragment"
+		/>
+
+</LinearLayout>

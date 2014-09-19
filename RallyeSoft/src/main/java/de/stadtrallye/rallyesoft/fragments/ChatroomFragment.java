@@ -19,9 +19,9 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -330,5 +330,14 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	@Override
 	public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
 
+	}
+
+	public static ChatroomFragment newInstance(int chatroomId) {
+		ChatroomFragment f = new ChatroomFragment();
+		Bundle b = new Bundle();
+		b.putInt(Std.CHATROOM, chatroomId);
+		f.setArguments(b);
+
+		return f;
 	}
 }

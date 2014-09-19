@@ -19,9 +19,9 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,7 +57,7 @@ public class AssistantAuthFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.assistant_auth, container, false);
+		View v = inflater.inflate(R.layout.assistant_auth_fragment, container, false);
 		name = (EditText) v.findViewById(R.id.name);
 		pass = (EditText) v.findViewById(R.id.pass);
 		next = (Button) v.findViewById(R.id.next);

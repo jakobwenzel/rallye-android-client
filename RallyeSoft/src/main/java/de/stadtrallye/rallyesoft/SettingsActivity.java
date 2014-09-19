@@ -1,4 +1,4 @@
-/*
+package de.stadtrallye.rallyesoft;/*
  * Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
  *
  * This file is part of RallySoft.
@@ -17,18 +17,15 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft;
+import android.os.Bundle;
+import android.preference.PreferenceActivity;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
 
-public class GameService extends Service{
-	
+public class SettingsActivity extends PreferenceActivity {
 
 	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		addPreferencesFromResource(R.xml.preferences);
 	}
-
 }

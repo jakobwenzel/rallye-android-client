@@ -19,16 +19,12 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
-import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.view.ViewGroup;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.ChatroomFragment;
 import de.stadtrallye.rallyesoft.model.IChatroom;
 
@@ -45,12 +41,6 @@ public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 		this.chatrooms = chatrooms;
 	}
 
-// --Commented out by Inspection START (22.09.13 02:46):
-//	public ChatroomFragment getCurrentFragment() {
-//		return current;
-//	}
-// --Commented out by Inspection STOP (22.09.13 02:46)
-
 	/**
 	 * Needed so the FragmentManager can distinguish tabs of different chatrooms (, if re logging in as different user)
 	 * Default behavior, will name Fragments after their position
@@ -60,20 +50,9 @@ public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 		return chatrooms.get(position).getID();
 	}
 
-	Map<Integer,ChatroomFragment> fragments = new HashMap<Integer,ChatroomFragment>();
-
 	@Override
 	public ChatroomFragment getItem(int pos) {
-		ChatroomFragment f = fragments.get(pos);
-		if (f!=null) return f;
-
-		f = new ChatroomFragment();
-		Bundle b = new Bundle();
-		b.putInt(Std.CHATROOM, chatrooms.get(pos).getID());
-		f.setArguments(b);
-		fragments.put(pos,f);
-
-		return f;
+		return ChatroomFragment.newInstance(chatrooms.get(pos).getID());
 	}
 
 	@Override

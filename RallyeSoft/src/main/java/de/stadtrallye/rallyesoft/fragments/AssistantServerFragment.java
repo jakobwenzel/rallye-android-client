@@ -21,10 +21,10 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -93,7 +93,7 @@ public class AssistantServerFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.assistant_server, container, false);
+		View v = inflater.inflate(R.layout.assistant_server_fragment, container, false);
 
 		scrollView = (ScrollView)v.findViewById(R.id.scrollView);
 

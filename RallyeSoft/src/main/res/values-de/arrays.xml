@@ -19,17 +19,13 @@
   -->
 
 <resources>
-    <string-array name="protocols" translatable="false">
-        <item>http</item>
-        <item>https</item>
-    </string-array>
 	<string-array name="daysOfWeek">
-		<item>Monday</item>
-		<item>Tuesday</item>
-		<item>Wednesday</item>
-		<item>Thursday</item>
-		<item>Friday</item>
-		<item>Saturday</item>
-		<item>Sunday</item>
+		<item>Montag</item>
+		<item>Dienstag</item>
+		<item>Mittwoch</item>
+		<item>Donnerstag</item>
+		<item>Freitag</item>
+		<item>Samstag</item>
+		<item>Sonntag</item>
 	</string-array>
 </resources>

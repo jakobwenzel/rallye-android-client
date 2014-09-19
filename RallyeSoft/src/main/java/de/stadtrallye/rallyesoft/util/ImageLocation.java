@@ -35,7 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.UploadService;
+import de.stadtrallye.rallyesoft.services.UploadService;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
@@ -124,7 +124,7 @@ public class ImageLocation {
 	 * @param resultCode received resultCode
 	 * @param data received Intent
 	 * @param context ApplicationContext to temporary save the Filename
-	 * @param autoUpload weather the selected Picture should be automatically uploaded using the Service {@link de.stadtrallye.rallyesoft.UploadService}
+	 * @param autoUpload weather the selected Picture should be automatically uploaded using the Service {@link de.stadtrallye.rallyesoft.services.UploadService}
 	 * @return null if no picture was selected
 	 */
 	public static IPicture imageResult(int requestCode, int resultCode, Intent data, Context context, boolean autoUpload) {

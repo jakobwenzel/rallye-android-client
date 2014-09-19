@@ -117,12 +117,12 @@ public class RequestFactory {
 	}
 	
 	public Request availableChatroomsRequest() throws HttpRequestException {
-		final URL url = getURL(Paths.CHATS);
+		final URL url = getURL(Paths.CHATROOMS);
 		return new Request(url);
 	}
 	
 	public Request chatRefreshRequest(int chatroom, long lastTime) throws HttpRequestException {
-		final URL url = getURL(Paths.CHATS+"/"+chatroom+"/since/"+lastTime);
+		final URL url = getURL(Paths.CHATROOMS+"/"+chatroom+"/since/"+lastTime);
 		return new Request(url);
 	}
 
@@ -137,7 +137,7 @@ public class RequestFactory {
 	}
 
 	public Request chatPostRequest(int chatroom, String msg, Integer pictureID) throws HttpRequestException {
-		final URL url = getURL(Paths.CHATS+"/"+chatroom);
+		final URL url = getURL(Paths.CHATROOMS+"/"+chatroom);
 		Request r = new Request(url, RequestType.PUT);
 		
 		try {
@@ -150,7 +150,7 @@ public class RequestFactory {
 	}
 
 	public Request chatPostWithHashRequest(int chatroom, String msg, String pictureHash) throws HttpRequestException {
-		final URL url = getURL(Paths.CHATS+"/"+chatroom);
+		final URL url = getURL(Paths.CHATROOMS+"/"+chatroom);
 		Request r = new Request(url, RequestType.PUT);
 
 		try {
@@ -178,7 +178,7 @@ public class RequestFactory {
 	}
 
 	public Request serverInfoRequest() throws HttpRequestException {
-		final URL url = getURL(Paths.INFO);
+		final URL url = getURL(Paths.SERVER_INFO);
 		return new Request(url);
 	}
 
@@ -193,7 +193,7 @@ public class RequestFactory {
 	}
 
 	public Request allSubmissionsRequest(int groupID) throws HttpRequestException {
-		final URL url = getURL(Paths.SUBMISSIONS+"/"+groupID);
+		final URL url = getURL(Paths.TASKS_SUBMISSIONS_ALL +"/"+groupID);
 		return new Request(url);
 	}
 

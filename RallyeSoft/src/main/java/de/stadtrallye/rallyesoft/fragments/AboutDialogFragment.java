@@ -19,7 +19,6 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -40,7 +39,7 @@ public class AboutDialogFragment extends DialogFragment {
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
-		View v = inflater.inflate(R.layout.about, null);
+		View v = inflater.inflate(R.layout.about_fragment, null);
 
 		TextView tvGitHub = (TextView) v.findViewById(R.id.about_github);
 		TextView tvLibs = (TextView) v.findViewById(R.id.about_libs);

@@ -25,17 +25,18 @@ public final class Paths {
 
 	public static final String GROUPS = "groups";
 	public static final String STATUS = "system/status";
-	public static final String CHATS = "chatrooms";
-	public static final String MAP_NODES = "map/nodes";
-	public static final String MAP_EDGES = "map/edges";
-	public static final String MAP_CONFIG = "map/config";
-	public static final String PICS = "pics";
-	public static final String AVATAR = "avatar";
-	public static final String INFO = "system/info";
-	public static final String SERVER_PICTURE = "system/picture";
+	public static final String CHAT = "chat";
+	public static final String CHATROOMS = CHAT+"/rooms";
+	public static final String MAP_NODES = "games/rallye/map/nodes";
+	public static final String MAP_EDGES = "games/rallye/map/edges";
+	public static final String MAP_CONFIG = "games/rallye/map/config";
+	public static final String PICS = "resources/pics";
+	public static final String SERVER_INFO = "server/info";
+	public static final String SERVER_PICTURE = "server/picture";
+	public static final String SERVER_STATUS = "server/status";
 	public static final String USERS = "users";
-	public static final String TASKS = "tasks";
-	public static final String SUBMISSIONS = "tasks/all";
+	public static final String TASKS = "games/rallye/tasks";
+	public static final String TASKS_SUBMISSIONS_ALL = "games/rallye/tasks/all";
 
 	/**
 	 * return relative path to a picture
@@ -47,7 +48,11 @@ public final class Paths {
 		return PICS +"/"+ picId +"/"+ size.toShortString();
 	}
 
+	public static final String SNIPPET_AVATAR = "avatar";
+	public static final String SNIPPET_SINCE = "since";
+
 	public static String getAvatar(int groupID) {
-		return GROUPS +"/"+ groupID +"/"+ AVATAR;
+		return GROUPS +"/"+ groupID +"/"+ SNIPPET_AVATAR;
 	}
+
 }

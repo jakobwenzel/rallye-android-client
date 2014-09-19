@@ -25,6 +25,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
+import de.stadtrallye.rallyesoft.services.GcmIntentService;
+
 /**
  * Created by Ramon on 30.12.13.
  */

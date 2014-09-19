@@ -19,8 +19,8 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,7 +54,7 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.assistant_complete, container, false);
+		View v = inflater.inflate(R.layout.assistant_complete_fragment, container, false);
 		next = (Button) v.findViewById(R.id.next);
 		next.setOnClickListener(this);
 

@@ -19,8 +19,8 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;

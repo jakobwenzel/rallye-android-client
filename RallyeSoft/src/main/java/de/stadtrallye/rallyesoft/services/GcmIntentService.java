@@ -17,7 +17,7 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft;
+package de.stadtrallye.rallyesoft.services;
 
 import android.content.Context;
 import android.os.Bundle;

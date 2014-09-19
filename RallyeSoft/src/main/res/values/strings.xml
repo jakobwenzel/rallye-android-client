@@ -117,5 +117,10 @@
 	<string name="choose_picture">Choose picture:</string>
 	<string name="picture_selection_failed">Internal error during picture selection!</string>
 	<string name="unread_from_here_on">Unread from her on</string>
+	<string name="auto_upload">Automatic Upload</string>
+	<string name="auto_upload_on_summ">Start uploading pictures as soon as they are taken (when the camera UI exits)</string>
+	<string name="auto_upload_off_summ">Start uploading pictures on \'Send\'</string>
+	<string name="settings">Settings</string>
+	<string name="data_transfer">Data Transfer</string>
 
 </resources>

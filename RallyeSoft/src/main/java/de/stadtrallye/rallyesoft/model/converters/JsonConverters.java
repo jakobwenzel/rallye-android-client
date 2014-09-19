@@ -50,6 +50,7 @@ import de.stadtrallye.rallyesoft.util.JSONConverter;
  * Collection of JSONConverters to create all structures from JSON
  * Supplement for Jackson on server side (Library would take over 1 mb)
  */
+@Deprecated
 public abstract class JsonConverters {
 
 	public static class ChatConverter extends JSONConverter<ChatEntry> {

@@ -19,13 +19,13 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
-import android.app.Activity;
+import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -62,7 +62,7 @@ public abstract class TabManager {
 	 * @param tabActivity the parent Activity who must initialize the TabManager
 	 * @return the current TabManager
 	 */
-	public static TabManager getTabManager(Activity tabActivity) {
+	public static TabManager getTabManager(FragmentActivity tabActivity) {
 		try {
 			return ((ITabActivity) tabActivity).getTabManager();
 		} catch (ClassCastException e) {

@@ -242,6 +242,11 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 			case R.id.menu_about:
 				DialogFragment dialog = new AboutDialogFragment();
 				dialog.show(getSupportFragmentManager(), "about");
+				break;
+			case R.id.menu_settings:
+				intent = new Intent(this, SettingsActivity.class);
+				startActivity(intent);
+				break;
 			default:
 				return false;
 		}

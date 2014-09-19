@@ -19,12 +19,14 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.model.CameraPosition;
 
 import de.rallye.model.structures.MapConfig;
+import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.LatLngAdapter;
@@ -44,5 +46,9 @@ public class Util {
 		}
 		b.putParcelable(Std.GOOGLE_MAPS_OPTIONS, gmo);
 		return  b;
+	}
+
+	public static CharSequence resolveDayOfWeek(Context context, int dayOfWeek) {
+		return context.getResources().getTextArray(R.array.daysOfWeek)[dayOfWeek%7];
 	}
 }

@@ -88,13 +88,13 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 			/** Called when a drawer has settled in a completely closed state. */
 			public void onDrawerClosed(View view) {
 				RallyeTabManager.this.activity.getActionBar().setTitle(activeTab.titleId);
-				RallyeTabManager.this.activity.supportInvalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+				RallyeTabManager.this.activity.invalidateOptionsMenu();
 			}
 
 			/** Called when a drawer has settled in a completely open state. */
 			public void onDrawerOpened(View drawerView) {
 				RallyeTabManager.this.activity.getActionBar().setTitle(R.string.dash_menu);
-				RallyeTabManager.this.activity.supportInvalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+				RallyeTabManager.this.activity.invalidateOptionsMenu();
 //				dashboard.inv
 			}
 		};
@@ -110,11 +110,11 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, false));
 		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, true));
 		tabs.put(TAB_WAIT_FOR_MODEL, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, false));
-//		tabs.put(TAB_ABOUT, new Tab<AboutDialogFragment>("about", AboutDialogFragment.class, R.string.about, false));
+//		tabs.put(TAB_ABOUT, new Tab<AboutDialogFragment>("about_fragment", AboutDialogFragment.class, R.string.about_fragment, false));
 
 		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, false));
 
-
+		//tabs.put(TAB_SETTINGS, new Tab<SettingsFragment>("settings", SettingsFragment.class, R.string.settings, false));//Can't be done, because there is no SupportPreferenceFragment, and native Fragments only support ChildFragments since API 17
 
 		List<String> nav = new ArrayList<String>();
 		for (int i: menu) {
