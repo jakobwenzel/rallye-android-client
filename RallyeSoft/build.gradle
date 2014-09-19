@@ -7,12 +7,14 @@ repositories {
 
 dependencies {
 	compile project(':common:RallyeStructures')
-	compile('org.glassfish.jersey.core:jersey-client:2.12') {
-		exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
-	}
-	compile('org.glassfish.jersey.media:jersey-media-json-jackson:2.12') {
-		exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
-	}
+//	compile('org.glassfish.jersey.core:jersey-client:2.12') {
+//		exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+//	}
+//	compile('org.glassfish.jersey.media:jersey-media-json-jackson:2.12') {
+//		exclude group: 'org.glassfish.hk2.external', module: 'javax.inject'
+//	}
+	compile 'com.squareup.retrofit:retrofit:1.6.+'
+	compile 'com.squareup.retrofit:converter-jackson:1.6.+'
 	compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
 	compile 'com.viewpagerindicator:library:2.4.1@aar'
 	compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
