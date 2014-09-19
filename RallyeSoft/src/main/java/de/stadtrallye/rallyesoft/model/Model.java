@@ -797,7 +797,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 		
 		public void commit() {
-			edit.commit();
+			edit.apply();
 		}
 
 		public Saver saveGroups() {

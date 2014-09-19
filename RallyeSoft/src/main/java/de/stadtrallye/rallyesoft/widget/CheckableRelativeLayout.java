@@ -19,7 +19,6 @@
 
 package de.stadtrallye.rallyesoft.widget;
 
-import android.R;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.Checkable;
@@ -52,7 +51,7 @@ public class CheckableRelativeLayout extends RelativeLayout implements Checkable
 		this.checked = checked;
 
 		if (checked) {
-			this.setBackgroundResource(R.color.holo_blue_light);
+			this.setBackgroundResource(android.R.color.holo_blue_light);
 		} else {
 			this.setBackgroundResource(0);
 		}

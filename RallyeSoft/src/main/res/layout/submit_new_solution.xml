@@ -71,7 +71,8 @@
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:id="@+id/text_submission"
-				android:layout_marginTop="16dp"/>
+				android:layout_marginTop="16dp"
+				android:inputType="textAutoComplete"/>
 
 
 		</LinearLayout>

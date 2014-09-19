@@ -1,9 +1,9 @@
+apply plugin: 'com.android.application'
+
 repositories {
 	maven { url "http://dl.bintray.com/populov/maven" }
 	mavenCentral()
 }
-
-apply plugin: 'android'
 
 dependencies {
 	compile project(':common:RallyeStructures')

@@ -95,14 +95,16 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		actionBar.setDisplayHomeAsUpEnabled(true);
 		actionBar.setDisplayShowTitleEnabled(true);
 
+		// Check if Google Play Services is working
+		int errorCode;
+		if ((errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this)) != ConnectionResult.SUCCESS) {
+			GooglePlayServicesUtil.getErrorDialog(errorCode, this, 0).show();
+			finish();
+		}
+
 		// Google Cloud Messaging Init
 		//PushInit.ensureRegistration(this);
 		GcmHelper.ensureRegistration(getApplicationContext());
-
-		// Check if Google Play Services is working
-		int errorCode;
-		if ((errorCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this)) != ConnectionResult.SUCCESS)
-			GooglePlayServicesUtil.getErrorDialog(errorCode, this, 0).show();
 
 		// Initialize Model
 		model = (IModel) getLastCustomNonConfigurationInstance();
