@@ -114,6 +114,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		if (gmap == null) {
 			gmap = getMap();
 			gmap.setMyLocationEnabled(true);
+			gmap.setBuildingsEnabled(true);
 //			gmap.setOnMarkerClickListener(this);
 //			gmap.setOnMapClickListener(this);
 //			gmap.setOnCameraChangeListener(this);
