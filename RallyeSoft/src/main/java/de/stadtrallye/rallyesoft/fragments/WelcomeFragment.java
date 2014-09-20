@@ -27,7 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import de.stadtrallye.rallyesoft.ConnectionAssistant;
+import de.stadtrallye.rallyesoft.ConnectionAssistantActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 
@@ -47,9 +47,9 @@ public class WelcomeFragment extends Fragment {
 		b.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(getActivity(), ConnectionAssistant.class);
+				Intent intent = new Intent(getActivity(), ConnectionAssistantActivity.class);
 				getTabManager(getActivity()).switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
-				startActivityForResult(intent, ConnectionAssistant.REQUEST_CODE);
+				startActivityForResult(intent, ConnectionAssistantActivity.REQUEST_CODE);
 			}
 		});
 

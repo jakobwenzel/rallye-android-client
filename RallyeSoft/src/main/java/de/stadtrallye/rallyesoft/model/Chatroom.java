@@ -32,7 +32,6 @@ import java.util.List;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.model.Chatroom.AdvTaskId;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
@@ -47,7 +46,7 @@ import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATS;
 
-public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> {
+public class Chatroom extends de.rallye.model.structures.Chatroom implements IChatroom, RequestExecutor.Callback<Chatroom.AdvTaskId> {
 
 	// statics
 	final private static String CLASS = Chatroom.class.getSimpleName();
@@ -69,10 +68,6 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	// Parent Model
 	final private Model model;
 
-	// Identifier
-	final private int id;
-	final private String name;
-
 	// State
 	private ChatroomState state;
 	private long lastRefresh = 0;//Conservative: timestamp of latest ChatEntry
@@ -89,7 +84,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	 * @return all available Chatrooms
 	 */
 	static List<Chatroom> getChatrooms(Model model) {
-		List<Chatroom> out = new ArrayList<Chatroom>();
+		List<Chatroom> out = new ArrayList<>();
 
 		Cursor c = model.db.query(Chatrooms.TABLE, Chatrooms.COLS, null, null, null, null, null);
 
@@ -119,7 +114,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		for (Chatroom c : chatrooms) {
 			ContentValues insert = new ContentValues();
-			insert.put(Chatrooms.KEY_ID, c.id);
+			insert.put(Chatrooms.KEY_ID, c.chatroomID);
 			insert.put(Chatrooms.KEY_NAME, c.name);
 			insert.put(Chatrooms.KEY_LAST_REFRESH, c.lastRefresh);
 			insert.put(Chatrooms.KEY_LAST_READ, c.lastReadId);
@@ -132,8 +127,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	}
 
 	private Chatroom(int id, String name, Model model, long lastRefresh, int lastReadId) {
-		this.id = id;
-		this.name = name;
+		super(id, name);
 		this.model = model;
 		this.lastRefresh = lastRefresh;
 		this.lastReadId = lastReadId;
@@ -154,17 +148,17 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (o == null || ((Object) this).getClass() != o.getClass()) return false;
 
 		Chatroom chatroom = (Chatroom) o;
 
-		return id == chatroom.id;
+		return chatroomID == chatroom.chatroomID;
 	}
 
 	// Implementation
 	@Override
 	public int getID() {
-		return id;
+		return chatroomID;
 	}
 
 	@Override
@@ -174,7 +168,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public int hashCode() {
-		return id;
+		return chatroomID;
 	}
 
 	@Override
@@ -191,7 +185,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		try {
 			setState(ChatroomState.Refreshing);
 
-			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatRefreshRequest(id, lastRefresh), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
+			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatRefreshRequest(chatroomID, lastRefresh), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -320,7 +314,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		values.put(Chats.KEY_PICTURE, chatEntry.pictureID);
 		values.put(Chats.FOREIGN_GROUP, chatEntry.groupID);
 		values.put(Chats.FOREIGN_USER, chatEntry.userID);
-		values.put(Chats.FOREIGN_ROOM, id);
+		values.put(Chats.FOREIGN_ROOM, chatroomID);
 	}
 
 	/**
@@ -332,7 +326,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		SQLiteDatabase db = model.db;
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
 		SQLiteStatement s = db.compileStatement("INSERT INTO " + Chats.TABLE +
-				" (" + DatabaseHelper.strStr(Chats.COLS) + ") VALUES (?, ?, ?, ?, ?, ?, " + id + ")");
+				" (" + DatabaseHelper.strStr(Chats.COLS) + ") VALUES (?, ?, ?, ?, ?, ?, " + chatroomID + ")");
 
 		int chatId;
 
@@ -384,7 +378,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 			s.close();
 		}
 
-		Log.i(THIS, "Received " + entries.size() + " new Chats in Chatroom " + this.id + " since " + this.lastRefresh + "");
+		Log.i(THIS, "Received " + entries.size() + " new Chats in Chatroom " + chatroomID + " since " + this.lastRefresh + "");
 
 //		notifyChatsAdded(entries);
 		notifyChatsChanged();
@@ -583,7 +577,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 	@Override
 	public Cursor getChatCursor() {
 		Cursor c = model.db.query(Chats.TABLE + " AS c LEFT JOIN " + Groups.TABLE + " AS g USING(" + Chats.FOREIGN_GROUP + ") LEFT JOIN " + Users.TABLE + " AS u USING(" + Chats.FOREIGN_USER + ")",
-				new String[]{Chats.KEY_ID + " AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c." + Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID + "=" + id, null, null, null, Chats.KEY_ID);
+				new String[]{Chats.KEY_ID + " AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c." + Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID + "=" + chatroomID, null, null, null, Chats.KEY_ID);
 		Log.i(THIS, "new Cursor: " + c.getCount() + " rows");
 		return c;
 	}
@@ -619,7 +613,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 	@Override
 	public IPictureGallery getPictureGallery(int initialPictureId) {
-		Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(Chatroom.this.id)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+		Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(chatroomID)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
 		int[] pictures = new int[c.getCount()];
 		int initialPos = 0;
 
@@ -668,7 +662,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 
 		CursorConverters.moveCursorToId(cursor,c.id,lastReadId);
 
-		List<ChatEntry> res = new ArrayList<ChatEntry>();
+		List<ChatEntry> res = new ArrayList<>();
 
 		cursor.moveToNext();
 		while (!cursor.isAfterLast()) {
@@ -688,7 +682,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostRequest(id, msg, pictureID), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostRequest(chatroomID, msg, pictureID), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -704,7 +698,7 @@ public class Chatroom implements IChatroom, RequestExecutor.Callback<AdvTaskId> 
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostWithHashRequest(id, msg, pictureHash), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostWithHashRequest(chatroomID, msg, pictureHash), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);

@@ -19,8 +19,34 @@
 
 package de.stadtrallye.rallyesoft.net.retrofit;
 
+import java.util.List;
+
+import de.rallye.model.structures.LoginInfo;
+import de.rallye.model.structures.ServerInfo;
+import de.rallye.model.structures.User;
+import de.rallye.model.structures.UserAuth;
+import de.stadtrallye.rallyesoft.net.Paths;
+import retrofit.Callback;
+import retrofit.http.Body;
+import retrofit.http.GET;
+import retrofit.http.PUT;
+import retrofit.http.Path;
+
 /**
  * Created by Ramon on 19.09.2014.
  */
-public class RetroCommunicator {
+public interface RetroCommunicator {
+
+	@GET(Paths.SERVER_INFO)
+	void getServerInfo(Callback<ServerInfo> callback);
+
+	@GET(Paths.GROUPS)
+	void getAvailableGroups(Callback<List<User>> callback);
+
+	@PUT(Paths.GROUPS_WITH_ID)
+	void login(@Path(Paths.PARAM_GROUP_ID) int groupID, @Body LoginInfo loginInfo, Callback<UserAuth> callback);
+
+//	@GET(Paths.SERVER_STATUS)
+//	void getServerStatus(Callback<ServerStatus> callback);
+
 }

@@ -41,7 +41,7 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.net.Request;
+import de.stadtrallye.rallyesoft.net.manual.Request;
 
 public class UploadService extends IntentService {
 

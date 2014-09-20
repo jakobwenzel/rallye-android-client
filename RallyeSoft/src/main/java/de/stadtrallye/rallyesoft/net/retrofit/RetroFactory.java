@@ -27,8 +27,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.net.HttpURLConnection;
+import java.net.Authenticator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import de.stadtrallye.rallyesoft.net.AuthManager;
+import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
@@ -38,15 +42,71 @@ import retrofit.mime.TypedOutput;
 /**
  * Created by Ramon on 19.09.2014.
  */
-public class RetroSetup {
+public class RetroFactory {
 
-	public RetroSetup(String server) {
+	private final AuthManager authManager;
+	private final JacksonConverter jacksonConverter;
+	private final ExecutorService executor;
+	private final PreemptiveAuthentication preemptiveAuthenticator;
+
+	public RetroFactory(AuthManager authManager) {
+		this.authManager = authManager;
+		this.jacksonConverter = new JacksonConverter();
+		this.executor = Executors.newCachedThreadPool();
+		this.preemptiveAuthenticator = new PreemptiveAuthentication(authManager);
+
+		configureFallbackAuthentication();
+	}
+
+	private void configureFallbackAuthentication() {
+		Authenticator.setDefault(authManager.getAuthenticator());
+	}
+
+	public ServerHandle getServer(String server) {
 		RestAdapter restAdapter = new RestAdapter.Builder()
 				.setEndpoint(server)
-				.setConverter(new JacksonConverter())
+				.setConverter(jacksonConverter)
+				.setExecutors(executor, null)
+				.setRequestInterceptor(preemptiveAuthenticator)
 				.build();
 
-		HttpURLConnection
+		return new ServerHandle(restAdapter);
+	}
+
+	public class ServerHandle {
+
+		private final RestAdapter restAdapter;
+
+		public ServerHandle(RestAdapter restAdapter) {
+			this.restAdapter = restAdapter;
+		}
+
+
+		public RetroCommunicator getPublicApi() {
+			return restAdapter.create(RetroCommunicator.class);
+		}
+
+		public RetroAuthCommunicator getAuthApi() throws IllegalAccessException {
+			if (authManager.hasUserAuth())
+				return restAdapter.create(RetroAuthCommunicator.class);
+			else
+				throw new IllegalAccessException("Trying to access the Auth API of a Server without having Auth data");
+		}
+	}
+}
+
+class PreemptiveAuthentication implements RequestInterceptor {
+
+	private static final String AUTHORIZATION = "Authorization";
+	private final AuthManager authManager;
+
+	public PreemptiveAuthentication(AuthManager authManager) {
+		this.authManager = authManager;
+	}
+
+	@Override
+	public void intercept(RequestFacade request) {
+		request.addHeader(AUTHORIZATION, authManager.getAuthString());
 	}
 }
 

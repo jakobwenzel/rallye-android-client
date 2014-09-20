@@ -17,7 +17,7 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.net;
+package de.stadtrallye.rallyesoft.net.manual;
 
 import android.util.Log;
 
@@ -37,7 +37,8 @@ import de.rallye.model.structures.SimpleSubmissionWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
-import de.stadtrallye.rallyesoft.net.Request.RequestType;
+import de.stadtrallye.rallyesoft.net.Paths;
+import de.stadtrallye.rallyesoft.net.manual.Request.RequestType;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
 public class RequestFactory {

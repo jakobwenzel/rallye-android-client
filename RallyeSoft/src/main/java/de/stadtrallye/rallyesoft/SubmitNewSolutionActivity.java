@@ -50,12 +50,12 @@ import de.stadtrallye.rallyesoft.util.ImageLocation;
 /**
  * Created by Ramon on 04.10.13.
  */
-public class SubmitNewSolution extends FragmentActivity implements IModel.IModelListener {
+public class SubmitNewSolutionActivity extends FragmentActivity implements IModel.IModelListener {
 
 	public static final int REQUEST_CODE = 7;
 	public static final int PICTURE_REQUEST_SOURCE = -100;
 
-	private static final String THIS = SubmitNewSolution.class.getSimpleName();
+	private static final String THIS = SubmitNewSolutionActivity.class.getSimpleName();
 	private IModel model;
 
 	private ImageView imageView;

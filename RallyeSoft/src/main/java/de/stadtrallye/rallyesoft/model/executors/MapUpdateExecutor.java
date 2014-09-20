@@ -25,7 +25,7 @@ import java.util.Map;
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
-import de.stadtrallye.rallyesoft.net.Request;
+import de.stadtrallye.rallyesoft.net.manual.Request;
 import de.stadtrallye.rallyesoft.util.JSONArray;
 
 public class MapUpdateExecutor extends MyRunnable<Map<Integer, Node>> {

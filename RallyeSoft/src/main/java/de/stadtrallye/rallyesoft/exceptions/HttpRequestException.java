@@ -21,7 +21,7 @@ package de.stadtrallye.rallyesoft.exceptions;
 
 import java.net.URL;
 
-import de.stadtrallye.rallyesoft.net.Request;
+import de.stadtrallye.rallyesoft.net.manual.Request;
 
 public class HttpRequestException extends Exception {
 

@@ -226,10 +226,10 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 			case android.R.id.home:
 				return tabManager.onAndroidHome(item);
 			case R.id.menu_login:
-				Intent intent = new Intent(this, ConnectionAssistant.class);
+				Intent intent = new Intent(this, ConnectionAssistantActivity.class);
 				lastTab = tabManager.getCurrentTab();
 				tabManager.switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
-				startActivityForResult(intent, ConnectionAssistant.REQUEST_CODE);
+				startActivityForResult(intent, ConnectionAssistantActivity.REQUEST_CODE);
 				break;
 			case R.id.menu_logout:
 				model.logout();
@@ -304,7 +304,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		// Android changes the upper 16 bits of a request generated from a fragment, so that
 		// it can deliver the result back to the fragment.
 		// We want to handle the result here, so we only look at the lower bits
-		if ((requestCode&0xffff) == ConnectionAssistant.REQUEST_CODE) {
+		if ((requestCode&0xffff) == ConnectionAssistantActivity.REQUEST_CODE) {
 			Log.i(THIS, "ConnectionAssistant finished with "+ resultCode);
 			if (resultCode == Activity.RESULT_OK) {
 				Log.i(THIS, "New Connection, refresh Model, refresh everything depending on it");
@@ -324,7 +324,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 					onConnectionStateChange(model.getConnectionState());
 				}
 			}, 1000);
-		} else if (requestCode == SubmitNewSolution.REQUEST_CODE) {
+		} else if (requestCode == SubmitNewSolutionActivity.REQUEST_CODE) {
 			Log.i(THIS, "Task Submission");
 			if (resultCode == Activity.RESULT_OK) {
 				Log.i(THIS, "Submitted: "+ data.getExtras());

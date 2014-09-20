@@ -54,7 +54,7 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * Activity that hosts an IConnectionAssistant and several Fragments containing the guided login
  * User inputs and server configurations are saved here, so they can be accessed from all pages of the assistant
  */
-public class ConnectionAssistant extends FragmentActivity implements IConnectionAssistant {
+public class ConnectionAssistantActivity extends FragmentActivity implements IConnectionAssistant {
 
 	public static final int REQUEST_CODE = 1336;
 
@@ -143,9 +143,9 @@ public class ConnectionAssistant extends FragmentActivity implements IConnection
 
 			if (f == null) {
 				if (arg == null)
-					f = Fragment.instantiate(ConnectionAssistant.this, clz.getName());
+					f = Fragment.instantiate(ConnectionAssistantActivity.this, clz.getName());
 				else
-					f = Fragment.instantiate(ConnectionAssistant.this, clz.getName(), arg);
+					f = Fragment.instantiate(ConnectionAssistantActivity.this, clz.getName(), arg);
 			}
 
 			return f;

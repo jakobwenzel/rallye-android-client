@@ -67,7 +67,7 @@
 			</intent-filter>
 		</activity>
 
-		<activity android:name=".ConnectionAssistant"
+		<activity android:name=".ConnectionAssistantActivity"
 				  android:parentActivityName=".MainActivity"
 				  android:theme="@android:style/Theme.Holo.Light.DarkActionBar">
 			<meta-data
@@ -80,7 +80,7 @@
 			</intent-filter>
 		</activity>
 
-		<activity android:name=".SubmitNewSolution"
+		<activity android:name=".SubmitNewSolutionActivity"
 				  android:parentActivityName=".MainActivity"
 				  android:theme="@android:style/Theme.Holo.Light.DarkActionBar">
 			<meta-data

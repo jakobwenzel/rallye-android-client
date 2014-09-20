@@ -21,7 +21,7 @@ package de.stadtrallye.rallyesoft.model.executors;
 
 import java.util.Map;
 
-import de.stadtrallye.rallyesoft.net.Request;
+import de.stadtrallye.rallyesoft.net.manual.Request;
 import de.stadtrallye.rallyesoft.util.IConverter;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 import de.stadtrallye.rallyesoft.util.StringedJSONArrayToMapConverter;

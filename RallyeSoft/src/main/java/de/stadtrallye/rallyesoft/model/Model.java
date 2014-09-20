@@ -61,7 +61,7 @@ import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Paths;
-import de.stadtrallye.rallyesoft.net.RequestFactory;
+import de.stadtrallye.rallyesoft.net.manual.RequestFactory;
 import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.util.PreferencesUtil;
 import de.wirsch.gcm.GcmHelper;

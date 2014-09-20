@@ -17,7 +17,7 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.net;
+package de.stadtrallye.rallyesoft.net.manual;
 
 import android.util.Log;
 

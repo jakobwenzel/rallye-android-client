@@ -49,7 +49,7 @@ import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.SubmitNewSolution;
+import de.stadtrallye.rallyesoft.SubmitNewSolutionActivity;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.ITasks;
@@ -161,10 +161,10 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 	}
 
 	private void submitNewSolution() {
-		Intent intent = new Intent(getActivity(), SubmitNewSolution.class);
+		Intent intent = new Intent(getActivity(), SubmitNewSolutionActivity.class);
 		intent.putExtra(Std.SUBMIT_TYPE, task.submitType);
 		intent.putExtra(Std.TASK_ID, task.taskID);
-		startActivityForResult(intent, SubmitNewSolution.REQUEST_CODE);
+		startActivityForResult(intent, SubmitNewSolutionActivity.REQUEST_CODE);
 	}
 
 	@Override
