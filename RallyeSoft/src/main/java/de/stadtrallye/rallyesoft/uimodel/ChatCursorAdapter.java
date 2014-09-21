@@ -133,13 +133,13 @@ public class ChatCursorAdapter extends CursorAdapter {
 		String userName = cursor.getString(c.userName);
 		if (userName == null) {
 			userName = String.valueOf(userID);
-			model.onMissingUserName(userID);
+			model.onMissingUserName(userID); //TODO: if the userid is not known to the server this will run in an infinite loop as long the Chat is open
 		}
 
 		String groupName = cursor.getString(c.groupName);
 		if (groupName == null) {
 			groupName = String.valueOf(groupID);
-			model.onMissingGroupName(groupID);
+			model.onMissingGroupName(groupID); //TODO: same goes here
 		}
 
 		mem.sender.setText(userName +" ("+ groupName +")");
