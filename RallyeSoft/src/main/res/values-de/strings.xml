@@ -55,7 +55,7 @@
 	<string name="next">Weiter</string>
 	<string name="back">Zurück</string>
 	<string name="connection_assistant">Verbindungs-Assistent</string>
-	<string name="invalid_url">Ungültige Addresse</string>
+	<string name="invalid_url">Ungültige Adresse</string>
 	<string name="invalid_server">Kein Server erreichbar</string>
 	<string name="invalid_login">Ungültiger Login</string>
 	<string name="finish">Beenden</string>
@@ -113,5 +113,10 @@
 	<string name="code_by">Code von</string>
 	<string name="code_available_at">Code verfügbar bei</string>
 	<string name="libraries_used">Verwendete Bibliotheken</string>
+	<string name="auto_upload">Automatischer Upload</string>
+	<string name="auto_upload_off_summ">Lade Bilder hoch wenn \'Senden\' gewählt wird</string>
+	<string name="auto_upload_on_summ">Lade Bilder hoch sobald sie ausgewählt sind</string>
+	<string name="data_transfer">Datentransfer</string>
+	<string name="settings">Einstellungen</string>
 
 </resources>

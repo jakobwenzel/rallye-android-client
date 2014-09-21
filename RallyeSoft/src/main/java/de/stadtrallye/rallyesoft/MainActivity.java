@@ -24,8 +24,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.PorterDuff.Mode;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -78,6 +77,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 
 	private RallyeTabManager tabManager;
 	private IPicture picture = null;
+	private TransitionDrawable logo;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -94,6 +94,8 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		actionBar = getActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 		actionBar.setDisplayShowTitleEnabled(true);
+		logo = (TransitionDrawable) getResources().getDrawable(R.drawable.transition_logo);
+		actionBar.setIcon(logo);
 
 		// Check if Google Play Services is working
 		int errorCode;
@@ -363,16 +365,16 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 
 		tabManager.conditionChange();
 
-		Drawable d = getResources().getDrawable(R.drawable.ic_launcher);
-
 		switch (newState) {
 			case Connected:
-				d.setColorFilter(null);
-				actionBar.setIcon(d);
+//				d.setColorFilter(null);
+//				actionBar.setIcon(d);
+				logo.startTransition(500);
 				break;
 			default:
-				d.setColorFilter(0x66666666, Mode.MULTIPLY);
-				actionBar.setIcon(d);
+//				d.setColorFilter(0x66666666, Mode.MULTIPLY);
+//				actionBar.setIcon(d);
+				logo.reverseTransition(500);
 		}
 	}
 

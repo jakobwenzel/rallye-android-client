@@ -21,17 +21,15 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -72,7 +70,7 @@ public class AssistantServerFragment extends Fragment {
     private Spinner protocol;
 	private EditText port;
 	private Button test;
-	private EditText path;
+//	private EditText path;
 	private ScrollView scrollView;
 	private InfoManager infoManager;
 	private ViewGroup server_info_manager;
@@ -100,20 +98,20 @@ public class AssistantServerFragment extends Fragment {
 		protocol = (Spinner) v.findViewById(R.id.protocol);
 		server = (EditText) v.findViewById(R.id.server);
 		port = (EditText) v.findViewById(R.id.port);
-		path = (EditText) v.findViewById(R.id.path);
+//		path = (EditText) v.findViewById(R.id.path);
 
 		port.setHint(Std.DEFAULT_PORT);
-		path.setHint(Std.DEFAULT_PATH);
+//		path.setHint(Std.DEFAULT_PATH);
 
-		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				if (actionId == EditorInfo.IME_ACTION_SEND) {
-					infoManager.startTest();
-				}
-				return false;
-			}
-		});
+//		path.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//			@Override
+//			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+//				if (actionId == EditorInfo.IME_ACTION_SEND) {
+//					infoManager.startTest();
+//				}
+//				return false;
+//			}
+//		});
 
 		test = (Button) v.findViewById(R.id.test);
 		test.setOnClickListener(new View.OnClickListener() {
@@ -171,11 +169,11 @@ public class AssistantServerFragment extends Fragment {
 
 		String s = assistant.getServer();
 		if (s != null) {
-			String[] parts = s.replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)/(\\w+?)/?$", "$1;$2;$3;$4").split(";");
+			String[] parts = s.replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)$", "$1;$2;$3").split(";"); ///(\w+?)/?
 			protocol.setSelection(parts[0].equals("http")? 0 : 1);
 			port.setText(parts[2]);
 			server.setText(parts[1]);
-			path.setText(parts[3]);
+//			path.setText(parts[3]);
 		}
 
 		infoManager.restore();
@@ -187,7 +185,7 @@ public class AssistantServerFragment extends Fragment {
 	public void onResume() {
 		server.addTextChangedListener(infoManager);
 		port.addTextChangedListener(infoManager);
-		path.addTextChangedListener(infoManager);
+//		path.addTextChangedListener(infoManager);
 
 		super.onResume();
 	}
@@ -196,7 +194,7 @@ public class AssistantServerFragment extends Fragment {
 	public void onPause() {
 		server.removeTextChangedListener(infoManager);
 		port.removeTextChangedListener(infoManager);
-		path.removeTextChangedListener(infoManager);
+//		path.removeTextChangedListener(infoManager);
 
 		super.onPause();
 	}
@@ -221,11 +219,11 @@ public class AssistantServerFragment extends Fragment {
 		String port = this.port.getText().toString();
 		if (port.equals(""))
 			port = Std.DEFAULT_PORT;
-		String path = this.path.getText().toString();
-		if (path.equals(""))
-			path = Std.DEFAULT_PATH;
+//		String path = this.path.getText().toString();
+//		if (path.equals(""))
+//			path = Std.DEFAULT_PATH;
 
-		return protocol +"://"+ server +":"+ port +"/"+ path;
+		return protocol +"://"+ server +":"+ port;
 	}
 
 //	private enum InfoState { clear, loading, complete }

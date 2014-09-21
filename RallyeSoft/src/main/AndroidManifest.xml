@@ -122,6 +122,14 @@
 				android:value=".MainActivity" />
 		</activity>
 
+		<activity android:name=".SettingsActivity"
+			android:label="@string/settings"
+			android:parentActivityName=".MainActivity">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value=".MainActivity" />
+		</activity>
+
 		<meta-data
 			android:name="com.google.android.maps.v2.API_KEY"
 			android:value="AIzaSyBvku0REe1MwJStdJ7Aye6NC7bwcSO-TG0"/>

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,15 +46,15 @@ import retrofit.mime.TypedOutput;
 public class RetroFactory {
 
 	private final AuthManager authManager;
-	private final JacksonConverter jacksonConverter;
+	private final JacksonConverter converter;
 	private final ExecutorService executor;
-	private final PreemptiveAuthentication preemptiveAuthenticator;
+	private final AddAuthAndAcceptInterceptor preemptiveAuthenticator;
 
 	public RetroFactory(AuthManager authManager) {
 		this.authManager = authManager;
-		this.jacksonConverter = new JacksonConverter();
+		this.converter = new JacksonConverter(); //TODO: Plugin Smile Converter here.... (after debugging is done, it should be completely transparent since it is still all jackson!!)
 		this.executor = Executors.newCachedThreadPool();
-		this.preemptiveAuthenticator = new PreemptiveAuthentication(authManager);
+		this.preemptiveAuthenticator = new AddAuthAndAcceptInterceptor(authManager, "application/json");//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
 
 		configureFallbackAuthentication();
 	}
@@ -65,7 +66,7 @@ public class RetroFactory {
 	public ServerHandle getServer(String server) {
 		RestAdapter restAdapter = new RestAdapter.Builder()
 				.setEndpoint(server)
-				.setConverter(jacksonConverter)
+				.setConverter(converter)
 				.setExecutors(executor, null)
 				.setRequestInterceptor(preemptiveAuthenticator)
 				.build();
@@ -95,18 +96,23 @@ public class RetroFactory {
 	}
 }
 
-class PreemptiveAuthentication implements RequestInterceptor {
+class AddAuthAndAcceptInterceptor implements RequestInterceptor {
 
 	private static final String AUTHORIZATION = "Authorization";
-	private final AuthManager authManager;
+	private static final String ACCEPT = "Accept";
 
-	public PreemptiveAuthentication(AuthManager authManager) {
+	private final AuthManager authManager;
+	private final String acceptMime;
+
+	public AddAuthAndAcceptInterceptor(AuthManager authManager, String acceptMime) {
 		this.authManager = authManager;
+		this.acceptMime = acceptMime;
 	}
 
 	@Override
 	public void intercept(RequestFacade request) {
 		request.addHeader(AUTHORIZATION, authManager.getAuthString());
+		request.addHeader(ACCEPT, acceptMime);
 	}
 }
 
@@ -123,7 +129,7 @@ class JacksonConverter implements Converter {
 		this.objectMapper = objectMapper;
 	}
 
-	@Override public Object fromBody(TypedInput body, Type type) throws ConversionException {
+	@Override public Object fromBody(TypedInput body, Type type) throws ConversionException {//Technically could switch dynamically between formats here....
 		try {
 			JavaType javaType = objectMapper.getTypeFactory().constructType(type);
 			return objectMapper.readValue(body.in(), javaType);
@@ -168,5 +174,16 @@ class JacksonConverter implements Converter {
 		public void writeTo(OutputStream out) throws IOException {
 			objectMapper.writeValue(out, object);
 		}
+	}
+}
+
+class SmileConverter extends JacksonConverter {
+
+	public SmileConverter() {
+		super(new ObjectMapper(new SmileFactory()));
+	}
+
+	public SmileConverter(ObjectMapper objectMapper) {
+		super(objectMapper);
 	}
 }

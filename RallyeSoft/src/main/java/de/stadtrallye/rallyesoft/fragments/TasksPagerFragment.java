@@ -66,7 +66,6 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 //	private ITasksMapControl mapControl;
 	private TitlePageIndicator indicator;
 	private byte size = 0;
-	private ViewGroup details;
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -94,7 +93,6 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.tasks_pager, container, false);
 
-		details = (ViewGroup) v.findViewById(R.id.task_details);
 		pager = (ViewPager) v.findViewById(R.id.tasks_pager);
 		indicator = (TitlePageIndicator) v.findViewById(R.id.pager_indicator);
 
@@ -180,14 +178,17 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 	private void setSize(byte newSize) {
 		switch (newSize) {
 			case 1:
-				details.setVisibility(View.GONE);
+				pager.setVisibility(View.GONE);
+				indicator.setVisibility(View.GONE);
 				break;
 			case 2:
-				details.setVisibility(View.VISIBLE);
+				pager.setVisibility(View.VISIBLE);
+				indicator.setVisibility(View.VISIBLE);
 				getView().findViewById(R.id.map).setVisibility(View.GONE);
 				break;
 			case 0:
-				details.setVisibility(View.VISIBLE);
+				pager.setVisibility(View.VISIBLE);
+				indicator.setVisibility(View.VISIBLE);
 				getView().findViewById(R.id.map).setVisibility(View.VISIBLE);
 		}
 		size = newSize;

@@ -27,9 +27,9 @@ public final class Paths {
 	public static final String STATUS = "system/status";
 	public static final String CHAT = "chat";
 	public static final String CHATROOMS = CHAT+"/rooms";
-	public static final String MAP_NODES = "games/rallye/map/nodes";
-	public static final String MAP_EDGES = "games/rallye/map/edges";
-	public static final String MAP_CONFIG = "games/rallye/map/config";
+	public static final String MAP_NODES = "games/map/nodes";
+	public static final String MAP_EDGES = "games/map/edges";
+	public static final String MAP_CONFIG = "games/map/config";
 	public static final String PICS = "resources/pics";
 	public static final String SERVER_INFO = "server/info";
 	public static final String SERVER_PICTURE = "server/picture";

@@ -77,7 +77,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setTitle(R.string.connection_assistant);
-		setContentView(R.layout.connection_assistant);
+//		setContentView(R.layout.connection_assistant);
 
 		ActionBar ab = getActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
@@ -171,7 +171,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 
 		FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 		FragmentHandler<?> f = steps.get(step-1);
-		ft.replace(R.id.fragments, f.getFragment(), f.getTag()).commit();
+		ft.replace(android.R.id.content, f.getFragment(), f.getTag()).commit();
 
 		if (fastForward) {
 			while (step < steps.size()-1) {
@@ -271,7 +271,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 			FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 			FragmentHandler<?> f = steps.get(step);
 
-			ft.replace(R.id.fragments, f.getFragment(), f.getTag()).addToBackStack(null).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
+			ft.replace(android.R.id.content, f.getFragment(), f.getTag()).addToBackStack(null).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
 			step++;
 		}
 	}

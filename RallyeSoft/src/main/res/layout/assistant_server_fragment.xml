@@ -20,6 +20,7 @@
   -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:id="@+id/scrollView">
@@ -41,6 +42,7 @@
 			android:id="@+id/protocol"
 			android:layout_marginTop="16dp"
 			android:layout_alignParentLeft="true"
+			tools:listitem="@android:layout/simple_dropdown_item_1line"
 			android:layout_below="@+id/textView"
 			android:entries="@array/protocols"/>
 
@@ -88,7 +90,7 @@
 			android:layout_marginLeft="16dp"
 			android:focusable="true"/>
 
-		<TextView
+		<!--<TextView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:textAppearance="?android:attr/textAppearanceMedium"
@@ -108,14 +110,14 @@
 			android:layout_marginTop="16dp"
 			android:layout_alignParentRight="true"
 			android:layout_toRightOf="@+id/textViewPath"
-			android:layout_marginLeft="16dp"/>
+			android:layout_marginLeft="16dp"/>-->
 
 		<Button
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="@string/test_server"
 			android:id="@+id/test"
-			android:layout_below="@+id/path"
+			android:layout_below="@+id/port"
 			android:layout_alignParentRight="true"
 			android:layout_marginTop="16dp"/>
 

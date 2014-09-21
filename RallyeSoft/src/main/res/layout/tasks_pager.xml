@@ -31,22 +31,15 @@
 		android:layout_height="0dp"
 		android:layout_weight="0.5" />
 
-	<LinearLayout
-		android:id="@+id/task_details"
-		android:orientation="vertical"
+
+	<android.support.v4.view.ViewPager
+		android:id="@+id/tasks_pager"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
-		android:layout_weight="0.5">
+		android:layout_weight="0.5"/>
 
-		<android.support.v4.view.ViewPager
-			android:id="@+id/tasks_pager"
-			android:layout_width="match_parent"
-			android:layout_height="0dp"
-			android:layout_weight="1"/>
+	<include
+		layout="@layout/tasks_pager_indicator"/>
 
-		<include
-			layout="@layout/tasks_pager_indicator"/>
-
-	</LinearLayout>
 
 </LinearLayout>

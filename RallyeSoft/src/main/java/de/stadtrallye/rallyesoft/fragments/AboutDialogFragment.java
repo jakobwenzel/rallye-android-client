@@ -40,11 +40,12 @@ public class AboutDialogFragment extends DialogFragment {
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
+		LayoutInflater inflater = getActivity().getLayoutInflater();
 
 		return new AlertDialog.Builder(getActivity())
 				.setTitle(R.string.about)
 				.setIcon(R.drawable.ic_launcher)
-//				.setView(v)
+				.setView(inflateCustomView(inflater, null, savedInstanceState))
 				.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -53,9 +54,8 @@ public class AboutDialogFragment extends DialogFragment {
 				}).create();
 	}
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.about_fragment, null);
+	private View inflateCustomView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.about_fragment, container, false);
 
 		TextView tvGitHub = (TextView) v.findViewById(R.id.about_github);
 		TextView tvLibs = (TextView) v.findViewById(R.id.about_libs);
@@ -64,4 +64,9 @@ public class AboutDialogFragment extends DialogFragment {
 
 		return v;
 	}
+
+//	@Override
+//	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+//		return inflateCustomView(inflater, container, savedInstanceState);
+//	}
 }
