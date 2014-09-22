@@ -32,7 +32,7 @@ import java.net.Authenticator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.stadtrallye.rallyesoft.net.AuthManager;
+import de.stadtrallye.rallyesoft.net.AuthProvider;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.ConversionException;
@@ -45,22 +45,16 @@ import retrofit.mime.TypedOutput;
  */
 public class RetroFactory {
 
-	private final AuthManager authManager;
 	private final JacksonConverter converter;
 	private final ExecutorService executor;
 	private final AddAuthAndAcceptInterceptor preemptiveAuthenticator;
 
-	public RetroFactory(AuthManager authManager) {
-		this.authManager = authManager;
+	public RetroFactory(AuthProvider authProvider) {
 		this.converter = new JacksonConverter(); //TODO: Plugin Smile Converter here.... (after debugging is done, it should be completely transparent since it is still all jackson!!)
 		this.executor = Executors.newCachedThreadPool();
-		this.preemptiveAuthenticator = new AddAuthAndAcceptInterceptor(authManager, "application/json");//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
+		this.preemptiveAuthenticator = new AddAuthAndAcceptInterceptor(authProvider, "application/json");//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
 
-		configureFallbackAuthentication();
-	}
-
-	private void configureFallbackAuthentication() {
-		Authenticator.setDefault(authManager.getAuthenticator());
+		Authenticator.setDefault(authProvider.getAuthenticator());
 	}
 
 	public ServerHandle getServer(String server) {
@@ -87,11 +81,8 @@ public class RetroFactory {
 			return restAdapter.create(RetroCommunicator.class);
 		}
 
-		public RetroAuthCommunicator getAuthApi() throws IllegalAccessException {
-			if (authManager.hasUserAuth())
-				return restAdapter.create(RetroAuthCommunicator.class);
-			else
-				throw new IllegalAccessException("Trying to access the Auth API of a Server without having Auth data");
+		public RetroAuthCommunicator getAuthApi() {
+			return restAdapter.create(RetroAuthCommunicator.class);
 		}
 	}
 }
@@ -101,17 +92,18 @@ class AddAuthAndAcceptInterceptor implements RequestInterceptor {
 	private static final String AUTHORIZATION = "Authorization";
 	private static final String ACCEPT = "Accept";
 
-	private final AuthManager authManager;
+	private final AuthProvider authProvider;
 	private final String acceptMime;
 
-	public AddAuthAndAcceptInterceptor(AuthManager authManager, String acceptMime) {
-		this.authManager = authManager;
+	public AddAuthAndAcceptInterceptor(AuthProvider authProvider, String acceptMime) {
+		this.authProvider = authProvider;
 		this.acceptMime = acceptMime;
 	}
 
 	@Override
 	public void intercept(RequestFacade request) {
-		request.addHeader(AUTHORIZATION, authManager.getAuthString());
+		if (authProvider.hasUserAuth())
+			request.addHeader(AUTHORIZATION, authProvider.getUserAuthString());
 		request.addHeader(ACCEPT, acceptMime);
 	}
 }

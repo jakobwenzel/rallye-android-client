@@ -46,7 +46,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
@@ -261,7 +261,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	}
 
 	@Override
-	public void onChatroomStateChanged(IChatroom.ChatroomState newStatus) {
+	public void onStateChanged(IChatroom.ChatroomState newStatus) {
 		switch (newStatus) {
 		case Refreshing:
 			ui.activateProgressAnimation();

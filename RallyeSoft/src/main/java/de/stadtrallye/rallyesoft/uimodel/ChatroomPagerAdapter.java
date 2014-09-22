@@ -26,7 +26,7 @@ import android.view.ViewGroup;
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.fragments.ChatroomFragment;
-import de.stadtrallye.rallyesoft.model.IChatroom;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 
 /**
  * Adapter for a List<IChatroom>

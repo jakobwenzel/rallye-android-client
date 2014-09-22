@@ -27,7 +27,9 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.rallye.model.structures.ServerInfo;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 
 
 public interface IModel {

@@ -15,7 +15,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
- */
+ *//*
+
 
 package de.stadtrallye.rallyesoft.model;
 
@@ -32,19 +33,21 @@ import java.util.List;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chatrooms;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Chats;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Chatrooms;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Chats;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Groups;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Users;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATS;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_CHATS;
 
 public class Chatroom extends de.rallye.model.structures.Chatroom implements IChatroom, RequestExecutor.Callback<Chatroom.AdvTaskId> {
 
@@ -80,9 +83,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	//Listeners
 	private final ArrayList<IChatroomListener> listeners = new ArrayList<IChatroomListener>();
 
-	/**
+	*/
+/**
 	 * @return all available Chatrooms
-	 */
+	 *//*
+
 	static List<Chatroom> getChatrooms(Model model) {
 		List<Chatroom> out = new ArrayList<>();
 
@@ -305,9 +310,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //		}
 //	}
 
-	/**
+	*/
+/**
 	 * Helper to remove redundancy of adding all Attributes to a ContentValues Map (except chatID)
-	 */
+	 *//*
+
 	private void fillContentValues(ContentValues values, ChatEntry chatEntry) {
 		values.put(Chats.KEY_MESSAGE, chatEntry.message);
 		values.put(Chats.KEY_TIME, chatEntry.timestamp);
@@ -317,11 +324,13 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		values.put(Chats.FOREIGN_ROOM, chatroomID);
 	}
 
-	/**
+	*/
+/**
 	 * Save ChatEntries to DB
 	 *
 	 * @param entries All entries that have a higher chatID than this.lastID will be saved to DB
-	 */
+	 *//*
+
 	private synchronized void saveChats(List<ChatEntry> entries) {
 		SQLiteDatabase db = model.db;
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
@@ -420,7 +429,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			@Override
 			public void run() {
 				for (IChatroomListener l : listeners) {
-					l.onChatroomStateChanged(newState);
+					l.onStateChanged(newState);
 				}
 			}
 		});
@@ -441,11 +450,13 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		listeners.remove(l);
 	}
 
-//	/**
+//	*/
+/**
 //	 * Request a callback with all available Chats
 //	 * Callback pattern in anticipation of asynchronous DB access
 //	 * @param callback the single Listener that wants to completely refresh or initialize its content
-//	 */
+//	 *//*
+
 //	@Override
 //	public void provideChats(IChatroomListener callback) {
 //		Log.i(THIS, "Chats requested");
@@ -474,10 +485,12 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //		});
 //	}
 
-	/**
+	*/
+/**
 	 * Notify all listeners on UI Thread if any
 	 * @return false if no listeners to notify
-	 */
+	 *//*
+
 	private boolean notifyChatsChanged() {
 		if (listeners.size() > 0) {
 
@@ -517,11 +530,13 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		});
 	}
 
-	/**
+	*/
+/**
 	 * Retrieve all Chats from DB
 	 * if a groupName or userName cannot be found in the DB, an update of the Table is initiated and the Chats will be edited as soon as the information is available
 	 * @return preliminary chatEntries, will be edited if incomplete
-	 */
+	 *//*
+
 //	private List<ChatEntry> getAllChats() {
 //		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
 //				new String[]{Chats.KEY_ID, Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
@@ -675,7 +690,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public int postChat(String msg, Integer pictureID) {
+	public de.rallye.model.structures.SimpleChatEntry postChat(String msg, Integer pictureID) {
 		if (!model.isConnected()) {
 			err.notLoggedIn();
 			return -1;
@@ -691,7 +706,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public int postChatWithHash(String msg, String pictureHash) {
+	public de.rallye.model.structures.SimpleChatWithPictureHash postChatWithHash(String msg, String pictureHash) {
 		if (!model.isConnected()) {
 			err.notLoggedIn();
 			return -1;
@@ -737,3 +752,4 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		}
 	}
 }
+*/

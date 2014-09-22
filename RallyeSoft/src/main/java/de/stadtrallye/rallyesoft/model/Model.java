@@ -51,11 +51,13 @@ import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.converters.PreferenceConverters;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Groups;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Users;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Groups;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Users;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
@@ -66,9 +68,9 @@ import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
 import de.stadtrallye.rallyesoft.util.PreferencesUtil;
 import de.wirsch.gcm.GcmHelper;
 
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_CHATROOMS;
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_GROUPS;
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_USERS;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_CHATROOMS;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_GROUPS;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_USERS;
 
 /**
  * My Model
@@ -840,7 +842,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			edit.putString(Std.SERVER+Std.NAME, serverInfo.name);
 			edit.putString(Std.SERVER+Std.DESCRIPTION, serverInfo.description);
 			edit.putString(Std.SERVER + Std.API, serverInfo.getApiAsString());
-            edit.putString(Std.SERVER+Std.BUILD, serverInfo.build);
+            edit.putString(Std.SERVER+Std.BUILD, serverInfo.build.toString());
 
 			return this;
 		}

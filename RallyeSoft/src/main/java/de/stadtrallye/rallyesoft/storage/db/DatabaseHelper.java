@@ -17,7 +17,7 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.db;
+package de.stadtrallye.rallyesoft.storage.db;
 
 import android.annotation.TargetApi;
 import android.content.Context;

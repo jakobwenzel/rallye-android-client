@@ -36,6 +36,7 @@ import java.util.Map;
 import de.stadtrallye.rallyesoft.MainActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 /**

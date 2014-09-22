@@ -22,26 +22,44 @@ package de.stadtrallye.rallyesoft.net;
 import android.util.Base64;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.nio.charset.Charset;
 
+import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 /**
  * Created by Ramon on 21.09.2014.
  */
-public class AuthManager {
+public class AuthProvider {
 
-	private static final String THIS = AuthManager.class.getSimpleName();
+	private static final String THIS = AuthProvider.class.getSimpleName();
 
-	private ServerLogin login;
+	@JsonProperty("groupID") protected int groupID;
+	@JsonProperty("userAuth") protected UserAuth userAuth;
 
-	public String getAuthString() {
+	public AuthProvider() {
+
+	}
+
+	public AuthProvider(int groupID, UserAuth userAuth) {
+		this.groupID = groupID;
+		this.userAuth = userAuth;
+	}
+
+	public void setUserAuth(UserAuth userAuth) {
+		this.userAuth = userAuth;
+	}
+
+	public String getUserAuthString() {
 		Charset cset = Charset.forName("iso-8859-1");
 
-		byte[] username = login.getHttpUser().getBytes(cset);
-		byte[] password = login.getUserPassword().getBytes(cset);
+		byte[] username = userAuth.getHttpUser(groupID).getBytes(cset);
+		byte[] password = userAuth.password.getBytes(cset);
 		if (username == null) {
 			username = new byte[0];
 		}
@@ -64,10 +82,10 @@ public class AuthManager {
 			protected PasswordAuthentication getPasswordAuthentication() {
 				String realm = getRequestingPrompt();
 				if (realm.equals("RallyeAuth")) {//TODO move Literals
-					return new PasswordAuthentication(login.getHttpUser(), login.getUserPassword().toCharArray());
+					return new PasswordAuthentication(userAuth.getHttpUser(groupID), userAuth.password.toCharArray());
 				} else if (realm.equals("RallyeNewUser")) {
 					Log.i(THIS, "Switching to NewUserAuthentication");
-					return new PasswordAuthentication(String.valueOf(login.getGroupID()), login.getGroupPassword().toCharArray());
+					return new PasswordAuthentication(String.valueOf(groupID), login.getGroupPassword().toCharArray());
 				} else {
 					return null;
 				}
@@ -76,7 +94,7 @@ public class AuthManager {
 	}
 
 	public boolean hasUserAuth() {
-		return login.hasUserAuth();
+		return userAuth != null;
 	}
 }
 

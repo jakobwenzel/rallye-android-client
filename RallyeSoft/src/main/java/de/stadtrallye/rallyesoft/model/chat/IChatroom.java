@@ -17,23 +17,24 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.model.chat;
 
 import android.database.Cursor;
 
 import java.util.List;
 
+import de.rallye.model.structures.SimpleChatWithPictureHash;
+import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.IPictureGallery;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
 /**
- * Represents 1 Chatroom, belonging to a Model
- * Currently refreshes only manually, push-implementation can be external, calling pushChat()
+ * Chatroom
  */
 public interface IChatroom {
 
-
 	enum ChatroomState { Ready, Refreshing }
-	enum PostState { Success, Failure, Retrying }
+	enum PostState { Success, Failure, Uploading }
 
 	/**
 	 * @return get the chatroomID of this Chatroom
@@ -48,12 +49,12 @@ public interface IChatroom {
 	/**
 	 * Request Chats from server since last update
 	 */
-	void refresh();
+	void update() throws NoServerKnownException;
 
 	/**
 	 * Clear everything and then execute {@link #refresh()}
 	 */
-	void resync();
+	void forceRefresh() throws NoServerKnownException;
 
 	/**
 	 * Save the UI state
@@ -67,6 +68,13 @@ public interface IChatroom {
 	int getLastReadId();
 
 	/**
+	 * Save the internal Chatroom state
+	 * includes lastUpdateTime and lastReadID, should be called after all updates
+	 */
+	void save();
+
+	/**
+	 * Convenience Method to get a Cursor of all chats and read only the ones that have not been read by the user (for notifications...)
 	 * @return all chat entries posted after the saved last read chatID
 	 */
 	List<ChatEntry> getUnreadEntries();
@@ -77,7 +85,7 @@ public interface IChatroom {
 	/**
 	 * Get the current ChatroomState of this Chatroom
 	 */
-	ChatroomState getChatStatus();
+	ChatroomState getState();
 
 	/**
 	 * Post a new Chat to the Chatroom
@@ -85,7 +93,7 @@ public interface IChatroom {
 	 * @param pictureID Nullable pictureID
 	 * @return a unique id, with which to identify the status of the chat
 	 */
-	int postChat(String msg, Integer pictureID);
+	de.rallye.model.structures.SimpleChatEntry postChat(String msg, Integer pictureID) throws NoServerKnownException;
 
 	/**
 	 * Post a new Chat to the Chatroom
@@ -93,18 +101,18 @@ public interface IChatroom {
 	 * @param pictureHash the hash with which the picture is being uploaded in parallel
 	 * @return a unique id, with which to identify the status of the chat
 	 */
-	int postChatWithHash(String msg, String pictureHash);
+	de.rallye.model.structures.SimpleChatWithPictureHash postChatWithHash(String msg, String pictureHash) throws NoServerKnownException;
 
 	/**
 	 * Manually add a chat (e.g. Received via Push)
 	 */
-	void pushChat(ChatEntry chatEntry);
+	//void pushChat(ChatEntry chatEntry);
 
 	/**
 	 * Manually edit a chat (e.g. Received via Push)
 	 * @param chatEntry chatID identifies the entry to edit, everything else will be updated
 	 */
-	void editChat(ChatEntry chatEntry);
+//	void editChat(ChatEntry chatEntry);
 
 	/**
 	 * a Cursor for all chats of this Chatroom
@@ -113,6 +121,7 @@ public interface IChatroom {
 	Cursor getChatCursor();
 
 	/**
+	 * Get a gallery of all pictures in this chatroom
 	 * @param initialPictureId the PictureID the Gallery should display after starting (not forced, only available via the Gallery)
 	 * @return Gallery Model, containing all pictures in this Chatroom in order of the ChatEntries
 	 */
@@ -129,14 +138,14 @@ public interface IChatroom {
 		 * Callback for changes to the Chatrooms State
 		 * @param status the new ChatroomState
 		 */
-		public void onChatroomStateChanged(ChatroomState status);
+		public void onStateChanged(ChatroomState status);
 
 		/**
 		 * Callback after trying to post a new message
 		 * @param id the id returned by Chatroom:postChat
 		 * @param chat the complete ChatEntry as returned by the server
 		 */
-		public void onPostStateChange(int id, PostState state, ChatEntry chat);
+		public void onPostStateChange(SimpleChatWithPictureHash post, PostState state, ChatEntry chat);
 
 		/**
 		 * The DB has changed and a new ChatCursor should be requested;

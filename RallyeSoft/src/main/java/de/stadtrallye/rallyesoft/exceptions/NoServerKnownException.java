@@ -17,26 +17,10 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model;
-
-import java.io.Serializable;
-
-import de.rallye.model.structures.PictureSize;
-import de.stadtrallye.rallyesoft.net.Paths;
+package de.stadtrallye.rallyesoft.exceptions;
 
 /**
- * Serializable Class to generate Picture URLs (as String) from a pictureID and PictureSize
- * So PictureGallery's do not have to hold on to Model, which is not serializable
+ * Created by Ramon on 22.09.2014.
  */
-public class PictureIdResolver implements Serializable {
-
-	private final String base;
-
-	public PictureIdResolver(String base) {
-		this.base = base;
-	}
-
-	public String resolvePictureID(int id, PictureSize size) {
-		return base + Paths.getPic(id, size);
-	}
+public class NoServerKnownException extends Throwable {
 }
