@@ -35,15 +35,15 @@ import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Edges;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Nodes;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Edges;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Nodes;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.MapUpdateExecutor;
 import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_EDGES;
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_NODES;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_EDGES;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_NODES;
 
 public class Map implements IMap, MapUpdateExecutor.Callback, RequestExecutor.Callback<Void> {
 	

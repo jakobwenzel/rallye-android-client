@@ -34,7 +34,7 @@ import de.rallye.model.structures.Submission;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONArrayToMapRequestExecutor;
 import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
@@ -42,9 +42,9 @@ import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.EDIT_TASKS;
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.getBoolean;
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.strStr;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_TASKS;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.getBoolean;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.strStr;
 
 /**
  *

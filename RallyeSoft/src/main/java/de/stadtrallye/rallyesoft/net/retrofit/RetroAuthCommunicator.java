@@ -25,6 +25,7 @@ import de.rallye.model.structures.Chatroom;
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
+import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.User;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
@@ -32,8 +33,10 @@ import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.net.Paths;
 import retrofit.Callback;
 import retrofit.client.Response;
+import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.GET;
+import retrofit.http.PUT;
 import retrofit.http.Path;
 
 /**
@@ -70,4 +73,7 @@ public interface RetroAuthCommunicator {
 
 	@GET(Paths.TASK_SUBMISSIONS)
 	void getSubmissionsForGroup(@Path(Paths.PARAM_TASK_ID) int taskID, Callback<List<Submission>> callback);
+
+	@PUT(Paths.CHATROOM_CHATS)
+	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatromID, @Body SimpleChatEntry message, Callback<ChatEntry> callback);
 }

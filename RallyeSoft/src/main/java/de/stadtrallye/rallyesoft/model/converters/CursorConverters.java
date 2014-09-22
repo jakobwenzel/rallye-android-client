@@ -23,12 +23,12 @@ import android.database.Cursor;
 
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.LatLng;
-import de.stadtrallye.rallyesoft.model.db.DatabaseHelper;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.Tasks;
-import static de.stadtrallye.rallyesoft.model.db.DatabaseHelper.getBoolean;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Tasks;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.getBoolean;
 
 /**
  * Functions to extract one Object from a Cursor, in case not everything can be done with a CursorAdapter
