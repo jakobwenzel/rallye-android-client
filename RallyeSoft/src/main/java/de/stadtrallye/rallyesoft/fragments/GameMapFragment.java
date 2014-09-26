@@ -41,7 +41,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import de.rallye.model.structures.Edge;
@@ -49,21 +48,21 @@ import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IMap;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.IModel;
 
 import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
-public class GameMapFragment extends SupportMapFragment implements IMap.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
+public class GameMapFragment extends SupportMapFragment implements IMapManager.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
 	
 	private enum Zoom { ToGame, ToBounds, ZoomCustom }
 	
 	private GoogleMap gmap;
-	private IMap map;
+	private IMapManager map;
 	private final HashMap<Marker, Node> markers = new HashMap<Marker, Node>();
 
 	private LatLngBounds gameBounds;
@@ -169,7 +168,7 @@ public class GameMapFragment extends SupportMapFragment implements IMap.IMapList
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.refresh_menu:
-			map.refresh();
+			map.updateMap();
 			return true;
 		case R.id.center_menu:
 			if (gameBounds != null) {
@@ -202,12 +201,12 @@ public class GameMapFragment extends SupportMapFragment implements IMap.IMapList
 
 
 	@Override
-	public void mapUpdate(Map<Integer, ? extends Node> nodes, List<? extends Edge> edges) {
+	public void onMapChange(List<Node> nodes, List<? extends Edge> edges) {
 		
 		Builder bounds = LatLngBounds.builder();
 		boolean hasBounds = false;
 		
-		for (Node n: nodes.values()) {
+		for (Node n: nodes) {
 			Marker m = gmap.addMarker(new MarkerOptions()
 								.position(toGms(n.location))
 								.title(n.name)

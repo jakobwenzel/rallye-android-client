@@ -21,6 +21,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,17 +39,18 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.MapConfig;
-import de.rallye.model.structures.Submission;
+import de.rallye.model.structures.Node;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.ITasks;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
@@ -57,33 +59,45 @@ import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
- * Map of all location specific tasks, combined with a list for direct selection
+ * Map of all location specific taskManager, combined with a list for direct selection
  * Possibly ability to maximize the map to fullsize
  */
-public class TasksMapFragment extends SupportMapFragment implements GoogleMap.OnMarkerClickListener, ITasks.ITasksListener, GoogleMap.OnInfoWindowClickListener,
-																		ITasksMapControl {
+public class TasksMapFragment extends SupportMapFragment implements GoogleMap.OnMarkerClickListener, ITaskManager.ITasksListener, GoogleMap.OnInfoWindowClickListener,
+																		ITasksMapControl, IMapManager.IMapListener {
 
 	public static final String TAG = "taskMap";
 
-	private IModel model;
-	private ITasks tasks;
 	private GoogleMap gmap;
-	private final HashMap<Marker, Integer> markers = new HashMap<Marker, Integer>();
+
+	private ITaskManager taskManager;
+	private final HashMap<Marker, Integer> markers = new HashMap<>();
 	private boolean singleMode;
+	private boolean lateInitialization;
 	private TabManager tabManager;
 	private boolean isLayouted;
+	private IMapManager mapManager;
 
-//	@Override
-//	public void onCreate(Bundle savedInstanceState) {
-//		super.onCreate(savedInstanceState);
-//
-//	}
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		lateInitialization = getArguments().getBoolean(Std.LATE_INITIALIZATION, false);
+		if (lateInitialization) {
+			boolean lateInitSaved = (savedInstanceState != null)? savedInstanceState.getBoolean(Std.LATE_INITIALIZATION, true) : true;
+			lateInitialization &= lateInitSaved;
+		}
+
+
+		final Server server = Server.getCurrentServer();
+		taskManager = server.acquireTaskManager(this);
+		mapManager = server.acquireMapManager(this);
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = super.onCreateView(inflater, container, savedInstanceState);
 
-		isLayouted = false;
+		isLayouted = false;// If in currently in layout, GoogleMap cannot animateCamera(), have to post it
 		v.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 			@Override
 			public void onGlobalLayout() {
@@ -98,11 +112,9 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		super.onActivityCreated(savedInstanceState);
 
 		try {
-			model = ((IModelActivity) getActivity()).getModel();
-			tasks = model.getTasks();
 			tabManager = getTabManager(getActivity());
 		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity and ITabActivity");
+			throw new ClassCastException(getActivity().toString() + " must implement ITabActivity");
 		}
 	}
 
@@ -123,12 +135,23 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 
 		singleMode = getArguments().getBoolean(Std.TASK_MAP_MODE_SINGLE, false);
 
-//		if (tasks.getMapLocation() != null)
-//			gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(toGms(tasks.getMapLocation()), tasks.getZoomLevel()));
+//		if (taskManager.getMapLocation() != null)
+//			gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(toGms(taskManager.getMapLocation()), taskManager.getZoomLevel()));
 
 		if (!singleMode) {
 			populateMap();
-			tasks.addListener(this);
+			taskManager.addListener(this);
+		}
+
+		mapManager.addListener(this);
+
+		if (lateInitialization) {
+			MapConfig mapConfig = mapManager.getMapConfigCached();
+			if (mapConfig != null) {
+				animateToConfigBounds(mapConfig);
+			} else {
+				mapManager.provideMapConfig();
+			}
 		}
 	}
 
@@ -136,14 +159,16 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 	public void onStop() {
 		super.onStop();
 
-		tasks.removeListener(this);
+		taskManager.removeListener(this);
+		mapManager.removeListener(this);
 	}
 
-//	@Override
-//	public void onSaveInstanceState(Bundle outState) {
-//		super.onSaveInstanceState(outState);
-//
-//	}
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+
+		outState.putBoolean(Std.LATE_INITIALIZATION, lateInitialization);
+	}
 
 	private void populateMap() {
 
@@ -151,7 +176,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		gmap.clear();
 
 		Task t;
-		Cursor cursor = tasks.getTasksCursor();
+		Cursor cursor = taskManager.getTasksCursor();
 		CursorConverters.TaskCursorIds c = CursorConverters.TaskCursorIds.read(cursor);
 
 		cursor.moveToFirst();
@@ -188,6 +213,12 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		return m;
 	}
 
+	private void animateToConfigBounds(MapConfig mapConfig) {
+		final int padding = getResources().getDimensionPixelOffset(R.dimen.map_center_padding);
+		LatLngBounds bounds = new LatLngBounds(toGms(mapConfig.bounds.get(0)), toGms(mapConfig.bounds.get(1)));//TODO Only save the SW + NE Corners as used by LatLngBounds
+		gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+	}
+
 
 	@Override
 	public boolean onMarkerClick(Marker marker) {
@@ -205,11 +236,6 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 	public void taskUpdate() {
 		if (!singleMode)
 			populateMap();
-	}
-
-	@Override
-	public void submissionsUpdate(Map<Integer, List<Submission>> submissions) {
-
 	}
 
 	@Override
@@ -237,7 +263,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 
 			cu = CameraUpdateFactory.newLatLngBounds(LatLngBounds.builder().include(rad1).include(rad2).build(), padding);
 		} else {
-			MapConfig mapConfig = model.getMap().getMapConfig();
+			MapConfig mapConfig = mapManager.getMapConfig();
 			cu = CameraUpdateFactory.newLatLngZoom(coords, (mapConfig != null)? mapConfig.zoomLevel + 4 : 16);
 		}
 
@@ -268,5 +294,28 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		args.putInt(Std.TASK_ID, id);
 
 		tabManager.openSubTab(RallyeTabManager.TAB_TASKS_DETAILS, args);
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		Server.getCurrentServer().releaseTaskManager(this);
+	}
+
+	@Override
+	public void onMapChange(List<Node> nodes, List<? extends Edge> edges) {
+
+	}
+
+	@Override
+	public void onMapConfigChange(MapConfig mapConfig) {
+		animateToConfigBounds(mapConfig);
+		lateInitialization = false;
+	}
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 }

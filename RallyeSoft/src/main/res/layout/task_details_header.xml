@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+  ~
+  ~ This file is part of RallyeSoft.
+  ~
+  ~ RallyeSoft is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Foobar is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  android:orientation="vertical"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent">
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:id="@+id/task_name"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:id="@+id/task_type"/>
+
+	<TextView
+		android:layout_marginTop="8dp"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceSmall"
+		android:id="@+id/task_description"/>
+
+	<View
+		android:layout_marginTop="16dp"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="@android:drawable/divider_horizontal_dark"/>
+
+	<de.stadtrallye.rallyesoft.widget.GridView
+		android:id="@+id/additional_info"
+		android:layout_marginTop="8dp"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:columnWidth="90dp"
+		android:horizontalSpacing="5dp"
+		android:verticalSpacing="5dp"
+		android:drawSelectorOnTop="true"/>
+
+
+	<View
+		android:layout_marginTop="16dp"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:background="@android:drawable/divider_horizontal_dark"/>
+
+	<TextView
+		android:layout_marginTop="20dp"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:text="@string/submissions"/>
+
+</LinearLayout>

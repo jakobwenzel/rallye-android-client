@@ -17,30 +17,39 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.chat;
+package de.stadtrallye.rallyesoft.model.tasks;
 
 import java.util.List;
 
+import de.rallye.model.structures.AdditionalResource;
+import de.rallye.model.structures.Submission;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 
 /**
- * Created by Ramon on 22.09.2014.
+ * Created by Ramon on 23.09.2014.
  */
-public interface IChatManager {
-	boolean isChatReady();
+public interface ITask {
 
-	List<? extends IChatroom> getChatrooms();
+	void addListener(ITaskListener listener);
+	void removeListener(ITaskListener listener);
 
-	void updateChatrooms();
+	void requestSubmissions();
 
-	void forceRefreshChatrooms();
+	String getName();
+	String getDescription();
 
-	void addListener(IChatListener chatListener);
-	void removeListener(IChatListener chatListener);
+	List<AdditionalResource> getAdditionalResources();
 
-	IChatroom findChatroom(int roomID);
+	int getSubmitType();
 
-	interface IChatListener extends IHandlerCallback {
-		void onChatroomsChange();
+	int getTaskID();
+
+	boolean hasSubmissionsCached();
+
+	List<Submission> getSubmissionsCached();
+
+	interface ITaskListener extends IHandlerCallback {
+		void onSubmissionsChanged(List<Submission> submissions);
+		void onTaskChange();
 	}
 }

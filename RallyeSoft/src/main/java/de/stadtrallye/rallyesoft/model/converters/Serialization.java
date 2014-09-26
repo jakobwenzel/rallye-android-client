@@ -17,29 +17,20 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
+package de.stadtrallye.rallyesoft.model.converters;
 
-import java.net.MalformedURLException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Parent of fragments that guide through the various steps
+ * Created by Ramon on 22.09.2014.
  */
-public interface IConnectionAssistant extends IProgressUI {
+public class Serialization {
+	private static ObjectMapper objectMapper;
 
-	void next();
-	void setServer(String server) throws MalformedURLException;
-	String getServer();
-	void setGroup(int id);
-
-	void back();
-
-	void setNameAndPass(String name, String pass);
-
-	void finish(boolean acceptNewConnection);
-
-	void login();
-
-	int getGroup();
-
-	String getPass();
+	public static ObjectMapper getInstance() {
+		if (objectMapper == null) {
+			objectMapper = new ObjectMapper();
+		}
+		return objectMapper;
+	}
 }

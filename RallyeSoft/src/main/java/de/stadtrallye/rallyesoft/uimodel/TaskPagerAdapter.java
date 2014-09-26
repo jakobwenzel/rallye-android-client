@@ -31,6 +31,7 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.TaskDetailsFragment;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
+import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
 
 /**
  * Adapter to use a Cursor to page through all Tasks in detail
@@ -65,6 +66,13 @@ public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 		this.notifyDataSetChanged();
 	}
 
+	public void close() {
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
+		}
+	}
+
 	@Override
 	public void setPrimaryItem(ViewGroup container, int position, Object object) {
 		super.setPrimaryItem(container, position, object);
@@ -77,7 +85,9 @@ public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 	public Fragment getItem(int position) {
 		Fragment f = new TaskDetailsFragment();
 		Bundle args = new Bundle();
-		args.putSerializable(Std.TASK, CursorConverters.getTask(position, cursor, c));
+//		args.putSerializable(Std.TASK, CursorConverters.getTask(position, cursor, c));
+		cursor.moveToPosition(position);
+		args.putInt(Std.TASK_ID, cursor.getInt(c.id));
 		f.setArguments(args);
 		return f;
 	}
@@ -90,5 +100,14 @@ public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 	@Override
 	public int getCount() {
 		return (cursor != null)? cursor.getCount() : 0;
+	}
+
+	public boolean isPosMatchingID(int pos, int taskID) {
+		cursor.moveToPosition(pos);
+		return taskID == cursor.getInt(c.id);
+	}
+
+	public int getPositionInCursor(int taskID) {
+		return TaskManager.findTaskPositionInCursor(taskID, cursor, c);
 	}
 }

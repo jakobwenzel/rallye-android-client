@@ -22,5 +22,12 @@ package de.stadtrallye.rallyesoft.exceptions;
 /**
  * Created by Ramon on 22.09.2014.
  */
-public class NoServerKnownException extends Throwable {
+public class NoServerKnownException extends RuntimeException {
+	public NoServerKnownException(String msg) {
+		super(msg);
+	}
+
+	public NoServerKnownException() {
+
+	}
 }

@@ -21,6 +21,7 @@ package de.stadtrallye.rallyesoft.uimodel;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,21 +39,24 @@ import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
+import de.stadtrallye.rallyesoft.net.Server;
 
 /**
  * ListAdapter for Chats from Cursor
  */
 public class ChatCursorAdapter extends CursorAdapter {
 
+	private static final String THIS = ChatCursorAdapter.class.getSimpleName();
+
 	private final LayoutInflater inflator;
 	private final ImageLoader loader;
 	private final DateFormat converter;
 	private final GroupUser user;
-	private final IModel model;
+	private final PictureIdResolver pictureResolver;
 
 	private IChatroom chatroom;
 
@@ -66,13 +70,13 @@ public class ChatCursorAdapter extends CursorAdapter {
 		public ImageView msg_img;
 	}
 
-	public ChatCursorAdapter(Context context, IModel model, IChatroom chatroom) {
+	public ChatCursorAdapter(Context context, PictureIdResolver pictureResolver, IChatroom chatroom) {
 		super(context, chatroom.getChatCursor(), false);
 
 		c = CursorConverters.ChatCursorIds.read(getCursor());
 
-		this.user = model.getUser();
-		this.model = model;
+		this.user = Server.getCurrentServer().getUser();
+		this.pictureResolver = pictureResolver;
 
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -133,13 +137,15 @@ public class ChatCursorAdapter extends CursorAdapter {
 		String userName = cursor.getString(c.userName);
 		if (userName == null) {
 			userName = String.valueOf(userID);
-			model.onMissingUserName(userID); //TODO: if the userid is not known to the server this will run in an infinite loop as long the Chat is open
+//			pictureResolver.onMissingUserName(userID); //TODO: if the userid is not known to the server this will run in an infinite loop as long the Chat is open
+			Log.w(THIS, "Unknown userID: "+ userID);
 		}
 
 		String groupName = cursor.getString(c.groupName);
 		if (groupName == null) {
 			groupName = String.valueOf(groupID);
-			model.onMissingGroupName(groupID); //TODO: same goes here
+//			pictureResolver.onMissingGroupName(groupID); //TODO: same goes here
+			Log.w(THIS, "Unknown groupID: "+ groupID);
 		}
 
 		mem.sender.setText(userName +" ("+ groupName +")");
@@ -149,7 +155,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 		int pictureID = cursor.getInt(c.pictureID);
 		if (pictureID != 0) {
 			mem.msg_img.setVisibility(View.VISIBLE);
-			loader.displayImage(model.getUrlFromImageId(pictureID, PictureSize.Mini), mem.msg_img);
+			loader.displayImage(pictureResolver.resolvePictureID(pictureID, PictureSize.Mini), mem.msg_img);
 		} else {
 			mem.msg_img.setVisibility(View.GONE);
 //			loader.displayImage(null, mem.msg_img);
@@ -159,7 +165,7 @@ public class ChatCursorAdapter extends CursorAdapter {
 		// ImageLoader must apparently be called for _EVERY_ entry
 		// When called with null or "" as URL, will display empty picture / default resource
 		// Otherwise ImageLoader will not be stable and start swapping images
-		loader.displayImage(model.getAvatarURL(groupID), mem.img);
+		loader.displayImage(Server.getCurrentServer().getAvatarUrl(groupID), mem.img);
 //		loader.displayImage(null, (!me)? mem.img_r : mem.img_l);
 
 		//Set read id on chatroom

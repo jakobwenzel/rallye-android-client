@@ -32,8 +32,7 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
-
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
+import de.stadtrallye.rallyesoft.net.Server;
 
 public class OverviewFragment extends Fragment implements IModel.IModelListener {
 
@@ -44,8 +43,7 @@ public class OverviewFragment extends Fragment implements IModel.IModelListener 
 	private TextView serverDesc;
 	private TextView serverName;
 	private TextView serverVer;
-
-	private IModel model;
+	private Server server;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -70,7 +68,8 @@ public class OverviewFragment extends Fragment implements IModel.IModelListener 
 	public void onStart() {
 		super.onStart();
 
-		model = getModel(getActivity());
+		server = Server.getCurrentServer();
+
 
 		onConnectionStateChange(model.getConnectionState());
 		if (model.getServerInfo() != null)
@@ -82,7 +81,8 @@ public class OverviewFragment extends Fragment implements IModel.IModelListener 
 	@Override
 	public void onStop() {
 		super.onStop();
-		model.removeListener(this);
+
+		server = null;
 	}
 
 	private void showServerInfo(ServerInfo info) {

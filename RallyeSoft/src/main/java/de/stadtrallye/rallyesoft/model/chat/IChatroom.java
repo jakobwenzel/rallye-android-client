@@ -23,8 +23,10 @@ import android.database.Cursor;
 
 import java.util.List;
 
+import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 
@@ -90,18 +92,11 @@ public interface IChatroom {
 	/**
 	 * Post a new Chat to the Chatroom
 	 * @param msg the Text of the new chat
+	 * @param pictureHash the hash with which the picture is being uploaded in parallel
 	 * @param pictureID Nullable pictureID
 	 * @return a unique id, with which to identify the status of the chat
 	 */
-	de.rallye.model.structures.SimpleChatEntry postChat(String msg, Integer pictureID) throws NoServerKnownException;
-
-	/**
-	 * Post a new Chat to the Chatroom
-	 * @param msg the Text of the new chat
-	 * @param pictureHash the hash with which the picture is being uploaded in parallel
-	 * @return a unique id, with which to identify the status of the chat
-	 */
-	de.rallye.model.structures.SimpleChatWithPictureHash postChatWithHash(String msg, String pictureHash) throws NoServerKnownException;
+	SimpleChatEntry postChat(String msg, String pictureHash, Integer pictureID) throws NoServerKnownException;
 
 	/**
 	 * Manually add a chat (e.g. Received via Push)
@@ -132,7 +127,7 @@ public interface IChatroom {
 	 * Contains Callbacks for the 2 states a Chatroom has
 	 * and a callback for when current cursors become invalid
 	 */
-	public interface IChatroomListener {
+	public interface IChatroomListener extends IHandlerCallback {
 
 		/**
 		 * Callback for changes to the Chatrooms State

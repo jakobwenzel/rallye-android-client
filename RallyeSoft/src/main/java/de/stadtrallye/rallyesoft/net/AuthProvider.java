@@ -22,7 +22,6 @@ package de.stadtrallye.rallyesoft.net;
 import android.util.Base64;
 import android.util.Log;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.Authenticator;
@@ -30,7 +29,6 @@ import java.net.PasswordAuthentication;
 import java.nio.charset.Charset;
 
 import de.rallye.model.structures.UserAuth;
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 
 /**
  * Created by Ramon on 21.09.2014.
@@ -41,6 +39,7 @@ public class AuthProvider {
 
 	@JsonProperty("groupID") protected int groupID;
 	@JsonProperty("userAuth") protected UserAuth userAuth;
+	protected String groupPassword;
 
 	public AuthProvider() {
 
@@ -51,8 +50,20 @@ public class AuthProvider {
 		this.userAuth = userAuth;
 	}
 
+	public void setGroupID(int groupID) {
+		this.groupID = groupID;
+	}
+
+	public Integer getGroupID() {
+		return groupID;
+	}
+
 	public void setUserAuth(UserAuth userAuth) {
 		this.userAuth = userAuth;
+	}
+
+	public void setGroupPassword(String groupPassword) {
+		this.groupPassword = groupPassword;
 	}
 
 	public String getUserAuthString() {
@@ -85,7 +96,7 @@ public class AuthProvider {
 					return new PasswordAuthentication(userAuth.getHttpUser(groupID), userAuth.password.toCharArray());
 				} else if (realm.equals("RallyeNewUser")) {
 					Log.i(THIS, "Switching to NewUserAuthentication");
-					return new PasswordAuthentication(String.valueOf(groupID), login.getGroupPassword().toCharArray());
+					return new PasswordAuthentication(String.valueOf(groupID), groupPassword.toCharArray());
 				} else {
 					return null;
 				}

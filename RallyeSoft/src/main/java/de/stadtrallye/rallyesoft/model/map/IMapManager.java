@@ -17,13 +17,15 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.model.map;
 
 import java.util.List;
 
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
+import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 
 /**
  * Model representation of a Street Map (for Scotland-Yard-type games)
@@ -31,14 +33,21 @@ import de.rallye.model.structures.Node;
  * and Edges of different types, connecting the Nodes
  * TODO: Players can "move" along Edges and assigned to a Node
  */
-public interface IMap {
+public interface IMapManager {
 	/**
-	 * Force refresh from server
+	 * update from server
 	 */
-	void refresh();
+	void updateMap() throws NoServerKnownException;
+
+	/**
+	 * force refresh
+	 */
+	void forceRefresh();
 
 	void addListener(IMapListener l);
 	void removeListener(IMapListener l);
+
+	void updateMapConfig() throws NoServerKnownException;
 
 	/**
 	 * Get the center of the game on the map as well as the initial zoomLevel (a Google Map can only be initialized with 1 set of coordinates at this time)
@@ -47,15 +56,19 @@ public interface IMap {
 	MapConfig getMapConfig();
 
 	/**
-	 * Request a callback to all announced Listeners: IMapListener.mapUpdate()
+	 * Request a callback to all announced Listeners: IMapListener.onMapChange()
 	 */
 	void provideMap();
+
+	MapConfig getMapConfigCached();
+
+	void provideMapConfig();
 
 	/**
 	 * contains a callback for when the map content has changed
 	 */
-	public interface IMapListener {
-		public void mapUpdate(java.util.Map<Integer, ? extends Node> nodes, List<? extends Edge> edges);
+	public interface IMapListener extends IHandlerCallback {
+		public void onMapChange(List<Node> nodes, List<? extends Edge> edges);
 
         void onMapConfigChange(MapConfig mapConfig);
     }

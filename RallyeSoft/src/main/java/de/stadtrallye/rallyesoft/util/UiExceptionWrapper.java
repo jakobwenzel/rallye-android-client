@@ -17,29 +17,14 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
-
-import java.net.MalformedURLException;
+package de.stadtrallye.rallyesoft.util;
 
 /**
- * Parent of fragments that guide through the various steps
+ * Created by Ramon on 26.09.2014.
  */
-public interface IConnectionAssistant extends IProgressUI {
+public class UiExceptionWrapper {
 
-	void next();
-	void setServer(String server) throws MalformedURLException;
-	String getServer();
-	void setGroup(int id);
+	private static final String THIS = UiExceptionWrapper.class.getSimpleName();
 
-	void back();
 
-	void setNameAndPass(String name, String pass);
-
-	void finish(boolean acceptNewConnection);
-
-	void login();
-
-	int getGroup();
-
-	String getPass();
 }

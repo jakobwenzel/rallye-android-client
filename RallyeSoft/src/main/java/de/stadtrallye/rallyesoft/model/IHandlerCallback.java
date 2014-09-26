@@ -17,29 +17,19 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
+package de.stadtrallye.rallyesoft.model;
 
-import java.net.MalformedURLException;
+import android.os.Handler;
 
 /**
- * Parent of fragments that guide through the various steps
+ * Created by Ramon on 25.09.2014.
  */
-public interface IConnectionAssistant extends IProgressUI {
-
-	void next();
-	void setServer(String server) throws MalformedURLException;
-	String getServer();
-	void setGroup(int id);
-
-	void back();
-
-	void setNameAndPass(String name, String pass);
-
-	void finish(boolean acceptNewConnection);
-
-	void login();
-
-	int getGroup();
-
-	String getPass();
+public interface IHandlerCallback {
+	/**
+	 * Should be extended by most Callbacks
+	 * Gives the instance registering for a callback a very flexible way to choose on which thread the callback should be executed
+	 *
+	 * @return An android handler to use for the callback, or null if worker thread is ok
+	 */
+	Handler getCallbackHandler();
 }

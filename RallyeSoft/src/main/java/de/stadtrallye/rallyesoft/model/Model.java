@@ -54,6 +54,10 @@ import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.model.converters.PreferenceConverters;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
+import de.stadtrallye.rallyesoft.model.map.MapManager;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
+import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Groups;
@@ -109,8 +113,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 
 	// Sub Modules
 	private List<Chatroom> chatrooms;
-	private final Map map;
-	private final Tasks tasks;
+	private final MapManager map;
+	private final TaskManager tasks;
 
 	// Listener
 	private final ArrayList<IModelListener> modelListeners = new ArrayList<IModelListener>();
@@ -256,8 +260,8 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			factory.setPushID(gcm);
 		}
 
-		map = new Map(this);
-		tasks = new Tasks(this);
+		map = new MapManager(this);
+		tasks = new TaskManager(this);
 
 		if (state == ConnectionState.Connected) {
 			if ((deprecatedTables & EDIT_CHATROOMS) > 0) {
@@ -381,9 +385,9 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 			setConnectionState(ConnectionState.InternalConnected);
 			
 			refreshConfiguration();
-			map.refreshMapConfig();
-			map.refresh();
-			tasks.refresh();
+			map.updateMapConfig();
+			map.updateMap();
+			tasks.update();
 		} else {
 			connectionFailure(r.getException(), ConnectionState.Invalid);
 		}
@@ -415,7 +419,7 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 		}
 
         refreshAvailableChatrooms();
-//        map.refreshMapConfig();
+//        map.updateMapConfig();
 	}
 	
 	private void refreshAvailableChatrooms() {
@@ -682,12 +686,12 @@ public class Model implements IModel, RequestExecutor.Callback<Model.CallbackIds
 	}
 	
 	@Override
-	public IMap getMap() {
+	public IMapManager getMap() {
 		return map;
 	}
 
 	@Override
-	public ITasks getTasks() {
+	public ITaskManager getTasks() {
 		return tasks;
 	}
 

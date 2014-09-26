@@ -21,9 +21,8 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
@@ -37,51 +36,58 @@ import android.view.ViewGroup;
 
 import com.viewpagerindicator.TitlePageIndicator;
 
-import java.util.List;
-import java.util.Map;
-
-import de.rallye.model.structures.Submission;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.ITasks;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 import de.stadtrallye.rallyesoft.uimodel.TaskPagerAdapter;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
 /**
- * Fragment to show the details of tasks, similar to the mail-view in GMail
+ * Fragment to shows the details of tasks, similar to the mail-view in GMail
  * Enhanced by a GMap
  */
-public class TasksPagerFragment extends Fragment implements ITasks.ITasksListener {
+public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksListener {
 
 	private static final String THIS = TasksPagerFragment.class.getSimpleName();
+	public static final String ARG_POS = Std.POSITION;
+	public static final String ARG_TASK_ID = Std.TASK_ID;
 
-	private IModel model;
 	private ViewPager pager;
-	private TaskPagerAdapter fragmentAdapter;
-	private ITasks tasks;
-//	private ITasksMapControl mapControl;
 	private TitlePageIndicator indicator;
+
+	private TaskPagerAdapter fragmentAdapter;
+
+	private ITaskManager taskManager;
+	private IMapManager mapManager;
+//	private ITasksMapControl mapControl;
+
 	private byte size = 0;
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.v(THIS, "we are in "+getClass().getName());
-		Log.v(THIS, "got result: " + resultCode);
-		if (resultCode== Activity.RESULT_OK) {
+//	@Override
+//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//		Log.v(THIS, "we are in "+getClass().getName());
+//		Log.v(THIS, "got result: " + resultCode);
+//		if (resultCode== Activity.RESULT_OK) {
+//
+//			Log.v(THIS, "need to update submissions");
+//		}
+//	}
 
-			Log.v(THIS, "need to update submissions");
-		}
-	}
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
+
+		final Server server = Server.getCurrentServer();
+		taskManager = server.acquireTaskManager(this);
+		mapManager = server.acquireMapManager(this);
 	}
 
 	@TargetApi(11)
@@ -108,20 +114,13 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 
-		try {
-			model = ((IModelActivity) getActivity()).getModel();
-			tasks = model.getTasks();
-		} catch (ClassCastException e) {
-			throw new ClassCastException(getActivity().toString() + " must implement IModelActivity");
-		}
-
 		FragmentManager fm = getChildFragmentManager();
 		Fragment mapFragment = fm.findFragmentByTag(TasksMapFragment.TAG);
 		if (mapFragment == null) {
 
 			mapFragment = new TasksMapFragment();
 
-			Bundle args = getDefaultMapOptions(model);
+			Bundle args = getDefaultMapOptions(mapManager.getMapConfigCached());
 			args.putBoolean(Std.TASK_MAP_MODE_SINGLE, true);
 			mapFragment.setArguments(args);
 			fm.beginTransaction().replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();
@@ -129,15 +128,24 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 
 		ITasksMapControl mapControl = (ITasksMapControl) mapFragment;
 
-		fragmentAdapter = new TaskPagerAdapter(getChildFragmentManager(), getActivity(), tasks.getTasksCursor(), mapControl);
+		fragmentAdapter = new TaskPagerAdapter(getChildFragmentManager(), getActivity(), taskManager.getTasksCursor(), mapControl);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager); // Needs an adapter
 
 		Bundle args = getArguments();
 		if (args != null) {
-			int id = args.getInt(Std.TASK_ID, -1);
-			int tab = (id >= 0) ? tasks.getTaskPositionInCursor(id) : 0;
-			pager.setCurrentItem(tab);
+			int id = args.getInt(ARG_TASK_ID, -1);//TODO transmit position (and taskID to be sure, just check the position against id, fallback to searching)
+			int pos = args.getInt(ARG_POS, 0);
+			int page;
+			if (id > 0) {
+				if (fragmentAdapter.isPosMatchingID(pos, id))
+					page = pos;
+				else
+					page = fragmentAdapter.getPositionInCursor(id);
+			} else {
+				page = 0;
+			}
+			pager.setCurrentItem(page);
 		}
 	}
 
@@ -145,7 +153,7 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 	public void onStart() {
 		super.onStart();
 
-		tasks.addListener(this);
+		taskManager.addListener(this);
 		setSize(size);
 	}
 
@@ -153,8 +161,9 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 	public void onStop() {
 		super.onStop();
 
-		tasks.removeListener(this);
+		taskManager.removeListener(this);
 	}
+
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		MenuItem resize = menu.add(Menu.NONE, R.id.resize_menu, 40, R.string.resize);
@@ -195,27 +204,24 @@ public class TasksPagerFragment extends Fragment implements ITasks.ITasksListene
 	}
 
 	@Override
-	public void onDetach() {
-		super.onDetach();
+	public void onDestroy() {
+		super.onDestroy();
 
-		model = null; // Just to be sure, since we load the model anyway in onActivityCreated
-		tasks = null;
-		fragmentAdapter = null;
+		final Server server = Server.getCurrentServer();
+		server.releaseTaskManager(this);
+		server.releaseMapManager(this);
+		taskManager = null;
+		mapManager = null;
+		fragmentAdapter.close();
 	}
-
-//	@Override
-//	public void onSaveInstanceState(Bundle outState) {
-//		super.onSaveInstanceState(outState);
-//
-//	}
 
 	@Override
 	public void taskUpdate() {
-		fragmentAdapter.changeCursor(tasks.getTasksCursor());
+		fragmentAdapter.changeCursor(taskManager.getTasksCursor());
 	}
 
 	@Override
-	public void submissionsUpdate(Map<Integer, List<Submission>> submissions) {
-
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 }

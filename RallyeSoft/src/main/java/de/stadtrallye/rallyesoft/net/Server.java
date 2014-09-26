@@ -27,8 +27,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
+import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.LoginInfo;
+import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
+import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.chat.ChatManager;
+import de.stadtrallye.rallyesoft.model.chat.IChatManager;
+import de.stadtrallye.rallyesoft.model.converters.Serialization;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
+import de.stadtrallye.rallyesoft.model.map.MapManager;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
+import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroCommunicator;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroFactory;
@@ -46,6 +56,7 @@ public class Server extends AuthProvider {
 
 	private static Server currentServer;
 	private static RetroFactory retroFactory;
+	private ServerInfo serverInfo;
 
 	public static Server getCurrentServer() {
 		return currentServer;
@@ -58,6 +69,10 @@ public class Server extends AuthProvider {
 	private final RetroCommunicator communicator;
 
 	private RetroAuthCommunicator authCommunicator;
+
+	private ITaskManager taskManager;
+	private ChatManager chatManager;
+	private MapManager mapManager;
 
 	public Server(String address) {
 		super();
@@ -74,7 +89,27 @@ public class Server extends AuthProvider {
 		this.communicator = serverHandle.getPublicApi();
 	}
 
-	public void login(int groupID, LoginInfo loginInfo, final ILoginListener loginListener) throws IllegalAccessException {
+	public ServerInfo getServerInfoCached() {
+		return serverInfo;
+	}
+
+	public void updateServerInfo(IServerListener listener) {
+		communicator.getServerInfo(new Callback<ServerInfo>() {
+			@Override
+			public void success(ServerInfo serverInfo, Response response) {
+
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+
+			}
+		});
+	}
+
+	public void login(int groupID, String groupPassword, LoginInfo loginInfo, final ILoginListener loginListener) throws IllegalAccessException {
+		setGroupPassword(groupPassword);
+
 		communicator.login(groupID, loginInfo, new Callback<UserAuth>() {
 			@Override
 			public void success(UserAuth userAuth, Response response) {
@@ -89,9 +124,9 @@ public class Server extends AuthProvider {
 		});
 	}
 
-	public RetroAuthCommunicator getAuthCommunicator() throws IllegalAccessException {
+	public RetroAuthCommunicator getAuthCommunicator() throws NoServerKnownException {
 		if (!hasUserAuth())
-			throw new IllegalAccessException("Trying to access the Auth API of a Server without having Auth data");
+			throw new NoServerKnownException("Trying to access the Auth API of a Server without having Auth data");
 
 		if (authCommunicator == null)
 			authCommunicator = serverHandle.getAuthApi();
@@ -107,13 +142,13 @@ public class Server extends AuthProvider {
 	}
 
 	public void save() throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = Serialization.getInstance();
 		mapper.writeValue(Storage.getServerConfigOutputStream(), this);
 	}
 
 	public static void load() {
 		try {
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = Serialization.getInstance();
 			Server server = mapper.readValue(Storage.getServerConfigInputStream(), Server.class);
 
 			currentServer = server;
@@ -136,11 +171,56 @@ public class Server extends AuthProvider {
 						Log.e(THIS, "Could not logout old Server", e);
 					}
 				});
-			} catch (IllegalAccessException e) {
+			} catch (NoServerKnownException e) {
 				Log.e(THIS, "Could not logout old Server", e);
 			}
 
 		currentServer = server;
+	}
+
+	public IChatManager acquireChatManager(Object handle) throws NoServerKnownException{
+		if (chatManager == null) {
+			chatManager = new ChatManager();
+		}
+		return chatManager;
+	}
+
+	public void releaseChatManager(Object handle) {
+
+	}
+
+	public ITaskManager acquireTaskManager(Object handle) throws NoServerKnownException{
+		if (taskManager == null) {
+			taskManager = new TaskManager();
+		}
+		return taskManager;
+	}
+
+	public void releaseTaskManager(Object handle) {
+
+	}
+
+	public IMapManager acquireMapManager(Object handle) throws NoServerKnownException{
+		if (mapManager == null) {
+			mapManager = new MapManager();
+		}
+		return mapManager;
+	}
+
+	public void releaseMapManager(Object handle) {
+
+	}
+
+	public String getAvatarUrl(int groupID) {
+		return address + Paths.getAvatar(groupID);
+	}
+
+	public GroupUser getUser() {
+		return null;
+	}
+
+	public static boolean isStillCurrent(Server server, Object handle) {
+		return server == currentServer;
 	}
 
 	public interface ILoginListener {

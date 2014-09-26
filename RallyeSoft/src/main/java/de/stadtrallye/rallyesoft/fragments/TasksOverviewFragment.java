@@ -21,9 +21,8 @@ package de.stadtrallye.rallyesoft.fragments;
 
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
@@ -37,34 +36,35 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.util.List;
-import java.util.Map;
-
-import de.rallye.model.structures.Submission;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.ITasks;
+import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TaskCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.TaskCursorWrapper;
 
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
 /**
  * Fragment that contains a ViewPager sorting the Tasks in location specific and ubiquitous
  */
-public class TasksOverviewFragment extends Fragment implements ITasks.ITasksListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class TasksOverviewFragment extends Fragment implements ITaskManager.ITasksListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 
-	private IModel model;
-	private ITasks tasks;
 	private ListView list;
+
 	private TaskCursorWrapper listAdapter;
+
+	private ITaskManager taskManager;
+	private IMapManager mapManager;
+
 	private byte size = 0;
 
 	@Override
@@ -73,6 +73,14 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 
 		setRetainInstance(true);
 		setHasOptionsMenu(true);
+
+		final Server server = Server.getCurrentServer();
+		try {
+			taskManager = server.acquireTaskManager(this);
+			mapManager = server.acquireMapManager(this);
+		} catch (NoServerKnownException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@TargetApi(11)
@@ -80,16 +88,15 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 		vg.setLayoutTransition(new LayoutTransition());
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.v(THIS, "we are in "+getClass().getName());
-		Log.v(THIS, "got result: " + resultCode);
-		if (resultCode== Activity.RESULT_OK) {
-
-			Log.v(THIS, "need to update submissions");
-		}
-	}
-
+//	@Override
+//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//		Log.v(THIS, "we are in "+getClass().getName());
+//		Log.v(THIS, "got result: " + resultCode);
+//		if (resultCode== Activity.RESULT_OK) {
+//
+//			Log.v(THIS, "need to update submissions");
+//		}
+//	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -104,56 +111,51 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 		list.setOnItemLongClickListener(this);
 //		list.setFastScrollEnabled(true);
 
+		if (savedInstanceState != null) {
+			size = savedInstanceState.getByte(Std.SIZE, size);
+		}
+		setSize(size);
+
 		return v;
+	}
+
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+
+		listAdapter = new TaskCursorWrapper(getActivity(), new TaskCursorAdapter(getActivity(), taskManager.getTasksCursor()), taskManager);
+		list.setAdapter(listAdapter);
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		model = getModel(getActivity());
-		tasks = model.getTasks();
-
-		listAdapter = new TaskCursorWrapper(getActivity(), new TaskCursorAdapter(getActivity(), tasks.getTasksCursor()), tasks);
-		list.setAdapter(listAdapter);
-
 		FragmentManager fm = getChildFragmentManager();
 		Fragment mapFragment = fm.findFragmentByTag(TasksMapFragment.TAG);
 
 		if (mapFragment == null) {
 			mapFragment = new TasksMapFragment();
-			mapFragment.setArguments(getDefaultMapOptions(model));
+			mapFragment.setArguments(getDefaultMapOptions(mapManager.getMapConfigCached()));
 			fm.beginTransaction().replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();
 		}
 
-		setSize(size);
-
-		tasks.addListener(this);
-		tasks.refreshSubmissions();
+		taskManager.addListener(this);
 	}
 
 	@Override
 	public void onStop() {
-		tasks.removeListener(this);
+		taskManager.removeListener(this);
 
 		super.onStop();
 
 	}
 
 	@Override
-	public void onDetach() {
-		super.onDetach();
-
-		model = null; //are generally retained during Configuration changes, but since we are refreshing it anyway in onActivityCreated
-		tasks = null; //same here
-		listAdapter = null;
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putByte(Std.SIZE, size);
 	}
-
-//	@Override
-//	public void onSaveInstanceState(Bundle outState) {
-//		super.onSaveInstanceState(outState);
-//
-//	}
 
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
@@ -178,7 +180,11 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.refresh_menu:
-				model.getTasks().refresh();
+				try {
+					taskManager.update();
+				} catch (NoServerKnownException e) {
+					Toast.makeText(getActivity(), R.string.notConnected, Toast.LENGTH_SHORT).show();
+				}
 				return true;
 			case R.id.resize_menu:
 				setSize((byte)((size+1) % 3));
@@ -187,6 +193,15 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 				Log.d(THIS, "No hit on menu item " + item);
 				return false;
 		}
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		taskManager.removeListener(this);
+		taskManager = null;
+		listAdapter.close();
 	}
 
 	private void setSize(byte newSize) {
@@ -207,12 +222,7 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 
 	@Override
 	public void taskUpdate() {
-		listAdapter.changeCursor(tasks.getTasksCursor());
-	}
-
-	@Override
-	public void submissionsUpdate(Map<Integer, List<Submission>> submissions) {
-
+		listAdapter.changeCursor(taskManager.getTasksCursor());
 	}
 
 	@Override
@@ -223,6 +233,7 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 
 		Bundle args = new Bundle();
 		args.putInt(Std.TASK_ID, (int)id);
+		args.putInt(Std.POSITION, listAdapter.translatePosition(position));
 
 		getTabManager(getActivity()).openSubTab(RallyeTabManager.TAB_TASKS_DETAILS, args);
 	}
@@ -251,5 +262,10 @@ public class TasksOverviewFragment extends Fragment implements ITasks.ITasksList
 				resId = R.string.solution_state_unknown;
 		}
 		return getString(resId);
+	}
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 }

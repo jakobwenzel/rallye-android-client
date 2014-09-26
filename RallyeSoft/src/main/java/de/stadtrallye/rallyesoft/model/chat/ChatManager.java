@@ -22,6 +22,7 @@ package de.stadtrallye.rallyesoft.model.chat;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_CHATS;
 
@@ -44,13 +48,17 @@ public class ChatManager implements IChatManager {
 	private static final String THIS = ChatManager.class.getSimpleName();
 
 	private final SQLiteDatabase db;
-	private final RetroAuthCommunicator communicator;
+	private RetroAuthCommunicator communicator;
 	private List<Chatroom> chatrooms;
 	private final List<IChatListener> listeners = new ArrayList<>();
 
-	public ChatManager() {
-		this.communicator = Server.getCurrentServer().getAuthCommunicator();
-		this.db = Storage.getDatabase();
+	public ChatManager(RetroAuthCommunicator communicator, SQLiteDatabase db) {
+		this.db = db;
+		this.communicator = communicator;
+	}
+
+	public ChatManager() throws NoServerKnownException {
+		this(Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabase());
 	}
 
 	@Override
@@ -64,8 +72,52 @@ public class ChatManager implements IChatManager {
 	}
 
 	@Override
-	public void forceRefreshChatrooms() {
+	public IChatroom findChatroom(int roomID) {
+		if (chatrooms == null)
+			return null;
 
+		for (IChatroom r: chatrooms) {
+			if (r.getID() == roomID)
+			{
+				return r;
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public void updateChatrooms() {
+		checkServerKnown();
+
+		communicator.getAvailableChatrooms(new Callback<List<Chatroom>>() {
+			@Override
+			public void success(List<Chatroom> chatrooms, Response response) {
+				ChatManager.this.chatrooms = chatrooms;
+				notifyChatroomsChanged();
+			}
+
+			@Override
+			public void failure(RetrofitError e) {
+				Log.e(THIS, "Update of available Chatrooms failed", e);
+				//TODO Server.getServer().commFailed(e);
+			}
+		});
+	}
+
+	private void checkServerKnown() throws NoServerKnownException{
+		if (communicator == null) {
+			throw new NoServerKnownException();
+		}
+	}
+
+	@Override
+	public void forceRefreshChatrooms() {
+		db.delete(DatabaseHelper.Chatrooms.TABLE, null, null);
+
+		chatrooms = null;
+
+		updateChatrooms();
 	}
 
 	@Override
@@ -87,11 +139,7 @@ public class ChatManager implements IChatManager {
 			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), c.getInt(3), c.getLong(2));
 
 			if (Storage.hasStructureChanged(EDIT_CHATS)) {
-				try {
-					room.forceRefresh();
-				} catch (NoServerKnownException e) {
-					Log.e(THIS, "Could not forceRefresh a Chatroom (Chatroom refused)", e);
-				}
+				room.forceRefresh();
 			}
 
 			out.add(room);
@@ -117,8 +165,19 @@ public class ChatManager implements IChatManager {
 	}
 
 	private void notifyChatroomsChanged() {
-		for (IChatListener l : listeners) {
-			l.onChatroomsChange();
+		Handler handler;
+		for (final IChatListener l: listeners) {
+			handler = l.getCallbackHandler();
+			if (handler == null) {
+				l.onChatroomsChange();
+			} else {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						l.onChatroomsChange();
+					}
+				});
+			}
 		}
 	}
 }

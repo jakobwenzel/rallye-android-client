@@ -84,4 +84,7 @@ public class Std {
 	public static final String APP_VERSION = "app_version";
 	public static final String PICTURE_REQUEST_SOURCE = "picture_request_source";
 	public static final String CALENDAR_DAY = "calendar_day";
+	public static final String LATE_INITIALIZATION = "late_initialization";
+	public static final String SIZE = "size";
+	public static final String POSITION = "position";
 }

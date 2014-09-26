@@ -47,11 +47,10 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionState;
 import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
-import de.stadtrallye.rallyesoft.uimodel.IModelActivity;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
@@ -63,14 +62,12 @@ import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends FragmentActivity implements IModelActivity, IModel.IModelListener, IProgressUI, ITabActivity, IPictureHandler {
+public class MainActivity extends FragmentActivity implements IProgressUI, ITabActivity, IPictureHandler {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
 	private ActionBar actionBar;
 
-	private IModel model;
-	private boolean keepModel = false;
 	private boolean progressCircle = false;
 
 	private Integer lastTab;
@@ -78,6 +75,7 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	private RallyeTabManager tabManager;
 	private IPicture picture = null;
 	private TransitionDrawable logo;
+	private Server server;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -108,12 +106,10 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		//PushInit.ensureRegistration(this);
 		GcmHelper.ensureRegistration(getApplicationContext());
 
+		Storage.aquireStorage(getApplicationContext(), this);
+
 		// Initialize Model
-		model = (IModel) getLastCustomNonConfigurationInstance();
-		if (model == null)
-			model = Model.getInstance(getApplicationContext());
-		model.addListener(this);
-		keepModel = false;
+		server = Server.getCurrentServer();
 
 		// Manages all fragments that will be displayed as Tabs in this activity
 		tabManager = new RallyeTabManager(this, model, drawerLayout);
@@ -183,6 +179,11 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	@Override
 	public void onStart() {
 		super.onStart();
+
+		if (!Server.isStillCurrent(server, this)) {
+			server = Server.getCurrentServer();
+			//TODO refresh dependencies
+		}
 
 		tabManager.showTab();
 	}
@@ -268,16 +269,6 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 		tabManager.onConfigurationChanged(newConfig);
 	}
 
-	/**
-	 * Called if e.g. the App is rotated
-	 * => save the model
-	 */
-	@Override
-	public Object onRetainCustomNonConfigurationInstance() {
-		keepModel = true;
-		return model;
-	}
-
 	@Override
 	protected void onPause() {
 		model.saveState();
@@ -293,10 +284,9 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	protected void onDestroy() {
 		Log.i(THIS, "Destroying...");
 
-		model.removeListener(this);
+		server = null;
 
-		if (!keepModel) // Only destroy the model if we do not need it again after the configuration change
-			model.destroy();
+		Storage.releaseStorage(this);
 
 		super.onDestroy();
 	}
@@ -386,27 +376,9 @@ public class MainActivity extends FragmentActivity implements IModelActivity, IM
 	}
 
 //	@Override
-	public void onMapConfigChange() {
-		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
-	}
-
-	@Override
-	public void onServerInfoChange(ServerInfo info) {
-
-	}
-
-	@Override
-	public void onAvailableGroupsChange(List<Group> groups) {
-
-	}
-
-	/**
-	 * IModelActivity
-	 */
-	@Override
-	public IModel getModel() {
-		return model;
-	}
+//	public void onMapConfigChange() {
+//		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
+//	}
 
 	/**
 	 * ITabActivity

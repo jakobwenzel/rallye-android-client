@@ -30,9 +30,10 @@ import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.Authenticator;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
+import de.stadtrallye.rallyesoft.model.converters.Serialization;
 import de.stadtrallye.rallyesoft.net.AuthProvider;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.ConversionException;
@@ -50,8 +51,8 @@ public class RetroFactory {
 	private final AddAuthAndAcceptInterceptor preemptiveAuthenticator;
 
 	public RetroFactory(AuthProvider authProvider) {
-		this.converter = new JacksonConverter(); //TODO: Plugin Smile Converter here.... (after debugging is done, it should be completely transparent since it is still all jackson!!)
-		this.executor = Executors.newCachedThreadPool();
+		this.converter = new JacksonConverter(Serialization.getInstance()); //TODO: Plugin Smile Converter here.... (after debugging is done, it should be completely transparent since it is still all jackson!!)
+		this.executor = Threading.getNetworkExecutor();
 		this.preemptiveAuthenticator = new AddAuthAndAcceptInterceptor(authProvider, "application/json");//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
 
 		Authenticator.setDefault(authProvider.getAuthenticator());

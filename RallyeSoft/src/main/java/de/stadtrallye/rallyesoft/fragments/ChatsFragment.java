@@ -19,12 +19,10 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -34,12 +32,11 @@ import java.util.List;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
-
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
@@ -56,7 +53,7 @@ public class ChatsFragment extends Fragment {
 	private ChatroomPagerAdapter fragmentAdapter;
 //	private int currentTab;
 	private IPicture picture = null;
-	private IModel model;
+	private IChatManager chatManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -88,8 +85,7 @@ public class ChatsFragment extends Fragment {
 	}
 
 	private void loadChatrooms() {
-		model = getModel(getActivity());
-		chatrooms = model.getChatrooms();
+		chatrooms = chatManager.getChatrooms();
 
 		fragmentAdapter = new ChatroomPagerAdapter(getChildFragmentManager(), chatrooms);
 		pager.setAdapter(fragmentAdapter);
@@ -98,10 +94,16 @@ public class ChatsFragment extends Fragment {
 
 		Bundle args = getArguments(); // Open specific Chatroom
 		if (args != null) {
-			int room = args.getInt(Std.CHATROOM, -1);
+			int roomID = args.getInt(Std.CHATROOM, -1);
 
-			if (room > -1) {
-				int pos = chatrooms.indexOf(model.getChatroom(room));
+			if (roomID > -1) {//TODO deactivate this function after executing it?
+				int pos = 0;
+				for (IChatroom chatroom: chatrooms) {
+					if (chatroom.getID() == roomID) {
+						break;
+					}
+					pos++;
+				}
 				pager.setCurrentItem(pos);
 			}
 		}
@@ -111,9 +113,11 @@ public class ChatsFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
-		if (model!=getModel(getActivity()))
+		IChatManager newChatManager = Server.getCurrentServer().acquireChatManager(this);
+		if (newChatManager != chatManager) {
+			chatManager = newChatManager;
 			loadChatrooms();
-
+		}
 	}
 	
 	@Override
@@ -124,6 +128,7 @@ public class ChatsFragment extends Fragment {
 //		chatrooms = null;
 
 //		currentTab = pager.getCurrentItem();
+		Server.getCurrentServer().releaseChatManager(this);
 	}
 	
 //	@Override
@@ -160,11 +165,7 @@ public class ChatsFragment extends Fragment {
 	}*/
 
 	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
+	public void onDestroy() {
+		super.onDestroy();
 	}
-
-
-	
-
 }

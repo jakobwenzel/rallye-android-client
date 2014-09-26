@@ -17,11 +17,33 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
+package de.stadtrallye.rallyesoft.threading;
 
-import de.stadtrallye.rallyesoft.model.IModel;
+import android.os.Handler;
+import android.os.Looper;
 
-public interface IModelActivity {
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-	public IModel getModel();
+/**
+ * Created by Ramon on 25.09.2014.
+ */
+public class Threading {
+
+	private static Handler uiHandler;
+	private static ExecutorService workExecutor;
+
+	public static Handler getUiExecutor() {
+		if (uiHandler == null) {
+			uiHandler = new Handler(Looper.getMainLooper());
+		}
+		return uiHandler;
+	}
+
+	public static ExecutorService getNetworkExecutor() {
+		if (workExecutor == null) {
+			workExecutor = Executors.newCachedThreadPool();
+		}
+		return workExecutor;
+	}
 }

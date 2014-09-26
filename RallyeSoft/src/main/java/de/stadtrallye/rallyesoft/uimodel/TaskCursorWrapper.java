@@ -29,7 +29,7 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.ITasks;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 
 /**
@@ -38,13 +38,13 @@ import de.stadtrallye.rallyesoft.model.structures.Task;
  */
 public class TaskCursorWrapper extends BaseAdapter implements SectionIndexer {
 
-	private final ITasks tasks;
+	private final ITaskManager tasks;
 	private final TaskCursorAdapter adapter;
 	private final LayoutInflater inflator;
 //	private final Context context;
 	private int headerPos = -1;
 
-	public TaskCursorWrapper(Context context, TaskCursorAdapter adapter, ITasks tasks) {
+	public TaskCursorWrapper(Context context, TaskCursorAdapter adapter, ITaskManager tasks) {
 		this.adapter = adapter;
 		this.tasks = tasks;
 //		this.context = context;
@@ -101,7 +101,7 @@ public class TaskCursorWrapper extends BaseAdapter implements SectionIndexer {
 		return (isHeaderPosition(position))? -1 * numHeaderPosition(position) : adapter.getItemId(translatePosition(position));
 	}
 
-	private int translatePosition(int position) {
+	public int translatePosition(int position) {
 		return position - numHeaderPosition(position);
 	}
 
@@ -170,5 +170,9 @@ public class TaskCursorWrapper extends BaseAdapter implements SectionIndexer {
 
 	public TaskCursorAdapter getAdapter() {
 		return adapter;
+	}
+
+	public void close() {
+		adapter.close();
 	}
 }

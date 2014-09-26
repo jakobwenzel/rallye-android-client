@@ -21,13 +21,13 @@ package de.stadtrallye.rallyesoft.net.retrofit;
 
 import java.util.List;
 
-import de.rallye.model.structures.Chatroom;
-import de.rallye.model.structures.Edge;
+import de.rallye.model.structures.Map;
 import de.rallye.model.structures.MapConfig;
-import de.rallye.model.structures.Node;
 import de.rallye.model.structures.SimpleChatEntry;
+import de.rallye.model.structures.SimpleSubmission;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.User;
+import de.stadtrallye.rallyesoft.model.chat.Chatroom;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.net.Paths;
@@ -56,14 +56,11 @@ public interface RetroAuthCommunicator {
 	@GET(Paths.CHATROOM_CHATS_SINCE)
 	void getChatsSince(@Path(Paths.PARAM_CHATROOM_ID) int chatroomID, @Path(Paths.PARAM_SINCE) long since, Callback<List<ChatEntry>> callback);
 
-	@GET(Paths.MAP_NODES)
-	void getMapNodes(Callback<List<Node>> callback);
+	@GET(Paths.MAP)
+	void getMap(Callback<Map> callback);
 
 	@GET(Paths.MAP_CONFIG)
 	void getMapConfig(Callback<MapConfig> callback);
-
-	@GET(Paths.MAP_EDGES)
-	void getMapEdges(Callback<List<Edge>> callback);
 
 	@GET(Paths.USERS)
 	void getAllUsers(Callback<List<User>> callback);
@@ -72,8 +69,14 @@ public interface RetroAuthCommunicator {
 	void getTasks(Callback<List<Task>> callback);
 
 	@GET(Paths.TASK_SUBMISSIONS)
-	void getSubmissionsForGroup(@Path(Paths.PARAM_TASK_ID) int taskID, Callback<List<Submission>> callback);
+	void getSubmissionsForTask(@Path(Paths.PARAM_TASK_ID) int taskID, Callback<List<Submission>> callback);
+
+	@GET(Paths.TASKS_SUBMISSIONS_ALL)
+	void getAllSubmissionsForGroup(@Path(Paths.PARAM_GROUP_ID) int groupID, Callback<List<Submission>> callback);
 
 	@PUT(Paths.CHATROOM_CHATS)
-	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatromID, @Body SimpleChatEntry message, Callback<ChatEntry> callback);
+	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatroomID, @Body SimpleChatEntry message, Callback<ChatEntry> callback);
+
+	@PUT(Paths.TASK_SUBMISSIONS)
+	void postSubmission(@Path(Paths.PARAM_TASK_ID) int taskID, @Body SimpleSubmission submission, Callback<Submission> callback);
 }

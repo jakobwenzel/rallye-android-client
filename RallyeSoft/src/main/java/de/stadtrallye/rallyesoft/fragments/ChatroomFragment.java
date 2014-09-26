@@ -19,9 +19,10 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,19 +44,20 @@ import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
+import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
 
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
@@ -70,7 +72,6 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	
 
 	private int roomID;
-//	private IModel model;
 	private int[] lastPos = null; //[0] = line, [1] = px
 	private IChatroom chatroom;
 	
@@ -82,7 +83,6 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	private EditText text;
 	private ProgressBar loading;
 	private ImageView chosen_picture;
-	private IModel model;
 	private IPictureHandler pictureHandler;
 
 
@@ -104,6 +104,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 
 		setHasOptionsMenu(true);
 
+		chatroom = Server.getCurrentServer().acquireChatManager(this).findChatroom(roomID);
 	}
 
 	@Override
@@ -131,7 +132,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.refresh_menu:
-				chatroom.refresh();
+				chatroom.update();
 				return true;
 			case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
 				ImageLocation.startPictureTakeOrSelect(getActivity(), chatroom.getID());
@@ -157,14 +158,11 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	}
 
 	private void loadChats() {
-		model = getModel(getActivity());
-		chatroom = model.getChatroom(roomID);
-
 		if (chatroom == null) {
 			throw new IllegalArgumentException(THIS +" could not find the Model of Chatroom "+ roomID);
 		}
 
-		chatAdapter = new ChatCursorAdapter(getActivity(), model, chatroom);
+		chatAdapter = new ChatCursorAdapter(getActivity(), Server.getCurrentServer().getPictureResolver(), chatroom);
 		list.setAdapter(chatAdapter);
 		list.setOnScrollListener(this);//TODO: use chatroom.getLastReadId() (wrap cursorAdapter add extra line)
 
@@ -208,9 +206,6 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	@Override
 	public void onStart() {
 		super.onStart();
-
-		if (model!=getModel(getActivity()))
-			loadChats();
 
 		loadImagePreview();
 	}
@@ -274,7 +269,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	}
 
 	@Override
-	public void onPostStateChange(int id, IChatroom.PostState state, ChatEntry chat) {
+	public void onPostStateChange(SimpleChatWithPictureHash post, IChatroom.PostState state, ChatEntry chat) {
 		switch (state) {
 			case Success:
 				text.getText().clear();
@@ -289,7 +284,8 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 				chosen_picture.setVisibility(View.GONE);
 				pictureHandler.discardPicture();
 				break;
-			case Retrying:
+			case Uploading:
+				loading.setVisibility(View.VISIBLE);
 				break;
 		}
 	}
@@ -298,12 +294,13 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	public void onClick(View v) {
 		Editable msg = text.getText();
         IPicture pic = pictureHandler.getPicture();
+		String hash = null;
         if (pic != null) {
-            chatroom.postChatWithHash(msg.toString(), pic.getHash());
-            loading.setVisibility(View.VISIBLE);
-        } else if (msg.length() > 0 ) {
-            chatroom.postChat(msg.toString(), null);
-        }
+			hash = pic.getHash();
+		}
+        if (pic != null || msg.length() > 0 ) {
+			chatroom.postChat(msg.toString(), hash, null);
+		}
 	}
 
 	@Override
@@ -339,5 +336,18 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 		f.setArguments(b);
 
 		return f;
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		Server.getCurrentServer().releaseChatManager(this);
+
+	}
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 }

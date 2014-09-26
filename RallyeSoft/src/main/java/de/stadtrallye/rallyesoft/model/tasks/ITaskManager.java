@@ -17,32 +17,35 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.model.tasks;
 
 import android.database.Cursor;
 
-import java.util.List;
-import java.util.Map;
-
-import de.rallye.model.structures.Submission;
+import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
 /**
  * Models CallbackIds for a Rallye-type game
  *
  */
-public interface ITasks {
+public interface ITaskManager {
 
 	/**
 	 * Refresh the CallbackIds from the server
 	 */
-	void refresh();
+	void update() throws NoServerKnownException;
 
-	void refreshSubmissions();
+	/**
+	 * Force refresh
+	 */
+	void forceRefresh() throws NoServerKnownException;
 
-	void submitSolution(int taskID, int type, IPicture picture, String text, String number);
+	ITask getTask(int taskID);
 
-	Map<Integer, List<Submission>> getSubmissions();
+	//void refreshSubmissions();
+
+	void submitSolution(int taskID, int type, IPicture picture, String text, Integer number) throws NoServerKnownException;
 
 	void addListener(ITasksListener l);
 	void removeListener(ITasksListener l);
@@ -67,16 +70,14 @@ public interface ITasks {
 	 */
 	Cursor getTasksCursor();
 
-	int getTaskPositionInCursor(int id);
-
 	int getLocationSpecificTasksCount();
 
 	/**
 	 * Callbacks
 	 */
-	public interface ITasksListener {
+	public interface ITasksListener extends IHandlerCallback {
 		void taskUpdate();
 
-		void submissionsUpdate(Map<Integer, List<Submission>> submissions);
+		//void submissionsUpdate(Map<Integer, List<Submission>> submissions);
 	}
 }

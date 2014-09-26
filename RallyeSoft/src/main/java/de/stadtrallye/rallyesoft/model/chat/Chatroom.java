@@ -23,6 +23,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Handler;
 import android.util.Log;
 
 import java.sql.SQLDataException;
@@ -36,9 +37,9 @@ import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
-import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.Storage;
@@ -66,18 +67,21 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private ChatroomState state;
 	private Deque<SimpleChatWithPictureHash> postQueue = new LinkedList<>();//TODO move to database
 
+	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime) throws NoServerKnownException {
+		this(chatroomID, name, lastReadID, lastUpdateTime, Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabase());
+	}
 
-	Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime) {
+	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime, RetroAuthCommunicator communicator, SQLiteDatabase db) {
 		super(chatroomID, name);
-		this.db = Storage.getDatabase();
-		this.comm = Server.getCurrentServer().getAuthCommunicator();
+		this.db = db;
+		this.comm = communicator;
 		this.lastReadID = lastReadID;
 		this.lastUpdateTime = lastUpdateTime;
 
 		THIS = CLASS + chatroomID;
 	}
 
-	Chatroom(int chatroomID, String name) {
+	public Chatroom(int chatroomID, String name) throws IllegalAccessException {
 		this(chatroomID, name, -1, 0);
 	}
 
@@ -131,7 +135,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		lastUpdateTime = 0;
 		lastReadID = -1;
 
-		db.delete(DatabaseHelper.Chats.TABLE, null, null);
+		db.delete(DatabaseHelper.Chats.TABLE, DatabaseHelper.Chatrooms.KEY_ID+"="+chatroomID, null);
 		update();
 	}
 
@@ -193,19 +197,10 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public SimpleChatEntry postChat(String msg, Integer pictureID) throws NoServerKnownException {
+	public SimpleChatEntry postChat(String msg, String pictureHash, Integer pictureID) throws NoServerKnownException {
 		checkServerKnown();
 
-		SimpleChatWithPictureHash post = queuePost(new SimpleChatWithPictureHash(msg, pictureID, null));
-
-		return post;
-	}
-
-	@Override
-	public SimpleChatWithPictureHash postChatWithHash(String msg, String pictureHash) throws NoServerKnownException {
-		checkServerKnown();
-
-		SimpleChatWithPictureHash post = queuePost(new SimpleChatWithPictureHash(msg, pictureHash));
+		SimpleChatWithPictureHash post = queuePost(new SimpleChatWithPictureHash(msg, pictureID, pictureHash));
 
 		return post;
 	}
@@ -333,9 +328,20 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		notifyPostChange(post, state, null);
 	}
 
-	private void notifyPostChange(SimpleChatWithPictureHash post, PostState state, ChatEntry entry) {
-		for (IChatroomListener l: listeners) {
-			l.onPostStateChange(post, state, entry);
+	private void notifyPostChange(final SimpleChatWithPictureHash post, final PostState state, final ChatEntry entry) {
+		Handler handler;
+		for (final IChatroomListener l: listeners) {
+			handler = l.getCallbackHandler();
+			if (handler == null) {
+				l.onPostStateChange(post, state, entry);
+			} else {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						l.onPostStateChange(post, state, entry);
+					}
+				});
+			}
 		}
 	}
 
@@ -423,8 +429,19 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	private void notifyChatsChanged() {
-		for(IChatroomListener l : listeners) {
-			l.onChatsChanged();
+		Handler handler;
+		for (final IChatroomListener l: listeners) {
+			handler = l.getCallbackHandler();
+			if (handler == null) {
+				l.onChatsChanged();
+			} else {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						l.onChatsChanged();
+					}
+				});
+			}
 		}
 	}
 

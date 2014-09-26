@@ -19,10 +19,10 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,7 +40,6 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import de.rallye.model.structures.AdditionalPicture;
 import de.rallye.model.structures.AdditionalResource;
@@ -51,64 +50,73 @@ import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.SubmitNewSolutionActivity;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.ITasks;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.model.PictureGallery;
+import de.stadtrallye.rallyesoft.model.tasks.ITask;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.widget.AdapterView;
 import de.stadtrallye.rallyesoft.widget.GridView;
 import de.stadtrallye.rallyesoft.widget.ListView;
 
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
-
 /**
  * List of all Tasks that have no location attached to them
  */
-public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemClickListener, ITasks.ITasksListener {
+public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemClickListener, ITask.ITaskListener {
 
 	private static final String THIS = TaskDetailsFragment.class.getSimpleName();
 
+	//Views
 	private TextView name;
 	private TextView desc;
-	private Task task;
 	private GridView additionalGrid;
-	private ListView submissionsList;
-	private AdditionalGridAdapter gridAdapter;
-	private IModel model;
-	private SubmissionListAdapter submissionAdapter;
 	private Button submit;
 	private TextView type;
+	private ListView list;
+
+	//Adapters
+	private AdditionalGridAdapter gridAdapter;
+	private SubmissionListAdapter submissionAdapter;
+
+	//Logic
+	private ITaskManager taskManager;
+	private ITask task;
+	private PictureIdResolver imageResolver;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		task = (Task) getArguments().getSerializable(Std.TASK);//TODO: only pipe taskID? (on the other hand: if whole ids are changed, no use + the adapter will reload anything anyway)
+		Server server = Server.getCurrentServer();
+		taskManager = server.acquireTaskManager(this);
+		this.imageResolver = server.getPictureResolver();
+
+		task = taskManager.getTask(getArguments().getInt(Std.TASK_ID));
+
 		setHasOptionsMenu(true);
 	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.tasks_details, container, false);
+		list = (ListView) inflater.inflate(R.layout.tasks_details, container, false);
+		View header = inflater.inflate(R.layout.task_details_header, list, false);
+		View footer = inflater.inflate(R.layout.task_details_header, list, false);
 
-		name = (TextView) v.findViewById(R.id.task_name);
-		type = (TextView) v.findViewById(R.id.task_type);
-		desc = (TextView) v.findViewById(R.id.task_description);
-		additionalGrid = (GridView) v.findViewById(R.id.additional_info);
-		submissionsList = (ListView) v.findViewById(R.id.submissions);
-
-		name.setText(task.name);
-		desc.setText(task.description);
-//		type.setText();
+		name = (TextView) header.findViewById(R.id.task_name);
+		type = (TextView) header.findViewById(R.id.task_type);
+		desc = (TextView) header.findViewById(R.id.task_description);
+		additionalGrid = (GridView) header.findViewById(R.id.additional_info);
+//		submissionsList = (ListView) v.findViewById(R.id.submissions);
 
 		gridAdapter = new AdditionalGridAdapter();
 		additionalGrid.setAdapter(gridAdapter);
 		additionalGrid.setOnItemClickListener(this);
 
 		submissionAdapter = new SubmissionListAdapter();
-		submissionsList.setAdapter(submissionAdapter);
+		list.setAdapter(submissionAdapter);
 
-		submit = (Button) v.findViewById(R.id.submit);
+		submit = (Button) footer.findViewById(R.id.submit);
 		submit.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -116,30 +124,35 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 			}
 		});
 
-		return v;
+		return list;
+	}
+
+	private void updateTaskInfo() {
+		name.setText(task.getName());
+		desc.setText(task.getDescription());
+//		type.setText();
+
+		gridAdapter.notifyDataSetChanged();
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		model = getModel(getActivity());
-		ITasks tasks = model.getTasks();
-		Map<Integer, List<Submission>> all = tasks.getSubmissions();
-		if (all != null) {
-			List<Submission> submissions = all.get(task.taskID);
-			if (submissions != null)
-				submissionAdapter.changeList(submissions);
-		}
+		task.addListener(this);
 
-		tasks.addListener(this);
+		if (task.hasSubmissionsCached()) {
+			submissionAdapter.changeList(task.getSubmissionsCached());
+		} else {
+			task.requestSubmissions();
+		}
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 
-		model.getTasks().removeListener(this);
+		task.removeListener(this);
 	}
 
 	@Override
@@ -162,8 +175,8 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 	private void submitNewSolution() {
 		Intent intent = new Intent(getActivity(), SubmitNewSolutionActivity.class);
-		intent.putExtra(Std.SUBMIT_TYPE, task.submitType);
-		intent.putExtra(Std.TASK_ID, task.taskID);
+		intent.putExtra(Std.SUBMIT_TYPE, task.getSubmitType());
+		intent.putExtra(Std.TASK_ID, task.getTaskID());
 		startActivityForResult(intent, SubmitNewSolutionActivity.REQUEST_CODE);
 	}
 
@@ -171,33 +184,36 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 	public void onItemClick(AdapterView parent, View view, int position, long id) {
 		Intent intent = new Intent(getActivity(), PictureGalleryActivity.class);
 
-		List<Integer> pics = new ArrayList<Integer>();
-		for (AdditionalResource add: task.additionalResources)
+		List<Integer> pics = new ArrayList<>();
+		for (AdditionalResource add: task.getAdditionalResources())
 			pics.add(((AdditionalPicture)add).pictureID);
 
-		intent.putExtra(Std.PICTURE_GALLERY, new AdditionalGallery(position, pics, model.getPictureIdResolver()));
+		intent.putExtra(Std.PICTURE_GALLERY, new AdditionalGallery(position, pics, imageResolver));
 		startActivity(intent);
 	}
 
+//	@Override
+//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//		Log.v(THIS, "got result: " + resultCode);
+//		if (resultCode== Activity.RESULT_OK) {
+//
+//			Log.v(THIS, "need to update submissions");
+//		}
+//	}
+
 	@Override
-	public void taskUpdate() {
+	public void onSubmissionsChanged(List<Submission> submissions) {
+		submissionAdapter.changeList(submissions);
+	}
+
+	@Override
+	public void onTaskChange() {
 
 	}
 
-
-
 	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.v(THIS, "got result: " + resultCode);
-		if (resultCode== Activity.RESULT_OK) {
-
-			Log.v(THIS, "need to update submissions");
-		}
-	}
-
-	@Override
-	public void submissionsUpdate(Map<Integer, List<Submission>> submissions) {
-		submissionAdapter.changeList(submissions.get(task.taskID));
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 
 	private class AdditionalGridAdapter extends BaseAdapter {
@@ -215,12 +231,12 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 		@Override
 		public int getCount() {
-			return (task.additionalResources != null)? task.additionalResources.size() : 0;
+			return (task.getAdditionalResources() != null)? task.getAdditionalResources().size() : 0;
 		}
 
 		@Override
 		public Object getItem(int position) {
-			return task.additionalResources.get(position);
+			return task.getAdditionalResources().get(position);
 		}
 
 		@Override
@@ -230,7 +246,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			AdditionalPicture pic = (AdditionalPicture) task.additionalResources.get(position);
+			AdditionalPicture pic = (AdditionalPicture) task.getAdditionalResources().get(position);
 
 			ImageView v = (ImageView) convertView;
 
@@ -241,7 +257,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
 
-			loader.displayImage(model.getUrlFromImageId(pic.pictureID, PictureSize.Mini), v);
+			loader.displayImage(imageResolver.resolvePictureID(pic.pictureID, PictureSize.Mini), v);
 
 			return v;
 		}
@@ -294,8 +310,8 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 //			View v;
 //			ViewMem mem;
-
-
+//
+//
 //			if (convertView == null) {
 //				v = inflator.inflate(R.layout.submission_item, null);
 //				mem = new ViewMem();
@@ -321,7 +337,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 				if (picID==null)
 					return v;
 
-				loader.displayImage(model.getUrlFromImageId(picID, PictureSize.Mini), v);
+				loader.displayImage(imageResolver.resolvePictureID(picID, PictureSize.Mini), v);
 				return v;
 			} else { //We currently only support text and num,bers
 				TextView v = (TextView) convertView;

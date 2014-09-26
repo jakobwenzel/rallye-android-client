@@ -28,7 +28,9 @@ import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
+import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 
 
@@ -71,12 +73,12 @@ public interface IModel {
 	/**
 	 * Get the GameMap Model (Scotland Yard)
 	 */
-	IMap getMap();
+	IMapManager getMap();
 
 	/**
 	 * Get the Tasks Model (Rallye)
 	 */
-	ITasks getTasks();
+	ITaskManager getTasks();
 
 	/**
 	 * All information necessary to connect to our server (with our login)

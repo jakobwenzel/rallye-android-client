@@ -126,4 +126,10 @@ public class TaskCursorAdapter extends CursorAdapter {
 		c = CursorConverters.TaskCursorIds.read(cursor);
 		super.changeCursor(cursor);
 	}
+
+	public void close() {
+		Cursor cursor = getCursor();
+		if (cursor != null)
+			cursor.close();
+	}
 }

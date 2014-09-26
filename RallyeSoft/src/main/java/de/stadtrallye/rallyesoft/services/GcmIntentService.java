@@ -23,14 +23,24 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
 import de.rallye.model.structures.Chatroom;
+import de.rallye.model.structures.PushChatEntry;
 import de.rallye.model.structures.PushEntity;
 import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
+import de.stadtrallye.rallyesoft.model.converters.Serialization;
 import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.net.Server;
 import de.wirsch.gcm.GcmBaseIntentService;
 
 public class GcmIntentService extends GcmBaseIntentService {
@@ -44,22 +54,22 @@ public class GcmIntentService extends GcmBaseIntentService {
 
 		try {
 			PushEntity.Type type = PushEntity.Type.valueOf(message.getString(PushEntity.TYPE));
-			JSONObject payload = new JSONObject(message.getString(PushEntity.PAYLOAD));
+			ObjectMapper mapper = Serialization.getInstance();
 
 			switch (type) {
 				case newMessage:
-					ChatEntry chat = new JsonConverters.ChatConverter().doConvert(payload);
-					int roomID = payload.getInt(Chatroom.CHATROOM_ID);
-					Model.getInstance(context).getChatroom(roomID).pushChat(chat);
+					PushChatEntry chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), PushChatEntry.class);
+					IChatroom chatroom = Server.getCurrentServer().getChat().findChatroom(chat.roomID);
+					chatroom.pushChat(chat.entry);
 					break;
 				case messageChanged:
-					chat = new JsonConverters.ChatConverter().doConvert(payload);
-					roomID = payload.getInt(Chatroom.CHATROOM_ID);
-					Model.getInstance(context).getChatroom(roomID).editChat(chat);
+					chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), PushChatEntry.class);
+					chatroom = Server.getCurrentServer().getChat().findChatroom(chat.roomID);
+					chatroom.changedChat(chat.entry);
 					break;
 				default:
 			}
-		} catch (JSONException e) {
+		} catch (JSONException | IOException e) {
 			Log.e(THIS, "Push Message not compatible", e);
 		}
 	}
