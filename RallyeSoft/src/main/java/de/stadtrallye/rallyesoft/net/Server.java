@@ -23,18 +23,23 @@ import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.IServer;
 import de.stadtrallye.rallyesoft.model.chat.ChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatManager;
-import de.stadtrallye.rallyesoft.model.converters.Serialization;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.map.MapManager;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
@@ -43,6 +48,7 @@ import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroCommunicator;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroFactory;
 import de.stadtrallye.rallyesoft.storage.Storage;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -56,23 +62,25 @@ public class Server extends AuthProvider {
 
 	private static Server currentServer;
 	private static RetroFactory retroFactory;
-	private ServerInfo serverInfo;
 
 	public static Server getCurrentServer() {
 		return currentServer;
 	}
 
 
-	@JsonProperty("address")
-	private final String address;
+	@JsonProperty private final String address;
+	@JsonProperty private ServerInfo serverInfo;
 	private final RetroFactory.ServerHandle serverHandle;
 	private final RetroCommunicator communicator;
+	private final List<IServer.IServerListener> listeners = new ArrayList<>();
 
 	private RetroAuthCommunicator authCommunicator;
 
 	private ITaskManager taskManager;
 	private ChatManager chatManager;
 	private MapManager mapManager;
+
+	private List<Group> groups;
 
 	public Server(String address) {
 		super();
@@ -82,33 +90,95 @@ public class Server extends AuthProvider {
 	}
 
 	@JsonCreator
-	public Server(@JsonProperty("address") String address, @JsonProperty("groupID") int groupID, @JsonProperty("userAuth") UserAuth userAuth) {
+	public Server(@JsonProperty("address") String address, @JsonProperty("groupID") int groupID, @JsonProperty("userAuth") UserAuth userAuth, @JsonProperty("serverInfo") ServerInfo serverInfo) {
 		super(groupID, userAuth);
 		this.address = address;
 		serverHandle = retroFactory.getServer(address);
 		this.communicator = serverHandle.getPublicApi();
+		this.serverInfo = serverInfo;
 	}
 
 	public ServerInfo getServerInfoCached() {
 		return serverInfo;
 	}
 
-	public void updateServerInfo(IServerListener listener) {
-		communicator.getServerInfo(new Callback<ServerInfo>() {
-			@Override
-			public void success(ServerInfo serverInfo, Response response) {
+	public void addListener(IServer.IServerListener listener) {
+		listeners.add(listener);
+	}
 
+	public void removeListener(IServer.IServerListener listener) {
+		listeners.remove(listener);
+	}
+
+	public void updateAvailableGroups() {
+		communicator.getAvailableGroups(new Callback<List<Group>>() {
+			@Override
+			public void success(List<Group> groups, Response response) {
+				Server.this.groups = groups;
+				notifyAvailableGroups();
 			}
 
 			@Override
-			public void failure(RetrofitError error) {
-
+			public void failure(RetrofitError e) {
+				//TODO Server.commError()
+				Log.e(THIS, "unable to get Groups", e);
 			}
 		});
 	}
 
-	public void login(int groupID, String groupPassword, LoginInfo loginInfo, final ILoginListener loginListener) throws IllegalAccessException {
-		setGroupPassword(groupPassword);
+	private void notifyAvailableGroups() {
+		android.os.Handler handler;
+		for (final IServer.IServerListener listener: listeners) {
+			handler = listener.getCallbackHandler();
+			if (handler != null) {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						listener.onAvailableGroupsChanged(groups);
+					}
+				});
+			} else {
+				listener.onAvailableGroupsChanged(groups);
+			}
+		}
+	}
+
+	public void updateServerInfo() {
+		communicator.getServerInfo(new Callback<ServerInfo>() {
+			@Override
+			public void success(ServerInfo serverInfo, Response response) {
+				Server.this.serverInfo = serverInfo;
+				notifyServerInfo();
+			}
+
+			@Override
+			public void failure(RetrofitError e) {
+				//TODO Server.commError()
+				Log.e(THIS, "unable to get ServerInfo", e);
+			}
+		});
+	}
+
+	private void notifyServerInfo() {
+		android.os.Handler handler;
+		for (final IServer.IServerListener listener: listeners) {
+			handler = listener.getCallbackHandler();
+			if (handler != null) {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						listener.onServerInfoChanged(serverInfo);
+					}
+				});
+			} else {
+				listener.onServerInfoChanged(serverInfo);
+			}
+		}
+	}
+
+	public void login(LoginInfo loginInfo, final ILoginListener loginListener) {
+		if (!hasGroupAuth())
+			throw new RuntimeException("No Group auth");//TODO own exception
 
 		communicator.login(groupID, loginInfo, new Callback<UserAuth>() {
 			@Override
@@ -146,14 +216,26 @@ public class Server extends AuthProvider {
 		mapper.writeValue(Storage.getServerConfigOutputStream(), this);
 	}
 
+	public static Server load(String json) {
+		ObjectMapper mapper = Serialization.getInstance();
+		try {
+			return mapper.readValue(json, Server.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	public static void load() {
 		try {
 			ObjectMapper mapper = Serialization.getInstance();
 			Server server = mapper.readValue(Storage.getServerConfigInputStream(), Server.class);
 
 			currentServer = server;
+		} catch (FileNotFoundException e) {
+			Log.w(THIS, "No previously saved Server!");
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(THIS, "Cannot load Server", e);
 		}
 	}
 
@@ -221,6 +303,32 @@ public class Server extends AuthProvider {
 
 	public static boolean isStillCurrent(Server server, Object handle) {
 		return server == currentServer;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public String getServerIconUrl() {
+		return address+ Paths.SERVER_PICTURE;
+	}
+
+	public List<Group> getAvailableGroupsCached() {
+		return groups;
+	}
+
+	public String serialize() {
+		ObjectMapper mapper = Serialization.getInstance();
+		try {
+			return mapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public String getPictureUploadURL(String hash) {
+		return address+Paths.PICS+"/"+hash;
 	}
 
 	public interface ILoginListener {

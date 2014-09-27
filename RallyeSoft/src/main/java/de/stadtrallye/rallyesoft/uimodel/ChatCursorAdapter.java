@@ -38,12 +38,12 @@ import java.util.Date;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
+import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
+import de.stadtrallye.rallyesoft.model.chat.ChatEntry.Sender;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry.Sender;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 
 /**
  * ListAdapter for Chats from Cursor

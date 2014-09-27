@@ -17,7 +17,7 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.structures;
+package de.stadtrallye.rallyesoft.model.chat;
 
 import de.rallye.model.structures.GroupUser;
 

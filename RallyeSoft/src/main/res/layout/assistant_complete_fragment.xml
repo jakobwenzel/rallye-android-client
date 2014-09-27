@@ -24,6 +24,8 @@
 			  android:layout_height="match_parent"
 			  android:padding="16dp">
 
+
+
 	<TextView
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
@@ -36,15 +38,23 @@
 			android:layout_alignParentBottom="false"
 			android:id="@+id/textView"/>
 
+	<ProgressBar
+		android:id="@+id/progress"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/textView"
+		android:layout_centerHorizontal="true"
+		android:indeterminate="true"/>
+
 	<Button
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:id="@+id/next"
-			android:text="@string/apply"
+			android:text="@string/finish"
 			android:enabled="false"
 			android:layout_alignParentRight="true"
 			android:layout_marginTop="16dp"
-			android:layout_below="@+id/textView"/>
+			android:layout_below="@+id/progress"/>
 
 	<Button
 			android:layout_width="wrap_content"

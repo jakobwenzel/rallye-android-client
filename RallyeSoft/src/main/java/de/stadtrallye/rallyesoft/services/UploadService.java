@@ -39,8 +39,7 @@ import java.net.URL;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.net.manual.Request;
 
 public class UploadService extends IntentService {
@@ -51,13 +50,10 @@ public class UploadService extends IntentService {
 
 	private static final int MAX_SIZE = 1000;
 
-	private final IModel model;
-	private NotificationManager notes;
+	private NotificationManager notes;//TODO use AndroidNoticifationManager as wrapper ? useful?
 
 	public UploadService() {
 		super("RallyePictureUpload");
-		
-		this.model = Model.getInstance(this);
 	}
 	
 	@Override
@@ -95,7 +91,7 @@ public class UploadService extends IntentService {
 			byte[] buf = outTemp.toByteArray();
 			size = buf.length;
 
-			URL url = model.getPictureUploadURL(hash);
+			URL url = new URL(Server.getCurrentServer().getPictureUploadURL(hash));
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod(Request.RequestType.PUT.toString());
 			con.setRequestProperty(Std.CONTENT_TYPE, mime);

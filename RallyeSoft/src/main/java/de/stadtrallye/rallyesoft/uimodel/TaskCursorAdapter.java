@@ -29,8 +29,8 @@ import android.widget.CursorAdapter;
 import android.widget.TextView;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 
 /**
  * ListAdapter for Tasks from Cursor

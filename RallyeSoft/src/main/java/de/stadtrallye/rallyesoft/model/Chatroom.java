@@ -18,7 +18,7 @@
  *//*
 
 
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.server;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -33,23 +33,23 @@ import java.util.List;
 
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
-import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
-import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
+import de.stadtrallye.rallyesoft.server.chat.IChatroom;
+import de.stadtrallye.rallyesoft.server.converters.CursorConverters;
+import de.stadtrallye.rallyesoft.server.converters.JsonConverters;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Chatrooms;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Chats;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Groups;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Users;
-import de.stadtrallye.rallyesoft.model.executors.JSONArrayRequestExecutor;
-import de.stadtrallye.rallyesoft.model.executors.JSONObjectRequestExecutor;
-import de.stadtrallye.rallyesoft.model.executors.RequestExecutor;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.server.executors.JSONArrayRequestExecutor;
+import de.stadtrallye.rallyesoft.server.executors.JSONObjectRequestExecutor;
+import de.stadtrallye.rallyesoft.server.executors.RequestExecutor;
+import de.stadtrallye.rallyesoft.server.structures.ChatEntry;
 
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_CHATS;
 
-public class Chatroom extends de.rallye.model.structures.Chatroom implements IChatroom, RequestExecutor.Callback<Chatroom.AdvTaskId> {
+public class Chatroom extends de.rallye.server.structures.Chatroom implements IChatroom, RequestExecutor.Callback<Chatroom.AdvTaskId> {
 
 	// statics
 	final private static String CLASS = Chatroom.class.getSimpleName();
@@ -69,7 +69,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	// Parent Model
-	final private Model model;
+	final private Model server;
 
 	// State
 	private ChatroomState state;
@@ -88,17 +88,17 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	 * @return all available Chatrooms
 	 *//*
 
-	static List<Chatroom> getChatrooms(Model model) {
+	static List<Chatroom> getChatrooms(Model server) {
 		List<Chatroom> out = new ArrayList<>();
 
-		Cursor c = model.db.query(Chatrooms.TABLE, Chatrooms.COLS, null, null, null, null, null);
+		Cursor c = server.db.query(Chatrooms.TABLE, Chatrooms.COLS, null, null, null, null, null);
 
 		while (c.moveToNext()) {
-			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), model, c.getLong(2), c.getInt(3));
+			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), server, c.getLong(2), c.getInt(3));
 
-			if ((model.deprecatedTables & EDIT_CHATS) > 0) {
+			if ((server.deprecatedTables & EDIT_CHATS) > 0) {
 				room.resync();
-				model.deprecatedTables &= ~EDIT_CHATS;
+				server.deprecatedTables &= ~EDIT_CHATS;
 			}
 
 			room.refresh();
@@ -109,11 +109,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		return out;
 	}
 
-	static void saveChatrooms(Model model, List<Chatroom> chatrooms) {
+	static void saveChatrooms(Model server, List<Chatroom> chatrooms) {
 		if (chatrooms == null)
 			return;
 
-		SQLiteDatabase db = model.db;
+		SQLiteDatabase db = server.db;
 
 		db.delete(Chatrooms.TABLE, null, null);
 
@@ -127,19 +127,19 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		}
 	}
 
-	public Chatroom(int id, String name, Model model) {
-		this(id, name, model, 0, 0);
+	public Chatroom(int id, String name, Model server) {
+		this(id, name, server, 0, 0);
 	}
 
-	private Chatroom(int id, String name, Model model, long lastRefresh, int lastReadId) {
+	private Chatroom(int id, String name, Model server, long lastRefresh, int lastReadId) {
 		super(id, name);
-		this.model = model;
+		this.server = server;
 		this.lastRefresh = lastRefresh;
 		this.lastReadId = lastReadId;
 
 		THIS = CLASS + " " + id;
 
-		Cursor c = model.db.query(Chats.TABLE, Chats.COLS, Chats.FOREIGN_ROOM + "=" + id, null, null, null, Chats.KEY_ID + " DESC", "1");
+		Cursor c = server.db.query(Chats.TABLE, Chats.COLS, Chats.FOREIGN_ROOM + "=" + id, null, null, null, Chats.KEY_ID + " DESC", "1");
 
 		if (c.moveToNext()) {
 			this.lastId = c.getInt(0);
@@ -178,7 +178,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public synchronized void refresh() {
-		if (!model.isConnected()) {
+		if (!server.isConnected()) {
 			err.notLoggedIn();
 			return;
 		}
@@ -190,7 +190,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		try {
 			setState(ChatroomState.Refreshing);
 
-			model.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatRefreshRequest(chatroomID, lastRefresh), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
+			server.exec.execute(new JSONArrayRequestExecutor<ChatEntry, AdvTaskId>(server.factory.chatRefreshRequest(chatroomID, lastRefresh), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_REFRESH, 0)));
 		} catch (HttpRequestException e) {
 			err.requestException(e);
 		}
@@ -215,7 +215,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		} else {
 			err.asyncTaskResponseError(r.getException());
 			setState(ChatroomState.Ready);
-			model.commError(r.getException());
+			server.commError(r.getException());
 		}
 	}
 
@@ -224,7 +224,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		lastId = 0;
 		lastRefresh = 0;
 
-		model.db.delete(Chats.TABLE, null, null);
+		server.db.delete(Chats.TABLE, null, null);
 		refresh();
 	}
 
@@ -248,7 +248,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //		notifyChatsAdded(upd);
 		//Only show notification if chatroom is not currently visible
 		if (!notifyChatsChanged())
-			ChatNotificationManager.getInstance(model.context).updateNotification();
+			ChatNotificationManager.getInstance(server.context).updateNotification();
 	}
 
 	@Override
@@ -257,7 +257,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		fillContentValues(update, chatEntry);
 
-		model.db.update(Chats.TABLE, update, Chats.KEY_ID + "=" + chatEntry.chatID, null);
+		server.db.update(Chats.TABLE, update, Chats.KEY_ID + "=" + chatEntry.chatID, null);
 
 		setLast(chatEntry.timestamp, 0);
 
@@ -271,11 +271,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 //	private void lookupNames(final ChatEntry chatEntry) {
-//		Cursor c = model.db.query(Users.TABLE, Users.COLS, Users.KEY_ID+"="+chatEntry.userID, null, null, null, null);
+//		Cursor c = server.db.query(Users.TABLE, Users.COLS, Users.KEY_ID+"="+chatEntry.userID, null, null, null, null);
 //		if (c.moveToFirst()) {
 //			chatEntry.setUserName(c.getString(1));
 //		} else {
-//			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
+//			server.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
 //				@Override
 //				public void dataAvailable(Map<Integer, GroupUser> users) {
 //					chatEntry.setUserName(users.get(chatEntry.userID).name);
@@ -288,11 +288,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //		}
 //		c.close();
 //
-//		c = model.db.query(Groups.TABLE, Groups.COLS, Groups.KEY_ID+"="+chatEntry.groupID, null, null, null, null);
+//		c = server.db.query(Groups.TABLE, Groups.COLS, Groups.KEY_ID+"="+chatEntry.groupID, null, null, null, null);
 //		if (c.moveToFirst()) {
 //			chatEntry.setGroupName(c.getString(1));
 //		} else {
-//			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
+//			server.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
 //				@Override
 //				public void dataAvailable(List<Group> groups) {
 //					HashMap<Integer, Group> groupMap = new HashMap<>();
@@ -332,7 +332,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	 *//*
 
 	private synchronized void saveChats(List<ChatEntry> entries) {
-		SQLiteDatabase db = model.db;
+		SQLiteDatabase db = server.db;
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
 		SQLiteStatement s = db.compileStatement("INSERT INTO " + Chats.TABLE +
 				" (" + DatabaseHelper.strStr(Chats.COLS) + ") VALUES (?, ?, ?, ?, ?, ?, " + chatroomID + ")");
@@ -399,7 +399,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		fillContentValues(insert, chat);
 
-		model.db.insert(Chats.TABLE, null, insert);
+		server.db.insert(Chats.TABLE, null, insert);
 
 		setLast(chat.timestamp, chat.chatID);
 	}
@@ -425,7 +425,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		Log.i(THIS, "Status: " + newState);
 
-		model.uiHandler.post(new Runnable() {
+		server.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (IChatroomListener l : listeners) {
@@ -464,7 +464,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //	}
 
 //	private void notifyChatsEdited(final List<ChatEntry> entries) {
-//		model.uiHandler.post(new Runnable() {
+//		server.uiHandler.post(new Runnable() {
 //			@Override
 //			public void run() {
 //				for(IChatroomListener l: listeners) {
@@ -475,7 +475,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //	}
 
 //	private void notifyChatsAdded(final List<ChatEntry> entries) {
-//		model.uiHandler.post(new Runnable() {
+//		server.uiHandler.post(new Runnable() {
 //			@Override
 //			public void run() {
 //				for(IChatroomListener l: listeners) {
@@ -494,7 +494,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private boolean notifyChatsChanged() {
 		if (listeners.size() > 0) {
 
-			model.uiHandler.post(new Runnable() {
+			server.uiHandler.post(new Runnable() {
 				@Override
 				public void run() {
 					for (IChatroomListener l : listeners) {
@@ -509,7 +509,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 
 	private void notifyChatPostState(final PostState state, final int postID, final ChatEntry chatEntry) {
-		model.uiHandler.post(new Runnable() {
+		server.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (IChatroomListener l : listeners) {
@@ -520,7 +520,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	void onDbChange() {
-		model.uiHandler.post(new Runnable() {
+		server.uiHandler.post(new Runnable() {
 			@Override
 			public void run() {
 				for (IChatroomListener l : listeners) {
@@ -538,7 +538,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	 *//*
 
 //	private List<ChatEntry> getAllChats() {
-//		Cursor c = model.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
+//		Cursor c = server.db.query(Chats.TABLE +" AS c LEFT JOIN "+ Groups.TABLE +" AS g USING("+Chats.FOREIGN_GROUP+") LEFT JOIN "+ Users.TABLE +" AS u USING("+Chats.FOREIGN_USER+")",
 //				new String[]{Chats.KEY_ID, Chats.KEY_MESSAGE, Chats.KEY_TIME, "c."+Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID+"="+id,	null, null, null, Chats.KEY_TIME);
 //
 //		final ArrayList<ChatEntry> out = new ArrayList<>(),
@@ -560,7 +560,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //		c.close();
 //
 //		if (missingGroup.size() > 0) {
-//			model.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
+//			server.getAvailableGroups(new IModel.IListAvailableCallback<Group>() {
 //				@Override
 //				public void dataAvailable(List<Group> groups) {
 //					HashMap<Integer, Group> groupMap = new HashMap<>();
@@ -576,7 +576,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //			});
 //		}
 //		if (missingUser.size() > 0) {
-//			model.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
+//			server.getAllUsers(new IModel.IMapAvailableCallback<Integer, GroupUser>() {
 //				@Override
 //				public void dataAvailable(Map<Integer, GroupUser> users) {
 //					for (ChatEntry chat: missingUser) {
@@ -591,13 +591,13 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public Cursor getChatCursor() {
-		Cursor c = model.db.query(Chats.TABLE + " AS c LEFT JOIN " + Groups.TABLE + " AS g USING(" + Chats.FOREIGN_GROUP + ") LEFT JOIN " + Users.TABLE + " AS u USING(" + Chats.FOREIGN_USER + ")",
+		Cursor c = server.db.query(Chats.TABLE + " AS c LEFT JOIN " + Groups.TABLE + " AS g USING(" + Chats.FOREIGN_GROUP + ") LEFT JOIN " + Users.TABLE + " AS u USING(" + Chats.FOREIGN_USER + ")",
 				new String[]{Chats.KEY_ID + " AS _id", Chats.KEY_MESSAGE, Chats.KEY_TIME, "c." + Chats.FOREIGN_GROUP, Groups.KEY_NAME, Chats.FOREIGN_USER, Users.KEY_NAME, Chats.KEY_PICTURE}, Chatrooms.KEY_ID + "=" + chatroomID, null, null, null, Chats.KEY_ID);
 		Log.i(THIS, "new Cursor: " + c.getCount() + " rows");
 		return c;
 	}
 
-	private static class PictureGallery extends de.stadtrallye.rallyesoft.model.PictureGallery {
+	private static class PictureGallery extends de.stadtrallye.rallyesoft.server.PictureGallery {
 
 		private final int[] pictures;
 		private final int initialPos;
@@ -628,7 +628,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public IPictureGallery getPictureGallery(int initialPictureId) {
-		Cursor c = model.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(chatroomID)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
+		Cursor c = server.db.query(Chats.TABLE, new String[]{Chats.KEY_PICTURE}, Chats.KEY_PICTURE + " <> 0 AND " + Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(chatroomID)}, Chats.KEY_PICTURE, null, Chats.KEY_TIME);
 		int[] pictures = new int[c.getCount()];
 		int initialPos = 0;
 
@@ -643,7 +643,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		}
 		c.close();
 
-		return new PictureGallery(initialPos, pictures, model.getPictureIdResolver());
+		return new PictureGallery(initialPos, pictures, server.getPictureIdResolver());
 	}
 
 	boolean needPost = true;
@@ -653,11 +653,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			lastReadId = lastRead;
 			if (needPost) {
 				needPost = false;
-				model.uiHandler.post(new Runnable() {
+				server.uiHandler.post(new Runnable() {
 					@Override
 					public void run() {
 						needPost = true;
-						ChatNotificationManager.getInstance(model.context).updateNotification();
+						ChatNotificationManager.getInstance(server.context).updateNotification();
 					}
 				});
 			}
@@ -690,14 +690,14 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public de.rallye.model.structures.SimpleChatEntry postChat(String msg, Integer pictureID) {
-		if (!model.isConnected()) {
+	public de.rallye.server.structures.SimpleChatEntry postChat(String msg, Integer pictureID) {
+		if (!server.isConnected()) {
 			err.notLoggedIn();
 			return -1;
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostRequest(chatroomID, msg, pictureID), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			server.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(server.factory.chatPostRequest(chatroomID, msg, pictureID), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -706,14 +706,14 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public de.rallye.model.structures.SimpleChatWithPictureHash postChatWithHash(String msg, String pictureHash) {
-		if (!model.isConnected()) {
+	public de.rallye.server.structures.SimpleChatWithPictureHash postChatWithHash(String msg, String pictureHash) {
+		if (!server.isConnected()) {
 			err.notLoggedIn();
 			return -1;
 		}
 		try {
 			int taskId = nextTaskId++;
-			model.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(model.factory.chatPostWithHashRequest(chatroomID, msg, pictureHash), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			server.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(server.factory.chatPostWithHashRequest(chatroomID, msg, pictureHash), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);
@@ -732,7 +732,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			notifyChatsChanged();
 		} else {
 			notifyChatPostState(PostState.Failure, postID, null);
-			model.commError(null);
+			server.commError(null);
 		}
 	}
 

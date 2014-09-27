@@ -46,14 +46,14 @@ import de.rallye.model.structures.Node;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
+import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;

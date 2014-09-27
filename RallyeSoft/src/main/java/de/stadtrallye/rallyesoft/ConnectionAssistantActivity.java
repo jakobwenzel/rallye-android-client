@@ -21,53 +21,58 @@ package de.stadtrallye.rallyesoft;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 
+import de.rallye.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.AssistantAuthFragment;
 import de.stadtrallye.rallyesoft.fragments.AssistantCompleteFragment;
 import de.stadtrallye.rallyesoft.fragments.AssistantGroupsFragment;
 import de.stadtrallye.rallyesoft.fragments.AssistantServerFragment;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.Model;
-import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 
 /**
  * Activity that hosts an IConnectionAssistant and several Fragments containing the guided login
  * User inputs and server configurations are saved here, so they can be accessed from all pages of the assistant
  */
-public class ConnectionAssistantActivity extends FragmentActivity implements IConnectionAssistant {
+public class ConnectionAssistantActivity extends FragmentActivity implements IConnectionAssistant, LoaderManager.LoaderCallbacks<Cursor> {
 
 	public static final int REQUEST_CODE = 1336;
-
-	private IModel model;
+	private static final String THIS = ConnectionAssistantActivity.class.getSimpleName();
 
 	private ArrayList<FragmentHandler<?>> steps;
 	private int step = 1;
 	private boolean fastForward = false;
 
-	private String server;
-	private int groupID;
+	private Server server;
 	private String name;
-	private String pass;
+	private String suggestedName;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,15 +88,13 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
 
+		Storage.aquireStorage(getApplicationContext(), this);
+
 		if (savedInstanceState != null) {
 			step = savedInstanceState.getInt(Std.STEP);
-			server = savedInstanceState.getString(Std.SERVER);
-			pass = savedInstanceState.getString(Std.PASSWORD);
-			groupID = savedInstanceState.getInt(Std.GROUP_ID);
+			server = Server.load(savedInstanceState.getString(Std.SERVER));
 			name = savedInstanceState.getString(Std.NAME);
 		}
-
-		model = Model.createTemporaryModel(getApplicationContext());
 
 		//Create FragmentHandlers
 		steps = new ArrayList<FragmentHandler<?>>();
@@ -99,6 +102,8 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		steps.add(new FragmentHandler<AssistantGroupsFragment>("groups", AssistantGroupsFragment.class));
 		steps.add(new FragmentHandler<AssistantAuthFragment>("auth", AssistantAuthFragment.class));
 		steps.add(new FragmentHandler<AssistantCompleteFragment>("complete", AssistantCompleteFragment.class));
+
+		getLoaderManager().initLoader(0, null, this);
 	}
 
 	@Override
@@ -113,6 +118,28 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 				return true;
 		}
 		return false;
+	}
+
+	private static final String[] PROFILE_PROJECTION = {ContactsContract.Profile.DISPLAY_NAME_PRIMARY};
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		return new CursorLoader(getApplicationContext(), ContactsContract.Profile.CONTENT_URI, PROFILE_PROJECTION, null, null, null);
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		suggestedName = data.getString(0);
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+
+	}
+
+	@Override
+	public String getSuggestedName() {
+		return suggestedName;
 	}
 
 	/**
@@ -185,10 +212,8 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		super.onSaveInstanceState(outState);
 
 		outState.putInt(Std.STEP, step);
-		outState.putString(Std.SERVER, server);
-		outState.putString(Std.PASSWORD, pass);
+		outState.putString(Std.SERVER, server.serialize());
 		outState.putString(Std.NAME, name);
-		outState.putInt(Std.GROUP_ID, groupID);
 	}
 
 	@Override
@@ -205,18 +230,24 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		setIntent(intent);
 	}
 
-	private void setServerLoginJSON(String login) {
+	/**
+	 * Extract login info from JSON
+	 * @param serverLoginJSON
+	 */
+	private void readServerLoginJSON(String serverLoginJSON) {
 		ServerLogin l;
 		try {
-			l = ServerLogin.fromJSON(login);
+			ObjectMapper mapper = Serialization.getInstance();
+			l = mapper.readValue(serverLoginJSON, ServerLogin.class);
 
-			setServer(l.getServer().toString());
+			setServer(new Server(l.getAddress()));
 			setGroup(l.getGroupID());
-			this.pass = l.getGroupPassword();
+			server.setGroupPassword(l.getGroupPassword());
 
 			fastForward = true;
 		} catch (Exception e) {
-			Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
+			Log.e(THIS, "Could not deserialize ServerLogin from JSON", e);
+			Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -225,7 +256,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		// only one message sent during the beam
 		NdefMessage msg = (NdefMessage) rawMsgs[0];
 
-		setServerLoginJSON(new String(msg.getRecords()[0].getPayload()));
+		readServerLoginJSON(new String(msg.getRecords()[0].getPayload()));
 	}
 
 	@Override
@@ -234,7 +265,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 			if (scanResult == null) return;
 
-			setServerLoginJSON(scanResult.getContents());
+			readServerLoginJSON(scanResult.getContents());
 		}
 	}
 
@@ -247,22 +278,22 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 	@Override
 	public void setNameAndPass(String name, String pass) {
 		this.name = name;
-		this.pass = pass;
-	}
-
-	@Override
-	public void login() {
-		model.login(name, groupID, pass);
+		server.setGroupPassword(pass);
 	}
 
 	@Override
 	public int getGroup() {
-		return groupID;
+		return server.getGroupID();
 	}
 
 	@Override
 	public String getPass() {
-		return pass;
+		return server.getGroupPassword();
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	@Override
@@ -283,41 +314,27 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 	}
 
 
-	/**
-	 * IModelActivity
-	 */
 	@Override
-	public IModel getModel() {
-		return model;
+	public void setServer(Server server) {
+		this.server = server;
 	}
 
 	@Override
-	public void setServer(String server) throws MalformedURLException {
-//		if (!model.isEmpty()) {
-//			model.destroy();// Model can only have setServer called once!!
-//			model = Model.createTemporaryModel(getApplicationContext());
-//		}
-		this.server = model.setServer(server);
-	}
-
-	@Override
-	public String getServer() {
+	public Server getServer() {
 		return server;
 	}
 	
 	@Override
 	public void setGroup(int groupID) {
-		this.groupID = groupID;
+		server.setGroupID(groupID);
 	}
 
 	@Override
 	public void finish(boolean acceptNewConnection) {
-		if (acceptNewConnection && model.isConnected()) {
-			model.acceptTemporaryModel();
-			model = null;
+		if (acceptNewConnection && server.hasUserAuth()) {
+			Server.setCurrentServer(server);
 		} else {
-			model.destroy();
-			model = null;
+			//server.destroy();
 		}
 
 		setResult((acceptNewConnection)? Activity.RESULT_OK : Activity.RESULT_CANCELED);
@@ -327,8 +344,8 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 
 	@Override
 	protected void onDestroy() {
-		if (model != null)
-			model.destroy();
+
+		Storage.releaseStorage(this);
 
 		super.onDestroy();
 	}

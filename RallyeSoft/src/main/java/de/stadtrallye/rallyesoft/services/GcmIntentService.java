@@ -23,29 +23,35 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 
-import de.rallye.model.structures.Chatroom;
 import de.rallye.model.structures.PushChatEntry;
 import de.rallye.model.structures.PushEntity;
-import de.stadtrallye.rallyesoft.model.Model;
+import de.stadtrallye.rallyesoft.model.AndroidNotificationManager;
+import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
+import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.converters.JsonConverters;
-import de.stadtrallye.rallyesoft.model.converters.Serialization;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
 import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import de.wirsch.gcm.GcmBaseIntentService;
 
 public class GcmIntentService extends GcmBaseIntentService {
 	
 	private static final String THIS = GcmIntentService.class.getSimpleName();
+
+	private IChatManager chatManager;
+	private AndroidNotificationManager notificationManager;
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+
+		chatManager = Server.getCurrentServer().acquireChatManager(this);
+		notificationManager = AndroidNotificationManager.getInstance(getApplicationContext());
+	}
 
 	@Override
 	protected void onMessage(Bundle message) {
@@ -58,18 +64,18 @@ public class GcmIntentService extends GcmBaseIntentService {
 
 			switch (type) {
 				case newMessage:
-					PushChatEntry chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), PushChatEntry.class);
-					IChatroom chatroom = Server.getCurrentServer().getChat().findChatroom(chat.roomID);
-					chatroom.pushChat(chat.entry);
+					PushChatEntry<ChatEntry> chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), new TypeReference<PushChatEntry<ChatEntry>>(){});
+					IChatroom chatroom = chatManager.findChatroom(chat.roomID);
+					chatroom.pushChat(chat.entry, notificationManager);
 					break;
 				case messageChanged:
-					chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), PushChatEntry.class);
-					chatroom = Server.getCurrentServer().getChat().findChatroom(chat.roomID);
-					chatroom.changedChat(chat.entry);
+					chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), new TypeReference<PushChatEntry<ChatEntry>>(){});
+					chatroom = chatManager.findChatroom(chat.roomID);
+					chatroom.editChat(chat.entry);
 					break;
 				default:
 			}
-		} catch (JSONException | IOException e) {
+		} catch (IOException e) {
 			Log.e(THIS, "Push Message not compatible", e);
 		}
 	}
@@ -99,4 +105,10 @@ public class GcmIntentService extends GcmBaseIntentService {
 		Model.getInstance(getApplicationContext()).logout();
 	}*/
 
+	@Override
+	public void onDestroy() {
+		Server.getCurrentServer().releaseChatManager(this);
+
+		super.onDestroy();
+	}
 }

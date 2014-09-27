@@ -28,6 +28,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.net.Server;
@@ -50,6 +52,7 @@ public class ChatManager implements IChatManager {
 	private final SQLiteDatabase db;
 	private RetroAuthCommunicator communicator;
 	private List<Chatroom> chatrooms;
+	private final ReadWriteLock chatroomLock = new ReentrantReadWriteLock();
 	private final List<IChatListener> listeners = new ArrayList<>();
 
 	public ChatManager(RetroAuthCommunicator communicator, SQLiteDatabase db) {

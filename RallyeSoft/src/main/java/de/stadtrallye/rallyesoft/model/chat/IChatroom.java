@@ -28,12 +28,16 @@ import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.uimodel.INotificationManager;
 
 /**
  * Chatroom
  */
 public interface IChatroom {
+
+	void editChat(ChatEntry chatEntry);
+
+	void pushChat(ChatEntry chatEntry, INotificationManager notificationManager);
 
 	enum ChatroomState { Ready, Refreshing }
 	enum PostState { Success, Failure, Uploading }

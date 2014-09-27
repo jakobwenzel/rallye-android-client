@@ -36,19 +36,20 @@ import java.util.Map;
 import de.stadtrallye.rallyesoft.MainActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.uimodel.INotificationManager;
 
 /**
  * Created by wilson on 04.10.13.
  */
-public class ChatNotificationManager {
+public class AndroidNotificationManager implements INotificationManager {
 
-
-
-	NotificationManager notificationService;
 	private Context context;
-	public ChatNotificationManager(Context context) {
+
+	private NotificationManager notificationService;
+
+	public AndroidNotificationManager(Context context) {
 		this.context = context;
 		notificationService = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 	}
@@ -65,15 +66,13 @@ public class ChatNotificationManager {
 		updateNotification();
 	}*/
 
-	protected void updateNotification() {
+	@Override
+	public void updateChatNotification(IChatroom chatroom) {
 
-		Map<IChatroom,List<ChatEntry>> notifyingEntries = new HashMap<IChatroom,List<ChatEntry>>();
-		List<? extends IChatroom> rooms = Model.getInstance(context).getChatrooms();
-		for (IChatroom room: rooms) {
-			List<ChatEntry> unread = room.getUnreadEntries();
-			if (unread.size()>0)
-				notifyingEntries.put(room,unread);
-		}
+		Map<IChatroom,List<ChatEntry>> notifyingEntries = new HashMap<>();
+		List<ChatEntry> unread = chatroom.getUnreadEntries();
+		if (unread.size()>0)
+			notifyingEntries.put(chatroom,unread);
 
 		if (notifyingEntries.size()>0) {
 
@@ -161,10 +160,10 @@ public class ChatNotificationManager {
 
 
 
-	static ChatNotificationManager instance;
-	public static ChatNotificationManager getInstance(Context context) {
+	static AndroidNotificationManager instance;
+	public static AndroidNotificationManager getInstance(Context context) {
 		if (instance==null)
-			instance = new ChatNotificationManager(context);
+			instance = new AndroidNotificationManager(context);
 
 		return instance;
 	}

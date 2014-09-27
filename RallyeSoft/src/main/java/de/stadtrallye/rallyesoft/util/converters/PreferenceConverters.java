@@ -17,7 +17,7 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.converters;
+package de.stadtrallye.rallyesoft.util.converters;
 
 import java.util.Collections;
 import java.util.HashSet;

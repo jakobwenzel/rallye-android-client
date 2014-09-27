@@ -24,6 +24,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -43,14 +44,15 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
-import java.net.MalformedURLException;
 import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.model.IServer;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
 /**
@@ -61,21 +63,21 @@ public class AssistantServerFragment extends Fragment {
 
 	private IConnectionAssistant assistant;
 
-	private EditText server;
+	private EditText edit_server;
 	private ImageView srv_image;
 	private TextView srv_name;
 	private TextView srv_desc;
-	private Button next;
+	private Button btn_next;
 	private ImageLoader loader;
     private Spinner protocol;
 	private EditText port;
-	private Button test;
+	private Button btn_test;
 //	private EditText path;
 	private ScrollView scrollView;
 	private InfoManager infoManager;
-	private ViewGroup server_info_manager;
-	private ViewGroup server_info;
-	private ViewGroup server_loading;
+	private ViewGroup grp_server_info_manager;
+	private ViewGroup grp_server_info;
+	private ViewGroup grp_server_loading;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -96,7 +98,7 @@ public class AssistantServerFragment extends Fragment {
 		scrollView = (ScrollView)v.findViewById(R.id.scrollView);
 
 		protocol = (Spinner) v.findViewById(R.id.protocol);
-		server = (EditText) v.findViewById(R.id.server);
+		edit_server = (EditText) v.findViewById(R.id.server);
 		port = (EditText) v.findViewById(R.id.port);
 //		path = (EditText) v.findViewById(R.id.path);
 
@@ -113,8 +115,8 @@ public class AssistantServerFragment extends Fragment {
 //			}
 //		});
 
-		test = (Button) v.findViewById(R.id.test);
-		test.setOnClickListener(new View.OnClickListener() {
+		btn_test = (Button) v.findViewById(R.id.test);
+		btn_test.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				View focus = getActivity().getCurrentFocus();
@@ -126,15 +128,15 @@ public class AssistantServerFragment extends Fragment {
 			}
 		});
 
-		server_info_manager = (ViewGroup) v.findViewById(R.id.info_manager);
-		server_info = (ViewGroup) v.findViewById(R.id.server_info);
-		server_loading = (ViewGroup) v.findViewById(R.id.loading);
+		grp_server_info_manager = (ViewGroup) v.findViewById(R.id.info_manager);
+		grp_server_info = (ViewGroup) v.findViewById(R.id.server_info);
+		grp_server_loading = (ViewGroup) v.findViewById(R.id.loading);
 		srv_image = (ImageView) v.findViewById(R.id.server_image);
 		srv_name = (TextView) v.findViewById(R.id.server_name);
 		srv_desc = (TextView) v.findViewById(R.id.server_desc);
 
-		next = (Button) v.findViewById(R.id.next);
-		next.setOnClickListener(new View.OnClickListener(){
+		btn_next = (Button) v.findViewById(R.id.next);
+		btn_next.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				assistant.next();
@@ -145,9 +147,6 @@ public class AssistantServerFragment extends Fragment {
 
 		if (android.os.Build.VERSION.SDK_INT >= 11)
 			setLayoutTransition((ViewGroup) v);
-
-		if (infoManager == null)
-			infoManager = new InfoManager(savedInstanceState);
 
 		return v;
 	}
@@ -161,29 +160,30 @@ public class AssistantServerFragment extends Fragment {
 		} catch (ClassCastException e) {
 			throw new ClassCastException(getActivity().toString() + " must implement IConnectionAssistant");
 		}
+
+		if (infoManager == null)
+			infoManager = new InfoManager(savedInstanceState, assistant.getServer());
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		String s = assistant.getServer();
-		if (s != null) {
-			String[] parts = s.replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)$", "$1;$2;$3").split(";"); ///(\w+?)/?
+		Server s = assistant.getServer();
+		if (s != null) {// Maybe save separately inside Server and only use getters here
+			String[] parts = s.getAddress().replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)$", "$1;$2;$3").split(";"); ///(\w+?)/?
 			protocol.setSelection(parts[0].equals("http")? 0 : 1);
 			port.setText(parts[2]);
-			server.setText(parts[1]);
+			edit_server.setText(parts[1]);
 //			path.setText(parts[3]);
 		}
 
 		infoManager.restore();
-
-		assistant.getModel().addListener(infoManager);
 	}
 
 	@Override
 	public void onResume() {
-		server.addTextChangedListener(infoManager);
+		edit_server.addTextChangedListener(infoManager);
 		port.addTextChangedListener(infoManager);
 //		path.addTextChangedListener(infoManager);
 
@@ -192,7 +192,7 @@ public class AssistantServerFragment extends Fragment {
 
 	@Override
 	public void onPause() {
-		server.removeTextChangedListener(infoManager);
+		edit_server.removeTextChangedListener(infoManager);
 		port.removeTextChangedListener(infoManager);
 //		path.removeTextChangedListener(infoManager);
 
@@ -203,7 +203,6 @@ public class AssistantServerFragment extends Fragment {
 	public void onStop() {
 		super.onStop();
 
-		assistant.getModel().removeListener(infoManager);
 	}
 
 	@Override
@@ -213,9 +212,9 @@ public class AssistantServerFragment extends Fragment {
 		super.onSaveInstanceState(outState);
 	}
 
-	private String getServer() {
+	private String collectAddress() {
 		String protocol = this.protocol.getSelectedItem().toString();
-		String server = this.server.getText().toString();
+		String server = this.edit_server.getText().toString();
 		String port = this.port.getText().toString();
 		if (port.equals(""))
 			port = Std.DEFAULT_PORT;
@@ -228,18 +227,20 @@ public class AssistantServerFragment extends Fragment {
 
 //	private enum InfoState { clear, loading, complete }
 
-	private class InfoManager implements IModel.IModelListener, ImageLoadingListener, TextWatcher {
+	private class InfoManager implements ImageLoadingListener, TextWatcher, IServer.IServerListener {
+		private final Server server;
 
 //		private InfoState state;
 
 		private boolean hasInfo, hasImage;
 
-		public InfoManager(Bundle savedInstanceState) {
+		public InfoManager(Bundle savedInstanceState, Server server) {
+			this.server = server;
 			if (savedInstanceState != null) {
 				hasInfo = savedInstanceState.getBoolean(Std.SERVER+Std.CONNECTED, false);
 				hasImage = savedInstanceState.getBoolean(Std.SERVER+Std.IMAGE, false);
 				if (hasInfo && hasImage) {
-					refresh();
+					updateViews();
 //					state = InfoState.complete;
 				} else {
 					hide();
@@ -254,7 +255,7 @@ public class AssistantServerFragment extends Fragment {
 
 		public void onSaveInstanceState(Bundle out) {
 			out.putBoolean(Std.SERVER+Std.CONNECTED, hasInfo);
-			out.putBoolean(Std.SERVER+Std.IMAGE, hasImage);
+			out.putBoolean(Std.SERVER + Std.IMAGE, hasImage);
 		}
 
 		public void reset() {
@@ -263,96 +264,99 @@ public class AssistantServerFragment extends Fragment {
 			hide();
 		}
 
+		/**
+		 * If we already have image and info, show it, else hide everything
+		 */
 		public void restore() {
 			if (hasImage && hasInfo) {
 				displayServerInfo();
-				IModel model = assistant.getModel();
-				loader.displayImage(model.getServerPictureURL(), srv_image);
-				onServerInfoChange(model.getServerInfo());
+
+				loader.displayImage(server.getServerIconUrl(), srv_image);
+				onServerInfoChanged(server.getServerInfoCached());
 			} else
 				hide();
 		}
 
+		/**
+		 *
+		 */
 		public void startTest() {
 //			state = InfoState.loading;
 			try {
 				displayLoadingState();
-				String server = getServer();
+				String address = collectAddress();
+				Server server = new Server(address);
+				server.updateServerInfo();
 				assistant.setServer(server);
-				IModel model = assistant.getModel();
-				loader.displayImage(model.getServerPictureURL(), srv_image, infoManager);
-			} catch (MalformedURLException e) {
+				loader.displayImage(server.getServerIconUrl(), srv_image, infoManager);
+			} catch (Exception e) {
 				Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 				hide();
 			}
 		}
 
 		private void displayServerInfo() {
-			server_info_manager.setVisibility(View.VISIBLE);
-			server_loading.setVisibility(View.GONE);
-			server_info.setVisibility(View.VISIBLE);
-			test.setVisibility(View.GONE);
-			next.setVisibility(View.VISIBLE);
+			grp_server_info_manager.setVisibility(View.VISIBLE);
+			grp_server_loading.setVisibility(View.GONE);
+			grp_server_info.setVisibility(View.VISIBLE);
+			btn_test.setVisibility(View.GONE);
+			btn_next.setVisibility(View.VISIBLE);
 			getView().post(new Runnable() {
 				@Override
 				public void run() {
-					scrollView.scrollTo(0, next.getTop());
-					next.requestFocus();
+					scrollView.scrollTo(0, btn_next.getTop());
+					btn_next.requestFocus();
 				}
 			});
 		}
 
 		private void displayLoadingState() {
-			server_info_manager.setVisibility(View.VISIBLE);
-			server_loading.setVisibility(View.VISIBLE);
-			server_info.setVisibility(View.GONE);
-			test.setVisibility(View.GONE);
-			next.setVisibility(View.GONE);
+			grp_server_info_manager.setVisibility(View.VISIBLE);
+			grp_server_loading.setVisibility(View.VISIBLE);
+			grp_server_info.setVisibility(View.GONE);
+			btn_test.setVisibility(View.GONE);
+			btn_next.setVisibility(View.GONE);
 		}
 
 		private void hide() {
-			server_info_manager.setVisibility(View.GONE);
-			test.setVisibility(View.VISIBLE);
-			next.setVisibility(View.GONE);
+			grp_server_info_manager.setVisibility(View.GONE);
+			btn_test.setVisibility(View.VISIBLE);
+			btn_next.setVisibility(View.GONE);
 		}
 
-		private void refresh() {
+		private void updateViews() {
 			if (hasInfo && hasImage) {
 				displayServerInfo();
 //				state = InfoState.complete;
 			}
 		}
 
-		private void failed() {
+		private void failed(Exception e) {
 			loader.cancelDisplayTask(srv_image);
 //			state = InfoState.clear;
 			hide();
 			Toast.makeText(getActivity(), R.string.connection_test_failed, Toast.LENGTH_SHORT).show();
-			server.requestFocus();
+			AssistantServerFragment.this.edit_server.requestFocus();
 		}
 
 		@Override
-		public void onConnectionStateChange(IModel.ConnectionState newState) {
-
-		}
-
-		@Override
-		public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
+		public void onConnectionFailed(Exception e) {
 			hasInfo = false;
-			failed();
+			failed(e);
 		}
 
 		@Override
-		public void onServerInfoChange(ServerInfo info) {
-			srv_name.setText(info.name);
-			srv_desc.setText(info.description);
+		public void onServerInfoChanged(ServerInfo serverInfo) {
+			srv_name.setText(serverInfo.name);
+			srv_desc.setText(serverInfo.description);
 
 			hasInfo = true;
-			refresh();
+			updateViews();
 		}
 
 		@Override
-		public void onAvailableGroupsChange(List<Group> groups) {
+		public void onAvailableGroupsChanged(List<Group> groups) {
+
 		}
 
 		@Override
@@ -363,13 +367,13 @@ public class AssistantServerFragment extends Fragment {
 		@Override
 		public void onLoadingFailed(String s, View view, FailReason failReason) {
 			hasImage = false;
-			failed();
+			failed(null);
 		}
 
 		@Override
 		public void onLoadingComplete(String s, View view, Bitmap bitmap) {
 			hasImage = true;
-			refresh();
+			updateViews();
 		}
 
 		@Override
@@ -389,6 +393,11 @@ public class AssistantServerFragment extends Fragment {
 
 		@Override
 		public void afterTextChanged(Editable s) {
+		}
+
+		@Override
+		public Handler getCallbackHandler() {
+			return Threading.getUiExecutor();
 		}
 	}
 }

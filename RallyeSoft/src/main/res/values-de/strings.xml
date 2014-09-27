@@ -118,5 +118,6 @@
 	<string name="auto_upload_on_summ">Lade Bilder hoch sobald sie ausgewählt sind</string>
 	<string name="data_transfer">Datentransfer</string>
 	<string name="settings">Einstellungen</string>
+	<string name="connecting">Verbinde...</string>
 
 </resources>

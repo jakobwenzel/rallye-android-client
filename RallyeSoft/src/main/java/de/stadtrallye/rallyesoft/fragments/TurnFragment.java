@@ -36,24 +36,20 @@ import java.util.List;
 import de.rallye.model.structures.AdditionalPicture;
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.Group;
-import de.rallye.model.structures.PictureSize;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.IModel.ConnectionState;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.widget.AdapterView;
 import de.stadtrallye.rallyesoft.widget.GridView;
 import de.stadtrallye.rallyesoft.widget.ListView;
-
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
 
 public class TurnFragment extends Fragment implements IModel.IModelListener, GridView.OnItemClickListener {
 
 	private GridView grid;
 	private ListView list;
-	private IModel model;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -69,8 +65,8 @@ public class TurnFragment extends Fragment implements IModel.IModelListener, Gri
 	public void onStart() {
 		super.onStart();
 
-		model = getModel(getActivity());
-		Cursor c = model.getTasks().getTasksCursor();
+
+		Cursor c = null;//TODO
 
 		Task task = CursorConverters.getTask(20, c, CursorConverters.TaskCursorIds.read(c));
 
@@ -160,7 +156,7 @@ public class TurnFragment extends Fragment implements IModel.IModelListener, Gri
 				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
 
-			loader.displayImage(model.getUrlFromImageId(pic.pictureID, PictureSize.Mini), v);
+//			loader.displayImage(model.getUrlFromImageId(pic.pictureID, PictureSize.Mini), v);//TODO
 
 			return v;
 		}

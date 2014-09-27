@@ -30,8 +30,8 @@ import android.view.ViewGroup;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.TaskDetailsFragment;
-import de.stadtrallye.rallyesoft.model.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
+import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 
 /**
  * Adapter to use a Cursor to page through all Tasks in detail

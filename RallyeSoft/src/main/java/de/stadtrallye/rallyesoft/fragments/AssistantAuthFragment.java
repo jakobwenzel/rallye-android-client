@@ -19,9 +19,9 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,9 +44,9 @@ public class AssistantAuthFragment extends Fragment {
 
 
 	private IConnectionAssistant assistant;
-	private EditText name;
-	private EditText pass;
-	private Button next;
+	private EditText edit_name;
+	private EditText edit_pass;
+	private Button btn_next;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -58,11 +58,11 @@ public class AssistantAuthFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.assistant_auth_fragment, container, false);
-		name = (EditText) v.findViewById(R.id.name);
-		pass = (EditText) v.findViewById(R.id.pass);
-		next = (Button) v.findViewById(R.id.next);
+		edit_name = (EditText) v.findViewById(R.id.name);
+		edit_pass = (EditText) v.findViewById(R.id.pass);
+		btn_next = (Button) v.findViewById(R.id.next);
 
-		next.setOnClickListener(new View.OnClickListener() {
+		btn_next.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				View focus = getActivity().getCurrentFocus();
@@ -74,7 +74,7 @@ public class AssistantAuthFragment extends Fragment {
 			}
 		});
 
-		pass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+		edit_pass.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -101,18 +101,25 @@ public class AssistantAuthFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 
-		String s = assistant.getPass();
-		if (s != null) {
-			pass.setText(s);
+		String pass = assistant.getPass();
+		if (pass != null) {
+			edit_pass.setText(pass);
+		}
+		String name = assistant.getName();
+		if (name == null) {
+			name = assistant.getSuggestedName();
+		}
+		if (name != null) {
+			edit_name.setText(name);
 		}
 	}
 
 	private void onNext() {
-		String n = name.getText().toString(), p = pass.getText().toString();
+		String n = edit_name.getText().toString(), p = edit_pass.getText().toString();
 
 		if (n == null || n.length() < 3) {
 			Toast.makeText(getActivity(), R.string.invalid_username, Toast.LENGTH_SHORT).show();
-		} else if (pass == null || pass.length() <= 3){
+		} else if (edit_pass == null || edit_pass.length() <= 3){
 			Toast.makeText(getActivity(), R.string.invalid_password, Toast.LENGTH_SHORT).show();
 		} else {
 			assistant.setNameAndPass(n, p);

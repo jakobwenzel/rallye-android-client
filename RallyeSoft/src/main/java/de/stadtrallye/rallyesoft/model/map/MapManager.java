@@ -25,6 +25,10 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Handler;
 import android.util.Log;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -44,6 +48,7 @@ import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Edges;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Nodes;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -183,7 +188,7 @@ public class MapManager implements IMapManager {
 	}
 	
 //	private void findNeighbors(Node node) {
-//		Cursor c = model.db.query(Edges.TABLE +" LEFT JOIN "+ Nodes.TABLE +" ON "+ Edges.KEY_B+"="+Nodes.KEY_ID,
+//		Cursor c = server.db.query(Edges.TABLE +" LEFT JOIN "+ Nodes.TABLE +" ON "+ Edges.KEY_B+"="+Nodes.KEY_ID,
 //				new String[]{ Edges.KEY_A, Edges.KEY_B, Edges.KEY_TYPE }, Edges.KEY_A+"="+node.ID, null, null, null, null);
 //	}
 
@@ -232,7 +237,7 @@ public class MapManager implements IMapManager {
 			public void success(MapConfig mapConfig, Response response) {
 				if (!mapConfig.equals(MapManager.this.mapConfig)) {
 					MapManager.this.mapConfig = mapConfig;
-					model.save().saveMapConfig().commit();
+					saveMapConfig();
 					Log.d(THIS, "Map Config has changed, replacing");
 					notifyMapConfigChange();
 				}
@@ -245,6 +250,26 @@ public class MapManager implements IMapManager {
 			}
 		});
     }
+
+	private void saveMapConfig() {
+		ObjectMapper mapper = Serialization.getInstance();
+		try {
+			mapper.writeValue(Storage.getMapConfigOutputStream(), mapConfig);
+		} catch (IOException e) {
+			Log.e(THIS, "Failed to save MapConfig", e);
+		}
+	}
+
+	private void loadMapConfig() {
+		ObjectMapper mapper = Serialization.getInstance();
+		try {
+			mapper.readValue(Storage.getMapConfigInputStream(), MapConfig.class);
+		} catch (FileNotFoundException e) {
+			Log.w(THIS, "No previously saved MapConfig found");
+		} catch (IOException e) {
+			Log.e(THIS, "Failed to load MapConfig", e);
+		}
+	}
 
 	@Override
 	public MapConfig getMapConfig() {

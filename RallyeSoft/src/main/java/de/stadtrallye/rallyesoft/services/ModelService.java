@@ -25,7 +25,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 /**
- * This Service should manage all parts of the model, so they can stay alive during configuration changes or in background
+ * This Service should manage all parts of the server, so they can stay alive during configuration changes or in background
  *
  * For extra efficiency this service should be started and bound
  *

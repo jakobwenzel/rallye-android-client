@@ -21,6 +21,7 @@ package de.stadtrallye.rallyesoft.fragments;
 
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -49,16 +50,20 @@ import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.threading.Threading;
 
-import static de.stadtrallye.rallyesoft.model.Model.getModel;
 import static de.stadtrallye.rallyesoft.model.structures.LatLngAdapter.toGms;
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 public class GameMapFragment extends SupportMapFragment implements IMapManager.IMapListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnCameraChangeListener {
 	
 	private static final String THIS = GameMapFragment.class.getSimpleName();
-	
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
+	}
+
 	private enum Zoom { ToGame, ToBounds, ZoomCustom }
 	
 	private GoogleMap gmap;
@@ -106,8 +111,8 @@ public class GameMapFragment extends SupportMapFragment implements IMapManager.I
 			gmap.setOnCameraChangeListener(this);
 		}
 
-		IModel model = getModel(getActivity());
-		map = model.getMap();
+
+//		map = model.getMap();//TODO
 		
 		if (zoom == null) {
 			map.provideMap();

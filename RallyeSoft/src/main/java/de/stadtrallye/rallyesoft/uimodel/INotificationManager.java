@@ -17,15 +17,14 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.executors;
+package de.stadtrallye.rallyesoft.uimodel;
 
-import de.stadtrallye.rallyesoft.net.manual.Request;
-import de.stadtrallye.rallyesoft.util.JSONConverter;
-import de.stadtrallye.rallyesoft.util.StringedJSONObjectConverter;
+import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 
-public class JSONObjectRequestExecutor<T, ID> extends RequestExecutor<T, ID> {
+/**
+ * Created by Ramon on 27.09.2014.
+ */
+public interface INotificationManager {
 
-	public JSONObjectRequestExecutor(Request req, JSONConverter<T> converter, Callback<ID> callback, ID callbackId) {
-		super(req, new StringedJSONObjectConverter<T>(converter), callback, callbackId);
-	}
+	void updateChatNotification(IChatroom chatroom);
 }

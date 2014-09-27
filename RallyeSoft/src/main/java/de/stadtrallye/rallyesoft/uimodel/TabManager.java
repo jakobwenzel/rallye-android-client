@@ -19,20 +19,23 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
-import android.support.v4.app.FragmentTransaction;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.MenuItem;
+
+import com.android.internal.util.Predicate;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.net.Server;
 
 /**
  * Manages all fragments used as Tabs in an activity
@@ -139,14 +142,14 @@ public abstract class TabManager {
 		public final String tag;
 		private final Class<C> clz;
 		public final int titleId;
+		private final Predicate<Server> showCondition;
 		private Bundle args;
-		public final boolean requiresOnline;
 
-		public Tab(String tag, Class<C> clz, int titleId, boolean requiresOnline) {
+		public Tab(String tag, Class<C> clz, int titleId, Predicate<Server> showCondition) {
 			this.tag = tag;
 			this.clz = clz;
-			this.requiresOnline = requiresOnline;
 			this.titleId = titleId;
+			this.showCondition = showCondition;
 		}
 
 		public Fragment getFragment() {
@@ -163,6 +166,13 @@ public abstract class TabManager {
 			}
 
 			return f;
+		}
+
+		public boolean isAvailable(Server server) {
+			if (showCondition == null)
+				return true;
+
+			return showCondition.apply(server);
 		}
 	}
 

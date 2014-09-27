@@ -20,6 +20,7 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,10 +32,11 @@ import java.util.List;
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.model.IServer;
 import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 
-public class OverviewFragment extends Fragment implements IModel.IModelListener {
+public class OverviewFragment extends Fragment implements IServer.IServerListener {
 
 	@SuppressWarnings("unused")
 	private static final String THIS = OverviewFragment.class.getSimpleName();
@@ -70,30 +72,30 @@ public class OverviewFragment extends Fragment implements IModel.IModelListener 
 
 		server = Server.getCurrentServer();
 
+		showServerInfo(server.getServerInfoCached());
 
-		onConnectionStateChange(model.getConnectionState());
-		if (model.getServerInfo() != null)
-			onServerInfoChange(model.getServerInfo());
-
-		model.addListener(this);
+		server.addListener(this);
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
 
+		server.removeListener(this);
 		server = null;
 	}
 
 	private void showServerInfo(ServerInfo info) {
-		serverName.setText(info.name);
-		serverDesc.setText(info.description);
-		StringBuilder sb = new StringBuilder();
-		for (ServerInfo.Api api: info.api) {
-			sb.append(api.name).append(": ").append(api.version).append('\n');
+		if (info != null) {
+			serverName.setText(info.name);
+			serverDesc.setText(info.description);
+			StringBuilder sb = new StringBuilder();
+			for (ServerInfo.Api api : info.api) {
+				sb.append(api.name).append(": ").append(api.version).append('\n');
+			}
+			sb.deleteCharAt(sb.length() - 1);
+			serverVer.setText(sb.toString());
 		}
-		sb.deleteCharAt(sb.length()-1);
-		serverVer.setText(sb.toString());
 	}
 
 	private void hideServerInfo() {
@@ -102,28 +104,33 @@ public class OverviewFragment extends Fragment implements IModel.IModelListener 
 		serverVer.setText("");
 	}
 
-	@Override
-	public void onConnectionStateChange(IModel.ConnectionState newState) {
-		connectionState.setText(newState.toString());
+//	@Override
+//	public void onConnectionStateChange(IModel.ConnectionState newState) {
+//		connectionState.setText(newState.toString());
+//
+//		if (newState == IModel.ConnectionState.Connected) {
+//			showServerInfo(server.getServerInfo());
+//		}
+//	}
 
-		if (newState == IModel.ConnectionState.Connected) {
-			showServerInfo(model.getServerInfo());
-		}
-	}
-
 	@Override
-	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
-		connectionState.setText(fallbackState +"\n"+ e.toString());
+	public void onConnectionFailed(Exception e) {
+		connectionState.setText(e.toString());
 		hideServerInfo();
 	}
 
 	@Override
-	public void onServerInfoChange(ServerInfo info) {
+	public void onServerInfoChanged(ServerInfo info) {
 		showServerInfo(info);
 	}
 
 	@Override
-	public void onAvailableGroupsChange(List<Group> groups) {
+	public void onAvailableGroupsChanged(List<Group> groups) {
 
+	}
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 }

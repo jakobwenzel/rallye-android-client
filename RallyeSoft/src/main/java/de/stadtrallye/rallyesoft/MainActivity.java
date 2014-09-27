@@ -41,13 +41,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import java.util.List;
-
-import de.rallye.model.structures.Group;
-import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
-import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.storage.Storage;
@@ -190,7 +185,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 
 	private void initializeState() {
 		setProgressBarIndeterminateVisibility(false);
-		tabManager.setModel(model);
+		tabManager.setServer(model);
 		onConnectionStateChange(model.getConnectionState());
 	}
 
@@ -377,7 +372,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 
 //	@Override
 //	public void onMapConfigChange() {
-//		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
+//		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(server));
 //	}
 
 	/**

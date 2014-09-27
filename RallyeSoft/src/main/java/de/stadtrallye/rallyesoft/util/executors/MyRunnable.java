@@ -17,17 +17,37 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.executors;
+package de.stadtrallye.rallyesoft.util.executors;
 
-import java.util.List;
+public abstract class MyRunnable<T> implements Runnable {
+	
+	private Exception exception;
+	protected T res;
 
-import de.stadtrallye.rallyesoft.net.manual.Request;
-import de.stadtrallye.rallyesoft.util.JSONConverter;
-import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
+	@Override
+	public void run() {
+		try {
+			res = tryRun();
+		} catch (Exception e){
+			exception = e;
+		} finally {
+			callback();
+		}
+	}
+	
+	public boolean isSuccessful() {
+		return exception == null;
+	}
+	
+	public T getResult() {
+		return res;
+	}
 
-public class JSONArrayRequestExecutor<T, ID> extends RequestExecutor<List<T>, ID> {
+	protected abstract T tryRun() throws Exception;
+	
+	protected abstract void callback();
 
-	public JSONArrayRequestExecutor(Request req, JSONConverter<T> converter, Callback<ID> callback, ID callbackId) {
-		super(req, new StringedJSONArrayConverter<T>(converter), callback, callbackId);
+	public Exception getException() {
+		return exception;
 	}
 }

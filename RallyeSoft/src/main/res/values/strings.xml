@@ -122,5 +122,6 @@
 	<string name="auto_upload_off_summ">Start uploading pictures on \'Send\'</string>
 	<string name="settings">Settings</string>
 	<string name="data_transfer">Data Transfer</string>
+	<string name="connecting">Connecting...</string>
 
 </resources>

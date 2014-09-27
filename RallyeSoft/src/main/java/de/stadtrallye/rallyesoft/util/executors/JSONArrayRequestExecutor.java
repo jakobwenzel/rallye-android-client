@@ -17,20 +17,17 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.converters;
+package de.stadtrallye.rallyesoft.util.executors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 
-/**
- * Created by Ramon on 22.09.2014.
- */
-public class Serialization {
-	private static ObjectMapper objectMapper;
+import de.stadtrallye.rallyesoft.net.manual.Request;
+import de.stadtrallye.rallyesoft.util.JSONConverter;
+import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
 
-	public static ObjectMapper getInstance() {
-		if (objectMapper == null) {
-			objectMapper = new ObjectMapper();
-		}
-		return objectMapper;
+public class JSONArrayRequestExecutor<T, ID> extends RequestExecutor<List<T>, ID> {
+
+	public JSONArrayRequestExecutor(Request req, JSONConverter<T> converter, Callback<ID> callback, ID callbackId) {
+		super(req, new StringedJSONArrayConverter<T>(converter), callback, callbackId);
 	}
 }

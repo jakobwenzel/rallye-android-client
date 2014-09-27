@@ -30,6 +30,7 @@ import java.net.URL;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.util.JSONConverter;
 
+@Deprecated
 public class ServerLogin {
 	
 	private static final String THIS = ServerLogin.class.getSimpleName();
@@ -188,7 +189,7 @@ public class ServerLogin {
 			return false;
 		return true;
 	}
-	
+
 	public String toJSON() {
 		JSONObject js = new JSONObject();
 		try {
@@ -201,7 +202,7 @@ public class ServerLogin {
 		}
 		return js.toString();
 	}
-	
+
 	public static ServerLogin fromJSON(String json) throws Exception {
 		JSONObject js;
 		try {
@@ -209,7 +210,7 @@ public class ServerLogin {
 			if (js.getInt(VERSION) != version) {
 				throw new Exception("Incompatible Versions of Login!");
 			}
-			
+
 			return new ServerLogin(js.getString(SERVER), js.getInt(GROUP_ID), null, js.getString(GROUP_PASSWORD), 0, null);
 		} catch (JSONException e) {
 			throw new Exception("Invalid JSON", e);

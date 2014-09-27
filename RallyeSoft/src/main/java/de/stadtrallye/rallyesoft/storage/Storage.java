@@ -36,6 +36,7 @@ import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 public class Storage {
 
 	private static final String SERVER_CONFIG = "server_config.json";
+	private static final String MAP_CONFIG = "map_config.json";
 
 	private static List<Object> handles = new ArrayList<>();
 
@@ -79,5 +80,13 @@ public class Storage {
 
 	public static FileInputStream getServerConfigInputStream() throws FileNotFoundException {
 		return context.openFileInput(SERVER_CONFIG);
+	}
+
+	public static FileOutputStream getMapConfigOutputStream() throws FileNotFoundException {
+		return context.openFileOutput(MAP_CONFIG, Context.MODE_PRIVATE);
+	}
+
+	public static FileInputStream getMapConfigInputStream() throws FileNotFoundException {
+		return context.openFileInput(MAP_CONFIG);
 	}
 }

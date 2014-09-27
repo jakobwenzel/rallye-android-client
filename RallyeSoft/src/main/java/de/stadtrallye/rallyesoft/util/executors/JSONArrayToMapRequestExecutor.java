@@ -17,7 +17,7 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.executors;
+package de.stadtrallye.rallyesoft.util.executors;
 
 import java.util.Map;
 

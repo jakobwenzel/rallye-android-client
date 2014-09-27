@@ -21,9 +21,9 @@ package de.stadtrallye.rallyesoft.net.retrofit;
 
 import java.util.List;
 
+import de.rallye.model.structures.Group;
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.ServerInfo;
-import de.rallye.model.structures.User;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.net.Paths;
 import retrofit.Callback;
@@ -41,7 +41,7 @@ public interface RetroCommunicator {
 	void getServerInfo(Callback<ServerInfo> callback);
 
 	@GET(Paths.GROUPS)
-	void getAvailableGroups(Callback<List<User>> callback);
+	void getAvailableGroups(Callback<List<Group>> callback);
 
 	@PUT(Paths.GROUPS_WITH_ID)
 	void login(@Path(Paths.PARAM_GROUP_ID) int groupID, @Body LoginInfo loginInfo, Callback<UserAuth> callback);

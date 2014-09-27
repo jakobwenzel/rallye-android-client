@@ -33,7 +33,7 @@ import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.net.Server;
 
 /**
  * Adapter for showing the Groups available for login on a new server
@@ -41,7 +41,7 @@ import de.stadtrallye.rallyesoft.model.IModel;
  */
 public class GroupListAdapter extends BaseAdapter {
 
-	private final IModel model;
+	private final Server server;
 	private List<Group> groups;
 	private final ImageLoader loader;
 //	private Context context;
@@ -54,10 +54,10 @@ public class GroupListAdapter extends BaseAdapter {
 	}
 
 
-	public GroupListAdapter(Context context, List<Group> groups, IModel model) {
+	public GroupListAdapter(Context context, List<Group> groups, Server server) {
 //		this.context = context;
 		this.groups = groups;
-		this.model = model;
+		this.server = server;
 
 		this.inflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -94,7 +94,7 @@ public class GroupListAdapter extends BaseAdapter {
 			// ImageLoader must apparently be called for _EVERY_ entry
 			// When called with null or "" as URL, will display empty pciture / default resource
 			// Otherwise ImageLoader will not be stable and start swapping images
-			loader.displayImage(model.getAvatarURL(g.groupID), mem.img);
+			loader.displayImage(server.getAvatarUrl(g.groupID), mem.img);
 		}
 
 		return v;

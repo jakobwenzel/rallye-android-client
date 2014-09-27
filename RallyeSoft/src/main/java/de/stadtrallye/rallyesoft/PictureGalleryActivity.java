@@ -58,7 +58,7 @@ public class PictureGalleryActivity extends Activity {
 	private ActionBar actionBar;
 	
 	private GalleryPager pager;
-//	private IModel model;
+//	private IModel server;
 	private ImageAdapter adapter;
 
 //	private IChatroom chatroom;
@@ -81,10 +81,10 @@ public class PictureGalleryActivity extends Activity {
 		pager = (GalleryPager)findViewById(R.id.image_pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
 
-//		model = Model.getInstance(getApplicationContext());
+//		server = Model.getInstance(getApplicationContext());
 		
 //		Bundle b = getIntent().getExtras();
-//		chatroom = model.getChatroom(b.getInt(Std.CHATROOM));
+//		chatroom = server.getChatroom(b.getInt(Std.CHATROOM));
 //		gallery = chatroom.getPictureGallery(b.getInt(Std.IMAGE));
 
 		gallery = (IPictureGallery) getIntent().getSerializableExtra(Std.PICTURE_GALLERY);

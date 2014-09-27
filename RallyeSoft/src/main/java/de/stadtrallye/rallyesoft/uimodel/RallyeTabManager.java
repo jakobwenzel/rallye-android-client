@@ -46,7 +46,7 @@ import de.stadtrallye.rallyesoft.fragments.TasksPagerFragment;
 import de.stadtrallye.rallyesoft.fragments.TurnFragment;
 import de.stadtrallye.rallyesoft.fragments.WaitForModelFragment;
 import de.stadtrallye.rallyesoft.fragments.WelcomeFragment;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.net.Server;
 
 /**
  * Contains and manages / executes all Fragments of MainActivity that are uses as Tabs (-> fullsized)
@@ -68,19 +68,19 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, /*TAB_NEXT_MOVE,*/ TAB_TASKS/*, TAB_MAP*/};
 
 	private final FragmentActivity activity;
-	protected IModel model;
+	private Server server;
 	private final ActionBarDrawerToggle drawerToggle;
 	private final DrawerLayout drawerLayout;
 	private final ListView dashboard;
 	private final MenuAdapter dashAdapter;
 
-	public RallyeTabManager(FragmentActivity activity, IModel model, DrawerLayout drawerLayout) {
+	public RallyeTabManager(FragmentActivity activity, Server server, DrawerLayout drawerLayout) {
 		super(activity, activity.getSupportFragmentManager(), R.id.content_frame);
 
 		setDefaultTab(TAB_OVERVIEW);
 
 		this.activity = activity;
-		this.model = model;
+		this.server = server;
 		this.drawerLayout = drawerLayout;
 
 		drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, R.drawable.ic_drawer_light, R.string.menu_drawer_open, R.string.menu_drawer_close) {
@@ -103,16 +103,16 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		drawerLayout.setDrawerListener(drawerToggle);
 
 
-		tabs.put(TAB_WELCOME, new Tab<WelcomeFragment>("welcome", WelcomeFragment.class, R.string.welcome, false));
-		tabs.put(TAB_OVERVIEW, new Tab<OverviewFragment>("overview", OverviewFragment.class, R.string.overview, false));
-		tabs.put(TAB_MAP, new Tab<GameMapFragment>("map", GameMapFragment.class, R.string.map, false));
-		tabs.put(TAB_TASKS, new Tab<TasksOverviewFragment>("tasks", TasksOverviewFragment.class, R.string.tasks, false));
-		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, false));
-		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, true));
-		tabs.put(TAB_WAIT_FOR_MODEL, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, false));
+		tabs.put(TAB_WELCOME, new Tab<WelcomeFragment>("welcome", WelcomeFragment.class, R.string.welcome, null));
+		tabs.put(TAB_OVERVIEW, new Tab<OverviewFragment>("overview", OverviewFragment.class, R.string.overview, null));
+		tabs.put(TAB_MAP, new Tab<GameMapFragment>("map", GameMapFragment.class, R.string.map, null));
+		tabs.put(TAB_TASKS, new Tab<TasksOverviewFragment>("tasks", TasksOverviewFragment.class, R.string.tasks, null));
+		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, null));
+		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, null));
+		tabs.put(TAB_WAIT_FOR_MODEL, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, null));
 //		tabs.put(TAB_ABOUT, new Tab<AboutDialogFragment>("about_fragment", AboutDialogFragment.class, R.string.about_fragment, false));
 
-		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, false));
+		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, null));
 
 		//tabs.put(TAB_SETTINGS, new Tab<SettingsFragment>("settings", SettingsFragment.class, R.string.settings, false));//Can't be done, because there is no SupportPreferenceFragment, and native Fragments only support ChildFragments since API 17
 
@@ -127,8 +127,8 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		dashboard.setOnItemClickListener(this);
 	}
 
-	public void setModel(IModel model) {
-		this.model = model;
+	public void setServer(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -139,7 +139,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 	@Override
 	protected boolean checkCondition(Tab tab) {
-		return !tab.requiresOnline || model.isConnected();
+		return tab.isAvailable(server);
 	}
 
 	@Override
@@ -174,7 +174,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		super.restoreState(state);
 
 		if (currentTab == null)
-			currentTab = (model.isEmpty())? TAB_WELCOME : TAB_OVERVIEW;
+			currentTab = (server == null || server.hasUserAuth())? TAB_WELCOME : TAB_OVERVIEW;
 
 		setSubMode(parentTab != null);
 	}

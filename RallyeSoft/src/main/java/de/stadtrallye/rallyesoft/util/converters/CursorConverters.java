@@ -17,15 +17,15 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model.converters;
+package de.stadtrallye.rallyesoft.util.converters;
 
 import android.database.Cursor;
 
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.LatLng;
-import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.model.structures.ChatEntry;
+import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Tasks;
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.getBoolean;

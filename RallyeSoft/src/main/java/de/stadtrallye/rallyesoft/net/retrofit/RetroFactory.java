@@ -31,9 +31,9 @@ import java.lang.reflect.Type;
 import java.net.Authenticator;
 import java.util.concurrent.ExecutorService;
 
-import de.stadtrallye.rallyesoft.model.converters.Serialization;
 import de.stadtrallye.rallyesoft.net.AuthProvider;
 import de.stadtrallye.rallyesoft.threading.Threading;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.ConversionException;

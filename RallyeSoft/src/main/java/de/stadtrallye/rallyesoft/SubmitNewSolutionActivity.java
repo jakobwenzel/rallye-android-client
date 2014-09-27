@@ -42,8 +42,10 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.Model;
 import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
+import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
 
@@ -56,7 +58,8 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 	public static final int PICTURE_REQUEST_SOURCE = -100;
 
 	private static final String THIS = SubmitNewSolutionActivity.class.getSimpleName();
-	private IModel model;
+	private static final String ARG_SUBMIT_TYPE = Std.SUBMIT_TYPE;
+	private static final String ARG_TASK_ID = Std.TASK_ID;
 
 	private ImageView imageView;
 	private int type;
@@ -69,6 +72,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 	private LinearLayout tabText;
 	private LinearLayout tabNumber;
 	private int taskID;
+	private ITaskManager taskManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -87,9 +91,8 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 		ab.setDisplayShowTitleEnabled(true);
 
 		// Initialize Model
-		model = Model.getInstance(getApplicationContext());
-//		model.addListener(this);
-
+		Storage.aquireStorage(getApplicationContext(), this);
+		taskManager = Server.getCurrentServer().acquireTaskManager(this);
 
 		tabPicture = (LinearLayout) findViewById(R.id.tab_picture);
 		tabText = (LinearLayout) findViewById(R.id.tab_text);
@@ -120,8 +123,8 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 		editNumber.addTextChangedListener(textWatcher);
 
 		Intent intent = getIntent();
-		type = intent.getIntExtra(Std.SUBMIT_TYPE, 0);
-		taskID = intent.getIntExtra(Std.TASK_ID, -1);
+		type = intent.getIntExtra(ARG_SUBMIT_TYPE, 0);
+		taskID = intent.getIntExtra(ARG_TASK_ID, -1);
 
 		if ((type & Task.TYPE_PICTURE) == 0) {
 			tabPicture.setVisibility(View.GONE);
@@ -190,15 +193,15 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 				if (text != null && text.length() > 0)
 					result.putExtra(Std.TEXT, text);
 				String number = editNumber.getText().toString();
-				if (number != null && number.length() > 0)
+				Integer intNumber = null;
+				if (number != null && number.length() > 0) {
 					result.putExtra(Std.NUMBER, number);
+					intNumber = Integer.parseInt(number);
+				}
 				setResult(RESULT_OK, result);
-				model.getTasks().submitSolution(taskID, type, picture, text, number);
+
+				taskManager.submitSolution(taskID, type, picture, text, intNumber);
 				finish();
-				//TODO: This is ugly, but for some reason onActivityResult does not get called.
-				// Maybe it's because of https://code.google.com/p/android/issues/detail?id=40537
-				// we should use push so that the other clients in the group get notified as well
-				model.getTasks().refreshSubmissions();
 				return true;
 			case android.R.id.home: //Up button
 				NavUtils.navigateUpFromSameTask(this);
@@ -224,6 +227,9 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+
+		Server.getCurrentServer().acquireTaskManager(this);
+		Storage.releaseStorage(this);
 	}
 
 	private void requestPicture() {

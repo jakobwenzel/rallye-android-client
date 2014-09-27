@@ -17,33 +17,24 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
+package de.stadtrallye.rallyesoft.model;
 
-import de.stadtrallye.rallyesoft.net.Server;
+import java.util.List;
+
+import de.rallye.model.structures.Group;
+import de.rallye.model.structures.ServerInfo;
 
 /**
- * Parent of fragments that guide through the various steps
+ * Created by Ramon on 27.09.2014.
  */
-public interface IConnectionAssistant extends IProgressUI {
+public interface IServer {
 
-	void next();
+	interface IServerListener extends IHandlerCallback {
 
-	void setServer(Server server);
-	Server getServer();
+		void onConnectionFailed(Exception e);
 
-	void setGroup(int id);
+		void onServerInfoChanged(ServerInfo serverInfo);
 
-	String getSuggestedName();
-
-	void back();
-
-	void setNameAndPass(String name, String pass);
-
-	void finish(boolean acceptNewConnection);
-
-	int getGroup();
-
-	String getPass();
-
-	String getName();
+		void onAvailableGroupsChanged(List<Group> groups);
+	}
 }

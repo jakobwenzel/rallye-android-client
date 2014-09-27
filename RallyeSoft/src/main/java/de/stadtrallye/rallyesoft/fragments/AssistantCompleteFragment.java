@@ -19,31 +19,34 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
-import java.util.List;
-
-import de.rallye.model.structures.Group;
-import de.rallye.model.structures.ServerInfo;
+import de.rallye.model.structures.LoginInfo;
+import de.rallye.model.structures.PushConfig;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
+import de.wirsch.gcm.GcmHelper;
 
 /**
  * Created by Ramon on 19.06.13
  */
-public class AssistantCompleteFragment extends Fragment implements View.OnClickListener, IModel.IModelListener {
+public class AssistantCompleteFragment extends Fragment implements View.OnClickListener, Server.ILoginListener {
 
 	private IConnectionAssistant assistant;
-	private Button next;
-	private Button cancel;
+	private Button btn_next;
+	private Button btn_cancel;
 	private boolean started = false;
+	private TextView text_status;
+	private ProgressBar prg_status;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -55,11 +58,13 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.assistant_complete_fragment, container, false);
-		next = (Button) v.findViewById(R.id.next);
-		next.setOnClickListener(this);
+		text_status = (TextView) v.findViewById(R.id.textView);
+		prg_status = (ProgressBar) v.findViewById(R.id.progress);
+		btn_next = (Button) v.findViewById(R.id.next);
+		btn_next.setOnClickListener(this);
 
-		cancel = (Button) v.findViewById(R.id.cancel);
-		cancel.setOnClickListener(this);
+		btn_cancel = (Button) v.findViewById(R.id.cancel);
+		btn_cancel.setOnClickListener(this);
 
 		return v;
 	}
@@ -79,12 +84,31 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 	public void onStart() {
 		super.onStart();
 
-		if (!started) {
-			assistant.getModel().addListener(this);
-			assistant.login();
-			started=true;
-		}
+		Server server = assistant.getServer();
 
+		if (server.hasUserAuth()) {//Already logged in
+			started = true;
+			showSuccess();
+		} else {//Still need to login
+			showProgress();
+			if (!started) {// not already underway
+				String gcmID = GcmHelper.getGcmId();
+				String deviceID = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
+				LoginInfo loginInfo = new LoginInfo(assistant.getName(), deviceID, gcmID, PushConfig.MODE_GCM);
+				server.login(loginInfo, this);
+				started = true;
+			}
+		}
+	}
+
+	private void showSuccess() {
+		prg_status.setVisibility(View.GONE);
+		text_status.setText(R.string.connected);
+	}
+
+	private void showProgress() {
+		prg_status.setVisibility(View.VISIBLE);
+		text_status.setText(R.string.connecting);
 	}
 
 //	@Override
@@ -95,33 +119,24 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 
 	@Override
 	public void onClick(View v) {
-		assistant.getModel().removeListener(this);
-		if (v == next)
+		if (v == btn_next)
 			assistant.finish(true);
 		else
 			assistant.finish(false);
 	}
 
 	@Override
-	public void onConnectionStateChange(IModel.ConnectionState newState) {
-		if (newState == IModel.ConnectionState.Connected) {
-			next.setEnabled(true);
-		}
+	public void loginSuccessful() {
+		showSuccess();
 	}
 
 	@Override
-	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
-		Toast.makeText(getActivity(), R.string.invalid_login, Toast.LENGTH_SHORT).show();
-		assistant.back();
+	public void loginFailed() {
+		showFailure();
 	}
 
-	@Override
-	public void onServerInfoChange(ServerInfo info) {
-
-	}
-
-	@Override
-	public void onAvailableGroupsChange(List<Group> groups) {
-
+	private void showFailure() {
+		prg_status.setVisibility(View.GONE);
+		text_status.setText(R.string.connection_failure);
 	}
 }
