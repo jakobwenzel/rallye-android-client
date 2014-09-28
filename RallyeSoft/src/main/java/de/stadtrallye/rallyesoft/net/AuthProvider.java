@@ -28,6 +28,7 @@ import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.nio.charset.Charset;
 
+import de.rallye.model.Authentication;
 import de.rallye.model.structures.UserAuth;
 
 /**
@@ -92,9 +93,9 @@ public class AuthProvider {
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
 				String realm = getRequestingPrompt();
-				if (realm.equals("RallyeAuth")) {//TODO move Literals
+				if (realm.equals(Authentication.USER_AUTH)) {
 					return new PasswordAuthentication(userAuth.getHttpUser(groupID), userAuth.password.toCharArray());
-				} else if (realm.equals("RallyeNewUser")) {
+				} else if (realm.equals(Authentication.GROUP_AUTH)) {
 					Log.i(THIS, "Switching to NewUserAuthentication");
 					return new PasswordAuthentication(String.valueOf(groupID), groupPassword.toCharArray());
 				} else {

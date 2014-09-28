@@ -134,7 +134,7 @@ public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksL
 
 		Bundle args = getArguments();
 		if (args != null) {
-			int id = args.getInt(ARG_TASK_ID, -1);//TODO transmit position (and taskID to be sure, just check the position against id, fallback to searching)
+			int id = args.getInt(ARG_TASK_ID, -1);
 			int pos = args.getInt(ARG_POS, 0);
 			int page;
 			if (id > 0) {

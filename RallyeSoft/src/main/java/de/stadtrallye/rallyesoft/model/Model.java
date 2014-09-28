@@ -135,7 +135,7 @@
 //	 */
 //	public static IModel getInstance(Context context) {
 //		if (model != null) {
-//			return model.reuse(); //TODO: render unnecessary
+//			return model.reuse();
 //		} else {
 //			return model = new Model(context, PreferencesUtil.getDefaultPreferences(context));
 //		}
@@ -445,7 +445,7 @@
 //				List<Chatroom> chatrooms = r.getResult();
 //
 //                if (!chatrooms.equals(this.chatrooms)) {
-//                    this.chatrooms = chatrooms; //TODO this overwrites stuff like lastReadId
+//                    this.chatrooms = chatrooms;
 //					if (pref != null)
 //						save().saveChatrooms().commit();
 //					Log.d(THIS, "Chatroom Config has changed, replacing");
