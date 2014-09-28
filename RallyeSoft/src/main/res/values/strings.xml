@@ -123,5 +123,6 @@
 	<string name="settings">Settings</string>
 	<string name="data_transfer">Data Transfer</string>
 	<string name="connecting">Connecting...</string>
+	<string name="export_barcode_error">Failed to export login as barcode...</string>
 
 </resources>

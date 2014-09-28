@@ -23,6 +23,7 @@ import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
+import de.stadtrallye.rallyesoft.net.Server;
 
 /**
  * Created by Ramon on 27.09.2014.
@@ -36,5 +37,9 @@ public interface IServer {
 		void onServerInfoChanged(ServerInfo serverInfo);
 
 		void onAvailableGroupsChanged(List<Group> groups);
+	}
+
+	interface ICurrentServerListener {
+		void onNewCurrentServer(Server server);
 	}
 }

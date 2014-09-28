@@ -104,6 +104,11 @@ public class AuthProvider {
 		};
 	}
 
+	/**
+	 * equivalent to is logged in
+	 * (as far as this client knows)
+	 * @return if the client has already the necessary authentication
+	 */
 	public boolean hasUserAuth() {
 		return userAuth != null;
 	}

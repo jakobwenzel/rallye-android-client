@@ -24,26 +24,37 @@ import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter.CreateNdefMessageCallback;
 import android.nfc.NfcEvent;
+import android.util.Log;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.charset.Charset;
 
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 
 @TargetApi(14)
 public class NfcCallback implements CreateNdefMessageCallback {
-	
-	private final IModel model;
 
-	public NfcCallback(IModel model) {
-		this.model = model;
+	private static final String THIS = NfcCallback.class.getSimpleName();
+	private final Server server;
+
+	public NfcCallback(Server server) {
+		this.server = server;
 	}
 
 	@Override
 	@TargetApi(14)
 	public NdefMessage createNdefMessage(NfcEvent event) {
-		String text = model.getLogin().toJSON();
-        NdefMessage msg = new NdefMessage(
+		ObjectMapper mapper = Serialization.getInstance();
+		String text = null;
+		try {
+			text = mapper.writeValueAsString(server.exportLogin());
+		} catch (JsonProcessingException e) {
+			Log.e(THIS, "Could not export Login", e);
+		}
+		NdefMessage msg = new NdefMessage(
                 new NdefRecord[] {
                 		new NdefRecord(
                 				NdefRecord.TNF_MIME_MEDIA, Std.APP_MIME.getBytes(Charset.forName("US-ASCII")),

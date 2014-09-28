@@ -120,7 +120,7 @@ public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksL
 
 			mapFragment = new TasksMapFragment();
 
-			Bundle args = getDefaultMapOptions(mapManager.getMapConfigCached());
+			Bundle args = getDefaultMapOptions(mapManager);
 			args.putBoolean(Std.TASK_MAP_MODE_SINGLE, true);
 			mapFragment.setArguments(args);
 			fm.beginTransaction().replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();

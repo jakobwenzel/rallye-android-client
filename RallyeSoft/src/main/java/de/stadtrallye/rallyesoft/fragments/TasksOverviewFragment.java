@@ -136,7 +136,7 @@ public class TasksOverviewFragment extends Fragment implements ITaskManager.ITas
 
 		if (mapFragment == null) {
 			mapFragment = new TasksMapFragment();
-			mapFragment.setArguments(getDefaultMapOptions(mapManager.getMapConfigCached()));
+			mapFragment.setArguments(getDefaultMapOptions(mapManager));
 			fm.beginTransaction().replace(R.id.map, mapFragment, TasksMapFragment.TAG).commit();
 		}
 

@@ -37,12 +37,15 @@ import android.view.MenuItem;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
+import de.stadtrallye.rallyesoft.model.IServer;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.storage.Storage;
@@ -53,11 +56,12 @@ import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
 import de.stadtrallye.rallyesoft.util.ImageLocation;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends FragmentActivity implements IProgressUI, ITabActivity, IPictureHandler {
+public class MainActivity extends FragmentActivity implements IProgressUI, ITabActivity, IPictureHandler, IServer.ICurrentServerListener {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
@@ -71,6 +75,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	private IPicture picture = null;
 	private TransitionDrawable logo;
 	private Server server;
+	private boolean hasServerChanged = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -104,11 +109,13 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		Storage.aquireStorage(getApplicationContext(), this);
 
 		// Initialize Model
+		Server.addListener(this);
 		server = Server.getCurrentServer();
 
 		// Manages all fragments that will be displayed as Tabs in this activity
-		tabManager = new RallyeTabManager(this, model, drawerLayout);
-		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(model));
+		tabManager = new RallyeTabManager(this, server, drawerLayout);
+
+		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(null));// this map is currently not used anyway, so for the time being we always do lateInitialization
 		// Recover Last State
 		tabManager.restoreState(savedInstanceState);
 
@@ -143,7 +150,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	private void initNFC() {
 		NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
 		if (nfc != null) {
-			nfc.setNdefPushMessageCallback(new NfcCallback(model), this);
+			nfc.setNdefPushMessageCallback(new NfcCallback(server), this);
 		}
 	}
 
@@ -167,26 +174,24 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 
+		setProgressBarIndeterminateVisibility(false);
 		tabManager.onPostCreate();
-		initializeState();
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		if (!Server.isStillCurrent(server, this)) {
-			server = Server.getCurrentServer();
-			//TODO refresh dependencies
+		if (hasServerChanged) {
+			updateServerState();
 		}
 
 		tabManager.showTab();
 	}
 
-	private void initializeState() {
-		setProgressBarIndeterminateVisibility(false);
-		tabManager.setServer(model);
-		onConnectionStateChange(model.getConnectionState());
+	private void updateServerState() {
+		tabManager.setServer(server);
+//		onConnectionStateChange(model.getConnectionState());
 	}
 
 	@Override
@@ -209,11 +214,11 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// If the nav drawer is open, hide action items related to the content view
 		boolean drawerOpen = tabManager.isMenuOpen();
-		boolean connected = model.isConnected();
+		boolean loggedIn = server.hasUserAuth();
 
-		menu.findItem(R.id.menu_logout).setVisible(!drawerOpen && connected);
-		menu.findItem(R.id.menu_share_barcode).setVisible(!drawerOpen).setEnabled(connected);
-		menu.findItem(R.id.menu_reconnect).setVisible(!drawerOpen && model.canReconnect());
+		menu.findItem(R.id.menu_logout).setVisible(!drawerOpen && loggedIn);
+		menu.findItem(R.id.menu_share_barcode).setVisible(!drawerOpen).setEnabled(loggedIn);
+//		menu.findItem(R.id.menu_reconnect).setVisible(!drawerOpen && model.canReconnect());
 
 		return true;
 	}
@@ -230,15 +235,21 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 				startActivityForResult(intent, ConnectionAssistantActivity.REQUEST_CODE);
 				break;
 			case R.id.menu_logout:
-				model.logout();
+				server.tryLogout();
 				break;
 			case R.id.menu_share_barcode:
 				IntentIntegrator zx = new IntentIntegrator(this);
-				zx.shareText(model.getLogin().toJSON());
+				ObjectMapper mapper = Serialization.getInstance();
+				try {
+					zx.shareText(mapper.writeValueAsString(server.exportLogin()));
+				} catch (JsonProcessingException e) {
+					Log.e(THIS, "Could not serialize exported Login", e);
+					Toast.makeText(this, R.string.export_barcode_error, Toast.LENGTH_SHORT).show();
+				}
 				break;
-			case R.id.menu_reconnect:
-				model.reconnect();
-				break;
+//			case R.id.menu_reconnect: //there is no more temporary offline, we cannot know if push messages will reach us
+//				model.reconnect();
+//				break;
 			case R.id.menu_about:
 				DialogFragment dialog = new AboutDialogFragment();
 				dialog.show(getSupportFragmentManager(), "about");
@@ -266,7 +277,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 
 	@Override
 	protected void onPause() {
-		model.saveState();
+//		model.saveState();// model should always save important data immediately
 
 		super.onPause();
 	}
@@ -280,6 +291,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		Log.i(THIS, "Destroying...");
 
 		server = null;
+		Server.removeListener(this);
 
 		Storage.releaseStorage(this);
 
@@ -292,25 +304,25 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		// it can deliver the result back to the fragment.
 		// We want to handle the result here, so we only look at the lower bits
 		if ((requestCode&0xffff) == ConnectionAssistantActivity.REQUEST_CODE) {
-			Log.i(THIS, "ConnectionAssistant finished with "+ resultCode);
+			Log.v(THIS, "ConnectionAssistant finished with "+ resultCode);
 			if (resultCode == Activity.RESULT_OK) {
-				Log.i(THIS, "New Connection, refresh Model, refresh everything depending on it");
-				model.removeListener(this);
-				model = Model.getInstance(getApplicationContext());
-				model.addListener(this);
-				initializeState();
+				Log.i(THIS, "ConnectionAssistant has connected to a new Server");
+//				model.removeListener(this);
+//				model = Model.getInstance(getApplicationContext());
+//				model.addListener(this);
+//				updateServerState();
 			}
-			findViewById(R.id.content_frame).postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					if (lastTab == null)
-						lastTab = RallyeTabManager.TAB_OVERVIEW;
-					tabManager.switchToTab(lastTab);
-					Log.w(THIS, "switching back to tab: "+ lastTab);
-					lastTab = null;
-					onConnectionStateChange(model.getConnectionState());
-				}
-			}, 1000);
+//			findViewById(R.id.content_frame).postDelayed(new Runnable() {
+//				@Override
+//				public void run() {
+//					if (lastTab == null)
+//						lastTab = RallyeTabManager.TAB_OVERVIEW;
+//					tabManager.switchToTab(lastTab);
+//					Log.w(THIS, "switching back to tab: "+ lastTab);
+//					lastTab = null;
+//					onConnectionStateChange(model.getConnectionState());
+//				}
+//			}, 1000);
 		} else if (requestCode == SubmitNewSolutionActivity.REQUEST_CODE) {
 			Log.i(THIS, "Task Submission");
 			if (resultCode == Activity.RESULT_OK) {
@@ -335,40 +347,38 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	/**
 	 * IModelListener
 	 */
-	@Override
-	public void onConnectionStateChange(ConnectionState newState) {
-		switch (newState) {//TODO: Add "No Network" status to UI (requires Model to have a "No Network" status) [Model has NoNetwork status, but never uses it] [Listen to Network Status Changes]
-			case Disconnecting:
-			case Connecting:
-				activateProgressAnimation();
-				break;
-			case Disconnected:
-			case Connected:
-			default:
-				deactivateProgressAnimation();
-		}
+//	@Override
+//	public void onConnectionStateChange(ConnectionState newState) {
+//		switch (newState) {//TODO: Add "No Network" status to UI (requires Model to have a "No Network" status) [Model has NoNetwork status, but never uses it] [Listen to Network Status Changes]
+//			case Disconnecting:
+//			case Connecting:
+//				activateProgressAnimation();
+//				break;
+//			case Disconnected:
+//			case Connected:
+//			default:
+//				deactivateProgressAnimation();
+//		}
+//
+//		tabManager.conditionChange();
+//
+//		switch (newState) {
+//			case Connected:
+////				d.setColorFilter(null);
+////				actionBar.setIcon(d);
+//				logo.startTransition(500);
+//				break;
+//			default:
+////				d.setColorFilter(0x66666666, Mode.MULTIPLY);
+////				actionBar.setIcon(d);
+//				logo.reverseTransition(500);
+//		}
+//	}
 
-		tabManager.conditionChange();
-
-		switch (newState) {
-			case Connected:
-//				d.setColorFilter(null);
-//				actionBar.setIcon(d);
-				logo.startTransition(500);
-				break;
-			default:
-//				d.setColorFilter(0x66666666, Mode.MULTIPLY);
-//				actionBar.setIcon(d);
-				logo.reverseTransition(500);
-		}
-	}
-
-	@Override
-	public void onConnectionFailed(Exception e, ConnectionState fallbackState) {
-		Toast.makeText(this, getString(R.string.connection_failure) +": "+ e.toString(), Toast.LENGTH_LONG).show();
-
-		onConnectionStateChange(fallbackState);
-	}
+//	@Override
+//	public void onConnectionFailed(Exception e) {
+//		Toast.makeText(this, getString(R.string.connection_failure) +": "+ e.toString(), Toast.LENGTH_LONG).show();
+//	}
 
 //	@Override
 //	public void onMapConfigChange() {
@@ -417,5 +427,11 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	@Override
 	public void discardPicture() {
 		picture = null;
+	}
+
+	@Override
+	public void onNewCurrentServer(Server server) {
+		this.server = server;
+		this.hasServerChanged = true;
 	}
 }

@@ -28,6 +28,8 @@ import de.rallye.model.structures.Submission;
 /**
  * Common:Task enhanced by a state of submissions, matching them into categories, see ({@link #getSubmitsFromList(java.util.List, boolean)})
  * Used to show quick overview of which tasks need further attention
+ *
+ * TODO integrate with de.stadtrallye.rallyesoft.model.tasks.Task !!, property is not saved anymore
  */
 @Deprecated
 public class Task extends de.rallye.model.structures.Task {

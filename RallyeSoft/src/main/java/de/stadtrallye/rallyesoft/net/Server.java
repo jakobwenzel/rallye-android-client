@@ -35,6 +35,7 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.ServerInfo;
+import de.rallye.model.structures.ServerLogin;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IServer;
@@ -62,6 +63,7 @@ public class Server extends AuthProvider {
 
 	private static Server currentServer;
 	private static RetroFactory retroFactory;
+	private static final List<IServer.ICurrentServerListener> currentServerListeners = new ArrayList<>();
 
 	public static Server getCurrentServer() {
 		return currentServer;
@@ -241,23 +243,27 @@ public class Server extends AuthProvider {
 
 	public static void setCurrentServer(Server server) {
 		if (currentServer != null && currentServer.hasUserAuth())
-			try {
-				currentServer.getAuthCommunicator().logout(currentServer.groupID, new Callback<Response>() {
-					@Override
-					public void success(Response response, Response response2) {
-						Log.d(THIS, "Logged out of old Server");
-					}
-
-					@Override
-					public void failure(RetrofitError e) {
-						Log.e(THIS, "Could not logout old Server", e);
-					}
-				});
-			} catch (NoServerKnownException e) {
-				Log.e(THIS, "Could not logout old Server", e);
-			}
+			currentServer.tryLogout();
 
 		currentServer = server;
+	}
+
+	public void tryLogout() {
+		try {
+			getAuthCommunicator().logout(currentServer.groupID, new Callback<Response>() {
+				@Override
+				public void success(Response response, Response response2) {
+					Log.d(THIS, "Logged out of old Server");
+				}
+
+				@Override
+				public void failure(RetrofitError e) {
+					Log.e(THIS, "Could not logout old Server", e);
+				}
+			});
+		} catch (NoServerKnownException e) {
+			Log.e(THIS, "Could not logout old Server", e);
+		}
 	}
 
 	public IChatManager acquireChatManager(Object handle) throws NoServerKnownException{
@@ -329,6 +335,18 @@ public class Server extends AuthProvider {
 
 	public String getPictureUploadURL(String hash) {
 		return address+Paths.PICS+"/"+hash;
+	}
+
+	public ServerLogin exportLogin() {
+		return new ServerLogin(address, groupID, groupPassword);
+	}
+
+	public static void addListener(IServer.ICurrentServerListener listener) {
+		currentServerListeners.add(listener);
+	}
+
+	public static void removeListener(IServer.ICurrentServerListener listener) {
+		currentServerListeners.remove(listener);
 	}
 
 	public interface ILoginListener {

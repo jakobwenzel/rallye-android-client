@@ -35,18 +35,14 @@ import java.util.List;
 
 import de.rallye.model.structures.AdditionalPicture;
 import de.rallye.model.structures.AdditionalResource;
-import de.rallye.model.structures.Group;
-import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.IModel;
-import de.stadtrallye.rallyesoft.model.IModel.ConnectionState;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.widget.AdapterView;
 import de.stadtrallye.rallyesoft.widget.GridView;
 import de.stadtrallye.rallyesoft.widget.ListView;
 
-public class TurnFragment extends Fragment implements IModel.IModelListener, GridView.OnItemClickListener {
+public class TurnFragment extends Fragment implements GridView.OnItemClickListener {
 
 	private GridView grid;
 	private ListView list;
@@ -87,26 +83,6 @@ public class TurnFragment extends Fragment implements IModel.IModelListener, Gri
 		});
 
 //		ArrayAdapter<Object> adapter = new ArrayAdapter<Object>(context, textViewResourceId, objects);
-	}
-
-	@Override
-	public void onConnectionStateChange(IModel.ConnectionState newState) {
-
-	}
-
-	@Override
-	public void onConnectionFailed(Exception e, ConnectionState fallbackState) {
-
-	}
-
-	@Override
-	public void onServerInfoChange(ServerInfo info) {
-
-	}
-
-	@Override
-	public void onAvailableGroupsChange(List<Group> groups) {
-
 	}
 
 	@Override

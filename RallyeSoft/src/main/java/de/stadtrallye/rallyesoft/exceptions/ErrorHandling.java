@@ -27,8 +27,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
-import de.stadtrallye.rallyesoft.model.IModel;
-
 public class ErrorHandling {
 	
 	private final String where;
@@ -79,9 +77,8 @@ public class ErrorHandling {
 		Log.e(where, "During JSON Conversion, Object could not be casted to source class", e);
 	}
 
-	public void connectionFailure(Exception e, IModel.ConnectionState fallbackState) {
-		e.printStackTrace();
-		Log.e(where,"fallback: "+ fallbackState);
+	public void connectionFailure(Exception e) {
+		Log.e(where,"connection failure", e);
 	}
 
 	public void concurrentRefresh() {

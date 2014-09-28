@@ -36,12 +36,7 @@ import android.widget.LinearLayout;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-import java.util.List;
-
-import de.rallye.model.structures.Group;
-import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IModel;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.net.Server;
@@ -52,7 +47,7 @@ import de.stadtrallye.rallyesoft.util.ImageLocation;
 /**
  * Created by Ramon on 04.10.13.
  */
-public class SubmitNewSolutionActivity extends FragmentActivity implements IModel.IModelListener {
+public class SubmitNewSolutionActivity extends FragmentActivity {
 
 	public static final int REQUEST_CODE = 7;
 	public static final int PICTURE_REQUEST_SOURCE = -100;
@@ -234,25 +229,5 @@ public class SubmitNewSolutionActivity extends FragmentActivity implements IMode
 
 	private void requestPicture() {
 		ImageLocation.startPictureTakeOrSelect(this, PICTURE_REQUEST_SOURCE);
-	}
-
-	@Override
-	public void onConnectionStateChange(IModel.ConnectionState newState) {
-
-	}
-
-	@Override
-	public void onConnectionFailed(Exception e, IModel.ConnectionState fallbackState) {
-
-	}
-
-	@Override
-	public void onServerInfoChange(ServerInfo info) {
-
-	}
-
-	@Override
-	public void onAvailableGroupsChange(List<Group> groups) {
-
 	}
 }
