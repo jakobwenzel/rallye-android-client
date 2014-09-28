@@ -33,7 +33,7 @@ public interface ITask {
 	void addListener(ITaskListener listener);
 	void removeListener(ITaskListener listener);
 
-	void requestSubmissions();
+	void updateSubmissions();
 
 	String getName();
 	String getDescription();
@@ -44,8 +44,10 @@ public interface ITask {
 
 	int getTaskID();
 
-	boolean hasSubmissionsCached();
-
+	/**
+	 * Get as List of all submissions if they are already known
+	 * @return null if not yet known
+	 */
 	List<Submission> getSubmissionsCached();
 
 	interface ITaskListener extends IHandlerCallback {

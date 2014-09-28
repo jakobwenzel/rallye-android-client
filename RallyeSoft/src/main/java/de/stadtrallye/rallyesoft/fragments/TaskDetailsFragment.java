@@ -50,9 +50,9 @@ import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.SubmitNewSolutionActivity;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.model.PictureGallery;
 import de.stadtrallye.rallyesoft.model.tasks.ITask;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
@@ -90,7 +90,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 		Server server = Server.getCurrentServer();
 		taskManager = server.acquireTaskManager(this);
-		this.imageResolver = server.getPictureResolver();
+		imageResolver = server.getPictureResolver();
 
 		task = taskManager.getTask(getArguments().getInt(Std.TASK_ID));
 
@@ -141,10 +141,11 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 		task.addListener(this);
 
-		if (task.hasSubmissionsCached()) {
-			submissionAdapter.changeList(task.getSubmissionsCached());
+		List<Submission> submissions = task.getSubmissionsCached();
+		if (submissions != null) {
+			submissionAdapter.changeList(submissions);
 		} else {
-			task.requestSubmissions();
+			task.updateSubmissions();
 		}
 	}
 

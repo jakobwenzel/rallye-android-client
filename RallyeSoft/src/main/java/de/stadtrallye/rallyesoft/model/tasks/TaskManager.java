@@ -24,11 +24,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Handler;
 import android.util.Log;
+import android.util.LruCache;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.SimpleSubmission;
@@ -61,9 +60,8 @@ public class TaskManager implements ITaskManager {
 
 	private final SQLiteDatabase db;
 	private final RetroAuthCommunicator comm;
-	private final int groupID;
 
-	private Map<Integer, de.stadtrallye.rallyesoft.model.tasks.Task> tasksCache = new WeakHashMap<>();
+	private final LruCache<Integer, de.stadtrallye.rallyesoft.model.tasks.Task> tasksCache = new LruCache<>(100); //Android manual says SoftReferences are inefficient because they have not enough information, recommends LruCache as max. efficient solution on Android
 
 	private final List<ITasksListener> tasksListeners = new ArrayList<>();
 
@@ -74,7 +72,6 @@ public class TaskManager implements ITaskManager {
 	public TaskManager(RetroAuthCommunicator communicator, SQLiteDatabase db) {
 
 		this.comm = communicator;
-		this.groupID = Server.getCurrentServer().getGroupID();
 		this.db = db;
 
 		if (Storage.hasStructureChanged(EDIT_TASKS)) {
@@ -116,21 +113,36 @@ public class TaskManager implements ITaskManager {
 
 	@Override
 	public ITask getTask(int taskID) {
-		de.stadtrallye.rallyesoft.model.tasks.Task task = tasksCache.get(taskID);
-		if (task == null) {
-			Cursor c = db.query(DatabaseHelper.Tasks.TABLE,
-					new String[]{DatabaseHelper.Tasks.KEY_ID + " AS _id", DatabaseHelper.Tasks.KEY_NAME, DatabaseHelper.Tasks.KEY_DESCRIPTION,
-							DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC, DatabaseHelper.Tasks.KEY_LAT, DatabaseHelper.Tasks.KEY_LON,
-							DatabaseHelper.Tasks.KEY_RADIUS, DatabaseHelper.Tasks.KEY_MULTIPLE, DatabaseHelper.Tasks.KEY_SUBMIT_TYPE,
-							DatabaseHelper.Tasks.KEY_POINTS, DatabaseHelper.Tasks.KEY_ADDITIONAL_RESOURCES, DatabaseHelper.Tasks.KEY_SUBMITS},
-					DatabaseHelper.Tasks.KEY_ID + "=" + taskID, null, null, null, DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC + " DESC");
-			c.moveToFirst();
-			task = new de.stadtrallye.rallyesoft.model.tasks.Task(CursorConverters.getTask(c, CursorConverters.TaskCursorIds.read(c)), this);//TODO do not do TaskCursorIds.read(), statically assign
+		synchronized (tasksCache) {
+			de.stadtrallye.rallyesoft.model.tasks.Task task = tasksCache.get(taskID);
+			if (task == null) {
+				Cursor c = db.query(DatabaseHelper.Tasks.TABLE,
+						new String[]{DatabaseHelper.Tasks.KEY_ID + " AS _id", DatabaseHelper.Tasks.KEY_NAME, DatabaseHelper.Tasks.KEY_DESCRIPTION,
+								DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC, DatabaseHelper.Tasks.KEY_LAT, DatabaseHelper.Tasks.KEY_LON,
+								DatabaseHelper.Tasks.KEY_RADIUS, DatabaseHelper.Tasks.KEY_MULTIPLE, DatabaseHelper.Tasks.KEY_SUBMIT_TYPE,
+								DatabaseHelper.Tasks.KEY_POINTS, DatabaseHelper.Tasks.KEY_ADDITIONAL_RESOURCES, DatabaseHelper.Tasks.KEY_SUBMITS},
+						DatabaseHelper.Tasks.KEY_ID + "=" + taskID, null, null, null, DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC + " DESC");
+				c.moveToFirst();
+				task = new de.stadtrallye.rallyesoft.model.tasks.Task(CursorConverters.getTask(c, tIds), this);
+				tasksCache.put(taskID, task);
+			}
+
+			return task;
 		}
+	}
 
-		tasksCache.put(taskID, task);
-
-		return task;
+	private static final CursorConverters.TaskCursorIds tIds = new CursorConverters.TaskCursorIds();
+	static {
+		tIds.id = 0;
+		tIds.name = 1;
+		tIds.description = 2;
+		tIds.locationSpecific = 3;
+		tIds.radius = 4;
+		tIds.multiple = 5;
+		tIds.submitType = 6;
+		tIds.points = 7;
+		tIds.additionalResources = 8;
+		tIds.submits = 9;
 	}
 
 	private void updateDatabase(List<Task> tasks) {
@@ -215,7 +227,7 @@ public class TaskManager implements ITaskManager {
 //			int submits = Task.getSubmitsFromList(submissions.get(taskID), getBoolean(c, 7));
 //			ContentValues vals = new ContentValues();
 //			vals.put(DatabaseHelper.Tasks.KEY_SUBMITS, submits);
-//			db.update(DatabaseHelper.Tasks.TABLE, vals, DatabaseHelper.Tasks.KEY_ID +"="+ taskID, null);//TODO bad decision, do sth else
+//			db.update(DatabaseHelper.Tasks.TABLE, vals, DatabaseHelper.Tasks.KEY_ID +"="+ taskID, null);//TODO bad decision, store them in db
 //		}
 //	}
 
@@ -226,14 +238,16 @@ public class TaskManager implements ITaskManager {
 	}
 
 	@Override
-	public void submitSolution(int taskID, int type, IPicture picture, String text, Integer number) throws NoServerKnownException {
+	public void submitSolution(final int taskID, int type, IPicture picture, String text, Integer number) throws NoServerKnownException {
 		checkServerKnown();
 
 		SimpleSubmission post = (picture==null)? new SimpleSubmission(type, number, text) : new SimpleSubmissionWithPictureHash(type, text, picture.getHash());
 		comm.postSubmission(taskID, post, new Callback<Submission>() {
 			@Override
 			public void success(Submission submission, Response response) {
-				//TODO
+				de.stadtrallye.rallyesoft.model.tasks.Task task = tasksCache.get(taskID);
+				if (task != null)
+					task.addSubmission(submission);
 			}
 
 			@Override
@@ -246,27 +260,33 @@ public class TaskManager implements ITaskManager {
 
 	@Override
 	public void addListener(ITasksListener l) {
-		tasksListeners.add(l);
+		synchronized (tasksListeners) {
+			tasksListeners.add(l);
+		}
 	}
 
 	@Override
 	public void removeListener(ITasksListener l) {
-		tasksListeners.remove(l);
+		synchronized (tasksListeners) {
+			tasksListeners.remove(l);
+		}
 	}
 
 	private void notifyTaskUpdate() {
 		Handler handler;
-		for (final ITasksListener l: tasksListeners) {
-			handler = l.getCallbackHandler();
-			if (handler == null) {
-				l.taskUpdate();
-			} else {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						l.taskUpdate();
-					}
-				});
+		synchronized (tasksListeners) {
+			for (final ITasksListener l : tasksListeners) {
+				handler = l.getCallbackHandler();
+				if (handler == null) {
+					l.taskUpdate();
+				} else {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							l.taskUpdate();
+						}
+					});
+				}
 			}
 		}
 	}

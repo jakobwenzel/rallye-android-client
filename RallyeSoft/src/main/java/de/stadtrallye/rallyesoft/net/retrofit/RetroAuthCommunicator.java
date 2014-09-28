@@ -72,7 +72,7 @@ public interface RetroAuthCommunicator {
 	void getSubmissionsForTask(@Path(Paths.PARAM_TASK_ID) int taskID, Callback<List<Submission>> callback);
 
 	@GET(Paths.TASKS_SUBMISSIONS_ALL)
-	void getAllSubmissionsForGroup(@Path(Paths.PARAM_GROUP_ID) int groupID, Callback<List<Submission>> callback);
+	void getAllSubmissionsForGroup(Callback<List<Submission>> callback);
 
 	@PUT(Paths.CHATROOM_CHATS)
 	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatroomID, @Body SimpleChatEntry message, Callback<ChatEntry> callback);

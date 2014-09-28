@@ -46,7 +46,7 @@ public final class Paths {
 	public static final String CHATROOM_CHATS_SINCE = CHATROOM_CHATS +"/since/{"+PARAM_SINCE+"}";
 	public static final String GROUPS_WITH_ID = GROUPS + "/{"+PARAM_GROUP_ID+"}";
 	public static final String TASK_SUBMISSIONS = TASKS + "/{"+PARAM_TASK_ID+"}";
-	public static final String TASKS_SUBMISSIONS_ALL = "games/rallye/tasks/all/{"+PARAM_GROUP_ID+"}";
+	public static final String TASKS_SUBMISSIONS_ALL = "games/rallye/tasks/all";
 	public static final String MAP = "games/map";
 
 

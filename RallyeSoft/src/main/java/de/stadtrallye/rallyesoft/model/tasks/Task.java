@@ -24,6 +24,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.Submission;
@@ -42,6 +44,8 @@ public class Task implements ITask {
 	private final de.rallye.model.structures.Task task;
 	private final List<ITaskListener> listeners = new ArrayList<>();
 	private List<Submission> submissions;
+	private final ReadWriteLock submissionsLock = new ReentrantReadWriteLock();
+	private boolean refreshingSubs;
 
 	public Task(de.rallye.model.structures.Task task, TaskManager manager) {
 		this.task = task;
@@ -51,46 +55,84 @@ public class Task implements ITask {
 
 	@Override
 	public void addListener(ITaskListener listener) {
-		listeners.add(listener);
+		synchronized (listeners) {
+			listeners.add(listener);
+		}
 	}
 
 	@Override
 	public void removeListener(ITaskListener listener) {
-		listeners.remove(listener);
+		synchronized (listeners) {
+			listeners.remove(listener);
+		}
 	}
 
 	private void notifySubmissionsChanged() {
 		Handler handler;
-		for (final ITaskListener listener: listeners) {
-			handler = listener.getCallbackHandler();
-			if (handler != null) {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
+		synchronized (listeners) {
+			submissionsLock.readLock().lock();
+			try {
+				for (final ITaskListener listener : listeners) {
+					handler = listener.getCallbackHandler();
+					if (handler != null) {
+						handler.post(new Runnable() {
+							@Override
+							public void run() {
+								submissionsLock.readLock().lock();
+								try {
+									listener.onSubmissionsChanged(submissions);
+								} finally {
+									submissionsLock.readLock().unlock();
+								}
+							}
+						});
+					} else {
 						listener.onSubmissionsChanged(submissions);
 					}
-				});
-			} else {
-				listener.onSubmissionsChanged(submissions);
+				}
+			} finally {
+				submissionsLock.readLock().unlock();
 			}
 		}
 	}
 
 	@Override
-	public void requestSubmissions() {
+	public void updateSubmissions() {
+		synchronized (this) {
+			if (refreshingSubs) {
+				Log.w(THIS, "Preventing concurrent Submission update");
+				return;
+			}
+			refreshingSubs = true;
+		}
+
 		manager.getSubmissionsFor(task.taskID, new Callback<List<Submission>>() {
 			@Override
 			public void success(List<Submission> submissions, Response response) {
-				Task.this.submissions = submissions;
+				submissionsLock.writeLock().lock();
+				try {
+					Task.this.submissions = submissions;
+				} finally {
+					submissionsLock.writeLock().unlock();
+				}
 				notifySubmissionsChanged();
+
+				resetRefreshingSubs();
 			}
 
 			@Override
 			public void failure(RetrofitError e) {
 				Log.e(THIS, "Submit failed", e);
 				//TODO Server.getServer().commFailed(e);
+				resetRefreshingSubs();
 			}
 		});
+	}
+
+	private void resetRefreshingSubs() {
+		synchronized (this) {
+			refreshingSubs = false;
+		}
 	}
 
 	@Override
@@ -119,12 +161,25 @@ public class Task implements ITask {
 	}
 
 	@Override
-	public boolean hasSubmissionsCached() {
-		return submissions != null;
+	public List<Submission> getSubmissionsCached() {
+		submissionsLock.readLock().lock();
+		try {
+			return submissions;
+		} finally {
+			submissionsLock.readLock().unlock();
+		}
 	}
 
-	@Override
-	public List<Submission> getSubmissionsCached() {
-		return submissions;
+	void addSubmission(Submission submission) {
+		submissionsLock.writeLock().lock();
+		try {
+			if (submissions == null) {
+				submissions = new ArrayList<>();
+			}
+			submissions.add(submission);
+		} finally {
+			submissionsLock.writeLock().unlock();
+		}
+		notifySubmissionsChanged();
 	}
 }
