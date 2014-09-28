@@ -39,7 +39,6 @@ import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.Map;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
-import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
 import de.stadtrallye.rallyesoft.net.Server;
@@ -59,12 +58,12 @@ import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_NODES;
 public class MapManager implements IMapManager {
 	
 	private static final String THIS = TaskManager.class.getSimpleName();
-	private static final ErrorHandling err = new ErrorHandling(THIS);
 
 	private MapConfig mapConfig;
-	private ReadWriteLock configLock = new ReentrantReadWriteLock();
-	private boolean refreshingMap = false;
+	private final ReadWriteLock configLock = new ReentrantReadWriteLock();
+//	private boolean refreshingMap = false;
 	private boolean refreshingConfig = false;
+	private final Object refreshingLock = new Object();
 
 	private final SQLiteDatabase db;
 	private final RetroAuthCommunicator comm;
@@ -77,7 +76,7 @@ public class MapManager implements IMapManager {
 		this.comm = comm;
 
 		if (Storage.hasStructureChanged(EDIT_EDGES | EDIT_NODES)) {
-			forceRefresh();
+			forceRefreshMapConfig();
 			Storage.structureChangeHandled(EDIT_EDGES | EDIT_NODES);
 		}
 
@@ -92,13 +91,13 @@ public class MapManager implements IMapManager {
 	public void updateMap() throws NoServerKnownException {
 		checkServerKnown();
 
-		synchronized (this) {
-			if (refreshingMap) {
-				Log.w(THIS, "Preventing concurrent Map refreshes");
-				return;
-			}
-			refreshingMap = true;
-		}
+//		synchronized (this) {
+//			if (refreshingMap) {
+//				Log.w(THIS, "Preventing concurrent Map refreshes");
+//				return;
+//			}
+//			refreshingMap = true;
+//		}
 
 		comm.getMap(new Callback<Map>() {
 			@Override
@@ -118,11 +117,6 @@ public class MapManager implements IMapManager {
 	private void checkServerKnown() throws NoServerKnownException {
 		if (comm == null)
 			throw new NoServerKnownException();
-	}
-
-	@Override
-	public void forceRefresh() {
-
 	}
 
 	@Override
@@ -194,27 +188,33 @@ public class MapManager implements IMapManager {
 
 	@Override
 	public void addListener(IMapListener l) {
-		mapListeners.add(l);
+		synchronized (mapListeners) {
+			mapListeners.add(l);
+		}
 	}
 	
 	@Override
 	public void removeListener(IMapListener l) {
-		mapListeners.remove(l);
+		synchronized (mapListeners) {
+			mapListeners.remove(l);
+		}
 	}
 
 	private void notifyMapUpdate(final List<Node> nodes, final List<Edge> edges) {
 		Handler handler;
-		for (final IMapListener l: mapListeners) {
-			handler = l.getCallbackHandler();
-			if (handler == null) {
-				l.onMapChange(nodes, edges);
-			} else {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						l.onMapChange(nodes, edges);
-					}
-				});
+		synchronized (mapListeners) {
+			for (final IMapListener l : mapListeners) {
+				handler = l.getCallbackHandler();
+				if (handler == null) {
+					l.onMapChange(nodes, edges);
+				} else {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							l.onMapChange(nodes, edges);
+						}
+					});
+				}
 			}
 		}
 	}
@@ -223,7 +223,7 @@ public class MapManager implements IMapManager {
 	public void updateMapConfig() throws NoServerKnownException {
         checkServerKnown();
 
-		synchronized (this) {
+		synchronized (refreshingLock) {
 			if (refreshingConfig) {
 				Log.w(THIS, "Preventing concurrent Config refreshes");
 				return;
@@ -235,71 +235,127 @@ public class MapManager implements IMapManager {
 		comm.getMapConfig(new Callback<MapConfig>() {
 			@Override
 			public void success(MapConfig mapConfig, Response response) {
-				if (!mapConfig.equals(MapManager.this.mapConfig)) {
-					MapManager.this.mapConfig = mapConfig;
-					saveMapConfig();
-					Log.d(THIS, "Map Config has changed, replacing");
-					notifyMapConfigChange();
+				boolean change = false;
+
+				configLock.writeLock().lock();
+				try {
+					if (!mapConfig.equals(MapManager.this.mapConfig)) {
+						MapManager.this.mapConfig = mapConfig;
+						saveMapConfig();
+						Log.d(THIS, "Map Config has changed, replacing");
+						change = true;
+					}
+				} finally {
+					configLock.writeLock().unlock();
 				}
+				if (change)
+					notifyMapConfigChange();
+
+				resetRefreshingConfig();
 			}
 
 			@Override
 			public void failure(RetrofitError e) {
 				Log.e(THIS, "MapConfig Update failed", e);
 				//TODO Server.getServer().commFailed(e);
+				resetRefreshingConfig();
 			}
 		});
     }
 
+	private void resetRefreshingConfig() {
+		synchronized (refreshingLock) {
+			refreshingConfig = false;
+		}
+	}
+
+	@Override
+	public void forceRefreshMapConfig() {
+		configLock.writeLock().lock();
+		try {
+			mapConfig = null;
+			updateMapConfig();
+		} finally {
+			configLock.writeLock().unlock();
+		}
+	}
+
 	private void saveMapConfig() {
 		ObjectMapper mapper = Serialization.getInstance();
+		configLock.readLock().lock();
 		try {
 			mapper.writeValue(Storage.getMapConfigOutputStream(), mapConfig);
 		} catch (IOException e) {
 			Log.e(THIS, "Failed to save MapConfig", e);
+		} finally {
+			configLock.readLock().unlock();
 		}
 	}
 
 	private void loadMapConfig() {
 		ObjectMapper mapper = Serialization.getInstance();
+		configLock.writeLock().lock();
 		try {
-			mapper.readValue(Storage.getMapConfigInputStream(), MapConfig.class);
+			mapConfig = mapper.readValue(Storage.getMapConfigInputStream(), MapConfig.class);
 		} catch (FileNotFoundException e) {
 			Log.w(THIS, "No previously saved MapConfig found");
 		} catch (IOException e) {
 			Log.e(THIS, "Failed to load MapConfig", e);
-		}
-	}
-
-	@Override
-	public MapConfig getMapConfig() {
-		return mapConfig;//TODO either delete or make blocking UNTIL mapConfig is available (i figure we do not need that anymore)
-	}
-
-	private void notifyMapConfigChange() {
-		Handler handler;
-		for (final IMapListener l: mapListeners) {
-			handler = l.getCallbackHandler();
-			if (handler == null) {
-				l.onMapConfigChange(MapManager.this.mapConfig);
-			} else {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						l.onMapConfigChange(MapManager.this.mapConfig);
-					}
-				});
-			}
+		} finally {
+			configLock.writeLock().unlock();
 		}
 	}
 
 	@Override
 	public MapConfig getMapConfigCached() {
-        return mapConfig;
-    }
+		configLock.readLock().lock();
+		try {
+			return mapConfig;//TODO either delete or make blocking UNTIL mapConfig is available (i figure we do not need that anymore)
+		} finally {
+			configLock.readLock().unlock();
+		}
+	}
+
+	private void notifyMapConfigChange() {
+		Handler handler;
+		synchronized (mapListeners) {
+			configLock.readLock().lock();
+			try {
+				for (final IMapListener l : mapListeners) {
+					handler = l.getCallbackHandler();
+					if (handler == null) {
+						l.onMapConfigChange(MapManager.this.mapConfig);
+					} else {
+						handler.post(new Runnable() {
+							@Override
+							public void run() {
+								configLock.readLock().lock();
+								try {
+									l.onMapConfigChange(MapManager.this.mapConfig);
+								} finally {
+									configLock.readLock().unlock();
+								}
+							}
+						});
+					}
+				}
+			} finally {
+				configLock.readLock().unlock();
+			}
+		}
+	}
 
 	@Override
 	public void provideMapConfig() {
-
+		configLock.readLock().lock();
+		try {
+			if (mapConfig != null) {
+				notifyMapConfigChange();
+			} else {
+				updateMapConfig();
+			}
+		} finally {
+			configLock.readLock().unlock();
+		}
 	}
 }

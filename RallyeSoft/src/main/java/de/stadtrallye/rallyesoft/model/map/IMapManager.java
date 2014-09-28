@@ -42,7 +42,7 @@ public interface IMapManager {
 	/**
 	 * force refresh
 	 */
-	void forceRefresh();
+	void forceRefreshMapConfig();
 
 	void addListener(IMapListener l);
 	void removeListener(IMapListener l);
@@ -51,16 +51,16 @@ public interface IMapManager {
 
 	/**
 	 * Get the center of the game on the map as well as the initial zoomLevel (a Google Map can only be initialized with 1 set of coordinates at this time)
-	 * @return MapConfig
+	 * @return MapConfig if cached, null otherwise
 	 */
-	MapConfig getMapConfig();
+	MapConfig getMapConfigCached();
 
 	/**
 	 * Request a callback to all announced Listeners: IMapListener.onMapChange()
 	 */
 	void provideMap();
 
-	MapConfig getMapConfigCached();
+
 
 	void provideMapConfig();
 
@@ -68,7 +68,7 @@ public interface IMapManager {
 	 * contains a callback for when the map content has changed
 	 */
 	public interface IMapListener extends IHandlerCallback {
-		public void onMapChange(List<Node> nodes, List<? extends Edge> edges);
+		void onMapChange(List<Node> nodes, List<? extends Edge> edges);
 
         void onMapConfigChange(MapConfig mapConfig);
     }

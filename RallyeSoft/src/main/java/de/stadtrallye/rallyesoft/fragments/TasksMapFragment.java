@@ -149,6 +149,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 			MapConfig mapConfig = mapManager.getMapConfigCached();
 			if (mapConfig != null) {
 				animateToConfigBounds(mapConfig);
+				lateInitialization = false;
 			} else {
 				mapManager.provideMapConfig();
 			}
@@ -263,7 +264,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 
 			cu = CameraUpdateFactory.newLatLngBounds(LatLngBounds.builder().include(rad1).include(rad2).build(), padding);
 		} else {
-			MapConfig mapConfig = mapManager.getMapConfig();
+			MapConfig mapConfig = mapManager.getMapConfigCached();
 			cu = CameraUpdateFactory.newLatLngZoom(coords, (mapConfig != null)? mapConfig.zoomLevel + 4 : 16);
 		}
 
