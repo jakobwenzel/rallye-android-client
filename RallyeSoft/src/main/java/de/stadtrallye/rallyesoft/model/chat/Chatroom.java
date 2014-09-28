@@ -32,6 +32,8 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.SimpleChatWithPictureHash;
@@ -60,12 +62,15 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	private final SQLiteDatabase db;
 	private final RetroAuthCommunicator comm;
+
 	private int lastReadID;
 	private long lastUpdateTime;
 	private int newestID = -1;
-	private final List<IChatroomListener> listeners = new ArrayList<>();
 	private ChatroomState state;
-	private Deque<SimpleChatWithPictureHash> postQueue = new LinkedList<>();//TODO move to database
+	private final ReadWriteLock stateLock = new ReentrantReadWriteLock();
+
+	private final List<IChatroomListener> listeners = new ArrayList<>();
+	private final Deque<SimpleChatWithPictureHash> postQueue = new LinkedList<>();//TODO move to database
 
 	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime) throws NoServerKnownException {
 		this(chatroomID, name, lastReadID, lastUpdateTime, Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabase());
@@ -131,9 +136,14 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public void forceRefresh() throws NoServerKnownException {
-		newestID = -1;
-		lastUpdateTime = 0;
-		lastReadID = -1;
+		stateLock.writeLock().lock();
+		try {
+			newestID = -1;
+			lastUpdateTime = 0;
+			lastReadID = -1;
+		} finally {
+			stateLock.writeLock().unlock();
+		}
 
 		db.delete(DatabaseHelper.Chats.TABLE, DatabaseHelper.Chatrooms.KEY_ID+"="+chatroomID, null);
 		update();
@@ -227,8 +237,10 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public void setLastReadId(int lastRead) {
-		if (lastReadID < lastRead) {
-			lastReadID = lastRead;
+		stateLock.writeLock().lock();
+		try {
+			if (lastReadID < lastRead) {
+				lastReadID = lastRead;
 //			if (needPost) {
 //				needPost = false;
 //				server.uiHandler.post(new Runnable() {
@@ -239,12 +251,20 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //					}
 //				});
 //			}
+			}
+		} finally {
+			stateLock.writeLock().unlock();
 		}
 	}
 
 	@Override
 	public int getLastReadId() {
-		return lastReadID;
+		stateLock.readLock().lock();
+		try {
+			return lastReadID;
+		} finally {
+			stateLock.readLock().unlock();
+		}
 	}
 
 	@Override
@@ -253,7 +273,12 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		CursorConverters.ChatCursorIds c = CursorConverters.ChatCursorIds.read(cursor);
 
-		CursorConverters.moveCursorToId(cursor,c.id,lastReadID);
+		stateLock.readLock().lock();
+		try {
+			CursorConverters.moveCursorToId(cursor, c.id, lastReadID);
+		} finally {
+			stateLock.readLock().unlock();
+		}
 
 		List<ChatEntry> res = new ArrayList<>();
 
@@ -267,12 +292,16 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public void addListener(IChatroomListener l) {
-		listeners.add(l);
+		synchronized (listeners) {
+			listeners.add(l);
+		}
 	}
 
 	@Override
 	public void removeListener(IChatroomListener l) {
-		listeners.remove(l);
+		synchronized (listeners) {
+			listeners.remove(l);
+		}
 	}
 
 	@Override
@@ -284,8 +313,13 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	public void save() {
 		ContentValues update = new ContentValues();
 
-		update.put(DatabaseHelper.Chatrooms.KEY_LAST_REFRESH, lastUpdateTime);
-		update.put(DatabaseHelper.Chatrooms.KEY_LAST_READ, lastReadID);
+		stateLock.readLock().lock();
+		try {
+			update.put(DatabaseHelper.Chatrooms.KEY_LAST_REFRESH, lastUpdateTime);
+			update.put(DatabaseHelper.Chatrooms.KEY_LAST_READ, lastReadID);
+		} finally {
+			stateLock.readLock().unlock();
+		}
 
 		db.update(DatabaseHelper.Chatrooms.TABLE, update, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID, null);
 	}
@@ -296,7 +330,9 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	private SimpleChatWithPictureHash queuePost(SimpleChatWithPictureHash post) {
-		postQueue.add(post);
+		synchronized (postQueue) {
+			postQueue.add(post);
+		}
 		notifyPostChange(post, PostState.Uploading);
 
 		comm.postMessage(chatroomID, post, new PostChatCallback(post));
@@ -307,7 +343,9 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	private void dequeuePost(SimpleChatWithPictureHash post, ChatEntry entry) {
-		postQueue.remove(post);
+		synchronized (postQueue) {
+			postQueue.remove(post);
+		}
 
 		Log.i(THIS, "Posted message: "+ post);
 
@@ -329,24 +367,31 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	private void notifyPostChange(final SimpleChatWithPictureHash post, final PostState state, final ChatEntry entry) {
-		Handler handler;
-		for (final IChatroomListener l: listeners) {
-			handler = l.getCallbackHandler();
-			if (handler == null) {
-				l.onPostStateChange(post, state, entry);
-			} else {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						l.onPostStateChange(post, state, entry);
-					}
-				});
+		synchronized (listeners) {
+			Handler handler;
+			for (final IChatroomListener l : listeners) {
+				handler = l.getCallbackHandler();
+				if (handler == null) {
+					l.onPostStateChange(post, state, entry);
+				} else {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							l.onPostStateChange(post, state, entry);
+						}
+					});
+				}
 			}
 		}
 	}
 
-	private synchronized void setState(final ChatroomState newState) {
-		state = newState;
+	private void setState(final ChatroomState newState) {
+		stateLock.writeLock().lock();
+		try {
+			state = newState;
+		} finally {
+			stateLock.writeLock().unlock();
+		}
 
 		Log.i(THIS, "State: " + newState);
 	}
@@ -356,7 +401,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	 *
 	 * @param entries All entries that have a higher chatID than this.newestID will be saved to DB
 	 */
-	private synchronized void saveChats(List<ChatEntry> entries) {
+	private void saveChats(List<ChatEntry> entries) {
 		//TODO check if user / group is known, otherwise request a update from server
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
 		SQLiteStatement s = db.compileStatement("INSERT INTO " + DatabaseHelper.Chats.TABLE +
@@ -365,6 +410,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		int chatId;
 		List<ChatEntry> update = new ArrayList<>();
 
+		stateLock.writeLock().lock();
 		try {
 			ChatEntry c;
 			for (Iterator<ChatEntry> i = entries.iterator(); i.hasNext(); ) {
@@ -411,9 +457,12 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 				setLast(last.timestamp, last.chatID);
 			}
 
+			Log.i(THIS, "Received " + entries.size() + " new Chats in Chatroom " + chatroomID + " since " + lastUpdateTime);
+
 		} catch (Exception e) {
 			Log.e(THIS, "All Inserts failed", e);
 		} finally {
+			stateLock.writeLock().unlock();
 			s.close();
 		}
 
@@ -424,24 +473,24 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			}
 		}
 
-		Log.i(THIS, "Received " + entries.size() + " new Chats in Chatroom " + chatroomID + " since " + this.lastUpdateTime + "");
-
 		notifyChatsChanged();
 	}
 
 	private void notifyChatsChanged() {
-		Handler handler;
-		for (final IChatroomListener l: listeners) {
-			handler = l.getCallbackHandler();
-			if (handler == null) {
-				l.onChatsChanged();
-			} else {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						l.onChatsChanged();
-					}
-				});
+		synchronized (listeners) {
+			Handler handler;
+			for (final IChatroomListener l : listeners) {
+				handler = l.getCallbackHandler();
+				if (handler == null) {
+					l.onChatsChanged();
+				} else {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							l.onChatsChanged();
+						}
+					});
+				}
 			}
 		}
 	}
@@ -479,10 +528,15 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public synchronized void pushChat(ChatEntry chatEntry, INotificationManager notificationManager) {
-		if (chatEntry.chatID <= this.newestID) {
-			Log.w(THIS, "Received Chat via Push that was already in the DB: " + chatEntry.chatID);
-			return;
+	public void pushChat(ChatEntry chatEntry, INotificationManager notificationManager) {
+		stateLock.readLock().lock();
+		try {
+			if (chatEntry.chatID <= newestID) {
+				Log.w(THIS, "Received Chat via Push that was already in the DB: " + chatEntry.chatID);
+				return;
+			}
+		} finally {
+			stateLock.readLock().unlock();
 		}
 
 		saveChat(chatEntry);
@@ -496,27 +550,34 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 //		notifyChatsAdded(upd);
 		//Only show notification if chatroom is not currently visible
-		if (listeners.isEmpty()) {
-			if (notificationManager != null)
-				notificationManager.updateChatNotification(this);
-		} else {
-			notifyChatsChanged();
+		synchronized (listeners) {
+			if (listeners.isEmpty()) {
+				if (notificationManager != null)
+					notificationManager.updateChatNotification(this);
+			} else {
+				notifyChatsChanged();
+			}
 		}
 	}
 
-	private synchronized void setLast(long updateTime, int newestID) {
-		if (updateTime > 0) {
-			if (updateTime > lastUpdateTime)
-				lastUpdateTime = updateTime;
-			else
-				Log.e(THIS, "Outdated lastUpdateTime: old:" + lastUpdateTime + ", new: " + updateTime);
-		}
+	private void setLast(long updateTime, int newestID) {
+		stateLock.writeLock().lock();
+		try {
+			if (updateTime > 0) {
+				if (updateTime > lastUpdateTime)
+					lastUpdateTime = updateTime;
+				else
+					Log.e(THIS, "Outdated lastUpdateTime: old:" + lastUpdateTime + ", new: " + updateTime);
+			}
 
-		if (newestID > 0) {
-			if (newestID > this.newestID)
-				this.newestID = newestID;
-			else
-				Log.e(THIS, "Outdated newestID: old:" + this.newestID + ", new: " + newestID);
+			if (newestID > 0) {
+				if (newestID > this.newestID)
+					this.newestID = newestID;
+				else
+					Log.e(THIS, "Outdated newestID: old:" + this.newestID + ", new: " + newestID);
+			}
+		} finally {
+			stateLock.writeLock().unlock();
 		}
 	}
 
@@ -537,9 +598,14 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	 * @param insert
 	 */
 	void fillRoomContentValues(ContentValues insert) {
-		insert.put(DatabaseHelper.Chatrooms.KEY_ID, chatroomID);
-		insert.put(DatabaseHelper.Chatrooms.KEY_NAME, name);
-		insert.put(DatabaseHelper.Chatrooms.KEY_LAST_REFRESH, lastUpdateTime);
-		insert.put(DatabaseHelper.Chatrooms.KEY_LAST_READ, lastReadID);
+		stateLock.readLock().lock();
+		try {
+			insert.put(DatabaseHelper.Chatrooms.KEY_ID, chatroomID);
+			insert.put(DatabaseHelper.Chatrooms.KEY_NAME, name);
+			insert.put(DatabaseHelper.Chatrooms.KEY_LAST_REFRESH, lastUpdateTime);
+			insert.put(DatabaseHelper.Chatrooms.KEY_LAST_READ, lastReadID);
+		} finally {
+			stateLock.readLock().unlock();
+		}
 	}
 }
