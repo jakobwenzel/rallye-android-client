@@ -66,27 +66,41 @@ public class ChatManager implements IChatManager {
 
 	@Override
 	public boolean isChatReady() {
-		return chatrooms != null;
+		chatroomLock.readLock().lock();
+		try {
+			return chatrooms != null;
+		} finally {
+			chatroomLock.readLock().unlock();
+		}
 	}
 
 	@Override
 	public List<? extends IChatroom> getChatrooms() {
-		return Collections.unmodifiableList(chatrooms);
+		chatroomLock.readLock().lock();
+		try {
+			return Collections.unmodifiableList(chatrooms);
+		} finally {
+			chatroomLock.readLock().unlock();
+		}
 	}
 
 	@Override
 	public IChatroom findChatroom(int roomID) {
-		if (chatrooms == null)
-			return null;
+		chatroomLock.readLock().lock();
+		try {
+			if (chatrooms == null)
+				return null;
 
-		for (IChatroom r: chatrooms) {
-			if (r.getID() == roomID)
-			{
-				return r;
+			for (IChatroom r : chatrooms) {
+				if (r.getID() == roomID) {
+					return r;
+				}
 			}
-		}
 
-		return null;
+			return null;
+		} finally {
+			chatroomLock.readLock().unlock();
+		}
 	}
 
 	@Override
@@ -96,7 +110,12 @@ public class ChatManager implements IChatManager {
 		communicator.getAvailableChatrooms(new Callback<List<Chatroom>>() {
 			@Override
 			public void success(List<Chatroom> chatrooms, Response response) {
-				ChatManager.this.chatrooms = chatrooms;
+				chatroomLock.writeLock().lock();
+				try {
+					ChatManager.this.chatrooms = chatrooms;
+				} finally {
+					chatroomLock.writeLock().unlock();
+				}
 				notifyChatroomsChanged();
 			}
 
@@ -118,19 +137,28 @@ public class ChatManager implements IChatManager {
 	public void forceRefreshChatrooms() {
 		db.delete(DatabaseHelper.Chatrooms.TABLE, null, null);
 
-		chatrooms = null;
+		chatroomLock.writeLock().lock();
+		try {
+			chatrooms = null;
+		} finally {
+			chatroomLock.writeLock().unlock();
+		}
 
 		updateChatrooms();
 	}
 
 	@Override
 	public void addListener(IChatListener chatListener) {
-		listeners.add(chatListener);
+		synchronized (listeners) {
+			listeners.add(chatListener);
+		}
 	}
 
 	@Override
 	public void removeListener(IChatListener chatListener) {
-		listeners.remove(chatListener);
+		synchronized (listeners) {
+			listeners.remove(chatListener);
+		}
 	}
 
 	public void readChatrooms() {
@@ -151,35 +179,47 @@ public class ChatManager implements IChatManager {
 		Storage.structureChangeHandled(EDIT_CHATS);
 
 		Log.i(THIS, "Read " + out.size() + " Chatrooms");
-		chatrooms = out;
+		chatroomLock.writeLock().lock();
+		try {
+			chatrooms = out;
+		} finally {
+			chatroomLock.writeLock().unlock();
+		}
 	}
 
 	public void writeChatrooms() {
-		if (chatrooms == null)
-			return;
+		chatroomLock.readLock().lock();
+		try {
+			if (chatrooms == null)
+				return;
 
-		db.delete(DatabaseHelper.Chatrooms.TABLE, null, null);
+			db.delete(DatabaseHelper.Chatrooms.TABLE, null, null);
 
-		for (Chatroom c : chatrooms) {
-			ContentValues insert = new ContentValues();
-			c.fillRoomContentValues(insert);
-			db.insert(DatabaseHelper.Chatrooms.TABLE, null, insert);
+			for (Chatroom c : chatrooms) {
+				ContentValues insert = new ContentValues();
+				c.fillRoomContentValues(insert);
+				db.insert(DatabaseHelper.Chatrooms.TABLE, null, insert);
+			}
+		} finally {
+			chatroomLock.readLock().unlock();
 		}
 	}
 
 	private void notifyChatroomsChanged() {
-		Handler handler;
-		for (final IChatListener l: listeners) {
-			handler = l.getCallbackHandler();
-			if (handler == null) {
-				l.onChatroomsChange();
-			} else {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						l.onChatroomsChange();
-					}
-				});
+		synchronized (listeners) {
+			Handler handler;
+			for (final IChatListener l : listeners) {
+				handler = l.getCallbackHandler();
+				if (handler == null) {
+					l.onChatroomsChange();
+				} else {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							l.onChatroomsChange();
+						}
+					});
+				}
 			}
 		}
 	}
