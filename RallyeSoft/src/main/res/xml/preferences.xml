@@ -19,7 +19,7 @@
   ~ along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
 	<PreferenceCategory android:title="@string/data_transfer">
 		<SwitchPreference
 			android:defaultValue="true"
@@ -27,5 +27,12 @@
 			android:summaryOff="@string/auto_upload_off_summ"
 			android:summaryOn="@string/auto_upload_on_summ"
 			android:title="@string/auto_upload" />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/troubleshooting">
+		<de.stadtrallye.rallyesoft.widget.ForceRefreshPreference android:title="@string/force_refresh_mapconfig" app:target="map_config" />
+		<de.stadtrallye.rallyesoft.widget.ForceRefreshPreference android:title="@string/force_refresh_chatrooms" app:target="available_chatrooms" />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/app_name">
+		<de.stadtrallye.rallyesoft.widget.AboutPreference android:title="@string/about" />
 	</PreferenceCategory>
 </PreferenceScreen>

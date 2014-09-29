@@ -38,9 +38,9 @@ public class AuthProvider {
 
 	private static final String THIS = AuthProvider.class.getSimpleName();
 
-	@JsonProperty("groupID") protected Integer groupID;
-	@JsonProperty("userAuth") protected UserAuth userAuth;
-	protected String groupPassword;
+	@JsonProperty protected Integer groupID;
+	@JsonProperty protected UserAuth userAuth;
+	@JsonProperty protected String groupPassword;
 
 	public AuthProvider() {
 

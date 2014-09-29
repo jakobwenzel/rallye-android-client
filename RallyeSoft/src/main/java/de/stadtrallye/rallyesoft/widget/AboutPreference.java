@@ -17,39 +17,34 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.fragments;
+package de.stadtrallye.rallyesoft.widget;
 
-
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
+import android.content.Context;
+import android.preference.DialogPreference;
 import android.text.method.LinkMovementMethod;
-import android.view.LayoutInflater;
+import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import de.stadtrallye.rallyesoft.R;
 
 /**
- * Created by Ramon on 16.10.13.
+ * Created by Ramon on 30.09.2014.
  */
-public class AboutDialogFragment extends DialogFragment {
+public class AboutPreference extends DialogPreference {
 
-	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState) {
-		LayoutInflater inflater = getActivity().getLayoutInflater();
+	public AboutPreference(Context context, AttributeSet attrs) {
+		super(context, attrs);
 
-		return new AlertDialog.Builder(getActivity())
-				.setTitle(R.string.about)
-				.setIcon(R.drawable.ic_launcher)
-				.setView(inflateCustomView(inflater, null, savedInstanceState))
-				.setPositiveButton(R.string.ok, null).create();
+		setDialogTitle(R.string.about);
+		setDialogIcon(R.drawable.ic_launcher);
+		setPositiveButtonText(android.R.string.ok);
+		setDialogLayoutResource(R.layout.about_fragment);
 	}
 
-	private View inflateCustomView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.about_fragment, container, false);
+	@Override
+	protected View onCreateDialogView() {
+		View v = super.onCreateDialogView();
 
 		TextView tvGitHub = (TextView) v.findViewById(R.id.about_github);
 		TextView tvLibs = (TextView) v.findViewById(R.id.about_libs);
@@ -58,9 +53,4 @@ public class AboutDialogFragment extends DialogFragment {
 
 		return v;
 	}
-
-//	@Override
-//	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-//		return inflateCustomView(inflater, container, savedInstanceState);
-//	}
 }

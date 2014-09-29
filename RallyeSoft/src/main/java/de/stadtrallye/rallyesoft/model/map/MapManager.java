@@ -41,7 +41,6 @@ import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.Server;
-import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
@@ -58,7 +57,7 @@ import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_NODES;
 
 public class MapManager implements IMapManager {
 	
-	private static final String THIS = TaskManager.class.getSimpleName();
+	private static final String THIS = MapManager.class.getSimpleName();
 
 	private MapConfig mapConfig;
 	private final ReadWriteLock configLock = new ReentrantReadWriteLock();

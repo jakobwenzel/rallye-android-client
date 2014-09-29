@@ -128,5 +128,9 @@
 	<string name="password_incorrect_try_again">Password was incorrect, please try again</string>
 	<string name="password_retry">Enter password</string>
 	<string name="retry">Retry login</string>
+	<string name="confirm_force_refresh">Are you sure? This will delete all current data. The app will try to refresh the data, but until then it is not available...</string>
+	<string name="troubleshooting">Troubleshooting</string>
+	<string name="force_refresh_mapconfig">Force refresh map configuration</string>
+	<string name="force_refresh_chatrooms">Force refresh the available chatrooms</string>
 
 </resources>

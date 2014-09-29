@@ -27,7 +27,6 @@ import android.content.res.Configuration;
 import android.graphics.drawable.TransitionDrawable;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
@@ -44,7 +43,6 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.zxing.integration.android.IntentIntegrator;
 
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
 import de.stadtrallye.rallyesoft.model.IServer;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
@@ -263,10 +261,6 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 //			case R.id.menu_reconnect: //there is no more temporary offline, we cannot know if push messages will reach us
 //				model.reconnect();
 //				break;
-			case R.id.menu_about:
-				DialogFragment dialog = new AboutDialogFragment();
-				dialog.show(getSupportFragmentManager(), "about");
-				break;
 			case R.id.menu_settings:
 				intent = new Intent(this, SettingsActivity.class);
 				startActivity(intent);
