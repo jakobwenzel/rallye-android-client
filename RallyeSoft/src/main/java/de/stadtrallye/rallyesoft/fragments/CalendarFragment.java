@@ -26,13 +26,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.astuetz.PagerSlidingTabStrip;
-
 import de.rallye.model.calendar.Calendar;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.services.IHandle;
 import de.stadtrallye.rallyesoft.services.ModelManager;
 import de.stadtrallye.rallyesoft.uimodel.CalendarDayPagerAdapter;
+import de.stadtrallye.rallyesoft.widget.SlidingTabLayout;
 
 /**
  * Created by Ramon on 17.09.2014.
@@ -42,7 +41,7 @@ public class CalendarFragment extends Fragment {
 	private static final String THIS = CalendarFragment.class.getSimpleName();
 
 	private ViewPager pager;
-	private PagerSlidingTabStrip indicator;
+	private SlidingTabLayout indicator;
 	private CalendarDayPagerAdapter fragmentAdapter;
 	private IHandle<Calendar> calendar;
 
@@ -60,7 +59,7 @@ public class CalendarFragment extends Fragment {
 
 		pager = (ViewPager) v.findViewById(R.id.pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
-		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
+		indicator = (SlidingTabLayout) v.findViewById(R.id.indicator);
 
 		return v;
 	}
