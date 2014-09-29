@@ -17,33 +17,17 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
+package de.stadtrallye.rallyesoft.storage;
 
-import de.stadtrallye.rallyesoft.model.Server;
+import android.database.sqlite.SQLiteDatabase;
 
 /**
- * Parent of fragments that guide through the various steps
+ * Created by Ramon on 29.09.2014.
  */
-public interface IConnectionAssistant extends IProgressUI {
+public interface IDbProvider {
+	boolean hasStructureChanged(int table);
 
-	void next();
+	void structureChangeHandled(int table);
 
-	void setServer(Server server);
-	Server getServer();
-
-	void setGroup(int id);
-
-	String getSuggestedName();
-
-	void back();
-
-	void setNameAndPass(String name, String pass);
-
-	void finish(boolean acceptNewConnection);
-
-	Integer getGroup();
-
-	String getPass();
-
-	String getName();
+	SQLiteDatabase getDatabase();
 }

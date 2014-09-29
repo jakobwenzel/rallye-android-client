@@ -19,48 +19,64 @@
 
 package de.stadtrallye.rallyesoft.fragments;
 
-
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.EditText;
 
 import de.stadtrallye.rallyesoft.R;
 
 /**
- * Created by Ramon on 16.10.13.
+ * Created by Ramon on 29.09.2014.
  */
-public class AboutDialogFragment extends DialogFragment {
+public class AssistantPasswordDialogFragment extends DialogFragment {
 
+	public static final String TAG = AssistantPasswordDialogFragment.class.getCanonicalName();
+
+	private EditText edit_password;
+	private IPasswordRetry callback;
+
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+
+		callback = (IPasswordRetry) getParentFragment();
+	}
+
+	@NonNull
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		LayoutInflater inflater = getActivity().getLayoutInflater();
 
 		return new AlertDialog.Builder(getActivity())
-				.setTitle(R.string.about)
-				.setIcon(R.drawable.ic_launcher)
+				.setTitle(R.string.password_retry)
 				.setView(inflateCustomView(inflater, null, savedInstanceState))
-				.setPositiveButton(R.string.ok, null).create();
+				.setPositiveButton(R.string.retry, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						callback.retryWithPassword(edit_password.getText().toString());
+					}
+				})
+				.create();
 	}
 
-	private View inflateCustomView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.about_fragment, container, false);
+	private View inflateCustomView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.assistant_password_dialog, container, false);
 
-		TextView tvGitHub = (TextView) v.findViewById(R.id.about_github);
-		TextView tvLibs = (TextView) v.findViewById(R.id.about_libs);
-		tvGitHub.setMovementMethod(LinkMovementMethod.getInstance());
-		tvLibs.setMovementMethod(LinkMovementMethod.getInstance());
+		edit_password = (EditText) v.findViewById(R.id.password);
 
 		return v;
 	}
 
-//	@Override
-//	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-//		return inflateCustomView(inflater, container, savedInstanceState);
-//	}
+	public interface IPasswordRetry {
+		void retryWithPassword(String password);
+	}
 }

@@ -39,7 +39,7 @@ import java.net.URL;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.net.manual.Request;
 
 public class UploadService extends IntentService {

@@ -23,7 +23,6 @@ import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
-import de.stadtrallye.rallyesoft.net.Server;
 
 /**
  * Created by Ramon on 27.09.2014.
@@ -32,7 +31,9 @@ public interface IServer {
 
 	interface IServerListener extends IHandlerCallback {
 
-		void onConnectionFailed(Exception e);
+		void onLoginSuccessful();
+
+		void onConnectionFailed(Exception e, int status);
 
 		void onServerInfoChanged(ServerInfo serverInfo);
 

@@ -33,7 +33,7 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IServer;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 
 public class OverviewFragment extends Fragment implements IServer.IServerListener {
@@ -114,7 +114,12 @@ public class OverviewFragment extends Fragment implements IServer.IServerListene
 //	}
 
 	@Override
-	public void onConnectionFailed(Exception e) {
+	public void onLoginSuccessful() {
+
+	}
+
+	@Override
+	public void onConnectionFailed(Exception e, int status) {
 		connectionState.setText(e.toString());
 		hideServerInfo();
 	}

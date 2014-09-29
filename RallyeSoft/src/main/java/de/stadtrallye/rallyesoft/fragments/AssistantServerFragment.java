@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,7 +52,7 @@ import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IServer;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 
@@ -60,6 +61,8 @@ import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
  * Asks for Server details and tries the Connection (showing ServerInfo)
  */
 public class AssistantServerFragment extends Fragment {
+
+	private static final String THIS = AssistantServerFragment.class.getSimpleName();
 
 	private IConnectionAssistant assistant;
 
@@ -78,6 +81,7 @@ public class AssistantServerFragment extends Fragment {
 	private ViewGroup grp_server_info_manager;
 	private ViewGroup grp_server_info;
 	private ViewGroup grp_server_loading;
+	private Server server;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -162,20 +166,22 @@ public class AssistantServerFragment extends Fragment {
 		}
 
 		if (infoManager == null)
-			infoManager = new InfoManager(savedInstanceState, assistant.getServer());
+			infoManager = new InfoManager(savedInstanceState);
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		Server s = assistant.getServer();
-		if (s != null) {// Maybe save separately inside Server and only use getters here
-			String[] parts = s.getAddress().replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)$", "$1;$2;$3").split(";"); ///(\w+?)/?
+		server = assistant.getServer();
+
+		if (server != null) {// Maybe save separately inside Server and only use getters here
+			String[] parts = server.getAddress().replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)$", "$1;$2;$3").split(";"); ///(\w+?)/?
 			protocol.setSelection(parts[0].equals("http")? 0 : 1);
 			port.setText(parts[2]);
 			edit_server.setText(parts[1]);
 //			path.setText(parts[3]);
+			server.addListener(infoManager);
 		}
 
 		infoManager.restore();
@@ -203,6 +209,8 @@ public class AssistantServerFragment extends Fragment {
 	public void onStop() {
 		super.onStop();
 
+		if (server != null)
+			server.removeListener(infoManager);
 	}
 
 	@Override
@@ -228,14 +236,11 @@ public class AssistantServerFragment extends Fragment {
 //	private enum InfoState { clear, loading, complete }
 
 	private class InfoManager implements ImageLoadingListener, TextWatcher, IServer.IServerListener {
-		private final Server server;
-
 //		private InfoState state;
 
 		private boolean hasInfo, hasImage;
 
-		public InfoManager(Bundle savedInstanceState, Server server) {
-			this.server = server;
+		public InfoManager(Bundle savedInstanceState) {
 			if (savedInstanceState != null) {
 				hasInfo = savedInstanceState.getBoolean(Std.SERVER+Std.CONNECTED, false);
 				hasImage = savedInstanceState.getBoolean(Std.SERVER+Std.IMAGE, false);
@@ -285,11 +290,19 @@ public class AssistantServerFragment extends Fragment {
 			try {
 				displayLoadingState();
 				String address = collectAddress();
-				Server server = new Server(address);
-				server.updateServerInfo();
-				assistant.setServer(server);
+				Server oldServer = server;
+				Server newServer = new Server(address);
+
+				if (oldServer != null)
+					oldServer.removeListener(this);
+
+				newServer.addListener(this);
+				assistant.setServer(newServer);
+				server = newServer;
+				newServer.updateServerInfo();
 				loader.displayImage(server.getServerIconUrl(), srv_image, infoManager);
 			} catch (Exception e) {
+				Log.w(THIS, "Failed to load ServerInfo", e);
 				Toast.makeText(getActivity(), R.string.invalid_url, Toast.LENGTH_SHORT).show();
 				hide();
 			}
@@ -340,7 +353,12 @@ public class AssistantServerFragment extends Fragment {
 		}
 
 		@Override
-		public void onConnectionFailed(Exception e) {
+		public void onLoginSuccessful() {
+
+		}
+
+		@Override
+		public void onConnectionFailed(Exception e, int status) {
 			hasInfo = false;
 			failed(e);
 		}

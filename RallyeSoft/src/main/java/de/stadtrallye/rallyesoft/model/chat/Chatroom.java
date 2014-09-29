@@ -26,6 +26,9 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Handler;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.sql.SQLDataException;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -39,9 +42,10 @@ import de.rallye.model.structures.SimpleChatEntry;
 import de.rallye.model.structures.SimpleChatWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
+import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.uimodel.INotificationManager;
@@ -60,7 +64,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private final String THIS;
 
 
-	private final SQLiteDatabase db;
+	private final IDbProvider dbProvider;
 	private final RetroAuthCommunicator comm;
 
 	private int lastReadID;
@@ -73,12 +77,12 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private final Deque<SimpleChatWithPictureHash> postQueue = new LinkedList<>();//TODO move to database
 
 	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime) throws NoServerKnownException {
-		this(chatroomID, name, lastReadID, lastUpdateTime, Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabase());
+		this(chatroomID, name, lastReadID, lastUpdateTime, Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabaseProvider());
 	}
 
-	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime, RetroAuthCommunicator communicator, SQLiteDatabase db) {
+	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime, RetroAuthCommunicator communicator, IDbProvider dbProvider) {
 		super(chatroomID, name);
-		this.db = db;
+		this.dbProvider = dbProvider;
 		this.comm = communicator;
 		this.lastReadID = lastReadID;
 		this.lastUpdateTime = lastUpdateTime;
@@ -86,7 +90,8 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		THIS = CLASS + chatroomID;
 	}
 
-	public Chatroom(int chatroomID, String name) throws IllegalAccessException {
+	@JsonCreator
+	public Chatroom(@JsonProperty("chatroomID") int chatroomID, @JsonProperty("name") String name) throws NoServerKnownException {
 		this(chatroomID, name, -1, 0);
 	}
 
@@ -145,15 +150,18 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			stateLock.writeLock().unlock();
 		}
 
-		db.delete(DatabaseHelper.Chats.TABLE, DatabaseHelper.Chatrooms.KEY_ID+"="+chatroomID, null);
+		getDb().delete(DatabaseHelper.Chats.TABLE, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID, null);
 		update();
+	}
+
+	private SQLiteDatabase getDb() {
+		return dbProvider.getDatabase();
 	}
 
 	@Override
 	public Cursor getChatCursor() {
-		Cursor c = db.query(DatabaseHelper.Chats.TABLE + " AS c LEFT JOIN " + DatabaseHelper.Groups.TABLE + " AS g USING(" + DatabaseHelper.Chats.FOREIGN_GROUP + ") LEFT JOIN " + DatabaseHelper.Users.TABLE + " AS u USING(" + DatabaseHelper.Chats.FOREIGN_USER + ")",
+		Cursor c = getDb().query(DatabaseHelper.Chats.TABLE + " AS c LEFT JOIN " + DatabaseHelper.Groups.TABLE + " AS g USING(" + DatabaseHelper.Chats.FOREIGN_GROUP + ") LEFT JOIN " + DatabaseHelper.Users.TABLE + " AS u USING(" + DatabaseHelper.Chats.FOREIGN_USER + ")",
 				new String[]{DatabaseHelper.Chats.KEY_ID + " AS _id", DatabaseHelper.Chats.KEY_MESSAGE, DatabaseHelper.Chats.KEY_TIME, "c." + DatabaseHelper.Chats.FOREIGN_GROUP, DatabaseHelper.Groups.KEY_NAME, DatabaseHelper.Chats.FOREIGN_USER, DatabaseHelper.Users.KEY_NAME, DatabaseHelper.Chats.KEY_PICTURE}, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID, null, null, null, DatabaseHelper.Chats.KEY_ID);
-		Log.i(THIS, "new Cursor: " + c.getCount() + " rows");
 		return c;
 	}
 
@@ -188,7 +196,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public IPictureGallery getPictureGallery(int initialPictureId) {
-		Cursor c = db.query(DatabaseHelper.Chats.TABLE, new String[]{DatabaseHelper.Chats.KEY_PICTURE}, DatabaseHelper.Chats.KEY_PICTURE + " <> 0 AND " + DatabaseHelper.Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(chatroomID)}, DatabaseHelper.Chats.KEY_PICTURE, null, DatabaseHelper.Chats.KEY_TIME);
+		Cursor c = getDb().query(DatabaseHelper.Chats.TABLE, new String[]{DatabaseHelper.Chats.KEY_PICTURE}, DatabaseHelper.Chats.KEY_PICTURE + " <> 0 AND " + DatabaseHelper.Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(chatroomID)}, DatabaseHelper.Chats.KEY_PICTURE, null, DatabaseHelper.Chats.KEY_TIME);
 		int[] pictures = new int[c.getCount()];
 		int initialPos = 0;
 
@@ -321,7 +329,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			stateLock.readLock().unlock();
 		}
 
-		db.update(DatabaseHelper.Chatrooms.TABLE, update, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID, null);
+		getDb().update(DatabaseHelper.Chatrooms.TABLE, update, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID, null);
 	}
 
 	private void checkServerKnown() throws NoServerKnownException {
@@ -404,7 +412,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private void saveChats(List<ChatEntry> entries) {
 		//TODO check if user / group is known, otherwise request a update from server
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
-		SQLiteStatement s = db.compileStatement("INSERT INTO " + DatabaseHelper.Chats.TABLE +
+		SQLiteStatement s = getDb().compileStatement("INSERT INTO " + DatabaseHelper.Chats.TABLE +
 				" (" + DatabaseHelper.strStr(DatabaseHelper.Chats.COLS) + ") VALUES (?, ?, ?, ?, ?, ?, " + chatroomID + ")");
 
 		int chatId;
@@ -503,7 +511,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		fillChatContentValues(insert, chat);
 
-		db.insert(DatabaseHelper.Chats.TABLE, null, insert);
+		getDb().insert(DatabaseHelper.Chats.TABLE, null, insert);
 
 		setLast(chat.timestamp, chat.chatID);
 	}
@@ -514,7 +522,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		fillChatContentValues(update, chatEntry);
 
-		db.update(DatabaseHelper.Chats.TABLE, update, DatabaseHelper.Chats.KEY_ID + "=" + chatEntry.chatID, null);
+		getDb().update(DatabaseHelper.Chats.TABLE, update, DatabaseHelper.Chats.KEY_ID + "=" + chatEntry.chatID, null);
 
 //		setLast(chatEntry.timestamp, 0);
 

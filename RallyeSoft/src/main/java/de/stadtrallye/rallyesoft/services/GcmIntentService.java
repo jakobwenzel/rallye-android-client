@@ -31,10 +31,10 @@ import java.io.IOException;
 import de.rallye.model.structures.PushChatEntry;
 import de.rallye.model.structures.PushEntity;
 import de.stadtrallye.rallyesoft.model.AndroidNotificationManager;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import de.wirsch.gcm.GcmBaseIntentService;
 

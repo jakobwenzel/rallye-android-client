@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 
 /**
  * Manages all fragments used as Tabs in an activity
@@ -155,6 +155,8 @@ public abstract class TabManager {
 		public Fragment getFragment() {
 			Fragment f = fragmentManager.findFragmentByTag(tag);
 
+//			if (f != null && !f.isDetached())
+
 			if (f == null) {
 				f = Fragment.instantiate(context, clz.getName());
 				if (args != null)
@@ -206,6 +208,7 @@ public abstract class TabManager {
 
 			return true;
 		} catch (Exception e) {
+			Log.e(THIS, "Unknown Exception during switch tab", e);
 			switchFailedCondition();
 			return false;
 		}
@@ -225,6 +228,7 @@ public abstract class TabManager {
 		try {
 			startTransaction(tab)
 				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+				.addToBackStack(null)
 			.commit();
 
 			parentTab = currentTab;
@@ -241,9 +245,7 @@ public abstract class TabManager {
 		Tab<?> tab = tabs.get(parentTab);
 
 		try {
-			startTransaction(tab)
-				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
-			.commit();
+			fragmentManager.popBackStack();
 
 			setActiveTab(parentTab, tab);
 			parentTab = null;

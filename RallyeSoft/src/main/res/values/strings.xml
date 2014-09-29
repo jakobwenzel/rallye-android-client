@@ -124,5 +124,9 @@
 	<string name="data_transfer">Data Transfer</string>
 	<string name="connecting">Connecting...</string>
 	<string name="export_barcode_error">Failed to export login as barcode...</string>
+	<string name="loading_groups">Please wait while loading available groups</string>
+	<string name="password_incorrect_try_again">Password was incorrect, please try again</string>
+	<string name="password_retry">Enter password</string>
+	<string name="retry">Retry login</string>
 
 </resources>

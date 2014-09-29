@@ -22,6 +22,7 @@ package de.stadtrallye.rallyesoft.fragments;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,9 +47,9 @@ import de.rallye.model.structures.Node;
 import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
@@ -66,6 +67,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 																		ITasksMapControl, IMapManager.IMapListener {
 
 	public static final String TAG = "taskMap";
+	private static final String THIS = TasksMapFragment.class.getSimpleName();
 
 	private GoogleMap gmap;
 
@@ -148,13 +150,16 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		if (lateInitialization) {
 			MapConfig mapConfig = mapManager.getMapConfigCached();
 			if (mapConfig != null) {
+				Log.i(THIS, "Late initialization with MapConfig");
 				animateToConfigBounds(mapConfig);
 				lateInitialization = false;
 			} else {
+				Log.i(THIS, "Late initialization without MapConfig, updating...");
 				mapManager.provideMapConfig();
 			}
 		}
 	}
+
 
 	@Override
 	public void onStop() {
@@ -216,8 +221,19 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 
 	private void animateToConfigBounds(MapConfig mapConfig) {
 		final int padding = getResources().getDimensionPixelOffset(R.dimen.map_center_padding);
-		LatLngBounds bounds = new LatLngBounds(toGms(mapConfig.bounds.get(0)), toGms(mapConfig.bounds.get(1)));//TODO Only save the SW + NE Corners as used by LatLngBounds
-		gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+		final LatLngBounds bounds = new LatLngBounds(toGms(mapConfig.bounds.get(0)), toGms(mapConfig.bounds.get(1)));//TODO Only save the SW + NE Corners as used by LatLngBounds
+
+		if (isLayouted)
+			gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+		else {
+			getView().post(new Runnable() { // MapView has not been layouted yet (newLatLngBounds will throw Exception), so post it in the queue
+				@Override
+				public void run() {
+					gmap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+				}
+			});
+		}
+
 	}
 
 

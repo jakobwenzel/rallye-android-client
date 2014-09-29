@@ -40,9 +40,10 @@ import de.rallye.model.structures.Map;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
+import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Edges;
@@ -65,26 +66,31 @@ public class MapManager implements IMapManager {
 	private boolean refreshingConfig = false;
 	private final Object refreshingLock = new Object();
 
-	private final SQLiteDatabase db;
+	private final IDbProvider dbProvider;
 	private final RetroAuthCommunicator comm;
 	
 	private final List<IMapListener> mapListeners = new ArrayList<>();
 
 
-	public MapManager(RetroAuthCommunicator comm, SQLiteDatabase db) {
-		this.db = db;
+	public MapManager(RetroAuthCommunicator comm, IDbProvider dbProvider) {
+		this.dbProvider = dbProvider;
 		this.comm = comm;
 
-		if (Storage.hasStructureChanged(EDIT_EDGES | EDIT_NODES)) {
+		if (dbProvider.hasStructureChanged(EDIT_EDGES | EDIT_NODES)) {
 			forceRefreshMapConfig();
-			Storage.structureChangeHandled(EDIT_EDGES | EDIT_NODES);
+			//TODO forceRefreshMap();
+			dbProvider.structureChangeHandled(EDIT_EDGES | EDIT_NODES);
 		}
 
-        //TODO async preload MapConfig...
+		loadMapConfig();// async?
 	}
 
 	public MapManager() throws NoServerKnownException {
-		this(Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabase());
+		this(Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabaseProvider());
+	}
+
+	private SQLiteDatabase getDb() {
+		return dbProvider.getDatabase();
 	}
 	
 	@Override
@@ -129,6 +135,7 @@ public class MapManager implements IMapManager {
 	
 	
 	private void updateDatabase(List<Node> nodes, List<Edge> edges) {
+		SQLiteDatabase db = getDb();
 
 		db.beginTransaction();
 		try {
@@ -166,14 +173,14 @@ public class MapManager implements IMapManager {
 	}
 	
 	private void readDatabase(List<Node> nodes, List<Edge> edges) {
-		Cursor c = db.query(Nodes.TABLE, Nodes.COLS, null, null, null, null, null);
+		Cursor c = getDb().query(Nodes.TABLE, Nodes.COLS, null, null, null, null, null);
 
 		while (c.moveToNext()) {
 			nodes.add(new Node((int) c.getLong(0), c.getString(1), new LatLng(c.getDouble(2), c.getDouble(3)), c.getString(4)));
 		}
 		c.close();
 
-		c = db.query(Edges.TABLE, Edges.COLS, null, null, null, null, null);
+		c = getDb().query(Edges.TABLE, Edges.COLS, null, null, null, null, null);
 
 		while (c.moveToNext()) {
 			edges.add(new Edge(nodes.get((int) c.getLong(0)), nodes.get((int) c.getLong(1)), c.getString(2)));
@@ -182,7 +189,7 @@ public class MapManager implements IMapManager {
 	}
 	
 //	private void findNeighbors(Node node) {
-//		Cursor c = server.db.query(Edges.TABLE +" LEFT JOIN "+ Nodes.TABLE +" ON "+ Edges.KEY_B+"="+Nodes.KEY_ID,
+//		Cursor c = getDb().query(Edges.TABLE +" LEFT JOIN "+ Nodes.TABLE +" ON "+ Edges.KEY_B+"="+Nodes.KEY_ID,
 //				new String[]{ Edges.KEY_A, Edges.KEY_B, Edges.KEY_TYPE }, Edges.KEY_A+"="+node.ID, null, null, null, null);
 //	}
 

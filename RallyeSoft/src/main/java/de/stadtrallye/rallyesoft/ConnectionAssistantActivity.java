@@ -52,7 +52,7 @@ import de.stadtrallye.rallyesoft.fragments.AssistantAuthFragment;
 import de.stadtrallye.rallyesoft.fragments.AssistantCompleteFragment;
 import de.stadtrallye.rallyesoft.fragments.AssistantGroupsFragment;
 import de.stadtrallye.rallyesoft.fragments.AssistantServerFragment;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
@@ -129,6 +129,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		data.moveToFirst();
 		suggestedName = data.getString(0);
 	}
 
@@ -212,7 +213,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		super.onSaveInstanceState(outState);
 
 		outState.putInt(Std.STEP, step);
-		outState.putString(Std.SERVER, server.serialize());
+		outState.putString(Std.SERVER, (server != null)? server.serialize() : null);
 		outState.putString(Std.NAME, name);
 	}
 
@@ -282,7 +283,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 	}
 
 	@Override
-	public int getGroup() {
+	public Integer getGroup() {
 		return server.getGroupID();
 	}
 

@@ -38,9 +38,9 @@ import com.viewpagerindicator.TitlePageIndicator;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
 import de.stadtrallye.rallyesoft.uimodel.TaskPagerAdapter;
@@ -82,7 +82,7 @@ public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksL
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setRetainInstance(true);
+//		setRetainInstance(true);
 		setHasOptionsMenu(true);
 
 		final Server server = Server.getCurrentServer();
@@ -128,7 +128,7 @@ public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksL
 
 		ITasksMapControl mapControl = (ITasksMapControl) mapFragment;
 
-		fragmentAdapter = new TaskPagerAdapter(getChildFragmentManager(), getActivity(), taskManager.getTasksCursor(), mapControl);
+		fragmentAdapter = new TaskPagerAdapter(fm, getActivity(), taskManager.getTasksCursor(), mapControl);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager); // Needs an adapter
 
@@ -212,7 +212,7 @@ public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksL
 		server.releaseMapManager(this);
 		taskManager = null;
 		mapManager = null;
-		fragmentAdapter.close();
+//		fragmentAdapter.close();
 	}
 
 	@Override

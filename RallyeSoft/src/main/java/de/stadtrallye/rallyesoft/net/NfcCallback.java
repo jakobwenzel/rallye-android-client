@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.Charset;
 
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
 
 @TargetApi(14)

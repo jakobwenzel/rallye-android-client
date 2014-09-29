@@ -39,10 +39,10 @@ import android.widget.Toast;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TaskCursorAdapter;
@@ -59,6 +59,7 @@ public class TasksOverviewFragment extends Fragment implements ITaskManager.ITas
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 
 	private ListView list;
+	private ViewGroup grp_map;
 
 	private TaskCursorWrapper listAdapter;
 
@@ -110,6 +111,8 @@ public class TasksOverviewFragment extends Fragment implements ITaskManager.ITas
 		list.setOnItemClickListener(this);
 		list.setOnItemLongClickListener(this);
 //		list.setFastScrollEnabled(true);
+
+		grp_map = (ViewGroup) v.findViewById(R.id.map);
 
 		if (savedInstanceState != null) {
 			size = savedInstanceState.getByte(Std.SIZE, size);
@@ -211,11 +214,11 @@ public class TasksOverviewFragment extends Fragment implements ITaskManager.ITas
 				break;
 			case 2:
 				list.setVisibility(View.VISIBLE);
-				getView().findViewById(R.id.map).setVisibility(View.GONE);
+				grp_map.setVisibility(View.GONE);
 				break;
 			case 0:
 				list.setVisibility(View.VISIBLE);
-				getView().findViewById(R.id.map).setVisibility(View.VISIBLE);
+				grp_map.setVisibility(View.VISIBLE);
 		}
 		size = newSize;
 	}

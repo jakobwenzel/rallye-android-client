@@ -19,6 +19,9 @@
 
 package de.stadtrallye.rallyesoft.model.chat;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.rallye.model.structures.GroupUser;
 
 /**
@@ -39,8 +42,9 @@ public class ChatEntry extends de.rallye.model.structures.ChatEntry {
 		this.userName = userName;
 	}
 
-	public ChatEntry(int chatID, String message, long timestamp, int groupID, int userID, Integer pictureID) {
-		super(chatID, message, timestamp, groupID, userID, (pictureID == 0)? null : pictureID);
+	@JsonCreator
+	public ChatEntry(@JsonProperty("chatID") int chatID, @JsonProperty("message") String message, @JsonProperty("timestamp") long timestamp, @JsonProperty("groupID") int groupID, @JsonProperty("userID") int userID, @JsonProperty("pictureID") Integer pictureID) {
+		super(chatID, message, timestamp, groupID, userID, (pictureID == 0)? null : pictureID);//why?
 	}
 
 	public void setUserName(String userName) {

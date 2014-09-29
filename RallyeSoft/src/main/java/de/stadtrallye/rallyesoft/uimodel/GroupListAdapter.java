@@ -33,7 +33,7 @@ import java.util.List;
 
 import de.rallye.model.structures.Group;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 
 /**
  * Adapter for showing the Groups available for login on a new server
@@ -102,7 +102,7 @@ public class GroupListAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		return groups.size();
+		return (groups != null)? groups.size() : 0;
 	}
 
 	@Override
@@ -115,7 +115,10 @@ public class GroupListAdapter extends BaseAdapter {
 		return groups.get(position).groupID;
 	}
 
-	public Integer findPosition(int group) {
+	public Integer findPosition(Integer group) {
+		if (group == null)
+			return null;
+
 		for (int i=0; i<groups.size(); i++) {
 			if (groups.get(i).groupID == group)
 				return i;

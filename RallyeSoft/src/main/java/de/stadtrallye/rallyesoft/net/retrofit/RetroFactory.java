@@ -48,22 +48,23 @@ public class RetroFactory {
 
 	private final JacksonConverter converter;
 	private final ExecutorService executor;
-	private final AddAuthAndAcceptInterceptor preemptiveAuthenticator;
 
-	public RetroFactory(AuthProvider authProvider) {
+	public RetroFactory() {
 		this.converter = new JacksonConverter(Serialization.getInstance()); //TODO: Plugin Smile Converter here.... (after debugging is done, it should be completely transparent since it is still all jackson!!)
 		this.executor = Threading.getNetworkExecutor();
-		this.preemptiveAuthenticator = new AddAuthAndAcceptInterceptor(authProvider, "application/json");//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
+	}
 
+	@Deprecated
+	public static void setFallbackAuthentication(AuthProvider authProvider) {
 		Authenticator.setDefault(authProvider.getAuthenticator());
 	}
 
-	public ServerHandle getServer(String server) {
+	public ServerHandle getServer(String server, AuthProvider authProvider) {
 		RestAdapter restAdapter = new RestAdapter.Builder()
 				.setEndpoint(server)
 				.setConverter(converter)
 				.setExecutors(executor, null)
-				.setRequestInterceptor(preemptiveAuthenticator)
+				.setRequestInterceptor(new AddAuthAndAcceptInterceptor(authProvider, "application/json"))//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
 				.build();
 
 		return new ServerHandle(restAdapter);
@@ -103,8 +104,11 @@ class AddAuthAndAcceptInterceptor implements RequestInterceptor {
 
 	@Override
 	public void intercept(RequestFacade request) {
-		if (authProvider.hasUserAuth())
+		if (authProvider.hasUserAuth()) {
 			request.addHeader(AUTHORIZATION, authProvider.getUserAuthString());
+		} else if (authProvider.hasGroupAuth()) {
+			request.addHeader(AUTHORIZATION, authProvider.getGroupAuthString());
+		}
 		request.addHeader(ACCEPT, acceptMime);
 	}
 }

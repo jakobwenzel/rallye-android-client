@@ -119,5 +119,8 @@
 	<string name="data_transfer">Datentransfer</string>
 	<string name="settings">Einstellungen</string>
 	<string name="connecting">Verbinde...</string>
+	<string name="export_barcode_error">Exportieren des Logins als Barcode fehlgeschlagen...</string>
+	<string name="loading_groups">Bitte warten während die verfügbaren Gruppen geladen werde...</string>
+	<string name="password_incorrect_try_again">Passwort falsch, bitte erneut probieren</string>
 
 </resources>

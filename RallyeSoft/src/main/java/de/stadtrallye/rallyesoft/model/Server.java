@@ -17,10 +17,11 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.net;
+package de.stadtrallye.rallyesoft.model;
 
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,6 +31,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import de.rallye.model.structures.Group;
 import de.rallye.model.structures.GroupUser;
@@ -38,13 +41,15 @@ import de.rallye.model.structures.ServerInfo;
 import de.rallye.model.structures.ServerLogin;
 import de.rallye.model.structures.UserAuth;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
-import de.stadtrallye.rallyesoft.model.IServer;
 import de.stadtrallye.rallyesoft.model.chat.ChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.map.MapManager;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
+import de.stadtrallye.rallyesoft.net.AuthProvider;
+import de.stadtrallye.rallyesoft.net.Paths;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroCommunicator;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroFactory;
@@ -54,62 +59,144 @@ import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+
 /**
  * Created by Ramon on 22.09.2014.
  */
+@JsonAutoDetect(getterVisibility = NONE)
 public class Server extends AuthProvider {
 
 	private static final String THIS = Server.class.getSimpleName();
-
-	private static Server currentServer;
-	private static RetroFactory retroFactory;
 	private static final List<IServer.ICurrentServerListener> currentServerListeners = new ArrayList<>();
+	private static Server currentServer;
+	private static RetroFactory retroFactory = new RetroFactory();
 
-	public static Server getCurrentServer() {
-		return currentServer;
-	}
-
-
-	@JsonProperty private final String address;
-	@JsonProperty private ServerInfo serverInfo;
+	@JsonProperty
+	private final String address;
 	private final RetroFactory.ServerHandle serverHandle;
 	private final RetroCommunicator communicator;
 	private final List<IServer.IServerListener> listeners = new ArrayList<>();
 
+	@JsonProperty
+	private ServerInfo serverInfo;
 	private RetroAuthCommunicator authCommunicator;
-
 	private ITaskManager taskManager;
 	private ChatManager chatManager;
 	private MapManager mapManager;
-
 	private List<Group> groups;
+
+	private final ReadWriteLock serverLock = new ReentrantReadWriteLock();
+	@JsonProperty private String userName;
 
 	public Server(String address) {
 		super();
 		this.address = address;
-		serverHandle = retroFactory.getServer(address);
+		serverHandle = retroFactory.getServer(address, this);
 		this.communicator = serverHandle.getPublicApi();
 	}
 
 	@JsonCreator
-	public Server(@JsonProperty("address") String address, @JsonProperty("groupID") int groupID, @JsonProperty("userAuth") UserAuth userAuth, @JsonProperty("serverInfo") ServerInfo serverInfo) {
+	public Server(@JsonProperty("address") String address, @JsonProperty("groupID") Integer groupID, @JsonProperty("userAuth") UserAuth userAuth, @JsonProperty("serverInfo") ServerInfo serverInfo, @JsonProperty("userName") String userName) {
 		super(groupID, userAuth);
 		this.address = address;
-		serverHandle = retroFactory.getServer(address);
+		this.userName = userName;
+		serverHandle = retroFactory.getServer(address, this);
 		this.communicator = serverHandle.getPublicApi();
 		this.serverInfo = serverInfo;
 	}
 
+	public static Server getCurrentServer() {
+		if (currentServer == null)
+			load();
+
+		return currentServer;
+	}
+
+	public static void setCurrentServer(Server server) {
+		if (currentServer != null && currentServer.hasUserAuth())
+			currentServer.tryLogout();
+
+		currentServer = server;
+		try {
+			currentServer.save();// maybe async?
+		} catch (IOException e) {
+			Log.e(THIS, "Failed to save Server", e);
+		}
+
+		notifyCurrentServerChanged();
+	}
+
+	public static Server load(String json) {
+		if (json == null)
+			return null;
+
+		ObjectMapper mapper = Serialization.getInstance();
+		try {
+			return mapper.readValue(json, Server.class);
+		} catch (IOException e) {
+			Log.e(THIS, "Failed to deserialize Server", e);
+			return null;
+		}
+	}
+
+	public static void load() {
+		try {
+			ObjectMapper mapper = Serialization.getInstance();
+
+			currentServer = mapper.readValue(Storage.getServerConfigInputStream(), Server.class);
+		} catch (FileNotFoundException e) {
+			Log.w(THIS, "No previously saved Server!");
+		} catch (IOException e) {
+			Log.e(THIS, "Cannot load Server", e);
+		}
+//		notifyCurrentServerChanged();
+	}
+
+	private static void notifyCurrentServerChanged() {
+		for (IServer.ICurrentServerListener l : currentServerListeners) {
+			l.onNewCurrentServer(currentServer);
+		}
+	}
+
+	@Deprecated
+	public static boolean isStillCurrent(Server server, Object handle) {
+		return server == currentServer;
+	}
+
+	/**
+	 * Not thread safe!!!
+	 * If you call this from somewhere else as the Android UI Thread, fix it!!!!!
+	 *
+	 * @param listener listener
+	 */
+	public static void addListener(IServer.ICurrentServerListener listener) {
+		currentServerListeners.add(listener);
+	}
+
+	public static void removeListener(IServer.ICurrentServerListener listener) {
+		currentServerListeners.remove(listener);
+	}
+
 	public ServerInfo getServerInfoCached() {
-		return serverInfo;
+		serverLock.readLock().lock();
+		try {
+			return serverInfo;
+		} finally {
+			serverLock.readLock().unlock();
+		}
 	}
 
 	public void addListener(IServer.IServerListener listener) {
-		listeners.add(listener);
+		synchronized (listeners) {
+			listeners.add(listener);
+		}
 	}
 
 	public void removeListener(IServer.IServerListener listener) {
-		listeners.remove(listener);
+		synchronized (listeners) {
+			listeners.remove(listener);
+		}
 	}
 
 	public void updateAvailableGroups() {
@@ -130,17 +217,19 @@ public class Server extends AuthProvider {
 
 	private void notifyAvailableGroups() {
 		android.os.Handler handler;
-		for (final IServer.IServerListener listener: listeners) {
-			handler = listener.getCallbackHandler();
-			if (handler != null) {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						listener.onAvailableGroupsChanged(groups);
-					}
-				});
-			} else {
-				listener.onAvailableGroupsChanged(groups);
+		synchronized (listeners) {
+			for (final IServer.IServerListener listener : listeners) {
+				handler = listener.getCallbackHandler();
+				if (handler != null) {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							listener.onAvailableGroupsChanged(groups);
+						}
+					});
+				} else {
+					listener.onAvailableGroupsChanged(groups);
+				}
 			}
 		}
 	}
@@ -149,7 +238,12 @@ public class Server extends AuthProvider {
 		communicator.getServerInfo(new Callback<ServerInfo>() {
 			@Override
 			public void success(ServerInfo serverInfo, Response response) {
-				Server.this.serverInfo = serverInfo;
+				serverLock.writeLock().lock();
+				try {
+					Server.this.serverInfo = serverInfo;
+				} finally {
+					serverLock.writeLock().unlock();
+				}
 				notifyServerInfo();
 			}
 
@@ -163,22 +257,72 @@ public class Server extends AuthProvider {
 
 	private void notifyServerInfo() {
 		android.os.Handler handler;
-		for (final IServer.IServerListener listener: listeners) {
-			handler = listener.getCallbackHandler();
-			if (handler != null) {
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
+		synchronized (listeners) {
+			serverLock.readLock().lock();
+			try {
+				for (final IServer.IServerListener listener : listeners) {
+					handler = listener.getCallbackHandler();
+					if (handler != null) {
+						handler.post(new Runnable() {
+							@Override
+							public void run() {
+								serverLock.readLock().lock();
+								try {
+									listener.onServerInfoChanged(serverInfo);
+								} finally {
+									serverLock.readLock().unlock();
+								}
+							}
+						});
+					} else {
 						listener.onServerInfoChanged(serverInfo);
 					}
-				});
-			} else {
-				listener.onServerInfoChanged(serverInfo);
+				}
+			} finally {
+				serverLock.readLock().unlock();
 			}
 		}
 	}
 
-	public void login(LoginInfo loginInfo, final ILoginListener loginListener) {
+	private void notifyConnectionFailed(final Exception e, final int status) {
+		android.os.Handler handler;
+		synchronized (listeners) {
+			for (final IServer.IServerListener listener : listeners) {
+				handler = listener.getCallbackHandler();
+				if (handler != null) {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							listener.onConnectionFailed(e, status);
+						}
+					});
+				} else {
+					listener.onConnectionFailed(e, status);
+				}
+			}
+		}
+	}
+
+	private void notifyLoginSuccessful() {
+		android.os.Handler handler;
+		synchronized (listeners) {
+			for (final IServer.IServerListener listener : listeners) {
+				handler = listener.getCallbackHandler();
+				if (handler != null) {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							listener.onLoginSuccessful();
+						}
+					});
+				} else {
+					listener.onLoginSuccessful();
+				}
+			}
+		}
+	}
+
+	public void login(final LoginInfo loginInfo) {
 		if (!hasGroupAuth())
 			throw new RuntimeException("No Group auth");//TODO own exception
 
@@ -186,12 +330,14 @@ public class Server extends AuthProvider {
 			@Override
 			public void success(UserAuth userAuth, Response response) {
 				setUserAuth(userAuth);
-				loginListener.loginSuccessful();
+				setUserName(loginInfo.name);
+				notifyLoginSuccessful();
 			}
 
 			@Override
-			public void failure(RetrofitError error) {
-				loginListener.loginFailed();
+			public void failure(RetrofitError e) {
+				Log.e(THIS, "Login failed", e);
+				notifyConnectionFailed(e, e.getResponse().getStatus());
 			}
 		});
 	}
@@ -218,36 +364,6 @@ public class Server extends AuthProvider {
 		mapper.writeValue(Storage.getServerConfigOutputStream(), this);
 	}
 
-	public static Server load(String json) {
-		ObjectMapper mapper = Serialization.getInstance();
-		try {
-			return mapper.readValue(json, Server.class);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public static void load() {
-		try {
-			ObjectMapper mapper = Serialization.getInstance();
-			Server server = mapper.readValue(Storage.getServerConfigInputStream(), Server.class);
-
-			currentServer = server;
-		} catch (FileNotFoundException e) {
-			Log.w(THIS, "No previously saved Server!");
-		} catch (IOException e) {
-			Log.e(THIS, "Cannot load Server", e);
-		}
-	}
-
-	public static void setCurrentServer(Server server) {
-		if (currentServer != null && currentServer.hasUserAuth())
-			currentServer.tryLogout();
-
-		currentServer = server;
-	}
-
 	public void tryLogout() {
 		try {
 			getAuthCommunicator().logout(currentServer.groupID, new Callback<Response>() {
@@ -266,9 +382,9 @@ public class Server extends AuthProvider {
 		}
 	}
 
-	public IChatManager acquireChatManager(Object handle) throws NoServerKnownException{
+	public IChatManager acquireChatManager(Object handle) throws NoServerKnownException {
 		if (chatManager == null) {
-			chatManager = new ChatManager();
+			chatManager = new ChatManager(getAuthCommunicator(), Storage.getDatabaseProvider());
 		}
 		return chatManager;
 	}
@@ -277,9 +393,9 @@ public class Server extends AuthProvider {
 
 	}
 
-	public ITaskManager acquireTaskManager(Object handle) throws NoServerKnownException{
+	public ITaskManager acquireTaskManager(Object handle) throws NoServerKnownException {
 		if (taskManager == null) {
-			taskManager = new TaskManager();
+			taskManager = new TaskManager(getAuthCommunicator(), Storage.getDatabaseProvider());
 		}
 		return taskManager;
 	}
@@ -288,9 +404,9 @@ public class Server extends AuthProvider {
 
 	}
 
-	public IMapManager acquireMapManager(Object handle) throws NoServerKnownException{
+	public IMapManager acquireMapManager(Object handle) throws NoServerKnownException {
 		if (mapManager == null) {
-			mapManager = new MapManager();
+			mapManager = new MapManager(getAuthCommunicator(), Storage.getDatabaseProvider());
 		}
 		return mapManager;
 	}
@@ -304,11 +420,7 @@ public class Server extends AuthProvider {
 	}
 
 	public GroupUser getUser() {
-		return null;
-	}
-
-	public static boolean isStillCurrent(Server server, Object handle) {
-		return server == currentServer;
+		return new GroupUser(this.userAuth.userID, this.groupID, this.userName);
 	}
 
 	public String getAddress() {
@@ -316,7 +428,7 @@ public class Server extends AuthProvider {
 	}
 
 	public String getServerIconUrl() {
-		return address+ Paths.SERVER_PICTURE;
+		return address + Paths.SERVER_PICTURE;
 	}
 
 	public List<Group> getAvailableGroupsCached() {
@@ -328,30 +440,20 @@ public class Server extends AuthProvider {
 		try {
 			return mapper.writeValueAsString(this);
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			Log.e(THIS, "Could not Serialize Server", e);
 			return null;
 		}
 	}
 
 	public String getPictureUploadURL(String hash) {
-		return address+Paths.PICS+"/"+hash;
+		return address + Paths.PICS + "/" + hash;
 	}
 
 	public ServerLogin exportLogin() {
 		return new ServerLogin(address, groupID, groupPassword);
 	}
 
-	public static void addListener(IServer.ICurrentServerListener listener) {
-		currentServerListeners.add(listener);
-	}
-
-	public static void removeListener(IServer.ICurrentServerListener listener) {
-		currentServerListeners.remove(listener);
-	}
-
-	public interface ILoginListener {
-		void loginSuccessful();
-
-		void loginFailed();
+	private void setUserName(String userName) {
+		this.userName = userName;
 	}
 }

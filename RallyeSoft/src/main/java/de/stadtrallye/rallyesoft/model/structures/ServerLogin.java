@@ -28,7 +28,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import de.rallye.model.structures.UserAuth;
-import de.stadtrallye.rallyesoft.util.JSONConverter;
 
 @Deprecated
 public class ServerLogin {
@@ -252,11 +251,11 @@ public class ServerLogin {
 //		}
 //	};
 
-	public static class AuthConverter extends JSONConverter<UserAuth> {
-
-		@Override
-		public UserAuth doConvert(JSONObject o) throws JSONException {
-			return new UserAuth(o.getInt(UserAuth.USER_ID), o.getString(UserAuth.PASSWORD));
-		}
-	}
+//	public static class AuthConverter extends JSONConverter<UserAuth> {
+//
+//		@Override
+//		public UserAuth doConvert(JSONObject o) throws JSONException {
+//			return new UserAuth(o.getInt(UserAuth.USER_ID), o.getString(UserAuth.PASSWORD));
+//		}
+//	}
 }

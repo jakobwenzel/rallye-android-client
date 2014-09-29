@@ -19,35 +19,41 @@
   ~ along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-			  android:orientation="vertical"
-			  android:layout_width="match_parent"
-			  android:layout_height="match_parent">
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:padding="15dp">
 
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceLarge"
-		android:id="@+id/task_name"/>
+		android:id="@+id/task_name"
+		tools:text="Task Name"/>
 
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceMedium"
-		android:id="@+id/task_type"/>
+		android:id="@+id/task_type"
+		tools:text="Task type"/>
 
 	<TextView
 		android:layout_marginTop="8dp"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceSmall"
-		android:id="@+id/task_description"/>
+		android:id="@+id/task_description"
+		tools:text="This is where a long and tedious description would go..."/>
 
 	<View
 		android:layout_marginTop="16dp"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="@android:drawable/divider_horizontal_dark"/>
+		android:layout_height="1dp"
+		android:background="@android:drawable/divider_horizontal_bright"/>
 
 	<de.stadtrallye.rallyesoft.widget.GridView
 		android:id="@+id/additional_info"
@@ -63,8 +69,8 @@
 	<View
 		android:layout_marginTop="16dp"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="@android:drawable/divider_horizontal_dark"/>
+		android:layout_height="1dp"
+		android:background="@android:drawable/divider_horizontal_bright"/>
 
 	<TextView
 		android:layout_marginTop="20dp"

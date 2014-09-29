@@ -34,6 +34,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -51,14 +52,13 @@ import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.SubmitNewSolutionActivity;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.PictureGallery;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.tasks.ITask;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.widget.AdapterView;
 import de.stadtrallye.rallyesoft.widget.GridView;
-import de.stadtrallye.rallyesoft.widget.ListView;
 
 /**
  * List of all Tasks that have no location attached to them
@@ -101,7 +101,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		list = (ListView) inflater.inflate(R.layout.tasks_details, container, false);
 		View header = inflater.inflate(R.layout.task_details_header, list, false);
-		View footer = inflater.inflate(R.layout.task_details_header, list, false);
+		View footer = inflater.inflate(R.layout.task_details_footer, list, false);
 
 		name = (TextView) header.findViewById(R.id.task_name);
 		type = (TextView) header.findViewById(R.id.task_type);
@@ -113,6 +113,8 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 		additionalGrid.setAdapter(gridAdapter);
 		additionalGrid.setOnItemClickListener(this);
 
+		list.addHeaderView(header);
+		list.addFooterView(footer);
 		submissionAdapter = new SubmissionListAdapter();
 		list.setAdapter(submissionAdapter);
 
@@ -138,6 +140,8 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 	@Override
 	public void onStart() {
 		super.onStart();
+
+		updateTaskInfo();
 
 		task.addListener(this);
 
@@ -209,7 +213,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 	@Override
 	public void onTaskChange() {
-
+		updateTaskInfo();
 	}
 
 	@Override

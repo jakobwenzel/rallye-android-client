@@ -19,9 +19,9 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.view.ViewGroup;
 
 import java.util.List;
 
@@ -34,7 +34,6 @@ import de.stadtrallye.rallyesoft.model.chat.IChatroom;
 public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 
 	private List<? extends IChatroom> chatrooms;
-	private ChatroomFragment current;
 
 	public ChatroomPagerAdapter(FragmentManager fm, List<? extends IChatroom> chatrooms) {
 		super(fm);
@@ -51,15 +50,8 @@ public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 	}
 
 	@Override
-	public ChatroomFragment getItem(int pos) {
+	public Fragment getItem(int pos) {
 		return ChatroomFragment.newInstance(chatrooms.get(pos).getID());
-	}
-
-	@Override
-	public void setPrimaryItem(ViewGroup container, int position, Object object) {
-		super.setPrimaryItem(container, position, object);
-
-		current = (ChatroomFragment) object;
 	}
 
 	@Override
@@ -70,5 +62,10 @@ public class ChatroomPagerAdapter extends FragmentPagerAdapter {
 	@Override
 	public CharSequence getPageTitle(int pos) {
 		return chatrooms.get(pos).getName();
+	}
+
+	public void onChatroomsChanged(List<? extends IChatroom> chatrooms) {
+		this.chatrooms = chatrooms;
+		notifyDataSetChanged();
 	}
 }

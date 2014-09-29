@@ -32,8 +32,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
+import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import retrofit.Callback;
@@ -49,19 +50,23 @@ public class ChatManager implements IChatManager {
 
 	private static final String THIS = ChatManager.class.getSimpleName();
 
-	private final SQLiteDatabase db;
+	private final IDbProvider dbProvider;
 	private RetroAuthCommunicator communicator;
 	private List<Chatroom> chatrooms;
 	private final ReadWriteLock chatroomLock = new ReentrantReadWriteLock();
 	private final List<IChatListener> listeners = new ArrayList<>();
 
-	public ChatManager(RetroAuthCommunicator communicator, SQLiteDatabase db) {
-		this.db = db;
+	public ChatManager(RetroAuthCommunicator communicator, IDbProvider dbProvider) {
+		this.dbProvider = dbProvider;
 		this.communicator = communicator;
 	}
 
 	public ChatManager() throws NoServerKnownException {
-		this(Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabase());
+		this(Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabaseProvider());
+	}
+
+	private SQLiteDatabase getDb() {
+		return dbProvider.getDatabase();
 	}
 
 	@Override
@@ -78,7 +83,10 @@ public class ChatManager implements IChatManager {
 	public List<? extends IChatroom> getChatrooms() {
 		chatroomLock.readLock().lock();
 		try {
-			return Collections.unmodifiableList(chatrooms);
+			if (chatrooms != null)
+				return Collections.unmodifiableList(chatrooms);
+			else
+				return null;
 		} finally {
 			chatroomLock.readLock().unlock();
 		}
@@ -135,7 +143,7 @@ public class ChatManager implements IChatManager {
 
 	@Override
 	public void forceRefreshChatrooms() {
-		db.delete(DatabaseHelper.Chatrooms.TABLE, null, null);
+		getDb().delete(DatabaseHelper.Chatrooms.TABLE, null, null);
 
 		chatroomLock.writeLock().lock();
 		try {
@@ -164,19 +172,19 @@ public class ChatManager implements IChatManager {
 	public void readChatrooms() {
 		List<Chatroom> out = new ArrayList<>();
 
-		Cursor c = db.query(DatabaseHelper.Chatrooms.TABLE, DatabaseHelper.Chatrooms.COLS, null, null, null, null, null);
+		Cursor c = getDb().query(DatabaseHelper.Chatrooms.TABLE, DatabaseHelper.Chatrooms.COLS, null, null, null, null, null);
 
 		while (c.moveToNext()) {
 			Chatroom room = new Chatroom(c.getInt(0), c.getString(1), c.getInt(3), c.getLong(2));
 
-			if (Storage.hasStructureChanged(EDIT_CHATS)) {
+			if (dbProvider.hasStructureChanged(EDIT_CHATS)) {
 				room.forceRefresh();
 			}
 
 			out.add(room);
 		}
 
-		Storage.structureChangeHandled(EDIT_CHATS);
+		dbProvider.structureChangeHandled(EDIT_CHATS);
 
 		Log.i(THIS, "Read " + out.size() + " Chatrooms");
 		chatroomLock.writeLock().lock();
@@ -193,12 +201,12 @@ public class ChatManager implements IChatManager {
 			if (chatrooms == null)
 				return;
 
-			db.delete(DatabaseHelper.Chatrooms.TABLE, null, null);
+			getDb().delete(DatabaseHelper.Chatrooms.TABLE, null, null);
 
 			for (Chatroom c : chatrooms) {
 				ContentValues insert = new ContentValues();
 				c.fillRoomContentValues(insert);
-				db.insert(DatabaseHelper.Chatrooms.TABLE, null, insert);
+				getDb().insert(DatabaseHelper.Chatrooms.TABLE, null, insert);
 			}
 		} finally {
 			chatroomLock.readLock().unlock();

@@ -46,8 +46,8 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.AboutDialogFragment;
 import de.stadtrallye.rallyesoft.model.IServer;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
-import de.stadtrallye.rallyesoft.net.Server;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
@@ -80,6 +80,8 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+//		android.support.v4.app.FragmentManager.enableDebugLogging(true);
 
 		// Layout, Title, ProgressCircle etc.
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
@@ -186,12 +188,19 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 			updateServerState();
 		}
 
+		if (isLoggedIn())
+			logo.startTransition(0);
+		else
+			logo.resetTransition();
+
 		tabManager.showTab();
 	}
 
 	private void updateServerState() {
 		tabManager.setServer(server);
+
 //		onConnectionStateChange(model.getConnectionState());
+		hasServerChanged = false;
 	}
 
 	@Override
@@ -214,13 +223,17 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// If the nav drawer is open, hide action items related to the content view
 		boolean drawerOpen = tabManager.isMenuOpen();
-		boolean loggedIn = server.hasUserAuth();
+		boolean loggedIn = isLoggedIn();
 
 		menu.findItem(R.id.menu_logout).setVisible(!drawerOpen && loggedIn);
 		menu.findItem(R.id.menu_share_barcode).setVisible(!drawerOpen).setEnabled(loggedIn);
 //		menu.findItem(R.id.menu_reconnect).setVisible(!drawerOpen && model.canReconnect());
 
 		return true;
+	}
+
+	private boolean isLoggedIn() {
+		return server != null && server.hasUserAuth();
 	}
 
 	@Override
@@ -231,7 +244,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 			case R.id.menu_login:
 				Intent intent = new Intent(this, ConnectionAssistantActivity.class);
 				lastTab = tabManager.getCurrentTab();
-				tabManager.switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
+//				tabManager.switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
 				startActivityForResult(intent, ConnectionAssistantActivity.REQUEST_CODE);
 				break;
 			case R.id.menu_logout:
@@ -433,5 +446,11 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	public void onNewCurrentServer(Server server) {
 		this.server = server;
 		this.hasServerChanged = true;
+
+		if (isLoggedIn()) {
+			logo.startTransition(500);
+		} else {
+			logo.reverseTransition(500);
+		}
 	}
 }

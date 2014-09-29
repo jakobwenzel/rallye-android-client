@@ -33,7 +33,7 @@ import de.rallye.model.structures.Group;
 import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.IServer;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.GroupListAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
@@ -46,17 +46,21 @@ public class AssistantGroupsFragment extends ListFragment implements IServer.ISe
 
 	private IConnectionAssistant assistant;
 	private GroupListAdapter groupAdapter;
+	private Server server;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		setRetainInstance(true);
+
 	}
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+
+		setEmptyText(getString(R.string.loading_groups));
 
 		try {
 			assistant = (IConnectionAssistant) getActivity();
@@ -78,15 +82,28 @@ public class AssistantGroupsFragment extends ListFragment implements IServer.ISe
 	public void onStart() {
 		super.onStart();
 
-		Server server = assistant.getServer();
+		server = assistant.getServer();
+		server.addListener(this);
 
-		groupAdapter = new GroupListAdapter(getActivity(), server.getAvailableGroupsCached(), server);
+		List<Group> groups = server.getAvailableGroupsCached();
+		groupAdapter = new GroupListAdapter(getActivity(), groups, server);
 		ListView list = getListView();
 		setListAdapter(groupAdapter);
-
-		restoreChoice(list);
+		if (groups == null) {
+			server.updateAvailableGroups();
+			//waiting
+		} else {
+			restoreChoice(list);
+		}
 
 		list.setOnItemClickListener(this);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+
+		server.removeListener(this);
 	}
 
 	@Override
@@ -96,7 +113,12 @@ public class AssistantGroupsFragment extends ListFragment implements IServer.ISe
 	}
 
 	@Override
-	public void onConnectionFailed(Exception e) {
+	public void onLoginSuccessful() {
+
+	}
+
+	@Override
+	public void onConnectionFailed(Exception e, int status) {
 		Toast.makeText(getActivity(), R.string.invalid_server, Toast.LENGTH_SHORT).show();
 		assistant.back();
 	}

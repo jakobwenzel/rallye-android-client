@@ -64,4 +64,8 @@ public class Util {
 	public static CharSequence resolveDayOfWeek(Context context, int dayOfWeek) {
 		return context.getResources().getTextArray(R.array.daysOfWeek)[dayOfWeek%7];
 	}
+
+	public static boolean isHttpPasswordIncorrect(int status) {
+		return status == 401;
+	}
 }

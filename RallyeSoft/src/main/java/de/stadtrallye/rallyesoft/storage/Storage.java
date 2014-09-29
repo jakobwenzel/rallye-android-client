@@ -21,6 +21,7 @@ package de.stadtrallye.rallyesoft.storage;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,20 +36,21 @@ import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
  */
 public class Storage {
 
+	private static final String THIS = Storage.class.getSimpleName();
+
 	private static final String SERVER_CONFIG = "server_config.json";
 	private static final String MAP_CONFIG = "map_config.json";
 
 	private static List<Object> handles = new ArrayList<>();
 
-	private static DatabaseHelper database;
-	private static int changedTables;
 	private static Context context;
+	private static final DatabaseProvider dbProvider = new DatabaseProvider();
 
 	public static synchronized void aquireStorage(Context applicationContext, Object handle) {
 		if (handles.isEmpty()) {
 			Storage.context = applicationContext;
-			database = new DatabaseHelper(applicationContext);
-			changedTables = database.getEditedTables();
+			dbProvider.setContext(applicationContext);
+			Log.d(THIS, "Creating new Storage context");
 		}
 
 		handles.add(handle);
@@ -58,21 +60,11 @@ public class Storage {
 		handles.remove(handle);
 
 		if (handles.isEmpty()) {
-			database.close();
+			dbProvider.close();
+			Log.d(THIS, "Last handle on Storage released");
 		}
 	}
 
-	public static SQLiteDatabase getDatabase() {
-		return database.getWritableDatabase();
-	}
-
-	public static boolean hasStructureChanged(int table) {
-		return (changedTables & table) > 0;
-	}
-
-	public static void structureChangeHandled(int table) {
-		changedTables &= ~table;
-	}
 
 	public static FileOutputStream getServerConfigOutputStream() throws FileNotFoundException {
 		return context.openFileOutput(SERVER_CONFIG, Context.MODE_PRIVATE);
@@ -88,5 +80,48 @@ public class Storage {
 
 	public static FileInputStream getMapConfigInputStream() throws FileNotFoundException {
 		return context.openFileInput(MAP_CONFIG);
+	}
+
+	public static IDbProvider getDatabaseProvider() {
+		return dbProvider;
+	}
+
+	private static class DatabaseProvider implements IDbProvider {
+		private DatabaseHelper helper;
+		private int changedTables;
+		private SQLiteDatabase db;
+
+		public void close() {
+			helper.close();
+			helper = null;
+			db = null;
+			changedTables = 0;
+			Log.d(THIS, "Closed Database");
+		}
+
+		@Override
+		public boolean hasStructureChanged(int table) {
+			return (changedTables & table) > 0;
+		}
+
+		@Override
+		public void structureChangeHandled(int table) {
+			changedTables &= ~table;
+		}
+
+		@Override
+		public SQLiteDatabase getDatabase() throws RuntimeException {
+			if (db == null) {
+				db = helper.getWritableDatabase();
+				Log.d(THIS, "Opened a new Database");
+			}
+			return db;
+		}
+
+		public void setContext(Context applicationContext) {
+			db = null;
+			helper = new DatabaseHelper(applicationContext);
+			changedTables = helper.getEditedTables();
+		}
 	}
 }

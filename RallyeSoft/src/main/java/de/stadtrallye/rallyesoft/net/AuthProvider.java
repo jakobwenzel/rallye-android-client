@@ -46,7 +46,7 @@ public class AuthProvider {
 
 	}
 
-	public AuthProvider(int groupID, UserAuth userAuth) {
+	public AuthProvider(Integer groupID, UserAuth userAuth) {
 		this.groupID = groupID;
 		this.userAuth = userAuth;
 	}
@@ -67,11 +67,7 @@ public class AuthProvider {
 		this.groupPassword = groupPassword;
 	}
 
-	public String getUserAuthString() {
-		Charset cset = Charset.forName("iso-8859-1");
-
-		byte[] username = userAuth.getHttpUser(groupID).getBytes(cset);
-		byte[] password = userAuth.password.getBytes(cset);
+	private String getBasicAuth(byte[] username, byte[] password) {
 		if (username == null) {
 			username = new byte[0];
 		}
@@ -83,9 +79,19 @@ public class AuthProvider {
 		final byte[] usernamePassword = new byte[username.length + password.length + 1];
 
 		System.arraycopy(username, 0, usernamePassword, 0, username.length);
+		usernamePassword[username.length] = ':';
 		System.arraycopy(password, 0, usernamePassword, username.length+1, password.length);
 
 		return "Basic " + Base64.encodeToString(usernamePassword, Base64.DEFAULT);
+	}
+
+	public String getUserAuthString() {
+		Charset cset = Charset.forName("iso-8859-1");
+
+		byte[] username = userAuth.getHttpUser(groupID).getBytes(cset);
+		byte[] password = userAuth.password.getBytes(cset);
+
+		return getBasicAuth(username, password);
 	}
 
 	public Authenticator getAuthenticator() {
@@ -94,9 +100,10 @@ public class AuthProvider {
 			protected PasswordAuthentication getPasswordAuthentication() {
 				String realm = getRequestingPrompt();
 				if (realm.equals(Authentication.USER_AUTH)) {
+					Log.i(THIS, "Using Fallback-UserAuthentication");
 					return new PasswordAuthentication(userAuth.getHttpUser(groupID), userAuth.password.toCharArray());
 				} else if (realm.equals(Authentication.GROUP_AUTH)) {
-					Log.i(THIS, "Switching to NewUserAuthentication");
+					Log.i(THIS, "Using Fallback-GroupAuthentication");
 					return new PasswordAuthentication(String.valueOf(groupID), groupPassword.toCharArray());
 				} else {
 					return null;
@@ -120,6 +127,15 @@ public class AuthProvider {
 
 	public String getGroupPassword() {
 		return groupPassword;
+	}
+
+	public String getGroupAuthString() {
+		Charset cset = Charset.forName("iso-8859-1");
+
+		byte[] username = String.valueOf(groupID).getBytes(cset);
+		byte[] password = groupPassword.getBytes(cset);
+
+		return getBasicAuth(username, password);
 	}
 }
 

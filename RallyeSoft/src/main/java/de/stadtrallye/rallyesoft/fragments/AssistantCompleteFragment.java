@@ -20,8 +20,11 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,17 +32,26 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.List;
+
+import de.rallye.model.structures.Group;
 import de.rallye.model.structures.LoginInfo;
 import de.rallye.model.structures.PushConfig;
+import de.rallye.model.structures.ServerInfo;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.IServer;
+import de.stadtrallye.rallyesoft.model.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.IConnectionAssistant;
+import de.stadtrallye.rallyesoft.uimodel.Util;
 import de.wirsch.gcm.GcmHelper;
 
 /**
  * Created by Ramon on 19.06.13
  */
-public class AssistantCompleteFragment extends Fragment implements View.OnClickListener, Server.ILoginListener {
+public class AssistantCompleteFragment extends Fragment implements View.OnClickListener, IServer.IServerListener, AssistantPasswordDialogFragment.IPasswordRetry {
+
+	private static final String THIS = AssistantCompleteFragment.class.getSimpleName();
 
 	private IConnectionAssistant assistant;
 	private Button btn_next;
@@ -47,6 +59,8 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 	private boolean started = false;
 	private TextView text_status;
 	private ProgressBar prg_status;
+	private Server server;
+	private LoginInfo loginInfo;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -84,7 +98,8 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 	public void onStart() {
 		super.onStart();
 
-		Server server = assistant.getServer();
+		server = assistant.getServer();
+		server.addListener(this);
 
 		if (server.hasUserAuth()) {//Already logged in
 			started = true;
@@ -94,14 +109,15 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 			if (!started) {// not already underway
 				String gcmID = GcmHelper.getGcmId();
 				String deviceID = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
-				LoginInfo loginInfo = new LoginInfo(assistant.getName(), deviceID, gcmID, PushConfig.MODE_GCM);
-				server.login(loginInfo, this);
+				loginInfo = new LoginInfo(assistant.getName(), deviceID, gcmID, PushConfig.MODE_GCM);
+				server.login(loginInfo);
 				started = true;
 			}
 		}
 	}
 
 	private void showSuccess() {
+		btn_next.setEnabled(true);
 		prg_status.setVisibility(View.GONE);
 		text_status.setText(R.string.connected);
 	}
@@ -111,11 +127,12 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 		text_status.setText(R.string.connecting);
 	}
 
-//	@Override
-//	public void onStop() {
-//		super.onStop();
-//
-//	}
+	@Override
+	public void onStop() {
+		super.onStop();
+
+		server.removeListener(this);
+	}
 
 	@Override
 	public void onClick(View v) {
@@ -124,19 +141,46 @@ public class AssistantCompleteFragment extends Fragment implements View.OnClickL
 		else
 			assistant.finish(false);
 	}
-
 	@Override
-	public void loginSuccessful() {
+	public void onLoginSuccessful() {
 		showSuccess();
 	}
 
 	@Override
-	public void loginFailed() {
-		showFailure();
+	public void onConnectionFailed(Exception e, int status) {
+		showFailure(e, status);
 	}
 
-	private void showFailure() {
+	@Override
+	public void onServerInfoChanged(ServerInfo serverInfo) {
+
+	}
+
+	@Override
+	public void onAvailableGroupsChanged(List<Group> groups) {
+
+	}
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
+	}
+
+	private void showFailure(Exception e, int status) {
 		prg_status.setVisibility(View.GONE);
-		text_status.setText(R.string.connection_failure);
+		if (Util.isHttpPasswordIncorrect(status)) {
+			text_status.setText(R.string.password_incorrect_try_again);
+			DialogFragment dialog = new AssistantPasswordDialogFragment();
+			dialog.show(getChildFragmentManager(), AssistantPasswordDialogFragment.TAG);
+		} else {
+			text_status.setText(R.string.connection_failure);
+		}
+	}
+
+	@Override
+	public void retryWithPassword(String password) {
+		Log.i(THIS, "Retrying with new password...");
+		server.setGroupPassword(password);
+		server.login(loginInfo);
 	}
 }

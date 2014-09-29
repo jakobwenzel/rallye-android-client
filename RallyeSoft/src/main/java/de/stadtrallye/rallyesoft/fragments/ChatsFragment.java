@@ -20,40 +20,42 @@
 package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.astuetz.PagerSlidingTabStrip;
-
 import java.util.List;
 
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
 import de.stadtrallye.rallyesoft.uimodel.IPicture;
+import de.stadtrallye.rallyesoft.widget.SlidingTabLayout;
 
 /**
  * Tab that contains the chat functions (several {@link ChatroomFragment}s)
  * @author Ramon
  *
  */
-public class ChatsFragment extends Fragment {
+public class ChatsFragment extends Fragment implements IChatManager.IChatListener {
 	
 	private static final String THIS = ChatsFragment.class.getSimpleName();
 
 	private List<? extends IChatroom> chatrooms;
 	private ViewPager pager;
-	private PagerSlidingTabStrip indicator;
+	private SlidingTabLayout indicator;
 	private ChatroomPagerAdapter fragmentAdapter;
 //	private int currentTab;
 	private IPicture picture = null;
 	private IChatManager chatManager;
+	private boolean lateInit = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -72,7 +74,7 @@ public class ChatsFragment extends Fragment {
 		
 		pager = (ViewPager) v.findViewById(R.id.pager);
 		pager.setPageMargin(getResources().getDimensionPixelSize(R.dimen.pager_margin));
-		indicator = (PagerSlidingTabStrip) v.findViewById(R.id.indicator);
+		indicator = (SlidingTabLayout) v.findViewById(R.id.indicator);
 
 		return v;
 	}
@@ -80,16 +82,25 @@ public class ChatsFragment extends Fragment {
 	@Override
 	public void onActivityCreated(Bundle savedBundle) {
 		super.onActivityCreated(savedBundle);
-		loadChatrooms();
-
-	}
-
-	private void loadChatrooms() {
-		chatrooms = chatManager.getChatrooms();
 
 		fragmentAdapter = new ChatroomPagerAdapter(getChildFragmentManager(), chatrooms);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager);
+	}
+
+	private void loadChatrooms() {
+		List<? extends IChatroom> newChatrooms = chatManager.getChatrooms();
+
+		if (fragmentAdapter == null) {
+			chatrooms = newChatrooms;
+			fragmentAdapter = new ChatroomPagerAdapter(getChildFragmentManager(), chatrooms);
+			pager.setAdapter(fragmentAdapter);
+		} else if (newChatrooms != chatrooms) {
+			chatrooms = newChatrooms;
+			pager.setAdapter(fragmentAdapter);
+			fragmentAdapter.onChatroomsChanged(chatrooms);
+			indicator.setViewPager(pager);
+		}
 
 
 		Bundle args = getArguments(); // Open specific Chatroom
@@ -97,27 +108,39 @@ public class ChatsFragment extends Fragment {
 			int roomID = args.getInt(Std.CHATROOM, -1);
 
 			if (roomID > -1) {//TODO deactivate this function after executing it?
-				int pos = 0;
-				for (IChatroom chatroom: chatrooms) {
-					if (chatroom.getID() == roomID) {
-						break;
-					}
-					pos++;
-				}
+				int pos = findChatroomPosition(roomID);
 				pager.setCurrentItem(pos);
 			}
 		}
+	}
+
+	private int findChatroomPosition(int roomID) {
+		int pos = 0;
+		for (IChatroom chatroom: chatrooms) {
+			if (chatroom.getID() == roomID) {
+				break;
+			}
+			pos++;
+		}
+		return pos;
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 
-		IChatManager newChatManager = Server.getCurrentServer().acquireChatManager(this);
-		if (newChatManager != chatManager) {
-			chatManager = newChatManager;
-			loadChatrooms();
+		chatManager = Server.getCurrentServer().acquireChatManager(this);
+		chatManager.addListener(this);
+
+//		loadChatrooms();
+
+		if (!chatManager.isChatReady()) {
+			chatManager.updateChatrooms();
+		} else {
+			chatrooms = chatManager.getChatrooms();
+			fragmentAdapter.onChatroomsChanged(chatrooms);
 		}
+
 	}
 	
 	@Override
@@ -128,6 +151,8 @@ public class ChatsFragment extends Fragment {
 //		chatrooms = null;
 
 //		currentTab = pager.getCurrentItem();
+		chatManager.removeListener(this);
+		chatManager = null;
 		Server.getCurrentServer().releaseChatManager(this);
 	}
 	
@@ -167,5 +192,17 @@ public class ChatsFragment extends Fragment {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+	}
+
+	@Override
+	public void onChatroomsChange() {
+		chatrooms = chatManager.getChatrooms();
+		fragmentAdapter.onChatroomsChanged(chatrooms);
+		indicator.setViewPager(pager);
+	}
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
 	}
 }

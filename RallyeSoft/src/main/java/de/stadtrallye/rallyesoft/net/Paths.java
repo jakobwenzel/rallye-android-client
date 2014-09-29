@@ -23,19 +23,20 @@ import de.rallye.model.structures.PictureSize;
 
 public final class Paths {
 
-	public static final String GROUPS = "groups";
-	public static final String STATUS = "system/status";
-	public static final String CHAT = "chat";
+	public static final String GROUPS = "/groups";
+	public static final String STATUS = "/system/status";
+	public static final String CHAT = "/chat";
 	public static final String CHATROOMS = CHAT+"/rooms";
-	public static final String MAP_NODES = "games/map/nodes";
-	public static final String MAP_EDGES = "games/map/edges";
-	public static final String MAP_CONFIG = "games/map/config";
-	public static final String PICS = "resources/pics";
-	public static final String SERVER_INFO = "server/info";
-	public static final String SERVER_PICTURE = "server/picture";
-	public static final String SERVER_STATUS = "server/status";
-	public static final String USERS = "users";
-	public static final String TASKS = "games/rallye/tasks";
+	public static final String MAP_NODES = "/games/map/nodes";
+	public static final String MAP_EDGES = "/games/map/edges";
+	public static final String MAP_CONFIG = "/games/map/config";
+	public static final String PICS = "/resources/pics";
+	public static final String SERVER_INFO = "/server/info";
+	public static final String SERVER_PICTURE = "/server/picture";
+	public static final String SERVER_STATUS = "/server/status";
+	public static final String USERS = "/users";
+	public static final String TASKS = "/games/rallye/tasks";
+	public static final String TASKS_SUBMISSIONS_ALL = "/games/rallye/tasks/all";
 
 	public static final String PARAM_GROUP_ID = "groupID";
 	public static final String PARAM_CHATROOM_ID = "chatroomID";
@@ -46,8 +47,7 @@ public final class Paths {
 	public static final String CHATROOM_CHATS_SINCE = CHATROOM_CHATS +"/since/{"+PARAM_SINCE+"}";
 	public static final String GROUPS_WITH_ID = GROUPS + "/{"+PARAM_GROUP_ID+"}";
 	public static final String TASK_SUBMISSIONS = TASKS + "/{"+PARAM_TASK_ID+"}";
-	public static final String TASKS_SUBMISSIONS_ALL = "games/rallye/tasks/all";
-	public static final String MAP = "games/map";
+	public static final String MAP = "/games/map";
 
 
 	/**

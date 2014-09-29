@@ -29,9 +29,6 @@ import android.widget.Button;
 
 import de.stadtrallye.rallyesoft.ConnectionAssistantActivity;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
-
-import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
 /**
  * Shown on first start, hints at ConnectionAssistant
@@ -48,7 +45,7 @@ public class WelcomeFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				Intent intent = new Intent(getActivity(), ConnectionAssistantActivity.class);
-				getTabManager(getActivity()).switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
+//				getTabManager(getActivity()).switchToTab(RallyeTabManager.TAB_WAIT_FOR_MODEL);
 				startActivityForResult(intent, ConnectionAssistantActivity.REQUEST_CODE);
 			}
 		});

@@ -34,6 +34,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.internal.util.Predicate;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +48,7 @@ import de.stadtrallye.rallyesoft.fragments.TasksPagerFragment;
 import de.stadtrallye.rallyesoft.fragments.TurnFragment;
 import de.stadtrallye.rallyesoft.fragments.WaitForModelFragment;
 import de.stadtrallye.rallyesoft.fragments.WelcomeFragment;
-import de.stadtrallye.rallyesoft.net.Server;
+import de.stadtrallye.rallyesoft.model.Server;
 
 /**
  * Contains and manages / executes all Fragments of MainActivity that are uses as Tabs (-> fullsized)
@@ -104,19 +106,19 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 
 		tabs.put(TAB_WELCOME, new Tab<WelcomeFragment>("welcome", WelcomeFragment.class, R.string.welcome, null));
-		tabs.put(TAB_OVERVIEW, new Tab<OverviewFragment>("overview", OverviewFragment.class, R.string.overview, null));
-		tabs.put(TAB_MAP, new Tab<GameMapFragment>("map", GameMapFragment.class, R.string.map, null));
-		tabs.put(TAB_TASKS, new Tab<TasksOverviewFragment>("tasks", TasksOverviewFragment.class, R.string.tasks, null));
-		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, null));
-		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, null));
+		tabs.put(TAB_OVERVIEW, new Tab<OverviewFragment>("overview", OverviewFragment.class, R.string.overview, new TabPredicate()));
+		tabs.put(TAB_MAP, new Tab<GameMapFragment>("map", GameMapFragment.class, R.string.map, new TabPredicate()));
+		tabs.put(TAB_TASKS, new Tab<TasksOverviewFragment>("tasks", TasksOverviewFragment.class, R.string.tasks, new TabPredicate()));
+		tabs.put(TAB_NEXT_MOVE, new Tab<TurnFragment>("next_move", TurnFragment.class, R.string.next_move, new TabPredicate()));
+		tabs.put(TAB_CHAT, new Tab<ChatsFragment>("chat", ChatsFragment.class, R.string.chat, new TabPredicate()));
 		tabs.put(TAB_WAIT_FOR_MODEL, new Tab<WaitForModelFragment>("waitForModel", WaitForModelFragment.class, R.string.waiting_for_model, null));
 //		tabs.put(TAB_ABOUT, new Tab<AboutDialogFragment>("about_fragment", AboutDialogFragment.class, R.string.about_fragment, false));
 
-		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, null));
+		tabs.put(TAB_TASKS_DETAILS, new Tab<TasksPagerFragment>("tasks_details", TasksPagerFragment.class, R.string.tasks, new TabPredicate()));
 
 		//tabs.put(TAB_SETTINGS, new Tab<SettingsFragment>("settings", SettingsFragment.class, R.string.settings, false));//Can't be done, because there is no SupportPreferenceFragment, and native Fragments only support ChildFragments since API 17
 
-		List<String> nav = new ArrayList<String>();
+		List<String> nav = new ArrayList<>();
 		for (int i: menu) {
 			nav.add(activity.getString(tabs.get(i).titleId));
 		}
@@ -129,6 +131,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 	public void setServer(Server server) {
 		this.server = server;
+		conditionChange();
 	}
 
 	@Override
@@ -174,7 +177,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		super.restoreState(state);
 
 		if (currentTab == null)
-			currentTab = (server == null || server.hasUserAuth())? TAB_WELCOME : TAB_OVERVIEW;
+			currentTab = (server == null || !server.hasUserAuth())? TAB_WELCOME : TAB_OVERVIEW;
 
 		setSubMode(parentTab != null);
 	}
@@ -237,6 +240,14 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		@Override
 		public boolean isEnabled(int position) {
 			return checkCondition(tabs.get(menu[position]));
+		}
+	}
+
+	private static class TabPredicate implements Predicate<Server> {
+
+		@Override
+		public boolean apply(Server server) {
+			return server != null;
 		}
 	}
 }
