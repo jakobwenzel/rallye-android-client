@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -87,7 +88,10 @@ public class PictureGalleryActivity extends Activity {
 //		chatroom = server.getChatroom(b.getInt(Std.CHATROOM));
 //		gallery = chatroom.getPictureGallery(b.getInt(Std.IMAGE));
 
+		String defaultSize = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("default_download_size", null);
+
 		gallery = (IPictureGallery) getIntent().getSerializableExtra(Std.PICTURE_GALLERY);
+		gallery.setImageSize(PictureSize.fromString(defaultSize));
 		
         adapter = new ImageAdapter();
         pager.setAdapter(adapter);

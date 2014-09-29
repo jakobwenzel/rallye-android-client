@@ -19,12 +19,15 @@
 
 package de.stadtrallye.rallyesoft.model;
 
+import android.util.Log;
+
 import java.io.Serializable;
 
 import de.rallye.model.structures.PictureSize;
 
 public abstract class PictureGallery implements IPictureGallery, Serializable {
 
+	private static final String THIS = PictureGallery.class.getSimpleName();
 	protected PictureSize size = PictureSize.Standard;
 	
 	@Override
@@ -34,6 +37,11 @@ public abstract class PictureGallery implements IPictureGallery, Serializable {
 	
 	@Override
 	public void setImageSize(PictureSize size) {
-		this.size = size;
+		if (size != null) {
+			this.size = size;
+		} else {
+			size = PictureSize.Standard;
+			Log.w(THIS, "Size is null, using Standard");
+		}
 	}
 }

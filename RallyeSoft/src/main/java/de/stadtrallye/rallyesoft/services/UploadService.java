@@ -22,9 +22,12 @@ package de.stadtrallye.rallyesoft.services;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -42,7 +45,7 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.net.manual.Request;
 
-public class UploadService extends IntentService {
+public class UploadService extends IntentService implements SharedPreferences.OnSharedPreferenceChangeListener {
 
 	private static final String THIS = UploadService.class.getSimpleName();
 
@@ -51,6 +54,11 @@ public class UploadService extends IntentService {
 	private static final int MAX_SIZE = 1000;
 
 	private NotificationManager notes;//TODO use AndroidNoticifationManager as wrapper ? useful?
+	private ConnectivityManager connection;
+	private SharedPreferences pref;
+	private boolean pref_slowUpload;
+	private boolean pref_meteredUpload;
+	private boolean pref_previewUpload;
 
 	public UploadService() {
 		super("RallyePictureUpload");
@@ -61,6 +69,18 @@ public class UploadService extends IntentService {
 		super.onCreate();
 		
 		notes = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+		connection = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
+		pref = PreferenceManager.getDefaultSharedPreferences(this);
+		pref.registerOnSharedPreferenceChangeListener(this);
+
+		readPrefs();
+	}
+
+	private void readPrefs() {
+		pref_slowUpload = pref.getBoolean("slow_upload", false);
+		pref_meteredUpload = pref.getBoolean("metered_upload", true);
+		pref_previewUpload = pref.getBoolean("preview_upload", true);
 	}
 
 	@Override
@@ -135,5 +155,17 @@ public class UploadService extends IntentService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+
+		pref.unregisterOnSharedPreferenceChangeListener(this);
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		readPrefs();
 	}
 }

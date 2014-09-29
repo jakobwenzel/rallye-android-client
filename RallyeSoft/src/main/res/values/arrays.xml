@@ -32,4 +32,14 @@
 		<item>Saturday</item>
 		<item>Sunday</item>
 	</string-array>
+	<string-array name="pictureSizes">
+		<item>Small</item>
+		<item>Standard</item>
+		<item>Original</item>
+	</string-array>
+	<string-array name="pictureSizesInt" translatable="false">
+		<item>mini</item>
+		<item>std</item>
+		<item>org</item>
+	</string-array>
 </resources>

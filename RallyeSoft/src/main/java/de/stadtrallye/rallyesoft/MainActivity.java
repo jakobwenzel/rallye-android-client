@@ -23,10 +23,12 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.drawable.TransitionDrawable;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
@@ -59,7 +61,7 @@ import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends FragmentActivity implements IProgressUI, ITabActivity, IPictureHandler, IServer.ICurrentServerListener {
+public class MainActivity extends FragmentActivity implements IProgressUI, ITabActivity, IPictureHandler, IServer.ICurrentServerListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
@@ -74,6 +76,8 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	private TransitionDrawable logo;
 	private Server server;
 	private boolean hasServerChanged = false;
+	private boolean pref_autoUpload;
+	private SharedPreferences pref;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -107,6 +111,9 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		GcmHelper.ensureRegistration(getApplicationContext());
 
 		Storage.aquireStorage(getApplicationContext(), this);
+		pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		pref.registerOnSharedPreferenceChangeListener(this);
+		pref_autoUpload = pref.getBoolean("auto_upload", true);
 
 		// Initialize Model
 		Server.addListener(this);
@@ -301,6 +308,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		Server.removeListener(this);
 
 		Storage.releaseStorage(this);
+		pref.unregisterOnSharedPreferenceChangeListener(this);
 
 		super.onDestroy();
 	}
@@ -336,7 +344,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 				Log.i(THIS, "Submitted: "+ data.getExtras());
 			}
 		} else {
-			picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
+			picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), pref_autoUpload);
 
 
 
@@ -445,6 +453,13 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 			logo.startTransition(500);
 		} else {
 			logo.reverseTransition(500);
+		}
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		if (key.equals("auto_upload")) {
+			pref_autoUpload = sharedPreferences.getBoolean("auto_upload", true);//TODO prettier
 		}
 	}
 }

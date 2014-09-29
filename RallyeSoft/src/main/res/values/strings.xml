@@ -132,5 +132,13 @@
 	<string name="troubleshooting">Troubleshooting</string>
 	<string name="force_refresh_mapconfig">Force refresh map configuration</string>
 	<string name="force_refresh_chatrooms">Force refresh the available chatrooms</string>
+	<string name="upload_pictures_metered">Metered uploads</string>
+	<string name="upload_pictures_metered_summary">Allow picture upload over metered connections</string>
+	<string name="upload_pictures_slow">Slow uploads</string>
+	<string name="upload_pictures_slow_summary">Allow picture uploads over slow metered connections like Edge or GPRS</string>
+	<string name="upload_small_version">Upload preview</string>
+	<string name="upload_small_version_summary">Upload a preview on metered connections, original only on Wifi</string>
+	<string name="default_picture_download_size">Default picture size</string>
+	<string name="default_picture_download_size_summary">The default size of pictures in the gallery</string>
 
 </resources>
