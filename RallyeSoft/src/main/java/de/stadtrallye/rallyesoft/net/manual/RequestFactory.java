@@ -36,10 +36,10 @@ import de.rallye.model.structures.SimpleSubmission;
 import de.rallye.model.structures.SimpleSubmissionWithPictureHash;
 import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.HttpRequestException;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.model.structures.ServerLogin;
 import de.stadtrallye.rallyesoft.net.Paths;
 import de.stadtrallye.rallyesoft.net.manual.Request.RequestType;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
 
 public class RequestFactory {
 	
@@ -198,7 +198,7 @@ public class RequestFactory {
 		return new Request(url);
 	}
 
-	public Request submitSolutionRequest(int taskID, int type, IPicture picture, String text, String number) throws HttpRequestException {
+	public Request submitSolutionRequest(int taskID, int type, IPictureManager.IPicture picture, String text, String number) throws HttpRequestException {
 		final URL url = getURL(Paths.TASKS+"/"+taskID);
 
 		Request r = new Request(url, RequestType.PUT);

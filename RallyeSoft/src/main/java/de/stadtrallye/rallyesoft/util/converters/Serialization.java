@@ -20,17 +20,26 @@
 package de.stadtrallye.rallyesoft.util.converters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 /**
  * Created by Ramon on 22.09.2014.
  */
 public class Serialization {
-	private static ObjectMapper objectMapper;
+	private static ObjectMapper jsonMapper;
+	private static ObjectMapper smileMapper;
 
-	public static ObjectMapper getInstance() {
-		if (objectMapper == null) {
-			objectMapper = new ObjectMapper();
+	public static ObjectMapper getJsonInstance() {
+		if (jsonMapper == null) {
+			jsonMapper = new ObjectMapper();
 		}
-		return objectMapper;
+		return jsonMapper;
+	}
+
+	public static ObjectMapper getSmileInstance() {
+		if (smileMapper == null) {
+			smileMapper = new ObjectMapper(new SmileFactory());
+		}
+		return smileMapper;
 	}
 }
