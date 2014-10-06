@@ -25,7 +25,7 @@ import android.os.Bundle;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
-import de.stadtrallye.rallyesoft.GcmBroadcastReceiver;
+import de.stadtrallye.rallyesoft.receivers.GcmBroadcastReceiver;
 
 /**
  * Created by Ramon on 30.12.13.

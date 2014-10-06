@@ -85,7 +85,7 @@ public class AssistantGroupsFragment extends ListFragment implements IServer.ISe
 		server = assistant.getServer();
 		server.addListener(this);
 
-		List<Group> groups = server.getAvailableGroupsCached();
+		List<Group> groups = server.getAvailableGroups();
 		groupAdapter = new GroupListAdapter(getActivity(), groups, server);
 		ListView list = getListView();
 		setListAdapter(groupAdapter);

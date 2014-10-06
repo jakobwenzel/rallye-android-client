@@ -21,13 +21,14 @@ package de.stadtrallye.rallyesoft.net.retrofit;
 
 import java.util.List;
 
+import de.rallye.model.structures.GroupUser;
 import de.rallye.model.structures.Map;
 import de.rallye.model.structures.MapConfig;
-import de.rallye.model.structures.SimpleChatEntry;
-import de.rallye.model.structures.SimpleSubmission;
+import de.rallye.model.structures.Picture;
+import de.rallye.model.structures.PostChat;
+import de.rallye.model.structures.PostSubmission;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
-import de.rallye.model.structures.User;
 import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.chat.Chatroom;
 import de.stadtrallye.rallyesoft.net.Paths;
@@ -38,6 +39,7 @@ import retrofit.http.DELETE;
 import retrofit.http.GET;
 import retrofit.http.PUT;
 import retrofit.http.Path;
+import retrofit.mime.TypedOutput;
 
 /**
  * Created by Ramon on 21.09.2014.
@@ -63,7 +65,7 @@ public interface RetroAuthCommunicator {
 	void getMapConfig(Callback<MapConfig> callback);
 
 	@GET(Paths.USERS)
-	void getAllUsers(Callback<List<User>> callback);
+	void getAllUsers(Callback<List<GroupUser>> callback);
 
 	@GET(Paths.TASKS)
 	void getTasks(Callback<List<Task>> callback);
@@ -75,8 +77,14 @@ public interface RetroAuthCommunicator {
 	void getAllSubmissionsForGroup(Callback<List<Submission>> callback);
 
 	@PUT(Paths.CHATROOM_CHATS)
-	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatroomID, @Body SimpleChatEntry message, Callback<ChatEntry> callback);
+	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatroomID, @Body PostChat message, Callback<ChatEntry> callback);
 
 	@PUT(Paths.TASK_SUBMISSIONS)
-	void postSubmission(@Path(Paths.PARAM_TASK_ID) int taskID, @Body SimpleSubmission submission, Callback<Submission> callback);
+	void postSubmission(@Path(Paths.PARAM_TASK_ID) int taskID, @Body PostSubmission submission, Callback<Submission> callback);
+
+	@PUT(Paths.PICS_PREVIEW)
+	Picture uploadPreviewPicture(@Path(Paths.PARAM_HASH) String hash, @Body TypedOutput picture);
+
+	@PUT(Paths.PIC_WITH_HASH)
+	Picture uploadPicture(@Path(Paths.PARAM_HASH) String hash, @Body TypedOutput picture);
 }

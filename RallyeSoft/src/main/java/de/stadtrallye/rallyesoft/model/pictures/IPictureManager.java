@@ -17,37 +17,23 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.util.executors;
+package de.stadtrallye.rallyesoft.model.pictures;
 
-public abstract class MyRunnable<T> implements Runnable {
-	
-	private Exception exception;
-	protected T res;
+/**
+ * Created by Ramon on 03.10.2014.
+ */
+public interface IPictureManager {
+	/**
+	* Created by Ramon on 09.10.13.
+	*/
+	interface IPicture {
 
-	@Override
-	public void run() {
-		try {
-			res = tryRun();
-		} catch (Exception e){
-			exception = e;
-		} finally {
-			callback();
-		}
-	}
-	
-	public boolean isSuccessful() {
-		return exception == null;
-	}
-	
-	public T getResult() {
-		return res;
-	}
+		String getUri();
 
-	protected abstract T tryRun() throws Exception;
-	
-	protected abstract void callback();
+		String getHash();
 
-	public Exception getException() {
-		return exception;
+		void discard();
+
+		void confirm();
 	}
 }

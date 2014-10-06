@@ -17,7 +17,7 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft;
+package de.stadtrallye.rallyesoft.receivers;
 
 import android.app.Activity;
 import android.content.ComponentName;

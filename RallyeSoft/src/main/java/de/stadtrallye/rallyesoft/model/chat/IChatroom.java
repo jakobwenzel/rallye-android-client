@@ -23,11 +23,11 @@ import android.database.Cursor;
 
 import java.util.List;
 
-import de.rallye.model.structures.SimpleChatEntry;
-import de.rallye.model.structures.SimpleChatWithPictureHash;
+import de.rallye.model.structures.PostChat;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
-import de.stadtrallye.rallyesoft.model.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.uimodel.INotificationManager;
 
 /**
@@ -58,7 +58,7 @@ public interface IChatroom {
 	void update() throws NoServerKnownException;
 
 	/**
-	 * Clear everything and then execute {@link #refresh()}
+	 * Clear everything and then execute {@link #update()}
 	 */
 	void forceRefresh() throws NoServerKnownException;
 
@@ -96,11 +96,10 @@ public interface IChatroom {
 	/**
 	 * Post a new Chat to the Chatroom
 	 * @param msg the Text of the new chat
-	 * @param pictureHash the hash with which the picture is being uploaded in parallel
-	 * @param pictureID Nullable pictureID
+	 * @param picture reference to the picture, will be marked as confirmed
 	 * @return a unique id, with which to identify the status of the chat
 	 */
-	SimpleChatEntry postChat(String msg, String pictureHash, Integer pictureID) throws NoServerKnownException;
+	PostChat postChat(String msg, PictureManager.Picture picture) throws NoServerKnownException;
 
 	/**
 	 * Manually add a chat (e.g. Received via Push)
@@ -115,7 +114,7 @@ public interface IChatroom {
 
 	/**
 	 * a Cursor for all chats of this Chatroom
-	 * @return _id, Chats.KEY_MESSAGE ("message"), Chats.KEY_TIME ("timestamp"), Chats.FOREIGN_GROUP ("groupID"), Groups.KEY_NAME ("groupName"), Chats.FOREIGN_USER ("userID"), Users.KEY_NAME ("userName"), Chats.KEY_PICTURE ("pictureID")
+	 * @return _id, Chats.KEY_MESSAGE ("message"), Chats.KEY_TIME ("timestamp"), Chats.FOREIGN_GROUP ("groupID"), Groups.KEY_NAME ("groupName"), Chats.FOREIGN_USER ("userID"), Users.KEY_NAME ("userName"), Chats.KEY_PICTURE ("pictureHash")
 	 */
 	Cursor getChatCursor();
 
@@ -124,7 +123,7 @@ public interface IChatroom {
 	 * @param initialPictureId the PictureID the Gallery should display after starting (not forced, only available via the Gallery)
 	 * @return Gallery Model, containing all pictures in this Chatroom in order of the ChatEntries
 	 */
-	IPictureGallery getPictureGallery(int initialPictureId);
+	IPictureGallery getPictureGallery(String initialPictureId);
 
 
 	/**
@@ -141,10 +140,11 @@ public interface IChatroom {
 
 		/**
 		 * Callback after trying to post a new message
-		 * @param id the id returned by Chatroom:postChat
+		 * @param post the handle returned by Chatroom:postChat
+		 * @param state the new state of the post
 		 * @param chat the complete ChatEntry as returned by the server
 		 */
-		public void onPostStateChange(SimpleChatWithPictureHash post, PostState state, ChatEntry chat);
+		public void onPostStateChange(PostChat post, PostState state, ChatEntry chat);
 
 		/**
 		 * The DB has changed and a new ChatCursor should be requested;

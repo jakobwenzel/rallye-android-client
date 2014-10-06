@@ -42,22 +42,25 @@ public final class Paths {
 	public static final String PARAM_CHATROOM_ID = "chatroomID";
 	public static final String PARAM_SINCE = "since";
 	public static final String PARAM_TASK_ID = "taskID";
+	public static final String PARAM_HASH = "hash";
 
 	public static final String CHATROOM_CHATS = CHATROOMS +"/{"+PARAM_CHATROOM_ID+"}";
 	public static final String CHATROOM_CHATS_SINCE = CHATROOM_CHATS +"/since/{"+PARAM_SINCE+"}";
 	public static final String GROUPS_WITH_ID = GROUPS + "/{"+PARAM_GROUP_ID+"}";
 	public static final String TASK_SUBMISSIONS = TASKS + "/{"+PARAM_TASK_ID+"}";
 	public static final String MAP = "/games/map";
+	public static final String PIC_WITH_HASH = PICS + "/{" + PARAM_HASH + "}";
+	public static final String PICS_PREVIEW = PIC_WITH_HASH + "/preview";
 
 
 	/**
 	 * return relative path to a picture
-	 * @param picId PictureID
+	 * @param hash PictureID
 	 * @param size approximate Size of the requested Picture
 	 * @return a RallyeServer compliant relative path (without the base URL)
 	 */
-	public static String getPic(int picId, PictureSize size) {
-		return PICS +"/"+ picId +"/"+ size.toShortString();
+	public static String getPic(String hash, PictureSize size) {
+		return PICS +"/"+ hash +"/"+ size.toShortString();
 	}
 
 	public static final String SNIPPET_AVATAR = "avatar";

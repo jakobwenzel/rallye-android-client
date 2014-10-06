@@ -38,12 +38,12 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import de.rallye.model.structures.SimpleChatEntry;
-import de.rallye.model.structures.SimpleChatWithPictureHash;
+import de.rallye.model.structures.PostChat;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
-import de.stadtrallye.rallyesoft.model.IPictureGallery;
 import de.stadtrallye.rallyesoft.model.Server;
-import de.stadtrallye.rallyesoft.net.PictureIdResolver;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.pictures.PictureGallery;
+import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
@@ -74,7 +74,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private final ReadWriteLock stateLock = new ReentrantReadWriteLock();
 
 	private final List<IChatroomListener> listeners = new ArrayList<>();
-	private final Deque<SimpleChatWithPictureHash> postQueue = new LinkedList<>();//TODO move to database
+	private final Deque<PostChat> postQueue = new LinkedList<>();//TODO move to database
 
 	public Chatroom(int chatroomID, String name, int lastReadID, long lastUpdateTime) throws NoServerKnownException {
 		this(chatroomID, name, lastReadID, lastUpdateTime, Server.getCurrentServer().getAuthCommunicator(), Storage.getDatabaseProvider());
@@ -88,6 +88,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		this.lastUpdateTime = lastUpdateTime;
 
 		THIS = CLASS + chatroomID;
+		Log.d(THIS, "Chatroom: "+ chatroomID +":"+ name +" lastReadId: "+ lastReadID +" lastUpdate: "+ lastUpdateTime);
 	}
 
 	@JsonCreator
@@ -127,8 +128,6 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 					Log.d(THIS, "No new Entries");
 
 				setState(ChatroomState.Ready);
-
-				save();
 			}
 
 			@Override
@@ -141,6 +140,8 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	@Override
 	public void forceRefresh() throws NoServerKnownException {
+		Log.i(THIS, "Force refreshing Chatroom");
+
 		stateLock.writeLock().lock();
 		try {
 			newestID = -1;
@@ -165,46 +166,18 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		return c;
 	}
 
-	private static class PictureGallery extends de.stadtrallye.rallyesoft.model.PictureGallery {
-
-		private final int[] pictures;
-		private final int initialPos;
-		private final PictureIdResolver resolver;
-
-		public PictureGallery(int initialPos, int[] pictures, PictureIdResolver resolver) {
-			this.resolver = resolver;
-			this.initialPos = initialPos;
-			this.pictures = pictures;
-		}
-
-		@Override
-		public int getInitialPosition() {
-			return initialPos;
-		}
-
-		@Override
-		public int getCount() {
-			return pictures.length;
-		}
-
-		@Override
-		public String getPictureUrl(int pos) {
-			return resolver.resolvePictureID(pictures[pos], size);
-		}
-
-	}
-
 	@Override
-	public IPictureGallery getPictureGallery(int initialPictureId) {
+	public IPictureGallery getPictureGallery(String initialPictureHash) {
 		Cursor c = getDb().query(DatabaseHelper.Chats.TABLE, new String[]{DatabaseHelper.Chats.KEY_PICTURE}, DatabaseHelper.Chats.KEY_PICTURE + " <> 0 AND " + DatabaseHelper.Chats.FOREIGN_ROOM + " = ?", new String[]{Integer.toString(chatroomID)}, DatabaseHelper.Chats.KEY_PICTURE, null, DatabaseHelper.Chats.KEY_TIME);
-		int[] pictures = new int[c.getCount()];
+		String[] pictures = new String[c.getCount()];
 		int initialPos = 0;
 
-		int picId, i = 0;
+		String hash;
+		int i = 0;
 		while (c.moveToNext()) {
-			picId = c.getInt(0);
-			pictures[i] = picId;
-			if (picId == initialPictureId) {
+			hash = c.getString(0);
+			pictures[i] = hash;
+			if (initialPictureHash.equals(hash)) {
 				initialPos = i;
 			}
 			i++;
@@ -215,19 +188,24 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public SimpleChatEntry postChat(String msg, String pictureHash, Integer pictureID) throws NoServerKnownException {
+	public PostChat postChat(String msg, PictureManager.Picture picture) throws NoServerKnownException {
 		checkServerKnown();
 
-		SimpleChatWithPictureHash post = queuePost(new SimpleChatWithPictureHash(msg, pictureID, pictureHash));
+		picture.confirm();
+		PostChat post = queuePost(new PostChat(msg, (picture!=null)? picture.getHash() : null));
 
 		return post;
 	}
 
+	public void onUserOrGroupChange() {
+		notifyChatsChanged();
+	}
+
 	private class PostChatCallback implements Callback<ChatEntry> {
 
-		private final SimpleChatWithPictureHash post;
+		private final PostChat post;
 
-		public PostChatCallback(SimpleChatWithPictureHash post) {
+		public PostChatCallback(PostChat post) {
 			this.post = post;
 		}
 
@@ -337,7 +315,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			throw new NoServerKnownException();
 	}
 
-	private SimpleChatWithPictureHash queuePost(SimpleChatWithPictureHash post) {
+	private PostChat queuePost(PostChat post) {
 		synchronized (postQueue) {
 			postQueue.add(post);
 		}
@@ -350,7 +328,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		return post;
 	}
 
-	private void dequeuePost(SimpleChatWithPictureHash post, ChatEntry entry) {
+	private void dequeuePost(PostChat post, ChatEntry entry) {
 		synchronized (postQueue) {
 			postQueue.remove(post);
 		}
@@ -362,7 +340,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		notifyPostChange(post, PostState.Success);
 	}
 
-	private void requeuePost(SimpleChatWithPictureHash post, Exception e) {
+	private void requeuePost(PostChat post, Exception e) {
 		comm.postMessage(chatroomID, post, new PostChatCallback(post));
 
 		Log.e(THIS, "Post failed: "+ post, e);
@@ -370,11 +348,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		notifyPostChange(post, PostState.Failure);
 	}
 
-	private void notifyPostChange(SimpleChatWithPictureHash post, PostState state) {
+	private void notifyPostChange(PostChat post, PostState state) {
 		notifyPostChange(post, state, null);
 	}
 
-	private void notifyPostChange(final SimpleChatWithPictureHash post, final PostState state, final ChatEntry entry) {
+	private void notifyPostChange(final PostChat post, final PostState state, final ChatEntry entry) {
 		synchronized (listeners) {
 			Handler handler;
 			for (final IChatroomListener l : listeners) {
@@ -410,7 +388,6 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	 * @param entries All entries that have a higher chatID than this.newestID will be saved to DB
 	 */
 	private void saveChats(List<ChatEntry> entries) {
-		//TODO check if user / group is known, otherwise request a update from server
 		//KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM
 		SQLiteStatement s = getDb().compileStatement("INSERT INTO " + DatabaseHelper.Chats.TABLE +
 				" (" + DatabaseHelper.strStr(DatabaseHelper.Chats.COLS) + ") VALUES (?, ?, ?, ?, ?, ?, " + chatroomID + ")");
@@ -442,8 +419,8 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 					s.bindLong(4, c.userID);
 					s.bindString(5, c.message);
 
-					if (c.pictureID != null)
-						s.bindLong(6, c.pictureID);
+					if (c.pictureHash != null)
+						s.bindString(6, c.pictureHash);
 					else
 						s.bindNull(6);
 
@@ -481,7 +458,32 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 			}
 		}
 
+		checkForNewUsers();
+		checkForNewGroups();
+
 		notifyChatsChanged();
+	}
+
+	private void checkForNewGroups() {
+		Cursor c = getDb().query(DatabaseHelper.Chats.TABLE + " AS c LEFT JOIN " + DatabaseHelper.Groups.TABLE + " AS g USING(" + DatabaseHelper.Chats.FOREIGN_GROUP + ")",
+				new String[]{"c." + DatabaseHelper.Chats.FOREIGN_GROUP, DatabaseHelper.Groups.KEY_NAME}, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID +" AND "+DatabaseHelper.Groups.KEY_NAME+" is null", null, null, null, DatabaseHelper.Chats.KEY_ID);
+
+		if (c.getCount() > 0) {
+			Server.getCurrentServer().updateAvailableGroups();
+		}
+
+		c.close();
+	}
+
+	private void checkForNewUsers() {
+		Cursor c = getDb().query(DatabaseHelper.Chats.TABLE + " AS c LEFT JOIN " + DatabaseHelper.Users.TABLE + " AS u USING(" + DatabaseHelper.Chats.FOREIGN_USER + ")",
+				new String[]{DatabaseHelper.Chats.FOREIGN_USER, DatabaseHelper.Users.KEY_NAME}, DatabaseHelper.Chatrooms.KEY_ID + "=" + chatroomID +" AND "+DatabaseHelper.Users.KEY_NAME+" is null", null, null, null, DatabaseHelper.Chats.KEY_ID);
+
+		if (c.getCount() > 0) {
+			Server.getCurrentServer().forceRefreshUsers();
+		}
+
+		c.close();
 	}
 
 	private void notifyChatsChanged() {
@@ -517,7 +519,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public void editChat(ChatEntry chatEntry) {
+	public void editChat(ChatEntry chatEntry) {//TODO check for unknown groups / users
 		ContentValues update = new ContentValues();
 
 		fillChatContentValues(update, chatEntry);
@@ -532,11 +534,14 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 //		upd.add(chatEntry);
 
 //		notifyChatsEdited(upd);
+		checkForNewUsers();
+		checkForNewGroups();
+
 		notifyChatsChanged();
 	}
 
 	@Override
-	public void pushChat(ChatEntry chatEntry, INotificationManager notificationManager) {
+	public void pushChat(ChatEntry chatEntry, INotificationManager notificationManager) {//TODO check for unknown groups / users
 		stateLock.readLock().lock();
 		try {
 			if (chatEntry.chatID <= newestID) {
@@ -556,6 +561,9 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 		Log.i(THIS, "Pushed: " + chatEntry);
 
+		checkForNewUsers();
+		checkForNewGroups();
+
 //		notifyChatsAdded(upd);
 		//Only show notification if chatroom is not currently visible
 		synchronized (listeners) {
@@ -569,20 +577,30 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	private void setLast(long updateTime, int newestID) {
+		boolean change = false;
 		stateLock.writeLock().lock();
 		try {
 			if (updateTime > 0) {
-				if (updateTime > lastUpdateTime)
+				Log.d(THIS, "updateTime: "+ updateTime);
+				if (updateTime > lastUpdateTime) {
 					lastUpdateTime = updateTime;
-				else
+					change = true;
+				} else
 					Log.e(THIS, "Outdated lastUpdateTime: old:" + lastUpdateTime + ", new: " + updateTime);
 			}
 
 			if (newestID > 0) {
-				if (newestID > this.newestID)
+				Log.d(THIS, "newestID: "+ newestID);
+				if (newestID > this.newestID) {
 					this.newestID = newestID;
-				else
+					change = true;
+				} else
 					Log.e(THIS, "Outdated newestID: old:" + this.newestID + ", new: " + newestID);
+			}
+
+			if (change) {
+				Log.d(THIS, "State has changed, saving");
+				save();
 			}
 		} finally {
 			stateLock.writeLock().unlock();
@@ -595,7 +613,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	private void fillChatContentValues(ContentValues values, ChatEntry chatEntry) {
 		values.put(DatabaseHelper.Chats.KEY_MESSAGE, chatEntry.message);
 		values.put(DatabaseHelper.Chats.KEY_TIME, chatEntry.timestamp);
-		values.put(DatabaseHelper.Chats.KEY_PICTURE, chatEntry.pictureID);
+		values.put(DatabaseHelper.Chats.KEY_PICTURE, chatEntry.pictureHash);
 		values.put(DatabaseHelper.Chats.FOREIGN_GROUP, chatEntry.groupID);
 		values.put(DatabaseHelper.Chats.FOREIGN_USER, chatEntry.userID);
 		values.put(DatabaseHelper.Chats.FOREIGN_ROOM, chatroomID);
@@ -603,7 +621,7 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 
 	/**
 	 * Helper, write all values worth saving to a ContentValues set, that ChatManager will save to DB
-	 * @param insert
+	 * @param insert the update to fill with everything about this chatroom
 	 */
 	void fillRoomContentValues(ContentValues insert) {
 		stateLock.readLock().lock();

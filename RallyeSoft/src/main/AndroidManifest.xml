@@ -98,9 +98,18 @@
 				<category android:name="de.stadtrallye.rallyesoft" />
 			</intent-filter>
 		</receiver>-->
+		<receiver
+			android:name=".receivers.NetworkStatusReceiver" android:enabled="false">
+			<intent-filter>
+				<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+			</intent-filter>
+			<!--<intent-filter>
+				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+			</intent-filter>-->
+		</receiver>
 
 		<receiver
-			android:name=".GcmBroadcastReceiver"
+			android:name=".receivers.GcmBroadcastReceiver"
 			android:permission="com.google.android.c2dm.permission.SEND" >
 			<intent-filter>
 				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
@@ -111,6 +120,8 @@
 		<service android:name=".services.GcmIntentService" />
 		
 		<service android:name=".services.UploadService" android:exported="false" />
+
+		<service android:name=".services.ModelService" />
 
 		<activity
 			android:name=".PictureGalleryActivity"
@@ -125,6 +136,14 @@
 		<activity android:name=".SettingsActivity"
 			android:label="@string/settings"
 			android:parentActivityName=".MainActivity">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value=".MainActivity" />
+		</activity>
+
+		<activity android:name=".UploadOverviewActivity"
+				  android:label="@string/upload_overview"
+				  android:parentActivityName=".MainActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value=".MainActivity" />

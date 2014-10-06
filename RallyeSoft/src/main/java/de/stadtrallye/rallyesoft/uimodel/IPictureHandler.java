@@ -19,11 +19,13 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
+
 /**
  * Created by Ramon on 17.09.2014.
  */
 public interface IPictureHandler {
-	IPicture getPicture();
+	IPictureManager.IPicture getPicture();
 	boolean hasPicture();
 	void discardPicture();
 }

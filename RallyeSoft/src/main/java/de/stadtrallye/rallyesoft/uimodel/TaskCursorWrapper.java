@@ -28,9 +28,9 @@ import android.widget.BaseAdapter;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
+import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
-import de.stadtrallye.rallyesoft.model.structures.Task;
 
 /**
  * Wrap a CursorAdapter and insert Header-Views

@@ -243,7 +243,7 @@ public class TasksOverviewFragment extends Fragment implements ITaskManager.ITas
 
 	@Override
 	public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-		Toast.makeText(getActivity(), getSubmitHint(listAdapter.getTask(position)), Toast.LENGTH_SHORT).show();
+//		Toast.makeText(getActivity(), getSubmitHint(listAdapter.getTask(position)), Toast.LENGTH_SHORT).show();
 		return true;
 	}
 

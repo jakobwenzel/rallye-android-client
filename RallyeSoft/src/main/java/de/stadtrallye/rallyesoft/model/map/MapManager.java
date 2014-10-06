@@ -287,7 +287,7 @@ public class MapManager implements IMapManager {
 	}
 
 	private void saveMapConfig() {
-		ObjectMapper mapper = Serialization.getInstance();
+		ObjectMapper mapper = Serialization.getJsonInstance();
 		configLock.readLock().lock();
 		try {
 			mapper.writeValue(Storage.getMapConfigOutputStream(), mapConfig);
@@ -299,7 +299,7 @@ public class MapManager implements IMapManager {
 	}
 
 	private void loadMapConfig() {
-		ObjectMapper mapper = Serialization.getInstance();
+		ObjectMapper mapper = Serialization.getJsonInstance();
 		configLock.writeLock().lock();
 		try {
 			mapConfig = mapper.readValue(Storage.getMapConfigInputStream(), MapConfig.class);

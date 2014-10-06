@@ -48,7 +48,7 @@ public class NfcCallback implements CreateNdefMessageCallback {
 	@Override
 	@TargetApi(14)
 	public NdefMessage createNdefMessage(NfcEvent event) {
-		ObjectMapper mapper = Serialization.getInstance();
+		ObjectMapper mapper = Serialization.getJsonInstance();
 		String text = null;
 		try {
 			text = mapper.writeValueAsString(server.exportLogin());

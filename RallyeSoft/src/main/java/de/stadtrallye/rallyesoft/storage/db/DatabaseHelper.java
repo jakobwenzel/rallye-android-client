@@ -28,7 +28,7 @@ import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 27;
+	private static final int DATABASE_VERSION = 30;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 
 	private int editedTables = 0;
@@ -112,7 +112,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		public static final String KEY_TIME = "timestamp";
 		public static final String KEY_MESSAGE = "message";
 		public static final String FOREIGN_USER = "userID";
-		public static final String KEY_PICTURE = "pictureID";
+		public static final String KEY_PICTURE = "pictureHash";
 		public static final String FOREIGN_GROUP = Groups.KEY_ID;
 		public static final String FOREIGN_ROOM = Chatrooms.KEY_ID;
 		public static final String CREATE =
@@ -122,7 +122,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				  Groups.KEY_ID +" INTEGER NOT NULL, "+
 				  FOREIGN_USER +" INTEGER NOT NULL, "+
 				  KEY_MESSAGE +" TEXT, "+
-				  KEY_PICTURE +" INTEGER, "+
+				  KEY_PICTURE +" TEXT, "+
 				  Chatrooms.KEY_ID +" INTEGER NOT NULL)";
 		public static final String[] COLS = { KEY_ID, KEY_TIME, FOREIGN_GROUP, FOREIGN_USER, KEY_MESSAGE, KEY_PICTURE, FOREIGN_ROOM };
 	}
@@ -158,6 +158,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     	public static final String[] COLS = { KEY_A, KEY_B, KEY_TYPE };
     }
 
+	public static final class Pictures {
+		public static final String TABLE = "pictures";
+		public static final String KEY_ID = "pID";
+		public static final String KEY_HASH = "hash";
+		public static final String KEY_FILE = "file";
+		public static final String KEY_ADDED = "added";
+		public static final String KEY_STATE = "state";
+		public static final String CREATE =
+				"CREATE TABLE "+ TABLE +" ("+
+						KEY_ID +" INTEGER PRIMARY KEY, "+
+						KEY_HASH +" TEXT NULL, "+
+						KEY_FILE +" TEXT NOT NULL, "+
+						KEY_ADDED +" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, "+
+						KEY_STATE +" INTEGER NOT NULL)";
+		public static final String[] COLS = {KEY_ID, KEY_HASH, KEY_FILE, KEY_ADDED, KEY_STATE};
+	}
+
     public DatabaseHelper(Context context) {
     	super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -171,6 +188,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(Nodes.CREATE);
 		db.execSQL(Edges.CREATE);
 		db.execSQL(Tasks.CREATE);
+		db.execSQL(Pictures.CREATE);
 	}
 	
 	@Override
@@ -182,26 +200,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		Log.w("Database", "Upgrading from version " + oldVersion + " to version " + newVersion);
 
-		if (oldVersion <= 20) {
-			drop(db, Chatrooms.TABLE);
-			drop(db, Groups.TABLE);
-			drop(db, Users.TABLE);
-			drop(db, Chats.TABLE);
-			drop(db, Nodes.TABLE);
-			drop(db, Edges.TABLE);
-			drop(db, Tasks.TABLE);
-
-			this.onCreate(db);
-			editedTables = EDIT_TASKS + EDIT_EDGES + EDIT_GROUPS + EDIT_NODES + EDIT_USERS + EDIT_CHATROOMS + EDIT_CHATS;
-		} else if (oldVersion <= 22) {
-			drop(db, Tasks.TABLE);
-			db.execSQL(Tasks.CREATE);
-			editedTables |= EDIT_TASKS;
-		} else if (oldVersion <= 24) {
-			drop(db, Chatrooms.TABLE);
-			db.execSQL(Chatrooms.CREATE);
-			editedTables |= EDIT_CHATROOMS;
-		} else if (oldVersion <= 25) {
+		if (oldVersion <= 25) {
 			drop(db, Chatrooms.TABLE);
 			drop(db, Groups.TABLE);
 			drop(db, Users.TABLE);
@@ -214,7 +213,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		} else if (oldVersion <= 26) {
 			drop(db, Tasks.TABLE);
 			db.execSQL(Tasks.CREATE);
-			editedTables |= EDIT_TASKS;
+			db.execSQL(Pictures.CREATE);
+			drop(db, Chats.TABLE);
+			db.execSQL(Chats.CREATE);
+			editedTables = EDIT_TASKS | EDIT_CHATS;
+		} else if (oldVersion < 28) {
+			db.execSQL(Pictures.CREATE);
+			drop(db, Chats.TABLE);
+			db.execSQL(Chats.CREATE);
+			editedTables = EDIT_CHATS;
+		} else if (oldVersion < 29) {
+			drop(db, Pictures.TABLE);
+			db.execSQL(Pictures.CREATE);
+			drop(db, Chats.TABLE);
+			db.execSQL(Chats.CREATE);
+			editedTables = EDIT_CHATS;
+		} else if (oldVersion < 30) {
+			drop(db, Chats.TABLE);
+			db.execSQL(Chats.CREATE);
+			editedTables = EDIT_CHATS;
 		}
 	}
 

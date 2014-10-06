@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+  ~
+  ~ This file is part of RallyeSoft.
+  ~
+  ~ RallyeSoft is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Foobar is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:padding="16dp">
+
+	<ImageView
+		android:layout_width="80dp"
+		android:layout_height="80dp"
+		android:id="@+id/upload_thumb"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		tools:src="@drawable/common_signin_btn_icon_light"
+		/>
+
+	<TextView
+		android:id="@+id/upload_name"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentRight="true"
+		android:layout_alignParentEnd="true"
+		android:layout_toRightOf="@id/upload_thumb"
+		android:layout_toEndOf="@id/upload_thumb"
+		tools:text="IMAG_20140712_000000"/>
+
+	<TextView
+		android:id="@+id/upload_desc"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="10dp"
+		android:textAppearance="?android:attr/textAppearanceSmall"
+		android:layout_alignParentRight="true"
+		android:layout_alignParentEnd="true"
+		android:layout_alignStart="@id/upload_name"
+		android:layout_below="@id/upload_name"
+		tools:text="Submission for task 3"
+		android:layout_alignLeft="@+id/upload_name"/>
+
+	<ProgressBar
+		style="@android:style/Widget.Holo.ProgressBar.Horizontal"
+		android:id="@+id/upload_progress"
+		android:layout_width="match_parent"
+		android:layout_height="10dp"
+		android:visibility="invisible"
+		android:layout_alignParentRight="true"
+		android:layout_alignParentEnd="true"
+		android:layout_alignLeft="@id/upload_name"
+		android:layout_alignStart="@id/upload_name"
+		android:layout_alignBottom="@id/upload_thumb"
+		android:indeterminate="false"
+		tools:visibility="visible"
+		tools:progress="4000"
+		tools:max="8000"
+		android:progress="50"
+		android:max="100"/>
+
+</RelativeLayout>

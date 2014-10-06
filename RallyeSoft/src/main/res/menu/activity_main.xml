@@ -27,9 +27,9 @@
         android:title="@string/logout"
         android:showAsAction="collapseActionView" />
 
-	<!--<item android:id="@+id/menu_reconnect"
-		  android:title="@string/reconnect"
-		  android:showAsAction="collapseActionView" />-->
+	<item android:id="@+id/menu_upload_overview"
+		  android:title="@string/upload_overview"
+		  android:showAsAction="collapseActionView" />
     
     <item android:id="@+id/menu_share_barcode"
         android:title="@string/share_barcode"

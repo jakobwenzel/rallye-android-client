@@ -140,5 +140,8 @@
 	<string name="upload_small_version_summary">Upload a preview on metered connections, original only on Wifi</string>
 	<string name="default_picture_download_size">Default picture size</string>
 	<string name="default_picture_download_size_summary">The default size of pictures in the gallery</string>
+	<string name="upload_failed">Upload failed</string>
+	<string name="original_file_uploads">Original file uploads</string>
+	<string name="upload_overview">Upload Overview</string>
 
 </resources>

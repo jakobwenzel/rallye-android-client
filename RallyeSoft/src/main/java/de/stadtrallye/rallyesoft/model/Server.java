@@ -19,6 +19,8 @@
 
 package de.stadtrallye.rallyesoft.model;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -60,6 +62,8 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Groups;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Users;
 
 /**
  * Created by Ramon on 22.09.2014.
@@ -88,6 +92,8 @@ public class Server extends AuthProvider {
 
 	private final ReadWriteLock serverLock = new ReentrantReadWriteLock();
 	@JsonProperty private String userName;
+	private boolean refreshingGroups;
+	private boolean refreshingUsers;
 
 	public Server(String address) {
 		super();
@@ -131,7 +137,7 @@ public class Server extends AuthProvider {
 		if (json == null)
 			return null;
 
-		ObjectMapper mapper = Serialization.getInstance();
+		ObjectMapper mapper = Serialization.getJsonInstance();
 		try {
 			return mapper.readValue(json, Server.class);
 		} catch (IOException e) {
@@ -142,7 +148,7 @@ public class Server extends AuthProvider {
 
 	public static void load() {
 		try {
-			ObjectMapper mapper = Serialization.getInstance();
+			ObjectMapper mapper = Serialization.getJsonInstance();
 
 			currentServer = mapper.readValue(Storage.getServerConfigInputStream(), Server.class);
 		} catch (FileNotFoundException e) {
@@ -200,17 +206,37 @@ public class Server extends AuthProvider {
 	}
 
 	public void updateAvailableGroups() {
+		synchronized(this) {
+			if (refreshingGroups) {
+				Log.w(THIS, "Preventing concurrent Group refreshes");
+				return;
+			}
+			refreshingGroups = true;
+		}
+
 		communicator.getAvailableGroups(new Callback<List<Group>>() {
 			@Override
 			public void success(List<Group> groups, Response response) {
 				Server.this.groups = groups;
+				writeGroups();
 				notifyAvailableGroups();
+				if (chatManager != null) {
+					chatManager.onGroupsChanged();
+				}
+
+				synchronized (this) {
+					refreshingGroups = false;
+				}
 			}
 
 			@Override
 			public void failure(RetrofitError e) {
 				//TODO Server.commError()
 				Log.e(THIS, "unable to get Groups", e);
+
+				synchronized (this) {
+					refreshingGroups = false;
+				}
 			}
 		});
 	}
@@ -360,7 +386,7 @@ public class Server extends AuthProvider {
 	}
 
 	public void save() throws IOException {
-		ObjectMapper mapper = Serialization.getInstance();
+		ObjectMapper mapper = Serialization.getJsonInstance();
 		mapper.writeValue(Storage.getServerConfigOutputStream(), this);
 	}
 
@@ -431,12 +457,12 @@ public class Server extends AuthProvider {
 		return address + Paths.SERVER_PICTURE;
 	}
 
-	public List<Group> getAvailableGroupsCached() {
+	public List<Group> getAvailableGroups() {
 		return groups;
 	}
 
 	public String serialize() {
-		ObjectMapper mapper = Serialization.getInstance();
+		ObjectMapper mapper = Serialization.getJsonInstance();
 		try {
 			return mapper.writeValueAsString(this);
 		} catch (JsonProcessingException e) {
@@ -455,5 +481,70 @@ public class Server extends AuthProvider {
 
 	private void setUserName(String userName) {
 		this.userName = userName;
+	}
+
+	public void forceRefreshUsers() {
+		synchronized(this) {
+			if (refreshingUsers) {
+				Log.w(THIS, "Preventing concurrent User refreshes");
+				return;
+			}
+			refreshingUsers = true;
+		}
+
+		getAuthCommunicator().getAllUsers(new Callback<List<GroupUser>>() {
+			@Override
+			public void success(List<GroupUser> users, Response response) {
+				writeUsers(users);
+				if (chatManager != null) {
+					chatManager.onUsersChanged();
+				}
+
+				synchronized (this) {
+					refreshingUsers = false;
+				}
+			}
+
+			@Override
+			public void failure(RetrofitError e) {
+				//TODO Server.commError()
+				Log.e(THIS, "unable to get Groups", e);
+
+				synchronized (this) {
+					refreshingUsers = false;
+				}
+			}
+		});
+	}
+
+	private void writeGroups() {
+		Log.v(THIS, "Saving Groups:" + groups);
+
+		final SQLiteDatabase db = Storage.getDatabaseProvider().getDatabase();
+		db.delete(Groups.TABLE, null, null);
+
+		for (Group g : groups) {
+			ContentValues insert = new ContentValues();
+			insert.put(Groups.KEY_ID, g.groupID);
+			insert.put(Groups.KEY_NAME, g.name);
+			insert.put(Groups.KEY_DESCRIPTION, g.description);
+			db.insert(Groups.TABLE, null, insert);
+		}
+	}
+
+	public void writeUsers(List<GroupUser> users) {
+		Log.v(THIS, "Saving Users");
+
+		final SQLiteDatabase db = Storage.getDatabaseProvider().getDatabase();
+
+		db.delete(Users.TABLE, null, null);
+
+		for (GroupUser u : users) {
+			ContentValues insert = new ContentValues();
+			insert.put(Users.KEY_ID, u.userID);
+			insert.put(Users.KEY_NAME, u.name);
+			insert.put(Users.FOREIGN_GROUP, u.groupID);
+			db.insert(Users.TABLE, null, insert);
+		}
 	}
 }

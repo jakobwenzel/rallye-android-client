@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -50,7 +49,8 @@ public class RetroFactory {
 	private final ExecutorService executor;
 
 	public RetroFactory() {
-		this.converter = new JacksonConverter(Serialization.getInstance()); //TODO: Plugin Smile Converter here.... (after debugging is done, it should be completely transparent since it is still all jackson!!)
+		this.converter = new JacksonConverter(Serialization.getJsonInstance(), Serialization.getSmileInstance(), false);// false indicates to output using json, true means Smile!!
+
 		this.executor = Threading.getNetworkExecutor();
 	}
 
@@ -64,7 +64,7 @@ public class RetroFactory {
 				.setEndpoint(server)
 				.setConverter(converter)
 				.setExecutors(executor, null)
-				.setRequestInterceptor(new AddAuthAndAcceptInterceptor(authProvider, "application/json"))//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
+				.setRequestInterceptor(new AddAuthAndAcceptInterceptor(authProvider, JacksonConverter.ACCEPTED_MIME_TYPES))//only other way to request json is on a per Request basis... We only use retrofit for data, pictures go separately, so what the hell (Right now when in doubt the server will answer json anyway, but this is more futureproof)
 				.build();
 
 		return new ServerHandle(restAdapter);
@@ -114,22 +114,35 @@ class AddAuthAndAcceptInterceptor implements RequestInterceptor {
 }
 
 class JacksonConverter implements Converter {
-	private static final String MIME_TYPE = "application/json";
+	public static final String MIME_TYPE_JSON = "application/json";
+	public static final String MIME_TYPE_SMILE = "application/x-jackson-smile";
+	public static final String ACCEPTED_MIME_TYPES = MIME_TYPE_JSON +", "+ MIME_TYPE_SMILE +"; q=0.8";
 
-	private final ObjectMapper objectMapper;
+	private final ObjectMapper jsonMapper;
+	private final ObjectMapper smileMapper;
+	private final boolean outputSmile;
 
-	public JacksonConverter() {
-		this(new ObjectMapper());
-	}
+//	public JacksonConverter() {
+//		this(new ObjectMapper());
+//	}
 
-	public JacksonConverter(ObjectMapper objectMapper) {
-		this.objectMapper = objectMapper;
+	public JacksonConverter(ObjectMapper jsonMapper, ObjectMapper smileMapper, boolean outputSmile) {
+		this.jsonMapper = jsonMapper;
+		this.smileMapper = smileMapper;
+		this.outputSmile = outputSmile;
 	}
 
 	@Override public Object fromBody(TypedInput body, Type type) throws ConversionException {//Technically could switch dynamically between formats here....
 		try {
-			JavaType javaType = objectMapper.getTypeFactory().constructType(type);
-			return objectMapper.readValue(body.in(), javaType);
+			if (MIME_TYPE_JSON.equals(body.mimeType())) {
+				JavaType javaType = jsonMapper.getTypeFactory().constructType(type);
+				return jsonMapper.readValue(body.in(), javaType);
+			} else if (MIME_TYPE_SMILE.equals(body.mimeType())) {
+				JavaType javaType = smileMapper.getTypeFactory().constructType(type);
+				return smileMapper.readValue(body.in(), javaType);
+			} else {
+				throw new ConversionException("Cannot convert MIME Type: "+ body.mimeType());
+			}
 		} catch (JsonParseException e) {
 			throw new ConversionException(e);
 		} catch (JsonMappingException e) {
@@ -159,7 +172,7 @@ class JacksonConverter implements Converter {
 
 		@Override
 		public String mimeType() {
-			return MIME_TYPE;
+			return outputSmile? MIME_TYPE_SMILE : MIME_TYPE_JSON;
 		}
 
 		@Override
@@ -169,18 +182,7 @@ class JacksonConverter implements Converter {
 
 		@Override
 		public void writeTo(OutputStream out) throws IOException {
-			objectMapper.writeValue(out, object);
+			jsonMapper.writeValue(out, object);
 		}
-	}
-}
-
-class SmileConverter extends JacksonConverter {
-
-	public SmileConverter() {
-		super(new ObjectMapper(new SmileFactory()));
-	}
-
-	public SmileConverter(ObjectMapper objectMapper) {
-		super(objectMapper);
 	}
 }

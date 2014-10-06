@@ -130,7 +130,8 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 		data.moveToFirst();
-		suggestedName = data.getString(0);
+		if (!data.isAfterLast())
+			suggestedName = data.getString(0);
 	}
 
 	@Override
@@ -238,7 +239,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 	private void readServerLoginJSON(String serverLoginJSON) {
 		ServerLogin l;
 		try {
-			ObjectMapper mapper = Serialization.getInstance();
+			ObjectMapper mapper = Serialization.getJsonInstance();
 			l = mapper.readValue(serverLoginJSON, ServerLogin.class);
 
 			setServer(new Server(l.getAddress()));

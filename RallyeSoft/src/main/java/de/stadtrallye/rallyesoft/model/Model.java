@@ -711,8 +711,8 @@
 //	}
 //
 //	@Override
-//	public String getUrlFromImageId(int pictureID, PictureSize size) {
-//		return currentLogin.getServer().toString() + Paths.getPic(pictureID, size);
+//	public String getUrlFromImageId(int pictureHash, PictureSize size) {
+//		return currentLogin.getServer().toString() + Paths.getPic(pictureHash, size);
 //	}
 //
 //	@SuppressWarnings("unchecked")

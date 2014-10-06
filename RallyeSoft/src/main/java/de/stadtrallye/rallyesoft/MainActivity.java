@@ -28,7 +28,6 @@ import android.content.res.Configuration;
 import android.graphics.drawable.TransitionDrawable;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
@@ -47,15 +46,15 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.IServer;
 import de.stadtrallye.rallyesoft.model.Server;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
+import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.net.NfcCallback;
 import de.stadtrallye.rallyesoft.storage.Storage;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
 import de.stadtrallye.rallyesoft.uimodel.ITabActivity;
 import de.stadtrallye.rallyesoft.uimodel.RallyeTabManager;
 import de.stadtrallye.rallyesoft.uimodel.TabManager;
-import de.stadtrallye.rallyesoft.util.ImageLocation;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import de.wirsch.gcm.GcmHelper;
 
@@ -72,12 +71,13 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	private Integer lastTab;
 
 	private RallyeTabManager tabManager;
-	private IPicture picture = null;
+	private IPictureManager.IPicture picture = null;
 	private TransitionDrawable logo;
 	private Server server;
 	private boolean hasServerChanged = false;
 	private boolean pref_autoUpload;
 	private SharedPreferences pref;
+	private PictureManager pictureManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -111,9 +111,11 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		GcmHelper.ensureRegistration(getApplicationContext());
 
 		Storage.aquireStorage(getApplicationContext(), this);
-		pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		pref = Storage.getAppPreferences();
 		pref.registerOnSharedPreferenceChangeListener(this);
 		pref_autoUpload = pref.getBoolean("auto_upload", true);
+		pictureManager = Storage.getPictureManager();
+
 
 		// Initialize Model
 		Server.addListener(this);
@@ -255,9 +257,13 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 			case R.id.menu_logout:
 				server.tryLogout();
 				break;
+			case R.id.menu_upload_overview:
+				intent = new Intent(this, UploadOverviewActivity.class);
+				startActivity(intent);
+				break;
 			case R.id.menu_share_barcode:
 				IntentIntegrator zx = new IntentIntegrator(this);
-				ObjectMapper mapper = Serialization.getInstance();
+				ObjectMapper mapper = Serialization.getJsonInstance();
 				try {
 					zx.shareText(mapper.writeValueAsString(server.exportLogin()));
 				} catch (JsonProcessingException e) {
@@ -344,7 +350,8 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 				Log.i(THIS, "Submitted: "+ data.getExtras());
 			}
 		} else {
-			picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), pref_autoUpload);
+			Log.i(THIS, "Received ActivityResult: Req: "+ requestCode +", res: "+ resultCode + ", intent: "+ data);
+			picture = pictureManager.onActivityResult(requestCode, resultCode, data);
 
 
 
@@ -356,7 +363,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 //			ImageLoader.getInstance().handleSlowNetwork();
 		}
 
-		super.onActivityResult(requestCode, resultCode, data);
+		super.onActivityResult(requestCode, resultCode, data);//TODO: this call is redundant, it only distributes teh result to the originating fragment, (we handle this ourselves)
 	}
 
 	/**
@@ -429,8 +436,8 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	}
 
 
-	@Override
-	public IPicture getPicture() {
+	@Override//TODO remove / revise
+	public IPictureManager.IPicture getPicture() {
 		return picture;
 	}
 

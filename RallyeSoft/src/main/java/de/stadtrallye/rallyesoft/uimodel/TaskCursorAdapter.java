@@ -29,7 +29,7 @@ import android.widget.CursorAdapter;
 import android.widget.TextView;
 
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.structures.Task;
+import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 
 /**
@@ -92,20 +92,20 @@ public class TaskCursorAdapter extends CursorAdapter {
 		final int submits = cursor.getInt(c.submits);
 
 		mem.name.setText(name);
-		switch (submits) {
-			case Task.SUBMITS_UNKNOWN:
-			case Task.SUBMITS_NONE:
-				mem.check.setVisibility(View.INVISIBLE);
-				break;
-			case Task.SUBMITS_SOME:
+//		switch (submits) {
+//			case Task.SUBMITS_UNKNOWN:
+//			case Task.SUBMITS_NONE:
+//				mem.check.setVisibility(View.INVISIBLE);
+//				break;
+//			case Task.SUBMITS_SOME:
+////				mem.check.setVisibility(View.VISIBLE);
+////				mem.check.setChecked(true);
+////				break;
+//			case Task.SUBMITS_COMPLETE:
 //				mem.check.setVisibility(View.VISIBLE);
 //				mem.check.setChecked(true);
 //				break;
-			case Task.SUBMITS_COMPLETE:
-				mem.check.setVisibility(View.VISIBLE);
-				mem.check.setChecked(true);
-				break;
-		}
+//		}
 //		mem.locate.setOnClickListener(new View.OnClickListener() {
 //			@Override
 //			public void onClick(View v) {
@@ -118,7 +118,7 @@ public class TaskCursorAdapter extends CursorAdapter {
 	}
 
 	public Task getTask(int position) {
-		return CursorConverters.getTask(position, getCursor(), c);
+		return CursorConverters.getTask(position, getCursor(), c);//TODO probably move to the new model task (needs to be constructed by TaskManager)
 	}
 
 	@Override

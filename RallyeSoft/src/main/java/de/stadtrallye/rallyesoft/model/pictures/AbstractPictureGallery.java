@@ -17,17 +17,31 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.util.executors;
+package de.stadtrallye.rallyesoft.model.pictures;
 
-import java.util.List;
+import android.util.Log;
 
-import de.stadtrallye.rallyesoft.net.manual.Request;
-import de.stadtrallye.rallyesoft.util.JSONConverter;
-import de.stadtrallye.rallyesoft.util.StringedJSONArrayConverter;
+import java.io.Serializable;
 
-public class JSONArrayRequestExecutor<T, ID> extends RequestExecutor<List<T>, ID> {
+import de.rallye.model.structures.PictureSize;
 
-	public JSONArrayRequestExecutor(Request req, JSONConverter<T> converter, Callback<ID> callback, ID callbackId) {
-		super(req, new StringedJSONArrayConverter<T>(converter), callback, callbackId);
+public abstract class AbstractPictureGallery implements IPictureGallery, Serializable {
+
+	private static final String THIS = AbstractPictureGallery.class.getSimpleName();
+	protected PictureSize size = PictureSize.Standard;
+	
+	@Override
+	public PictureSize getImageSize() {
+		return size;
+	}
+	
+	@Override
+	public void setImageSize(PictureSize size) {
+		if (size != null) {
+			this.size = size;
+		} else {
+			size = PictureSize.Standard;
+			Log.w(THIS, "Size is null, using Standard");
+		}
 	}
 }

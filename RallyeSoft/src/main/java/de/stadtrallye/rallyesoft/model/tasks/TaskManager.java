@@ -29,19 +29,17 @@ import android.util.LruCache;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.rallye.model.structures.AdditionalResource;
-import de.rallye.model.structures.SimpleSubmission;
-import de.rallye.model.structures.SimpleSubmissionWithPictureHash;
+import de.rallye.model.structures.PostSubmission;
 import de.rallye.model.structures.Submission;
-import de.stadtrallye.rallyesoft.exceptions.ErrorHandling;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.Server;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -55,7 +53,6 @@ import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.strStr;
 public class TaskManager implements ITaskManager {
 
 	private static final String THIS = TaskManager.class.getSimpleName();
-	private static final ErrorHandling err = new ErrorHandling(THIS);
 
 
 	private final IDbProvider dbProvider;
@@ -177,7 +174,7 @@ public class TaskManager implements ITaskManager {
 				taskIn.bindLong(8, (t.multipleSubmits) ? 1 : 0);
 				taskIn.bindLong(9, t.submitType);
 				taskIn.bindString(10, t.maxPoints);
-				String add = AdditionalResource.additionalResourcesToString(t.additionalResources);
+				String add = Serialization.getJsonInstance().writeValueAsString(t.additionalResources);
 				if (add == null) {
 					taskIn.bindNull(11);
 				} else {
@@ -243,10 +240,10 @@ public class TaskManager implements ITaskManager {
 	}
 
 	@Override
-	public void submitSolution(final int taskID, int type, IPicture picture, String text, Integer number) throws NoServerKnownException {
+	public void submitSolution(final int taskID, int type, IPictureManager.IPicture picture, String text, Integer number) throws NoServerKnownException {
 		checkServerKnown();
 
-		SimpleSubmission post = (picture==null)? new SimpleSubmission(type, number, text) : new SimpleSubmissionWithPictureHash(type, text, picture.getHash());
+		PostSubmission post = new PostSubmission(type, (picture != null)? picture.getHash() : null, number, text);
 		comm.postSubmission(taskID, post, new Callback<Submission>() {
 			@Override
 			public void success(Submission submission, Response response) {

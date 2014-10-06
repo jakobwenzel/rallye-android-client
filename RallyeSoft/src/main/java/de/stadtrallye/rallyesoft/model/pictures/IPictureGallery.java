@@ -17,7 +17,7 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.model;
+package de.stadtrallye.rallyesoft.model.pictures;
 
 import java.io.Serializable;
 

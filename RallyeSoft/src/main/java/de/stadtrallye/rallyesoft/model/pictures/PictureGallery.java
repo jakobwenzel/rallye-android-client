@@ -17,21 +17,38 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft.uimodel;
+package de.stadtrallye.rallyesoft.model.pictures;
 
-import android.net.Uri;
+import de.stadtrallye.rallyesoft.net.PictureIdResolver;
 
 /**
-* Created by Ramon on 09.10.13.
+* Created by Ramon on 06.10.2014.
 */
-public interface IPicture {
-	enum UploadState { NotUploaded, Uploading, UploadComplete }
+public class PictureGallery extends AbstractPictureGallery {
 
-	Uri getPath();
-	String getHash();
-	int getSource();
+	private final String[] pictures;
+	private final int initialPos;
+	private final PictureIdResolver resolver;
 
-	UploadState getUploadState();
-	void setStartUpload();
-	void setUploadComplete();
+	public PictureGallery(int initialPos, String[] pictures, PictureIdResolver resolver) {
+		this.resolver = resolver;
+		this.initialPos = initialPos;
+		this.pictures = pictures;
+	}
+
+	@Override
+	public int getInitialPosition() {
+		return initialPos;
+	}
+
+	@Override
+	public int getCount() {
+		return pictures.length;
+	}
+
+	@Override
+	public String getPictureUrl(int pos) {
+		return resolver.resolvePictureID(pictures[pos], size);
+	}
+
 }

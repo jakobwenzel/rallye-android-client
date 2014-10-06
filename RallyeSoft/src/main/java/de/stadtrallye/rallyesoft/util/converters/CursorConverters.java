@@ -20,11 +20,17 @@
 package de.stadtrallye.rallyesoft.util.converters;
 
 import android.database.Cursor;
+import android.util.Log;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+
+import java.io.IOException;
+import java.util.List;
 
 import de.rallye.model.structures.AdditionalResource;
 import de.rallye.model.structures.LatLng;
+import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
-import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Tasks;
@@ -71,11 +77,16 @@ public class CursorConverters {
 
 		coords = (cursor.isNull(c.latitude) || cursor.isNull(c.longitude))? null : new LatLng(cursor.getDouble(c.latitude), cursor.getDouble(c.longitude));
 
-		return new Task(cursor.getInt(c.id), getBoolean(cursor, c.locationSpecific), coords,
-				cursor.getDouble(c.radius), cursor.getString(c.name), cursor.getString(c.description),
-				getBoolean(cursor, c.multiple), cursor.getInt(c.submitType), cursor.getString(c.points),
-				AdditionalResource.additionalResourcesFromString(cursor.getString(c.additionalResources)),
-				cursor.getInt(c.submits));
+		try {
+			List<AdditionalResource> res = Serialization.getJsonInstance().readValue(cursor.getString(c.additionalResources), new TypeReference<List<AdditionalResource>>(){});
+			return new Task(cursor.getInt(c.id), getBoolean(cursor, c.locationSpecific), coords,
+					cursor.getDouble(c.radius), cursor.getString(c.name), cursor.getString(c.description),
+					getBoolean(cursor, c.multiple), cursor.getInt(c.submitType), cursor.getString(c.points),
+					res);
+		} catch (IOException e) {
+			Log.e("Task Cursor Converter", "Json deserialization failed", e);
+			return null;
+		}
 	}
 
 	public static Task getTask(int pos, Cursor cursor, TaskCursorIds c) {
@@ -87,7 +98,7 @@ public class CursorConverters {
 	public static ChatEntry getChatEntry(Cursor cursor, ChatCursorIds c) {
 		return new ChatEntry(cursor.getInt(c.id),cursor.getString(c.message),cursor.getLong(c.timestamp),
 				cursor.getInt(c.groupID),cursor.getString(c.groupName),cursor.getInt(c.userID),
-				cursor.getString(c.userName),cursor.getInt(c.pictureID));
+				cursor.getString(c.userName),cursor.getString(c.pictureHash));
 	}
 
 
@@ -117,7 +128,7 @@ public class CursorConverters {
 	}
 
 	public static class ChatCursorIds {
-		public int groupID, userID, userName, groupName, timestamp, message, pictureID, id;
+		public int groupID, userID, userName, groupName, timestamp, message, pictureHash, id;
 
 		/**
 		 *
@@ -135,7 +146,7 @@ public class CursorConverters {
 			c.groupName = cursor.getColumnIndexOrThrow(DatabaseHelper.Groups.KEY_NAME);
 			c.timestamp = cursor.getColumnIndexOrThrow(DatabaseHelper.Chats.KEY_TIME);
 			c.message = cursor.getColumnIndexOrThrow(DatabaseHelper.Chats.KEY_MESSAGE);
-			c.pictureID = cursor.getColumnIndexOrThrow(DatabaseHelper.Chats.KEY_PICTURE);
+			c.pictureHash = cursor.getColumnIndexOrThrow(DatabaseHelper.Chats.KEY_PICTURE);
 			c.id = cursor.getColumnIndexOrThrow("_id");
 
 			return c;

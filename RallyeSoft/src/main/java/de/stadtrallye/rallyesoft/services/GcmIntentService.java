@@ -60,7 +60,7 @@ public class GcmIntentService extends GcmBaseIntentService {
 
 		try {
 			PushEntity.Type type = PushEntity.Type.valueOf(message.getString(PushEntity.TYPE));
-			ObjectMapper mapper = Serialization.getInstance();
+			ObjectMapper mapper = Serialization.getJsonInstance();
 
 			switch (type) {
 				case newMessage:

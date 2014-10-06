@@ -23,9 +23,9 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,11 +38,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Server;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
+import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.storage.Storage;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
-import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 /**
  * Created by Ramon on 04.10.13.
@@ -59,7 +59,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	private ImageView imageView;
 	private int type;
 
-	private IPicture picture;
+	private IPictureManager.IPicture picture;
 	private EditText editText;
 	private EditText editNumber;
 
@@ -68,6 +68,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	private LinearLayout tabNumber;
 	private int taskID;
 	private ITaskManager taskManager;
+	private PictureManager pictureManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -87,6 +88,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 
 		// Initialize Model
 		Storage.aquireStorage(getApplicationContext(), this);
+		pictureManager = Storage.getPictureManager();
 		taskManager = Server.getCurrentServer().acquireTaskManager(this);
 
 		tabPicture = (LinearLayout) findViewById(R.id.tab_picture);
@@ -199,8 +201,8 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 				finish();
 				return true;
 			case android.R.id.home: //Up button
-				NavUtils.navigateUpFromSameTask(this);
-				return true;
+//				NavUtils.navigateUpFromSameTask(this);
+				return false;
 			default:
 				return false;
 		}
@@ -208,11 +210,13 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
+		Log.i(THIS, "Received ActivityResult: Req: " + requestCode + ", res: " + resultCode);
+//		picture = pictureManager.onActivityResult(requestCode, resultCode, data);
+//		picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
 
 		if (picture != null) {
 
-			ImageLoader.getInstance().displayImage(picture.getPath().toString(), this.imageView);
+			ImageLoader.getInstance().displayImage(picture.getUri(), this.imageView);
 			invalidateOptionsMenu();
 		}
 
@@ -228,6 +232,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	}
 
 	private void requestPicture() {
-		ImageLocation.startPictureTakeOrSelect(this, PICTURE_REQUEST_SOURCE);
+		Intent intent = pictureManager.startPictureTakeOrSelect();
+		startActivityForResult(intent, PictureManager.REQUEST_CODE);
 	}
 }

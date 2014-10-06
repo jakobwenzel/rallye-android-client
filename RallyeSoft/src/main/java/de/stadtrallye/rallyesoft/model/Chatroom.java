@@ -318,7 +318,7 @@ public class Chatroom extends de.rallye.server.structures.Chatroom implements IC
 	private void fillContentValues(ContentValues values, ChatEntry chatEntry) {
 		values.put(Chats.KEY_MESSAGE, chatEntry.message);
 		values.put(Chats.KEY_TIME, chatEntry.timestamp);
-		values.put(Chats.KEY_PICTURE, chatEntry.pictureID);
+		values.put(Chats.KEY_PICTURE, chatEntry.pictureHash);
 		values.put(Chats.FOREIGN_GROUP, chatEntry.groupID);
 		values.put(Chats.FOREIGN_USER, chatEntry.userID);
 		values.put(Chats.FOREIGN_ROOM, chatroomID);
@@ -358,8 +358,8 @@ public class Chatroom extends de.rallye.server.structures.Chatroom implements IC
 					s.bindLong(4, c.userID);
 					s.bindString(5, c.message);
 
-					if (c.pictureID != null)
-						s.bindLong(6, c.pictureID);
+					if (c.pictureHash != null)
+						s.bindLong(6, c.pictureHash);
 					else
 						s.bindNull(6);
 
@@ -690,14 +690,14 @@ public class Chatroom extends de.rallye.server.structures.Chatroom implements IC
 	}
 
 	@Override
-	public de.rallye.server.structures.SimpleChatEntry postChat(String msg, Integer pictureID) {
+	public de.rallye.server.structures.SimpleChatEntry postChat(String msg, Integer pictureHash) {
 		if (!server.isConnected()) {
 			err.notLoggedIn();
 			return -1;
 		}
 		try {
 			int taskId = nextTaskId++;
-			server.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(server.factory.chatPostRequest(chatroomID, msg, pictureID), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
+			server.exec.execute(new JSONObjectRequestExecutor<ChatEntry, AdvTaskId>(server.factory.chatPostRequest(chatroomID, msg, pictureHash), new JsonConverters.ChatConverter(), this, new AdvTaskId(Tasks.CHAT_POST, taskId)));
 			return taskId;
 		} catch (HttpRequestException e) {
 			err.requestException(e);

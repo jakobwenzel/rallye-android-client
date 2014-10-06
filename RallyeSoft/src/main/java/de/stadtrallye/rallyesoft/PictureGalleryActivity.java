@@ -49,7 +49,7 @@ import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListene
 
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureGallery;
 import de.stadtrallye.rallyesoft.widget.GalleryPager;
 
 public class PictureGalleryActivity extends Activity {

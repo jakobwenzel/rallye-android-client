@@ -35,8 +35,8 @@ import java.util.List;
 
 import de.rallye.model.structures.AdditionalPicture;
 import de.rallye.model.structures.AdditionalResource;
+import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
-import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.widget.AdapterView;
 import de.stadtrallye.rallyesoft.widget.GridView;
@@ -132,7 +132,7 @@ public class TurnFragment extends Fragment implements GridView.OnItemClickListen
 				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
 
-//			loader.displayImage(model.getUrlFromImageId(pic.pictureID, PictureSize.Mini), v);//TODO
+//			loader.displayImage(model.getUrlFromImageId(pic.pictureHash, PictureSize.Mini), v);//TODO
 
 			return v;
 		}

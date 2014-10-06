@@ -20,7 +20,9 @@
 package de.stadtrallye.rallyesoft.storage;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.FileInputStream;
@@ -29,6 +31,7 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 
 /**
@@ -45,6 +48,7 @@ public class Storage {
 
 	private static Context context;
 	private static final DatabaseProvider dbProvider = new DatabaseProvider();
+	private static PictureManager pictureManager;
 
 	public static synchronized void aquireStorage(Context applicationContext, Object handle) {
 		if (handles.isEmpty()) {
@@ -61,6 +65,7 @@ public class Storage {
 
 		if (handles.isEmpty()) {
 			dbProvider.close();
+//			pictureManager = null;
 			Log.d(THIS, "Last handle on Storage released");
 		}
 	}
@@ -84,6 +89,17 @@ public class Storage {
 
 	public static IDbProvider getDatabaseProvider() {
 		return dbProvider;
+	}
+
+	public static SharedPreferences getAppPreferences() {
+		return PreferenceManager.getDefaultSharedPreferences(context);
+	}
+
+	public static PictureManager getPictureManager() {
+		if (pictureManager == null) {
+			pictureManager = new PictureManager(context, dbProvider);
+		}
+		return pictureManager;
 	}
 
 	private static class DatabaseProvider implements IDbProvider {

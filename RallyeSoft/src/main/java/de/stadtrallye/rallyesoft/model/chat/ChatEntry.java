@@ -35,16 +35,16 @@ public class ChatEntry extends de.rallye.model.structures.ChatEntry {
 
 	public enum Sender { Me, MyGroup, SomeoneElse}
 
-	public ChatEntry(int chatID, String message, long timestamp, int groupID, String groupName, int userID, String userName, Integer pictureID) {
-		this(chatID, message, timestamp, groupID, userID, pictureID);
+	public ChatEntry(int chatID, String message, long timestamp, int groupID, String groupName, int userID, String userName, String pictureHash) {
+		this(chatID, message, timestamp, groupID, userID, pictureHash);
 
 		this.groupName = groupName;
 		this.userName = userName;
 	}
 
 	@JsonCreator
-	public ChatEntry(@JsonProperty("chatID") int chatID, @JsonProperty("message") String message, @JsonProperty("timestamp") long timestamp, @JsonProperty("groupID") int groupID, @JsonProperty("userID") int userID, @JsonProperty("pictureID") Integer pictureID) {
-		super(chatID, message, timestamp, groupID, userID, (pictureID == 0)? null : pictureID);//why?
+	public ChatEntry(@JsonProperty("chatID") int chatID, @JsonProperty("message") String message, @JsonProperty("timestamp") long timestamp, @JsonProperty("groupID") int groupID, @JsonProperty("userID") int userID, @JsonProperty("pictureHash") String pictureHash) {
+		super(chatID, message, timestamp, groupID, userID, pictureHash);
 	}
 
 	public void setUserName(String userName) {

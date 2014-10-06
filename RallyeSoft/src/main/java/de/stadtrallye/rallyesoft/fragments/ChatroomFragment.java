@@ -44,19 +44,20 @@ import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-import de.rallye.model.structures.SimpleChatWithPictureHash;
+import de.rallye.model.structures.PostChat;
 import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
+import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
+import de.stadtrallye.rallyesoft.storage.Storage;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ChatCursorAdapter;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.uimodel.IPictureHandler;
 import de.stadtrallye.rallyesoft.uimodel.IProgressUI;
-import de.stadtrallye.rallyesoft.util.ImageLocation;
 
 import static de.stadtrallye.rallyesoft.uimodel.TabManager.getTabManager;
 
@@ -84,6 +85,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	private ProgressBar loading;
 	private ImageView chosen_picture;
 	private IPictureHandler pictureHandler;
+	private PictureManager pictureManager;
 
 
 	/**
@@ -105,6 +107,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 		setHasOptionsMenu(true);
 
 		chatroom = Server.getCurrentServer().acquireChatManager(this).findChatroom(roomID);
+		pictureManager = Storage.getPictureManager();
 	}
 
 	@Override
@@ -135,7 +138,8 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 				chatroom.update();
 				return true;
 			case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
-				ImageLocation.startPictureTakeOrSelect(getActivity(), chatroom.getID());
+				Intent intent = pictureManager.startPictureTakeOrSelect();
+				startActivityForResult(intent, PictureManager.REQUEST_CODE);
 				return true;
 			default:
 				return false;
@@ -175,10 +179,10 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	}
 
 	private void loadImagePreview() {
-		IPicture pic = pictureHandler.getPicture();
-		if (pic != null && pic.getSource() == chatroom.getID()) {//TODO: use IPicture.UploadState
+		IPictureManager.IPicture pic = pictureHandler.getPicture();
+		if (pic != null/* && pic.getSource() == chatroom.getID()*/) {//TODO: use IPicture.UploadState
 			chosen_picture.setVisibility(View.VISIBLE);
-			ImageLoader.getInstance().displayImage(pic.getPath().toString(), chosen_picture);
+			ImageLoader.getInstance().displayImage(pic.getUri(), chosen_picture);
 		} else {
 			chosen_picture.setVisibility(View.GONE);
 		}
@@ -209,6 +213,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 
 		loadImagePreview();
 	}
+
 	
 	@Override
 	public void onStop() {
@@ -216,7 +221,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 
 		saveScrollState();
 		
-		chatroom.setLastReadId(chatAdapter.getChatID(lastPos[0]));
+		chatroom.setLastReadId(chatAdapter.getChatID(lastPos[0]));//TODO create simple function / execute each time the list has finished scrolling
 		
 		chatroom.removeListener(this);
 	}
@@ -269,7 +274,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	}
 
 	@Override
-	public void onPostStateChange(SimpleChatWithPictureHash post, IChatroom.PostState state, ChatEntry chat) {
+	public void onPostStateChange(PostChat post, IChatroom.PostState state, ChatEntry chat) {
 		switch (state) {
 			case Success:
 				text.getText().clear();
@@ -293,24 +298,26 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();
-        IPicture pic = pictureHandler.getPicture();
-		String hash = null;
-        if (pic != null) {
-			hash = pic.getHash();
-		}
+		PictureManager.Picture pic = null;//TODO get picture
         if (pic != null || msg.length() > 0 ) {
-			chatroom.postChat(msg.toString(), hash, null);
+			chatroom.postChat(msg.toString(), pic);
 		}
 	}
 
 	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.i(THIS, "Received onActivityResult callback in Fragment!!");
+		pictureManager.onActivityResult(requestCode, resultCode, data);//TODO if it works remember picture
+	}
+
+	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-		Integer picID = chatAdapter.getPictureID(pos);
-		if (picID == null)
+		String picHash = chatAdapter.getPictureHash(pos);
+		if (picHash == null)
 			return;
 
 		Intent intent = new Intent(getActivity(), PictureGalleryActivity.class);
-		intent.putExtra(Std.PICTURE_GALLERY, chatroom.getPictureGallery(picID));
+		intent.putExtra(Std.PICTURE_GALLERY, chatroom.getPictureGallery(picHash));
 //				intent.putExtra(Std.CHATROOM, chatroom.getID());
 //				intent.putExtra(Std.IMAGE, picID);
 		startActivity(intent);

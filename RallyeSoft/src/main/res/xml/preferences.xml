@@ -21,7 +21,7 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
 	<PreferenceCategory android:title="@string/data_transfer">
-		<SwitchPreference
+		<CheckBoxPreference
 			android:defaultValue="true"
 			android:key="auto_upload"
 			android:summaryOff="@string/auto_upload_off_summ"

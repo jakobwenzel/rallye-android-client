@@ -41,6 +41,7 @@ import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_CHATROOMS;
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_CHATS;
 
 /**
@@ -59,6 +60,13 @@ public class ChatManager implements IChatManager {
 	public ChatManager(RetroAuthCommunicator communicator, IDbProvider dbProvider) {
 		this.dbProvider = dbProvider;
 		this.communicator = communicator;
+
+		if (dbProvider.hasStructureChanged(EDIT_CHATROOMS)) {
+			forceRefreshChatrooms();
+			dbProvider.structureChangeHandled(EDIT_CHATROOMS);
+		} else {
+			readChatrooms();
+		}
 	}
 
 	public ChatManager() throws NoServerKnownException {
@@ -121,6 +129,10 @@ public class ChatManager implements IChatManager {
 				chatroomLock.writeLock().lock();
 				try {
 					ChatManager.this.chatrooms = chatrooms;
+					for (Chatroom room : chatrooms) {
+						room.update();
+					}
+					writeChatrooms();
 				} finally {
 					chatroomLock.writeLock().unlock();
 				}
@@ -229,6 +241,25 @@ public class ChatManager implements IChatManager {
 					});
 				}
 			}
+		}
+	}
+
+	public void onGroupsChanged() {
+		notifyChatroomsDbChanged();
+	}
+
+	public void onUsersChanged() {
+		notifyChatroomsDbChanged();
+	}
+
+	private void notifyChatroomsDbChanged() {
+		chatroomLock.readLock().lock();
+		try {
+			for (Chatroom room : chatrooms) {
+				room.onUserOrGroupChange();
+			}
+		} finally {
+			chatroomLock.readLock().unlock();
 		}
 	}
 }

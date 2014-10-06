@@ -188,12 +188,12 @@
 //	PictureIdResolver getPictureIdResolver();
 //
 //	/**
-//	 * Put together the URL for pictureID
-//	 * @param pictureID a valid pictureID (e.g. from chats)
+//	 * Put together the URL for pictureHash
+//	 * @param pictureHash a valid pictureHash (e.g. from chats)
 //	 * @param size The requested Size of the Picture: Thumbnail, Normal, Original
 //	 * @return URL as String (ImageLoader!)
 //	 */
-//	String getUrlFromImageId(int pictureID, PictureSize size);
+//	String getUrlFromImageId(int pictureHash, PictureSize size);
 //
 //	/**
 //	 * Get the current State of the Model

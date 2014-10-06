@@ -34,9 +34,9 @@ import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ChatroomPagerAdapter;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
 import de.stadtrallye.rallyesoft.widget.SlidingTabLayout;
 
 /**
@@ -53,7 +53,7 @@ public class ChatsFragment extends Fragment implements IChatManager.IChatListene
 	private SlidingTabLayout indicator;
 	private ChatroomPagerAdapter fragmentAdapter;
 //	private int currentTab;
-	private IPicture picture = null;
+	private IPictureManager.IPicture picture = null;
 	private IChatManager chatManager;
 	private boolean lateInit = false;
 
@@ -85,7 +85,7 @@ public class ChatsFragment extends Fragment implements IChatManager.IChatListene
 
 		fragmentAdapter = new ChatroomPagerAdapter(getChildFragmentManager(), chatrooms);
 		pager.setAdapter(fragmentAdapter);
-		indicator.setViewPager(pager);
+//		indicator.setViewPager(pager);
 	}
 
 	private void loadChatrooms() {
@@ -139,6 +139,7 @@ public class ChatsFragment extends Fragment implements IChatManager.IChatListene
 		} else {
 			chatrooms = chatManager.getChatrooms();
 			fragmentAdapter.onChatroomsChanged(chatrooms);
+			indicator.setViewPager(pager);
 		}
 
 	}

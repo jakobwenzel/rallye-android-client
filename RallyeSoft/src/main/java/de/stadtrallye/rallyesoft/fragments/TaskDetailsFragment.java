@@ -39,7 +39,6 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import de.rallye.model.structures.AdditionalPicture;
@@ -51,8 +50,8 @@ import de.stadtrallye.rallyesoft.PictureGalleryActivity;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.SubmitNewSolutionActivity;
 import de.stadtrallye.rallyesoft.common.Std;
-import de.stadtrallye.rallyesoft.model.PictureGallery;
 import de.stadtrallye.rallyesoft.model.Server;
+import de.stadtrallye.rallyesoft.model.pictures.PictureGallery;
 import de.stadtrallye.rallyesoft.model.tasks.ITask;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.net.PictureIdResolver;
@@ -189,11 +188,13 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 	public void onItemClick(AdapterView parent, View view, int position, long id) {
 		Intent intent = new Intent(getActivity(), PictureGalleryActivity.class);
 
-		List<Integer> pics = new ArrayList<>();
-		for (AdditionalResource add: task.getAdditionalResources())
-			pics.add(((AdditionalPicture)add).pictureID);
+		final List<AdditionalResource> additionalResources = task.getAdditionalResources();
+		String[] pics = new String[additionalResources.size()];
+		for (int i=0; i<additionalResources.size(); ++i) {
+			pics[i] = ((AdditionalPicture) additionalResources.get(i)).pictureHash;
+		}
 
-		intent.putExtra(Std.PICTURE_GALLERY, new AdditionalGallery(position, pics, imageResolver));
+		intent.putExtra(Std.PICTURE_GALLERY, new PictureGallery(position, pics, imageResolver));
 		startActivity(intent);
 	}
 
@@ -262,7 +263,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 				v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 			}
 
-			loader.displayImage(imageResolver.resolvePictureID(pic.pictureID, PictureSize.Mini), v);
+			loader.displayImage(imageResolver.resolvePictureID(pic.pictureHash, PictureSize.Mini), v);
 
 			return v;
 		}
@@ -338,11 +339,11 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 					v.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 				}
 
-				Integer picID = sub.intSubmission;
-				if (picID==null)
+				String picHash = sub.picSubmission;
+				if (picHash==null)
 					return v;
 
-				loader.displayImage(imageResolver.resolvePictureID(picID, PictureSize.Mini), v);
+				loader.displayImage(imageResolver.resolvePictureID(picHash, PictureSize.Mini), v);
 				return v;
 			} else { //We currently only support text and num,bers
 				TextView v = (TextView) convertView;
@@ -356,34 +357,6 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 					v.setText(sub.textSubmission);
 				return v;
 			}
-		}
-	}
-
-	private static class AdditionalGallery extends PictureGallery {
-
-		private final PictureIdResolver resolver;
-		private final List<Integer> pictures;
-		private final int initialPos;
-
-		public AdditionalGallery(int initialPos, List<Integer> pictures, PictureIdResolver resolver) {
-			this.pictures = pictures;
-			this.initialPos = initialPos;
-			this.resolver = resolver;
-		}
-
-		@Override
-		public int getInitialPosition() {
-			return initialPos;
-		}
-
-		@Override
-		public int getCount() {
-			return pictures.size();
-		}
-
-		@Override
-		public String getPictureUrl(int pos) {
-			return resolver.resolvePictureID(pictures.get(pos), this.size);
 		}
 	}
 }

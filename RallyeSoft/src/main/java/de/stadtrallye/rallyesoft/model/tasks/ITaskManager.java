@@ -23,7 +23,7 @@ import android.database.Cursor;
 
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
-import de.stadtrallye.rallyesoft.uimodel.IPicture;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 
 /**
  * Models CallbackIds for a Rallye-type game
@@ -45,7 +45,7 @@ public interface ITaskManager {
 
 	//void refreshSubmissions();
 
-	void submitSolution(int taskID, int type, IPicture picture, String text, Integer number) throws NoServerKnownException;
+	void submitSolution(int taskID, int type, IPictureManager.IPicture picture, String text, Integer number) throws NoServerKnownException;
 
 	void addListener(ITasksListener l);
 	void removeListener(ITasksListener l);

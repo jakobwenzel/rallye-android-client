@@ -24,7 +24,7 @@ import java.io.Serializable;
 import de.rallye.model.structures.PictureSize;
 
 /**
- * Serializable Class to generate Picture URLs (as String) from a pictureID and PictureSize
+ * Serializable Class to generate Picture URLs (as String) from a pictureHash and PictureSize
  * So PictureGallery's do not have to hold on to Model, which is not serializable
  */
 public class PictureIdResolver implements Serializable {
@@ -35,7 +35,7 @@ public class PictureIdResolver implements Serializable {
 		this.base = base;
 	}
 
-	public String resolvePictureID(int id, PictureSize size) {
-		return base + Paths.getPic(id, size);
+	public String resolvePictureID(String hash, PictureSize size) {
+		return base + Paths.getPic(hash, size);
 	}
 }

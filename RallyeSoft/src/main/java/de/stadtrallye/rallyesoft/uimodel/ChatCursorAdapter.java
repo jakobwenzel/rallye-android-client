@@ -152,10 +152,10 @@ public class ChatCursorAdapter extends CursorAdapter {
 		mem.msg.setText(cursor.getString(c.message));
 		mem.time.setText(converter.format(new Date(cursor.getLong(c.timestamp) * 1000L)));
 
-		int pictureID = cursor.getInt(c.pictureID);
-		if (pictureID != 0) {
+		String pictureHash = cursor.getString(c.pictureHash);
+		if (pictureHash != null) {
 			mem.msg_img.setVisibility(View.VISIBLE);
-			loader.displayImage(pictureResolver.resolvePictureID(pictureID, PictureSize.Mini), mem.msg_img);
+			loader.displayImage(pictureResolver.resolvePictureID(pictureHash, PictureSize.Mini), mem.msg_img);
 		} else {
 			mem.msg_img.setVisibility(View.GONE);
 //			loader.displayImage(null, mem.msg_img);
@@ -178,10 +178,10 @@ public class ChatCursorAdapter extends CursorAdapter {
 	 * @param pos Chat Entry Position
 	 * @return null, if none, else int > 0
 	 */
-	public Integer getPictureID(int pos) {
+	public String getPictureHash(int pos) {
 		Cursor cursor = getCursor();
 		cursor.moveToPosition(pos);
-		return (cursor.isNull(c.pictureID))? null : cursor.getInt(c.pictureID);
+		return (cursor.isNull(c.pictureHash))? null : cursor.getString(c.pictureHash);
 	}
 
 	public int getChatID(int pos) {
