@@ -61,6 +61,7 @@ public class RetroFactory {
 
 	public ServerHandle getServer(String server, AuthProvider authProvider) {
 		RestAdapter restAdapter = new RestAdapter.Builder()
+				.setLogLevel(RestAdapter.LogLevel.FULL)
 				.setEndpoint(server)
 				.setConverter(converter)
 				.setExecutors(executor, null)

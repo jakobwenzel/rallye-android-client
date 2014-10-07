@@ -199,8 +199,8 @@ class UploadAdapter extends BaseAdapter implements UploadService.IUploadListener
 				}
 
 				PictureManager.Picture p = getItem(position);
-				mem.name.setText(p.getUri());
-				mem.desc.setText("Unknown Origin");
+				mem.name.setText(context.getString(R.string.picture_no_x, p.pictureID));
+				mem.desc.setText(getSourceDescription(p.getSourceHint()));
 				imageLoader.displayImage(p.getUri(), mem.thumb);
 				if (uploadStatus != null && uploadStatus.picture == p) {//equals
 					mem.progress.setMax(uploadStatus.biteCount);
@@ -219,6 +219,26 @@ class UploadAdapter extends BaseAdapter implements UploadService.IUploadListener
 		}
 
 		return null;
+	}
+
+	private String getSourceDescription(PictureManager.SourceHint sourceHint) {
+		if (sourceHint == null) {
+			return context.getString(R.string.unknown);
+		}
+
+		String sourceName = null;
+		switch (sourceHint.source) {
+			case PictureManager.SOURCE_CHAT:
+				sourceName = context.getString(R.string.chat);
+				break;
+			case PictureManager.SOURCE_SUBMISSION:
+				sourceName = context.getString(R.string.submission);
+				break;
+			default:
+				sourceName = context.getString(R.string.unknown);
+		}
+
+		return sourceName +" "+ sourceHint.name;
 	}
 
 	@Override

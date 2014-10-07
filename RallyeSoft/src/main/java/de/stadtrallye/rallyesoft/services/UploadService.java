@@ -90,11 +90,11 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 
 	public static class UploadStatus {
 		public final PictureManager.Picture picture;
-		public final int biteCount;
+		public int biteCount;
 		private int biteProgress;
 		private boolean indeterminate;
 		public final NotificationCompat.Builder notification;
-		public final long picSize;
+		public long picSize;
 
 		public UploadStatus(PictureManager.Picture picture, long picSize, int biteCount, NotificationCompat.Builder notification) {
 			this.picture = picture;
@@ -254,15 +254,16 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 
 		try {
 			Uri uri = Uri.parse(picture.getUri());
+			initReport(picture, biteSize);
 			AssetFileDescriptor fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
-			final long picSize = fileDescriptor.getDeclaredLength();//TODO report as indeterminate progress if length unkown
+			final long picSize = fileDescriptor.getDeclaredLength();//TODO report as indeterminate progress if length unknown
 			fileInputStream = fileDescriptor.createInputStream();
 
 			TypedOutput uploadStream;
 			RetroAuthCommunicator comm = Server.getCurrentServer().getAuthCommunicator();
 			Picture responsePicture;
 
-			reportUploadBegins(picture, picSize, biteSize);
+			reportUploadBegins(picSize, biteSize);
 
 			final FileInputStream fIn = fileInputStream;
 
@@ -339,21 +340,26 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 			}
 
 			if (responsePicture != null) {
-				//TODO picture.serverResponse(responsePicture), possibly rename file / hash, if the server would like to
+				if (!responsePicture.pictureHash.equals(picture.getHash())) {
+					//TODO picture.serverResponse(responsePicture), possibly rename file / hash, if the server would like to
+					Log.w(THIS, "The server responded with a different hash than it was asked for... We should rename our file, but cannot since it is not yet implemented");
+				}
 			}
 
 			reportUploadComplete(picture);
 
-			Log.i(THIS, picture + " successfully uploaded (" + picSize + " bytes)");
+			Log.i(THIS, "Picture "+ picture.pictureID + " successfully uploaded (" + picSize + " bytes)");
 			return;
 		} catch (RetrofitError e) {
 			if (e.isNetworkError()) {
-				Log.e(THIS, "Retrofit Network error", e);
+				Log.e(THIS, "Retrofit Network error", e.getCause());
 			} else {
 				Log.e(THIS, "Server declined", e);
 			}
 		} catch (FileNotFoundException e) {
-			Log.e(THIS, "File was not were it was supposed to be", e);
+			Log.e(THIS, "File was not were it was supposed to be: "+ picture.getUri(), e);
+			picture.discard();
+			return;
 		} catch (IOException e) {
 			Log.e(THIS, "Upload failed", e);
 		} finally {
@@ -373,14 +379,20 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 		notes.notify(NOTE_TAG, R.id.uploader, uploadStatus.notification.setProgress(0, 0, false).setContentTitle(getString(R.string.upload_failed)).build());
 	}
 
-	private void reportUploadBegins(PictureManager.Picture picture, long picSize, int biteSize) {
+	private void initReport(PictureManager.Picture picture, int biteSize) {
 		NotificationCompat.Builder note = new NotificationCompat.Builder(this)
 				.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, UploadOverviewActivity.class), 0))
 				.setSmallIcon(R.drawable.ic_upload_light)
 				.setContentTitle(getString(R.string.uploading) + "...")
-				.setContentText(Uri.parse(picture.getUri()).getLastPathSegment());
+				.setContentText(getString(R.string.picture_no_x, picture.pictureID));
 
-		uploadStatus = new UploadStatus(picture, picSize, (int) (picSize / biteSize), note);
+		uploadStatus = new UploadStatus(picture, -1, -1, note);
+	}
+
+	private void reportUploadBegins(long picSize, int biteSize) {
+
+		uploadStatus.picSize = picSize;
+		uploadStatus.biteCount = (int) (picSize / biteSize);
 		uploadStatus.indeterminate = false;
 		uploadStatus.biteProgress = 0;
 	}
@@ -453,8 +465,8 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 				upload(picture, previewUpload);
 			}
 
-			if (!queue.isEmpty() && !isUploadAllowed()) {
-				Log.i(THIS, "Uploader paused, unsatisfactory network, waitOnWiFi: "+ waitingOnWiFi +", waitOnAny: "+ waitingOnAnyNetwork);
+			if (!queue.isEmpty()) {
+				Log.i(THIS, "Uploader paused, unsatisfactory network, waitOnWiFi: " + waitingOnWiFi + ", waitOnAny: " + waitingOnAnyNetwork);
 				setEnableNetworkStateListener(true);
 			} else {
 				setEnableNetworkStateListener(false);

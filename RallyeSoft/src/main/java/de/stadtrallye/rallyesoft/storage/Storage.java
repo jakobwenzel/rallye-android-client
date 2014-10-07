@@ -102,6 +102,10 @@ public class Storage {
 		return pictureManager;
 	}
 
+	public static void deleteServerConfig() {
+		context.deleteFile(SERVER_CONFIG);
+	}
+
 	private static class DatabaseProvider implements IDbProvider {
 		private DatabaseHelper helper;
 		private int changedTables;

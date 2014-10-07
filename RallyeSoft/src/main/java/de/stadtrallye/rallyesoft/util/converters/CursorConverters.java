@@ -22,6 +22,7 @@ package de.stadtrallye.rallyesoft.util.converters;
 import android.database.Cursor;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
@@ -78,7 +79,17 @@ public class CursorConverters {
 		coords = (cursor.isNull(c.latitude) || cursor.isNull(c.longitude))? null : new LatLng(cursor.getDouble(c.latitude), cursor.getDouble(c.longitude));
 
 		try {
-			List<AdditionalResource> res = Serialization.getJsonInstance().readValue(cursor.getString(c.additionalResources), new TypeReference<List<AdditionalResource>>(){});
+			List<AdditionalResource> res = null;
+			String addRes = cursor.getString(c.additionalResources);
+			if (addRes != null) {
+				try {
+					res = Serialization.getJsonInstance().readValue(addRes, new TypeReference<List<AdditionalResource>>() {
+					});
+				} catch (JsonParseException e) {
+					Log.e("CursorConverters", "Could not read additional resources: "+ addRes, e);
+				}
+			}
+
 			return new Task(cursor.getInt(c.id), getBoolean(cursor, c.locationSpecific), coords,
 					cursor.getDouble(c.radius), cursor.getString(c.name), cursor.getString(c.description),
 					getBoolean(cursor, c.multiple), cursor.getInt(c.submitType), cursor.getString(c.points),

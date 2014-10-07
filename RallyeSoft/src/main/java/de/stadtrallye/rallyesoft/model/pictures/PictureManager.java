@@ -31,7 +31,12 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -39,6 +44,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.services.UploadService;
 import de.stadtrallye.rallyesoft.storage.IDbProvider;
+import de.stadtrallye.rallyesoft.util.converters.Serialization;
 
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Pictures;
 
@@ -66,7 +72,7 @@ public class PictureManager implements IPictureManager {
 			case 4: return "Saved";
 			case 16: return "Confirmed";
 			case 64: return "Failed";
-			case 265: return "Uploading";
+			case 256: return "Uploading";
 			case 512: return "Uploaded Preview";
 			case 1024: return "Uploaded";
 			case 4096: return "Discarded";
@@ -78,6 +84,24 @@ public class PictureManager implements IPictureManager {
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
 	public static final int REQUEST_CODE = 519;
+
+	public static final int SOURCE_CHAT = 1;
+	public static final int SOURCE_SUBMISSION = 2;
+
+	public static SourceHint getSourceHint(int source, String name) {
+		return new SourceHint(source, name);
+	}
+
+	public static class SourceHint {
+		public final String name;
+		public final int source;
+
+		@JsonCreator
+		public SourceHint(@JsonProperty("source") int source, @JsonProperty("name") String name) {
+			this.name = name;
+			this.source = source;
+		}
+	}
 
 	private final Context context;
 	private final IDbProvider dbProvider;
@@ -118,9 +142,17 @@ public class PictureManager implements IPictureManager {
 		unconfirmed = null;
 		queue.clear();
 
-		Cursor c = getDb().query(Pictures.TABLE, new String[]{Pictures.KEY_ID, Pictures.KEY_STATE, Pictures.KEY_FILE}, Pictures.KEY_STATE + "<=?", new String[]{Integer.toString(STATE_CONFIRMED)}, null, null, null);
+		Cursor c = getDb().query(Pictures.TABLE, new String[]{Pictures.KEY_ID, Pictures.KEY_STATE, Pictures.KEY_FILE, Pictures.KEY_SOURCE_HINT}, Pictures.KEY_STATE + "<=?", new String[]{Integer.toString(STATE_UPLOADED)}, null, null, null);
 		while (c.moveToNext()) {
-			Picture picture = new Picture(c.getInt(0), c.getString(1), c.getInt(2));
+			SourceHint sourceHint = null;
+			try {
+				String s = c.getString(3);
+				if (s != null)
+					sourceHint = Serialization.getJsonInstance().readValue(s, SourceHint.class);
+			} catch (IOException e) {
+				Log.e(THIS, "Could not read SourceHint", e);
+			}
+			Picture picture = new Picture(c.getInt(0), c.getString(2), c.getInt(1), sourceHint);
 			if (picture.isUnconfirmed()) {
 				unconfirmed = picture;
 				if (unconfirmed != null) {
@@ -141,10 +173,10 @@ public class PictureManager implements IPictureManager {
 			notifyUploader();
 	}
 
-	private Uri getPicturePlaceholderUri(int mediaType){
+	private Uri getPicturePlaceholderUri(int mediaType, SourceHint sourceHint){
 		Uri uri = Uri.fromFile(getPicturePlaceholder(mediaType));
 
-		saveReservedFilename(uri);
+		saveReservedFilename(uri, sourceHint);
 		return uri;
 	}
 
@@ -172,7 +204,7 @@ public class PictureManager implements IPictureManager {
 		return mediaFile;
 	}
 
-	private void saveReservedFilename(Uri mediaFile) {
+	private void saveReservedFilename(Uri mediaFile, SourceHint sourceHint) {
 		if (unconfirmed != null) {
 			Log.w(THIS, "Overwriting unconfirmed Picture: "+ unconfirmed);
 		}
@@ -180,17 +212,22 @@ public class PictureManager implements IPictureManager {
 		ContentValues insert = new ContentValues();
 		insert.put(Pictures.KEY_FILE, mediaFile.toString());
 		insert.put(Pictures.KEY_STATE, STATE_RESERVED);
+		try {
+			insert.put(Pictures.KEY_SOURCE_HINT, Serialization.getJsonInstance().writeValueAsString(sourceHint));
+		} catch (JsonProcessingException e) {
+			Log.e(THIS, "Could not serialize SourceHint", e);
+		}
 
 		int lastID = (int) getDb().insert(Pictures.TABLE, null, insert);
 		Log.d(THIS, lastID+": reserved: "+ mediaFile.toString());
-		unconfirmed = new Picture(lastID, mediaFile.toString(), STATE_RESERVED);
+		unconfirmed = new Picture(lastID, mediaFile.toString(), STATE_RESERVED, sourceHint);
 		queuedUnconfirmed = false;
 	}
 
 	/**
 	 * Get an intent to either take a picture with the camera app or select an app that can pick an existing picture
 	 */
-	public Intent startPictureTakeOrSelect() {
+	public Intent startPictureTakeOrSelect(SourceHint sourceHint) {
 		//Attention: Our RequestCode will not be used for the result, if a jpeg is picked, data.getType will contain image/jpeg, if the picture was just taken with the camera it will be null
 		Intent pickIntent = new Intent();
 		pickIntent.setType("image/jpeg");
@@ -198,7 +235,7 @@ public class PictureManager implements IPictureManager {
 
 		Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-		Uri fileUri = getPicturePlaceholderUri(PictureManager.MEDIA_TYPE_IMAGE); // reserve a filename to save the image
+		Uri fileUri = getPicturePlaceholderUri(PictureManager.MEDIA_TYPE_IMAGE, sourceHint); // reserve a filename to save the image
 		takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
 		takePhotoIntent.putExtra("return-data", true);
 
@@ -310,12 +347,18 @@ public class PictureManager implements IPictureManager {
 		public final int pictureID;
 		private String file;
 		private int state;
+		private final SourceHint sourceHint;
 		private String hash;
 
-		public Picture(int pictureID, String file, int state) {
+		public Picture(int pictureID, String file, int state, SourceHint sourceHint) {
 			this.pictureID = pictureID;
 			this.file = file;
 			this.state = state;
+			this.sourceHint = sourceHint;
+		}
+
+		public SourceHint getSourceHint() {
+			return sourceHint;
 		}
 
 		public boolean hasHash() {
@@ -359,7 +402,7 @@ public class PictureManager implements IPictureManager {
 
 		public void uploadedPreview() {
 			ContentValues update = new ContentValues();
-			setState(STATE_UPLOADED, update);
+			setState(STATE_UPLOADED_PREVIEW, update);
 			updateDb(update);
 		}
 

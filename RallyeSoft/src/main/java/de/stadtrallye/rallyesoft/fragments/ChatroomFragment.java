@@ -138,7 +138,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 				chatroom.update();
 				return true;
 			case R.id.picture_menu: //Open a chooser containing all apps that can pick a jpeg and the camera
-				Intent intent = pictureManager.startPictureTakeOrSelect();
+				Intent intent = pictureManager.startPictureTakeOrSelect(PictureManager.getSourceHint(PictureManager.SOURCE_CHAT, chatroom.getName()));
 				startActivityForResult(intent, PictureManager.REQUEST_CODE);
 				return true;
 			default:
@@ -157,6 +157,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 
 		send.setOnClickListener(this);
 		list.setOnItemClickListener(this);
+		list.setOnScrollListener(this);
 
 		return v;
 	}
@@ -219,9 +220,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	public void onStop() {
 		super.onStop();
 
-		saveScrollState();
-		
-		chatroom.setLastReadId(chatAdapter.getChatID(lastPos[0]));//TODO create simple function / execute each time the list has finished scrolling
+//		saveScrollState();
 		
 		chatroom.removeListener(this);
 	}
@@ -287,7 +286,6 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 				loading.setVisibility(View.GONE);
 				Toast.makeText(getActivity(), getString(R.string.chat_post_failure), Toast.LENGTH_SHORT).show();
 				chosen_picture.setVisibility(View.GONE);
-				pictureHandler.discardPicture();
 				break;
 			case Uploading:
 				loading.setVisibility(View.VISIBLE);
@@ -307,7 +305,7 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.i(THIS, "Received onActivityResult callback in Fragment!!");
-		pictureManager.onActivityResult(requestCode, resultCode, data);//TODO if it works remember picture
+		pictureManager.onActivityResult(requestCode, resultCode, data);//TODO android cannot find this fragment since it is not registered under its former id (yet / if any) |if it works remember picture
 	}
 
 	@Override

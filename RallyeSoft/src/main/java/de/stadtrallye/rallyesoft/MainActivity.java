@@ -22,6 +22,8 @@ package de.stadtrallye.rallyesoft;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -78,6 +80,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	private boolean pref_autoUpload;
 	private SharedPreferences pref;
 	private PictureManager pictureManager;
+	private boolean running = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -201,6 +204,8 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 			logo.resetTransition();
 
 		tabManager.showTab();
+
+		running = true;
 	}
 
 	private void updateServerState() {
@@ -255,6 +260,12 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 				startActivityForResult(intent, ConnectionAssistantActivity.REQUEST_CODE);
 				break;
 			case R.id.menu_logout:
+				new AlertDialog.Builder(this).setTitle(R.string.logout).setMessage(R.string.are_you_sure).setCancelable(true).setNegativeButton(android.R.string.cancel, null).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						server.logout();
+					}
+				}).create().show();
 				server.tryLogout();
 				break;
 			case R.id.menu_upload_overview:
@@ -302,6 +313,13 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		super.onPause();
 	}
 
+	@Override
+	protected void onStop() {
+		running = false;
+
+		super.onStop();
+	}
+
 	/**git status
 	 * 
 	 * Passed-Through to Model (if not kept for ConfigurationChange) and GCMRegistrar
@@ -328,22 +346,18 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 			Log.v(THIS, "ConnectionAssistant finished with "+ resultCode);
 			if (resultCode == Activity.RESULT_OK) {
 				Log.i(THIS, "ConnectionAssistant has connected to a new Server");
+
 //				model.removeListener(this);
 //				model = Model.getInstance(getApplicationContext());
 //				model.addListener(this);
 //				updateServerState();
 			}
-//			findViewById(R.id.content_frame).postDelayed(new Runnable() {
-//				@Override
-//				public void run() {
-//					if (lastTab == null)
-//						lastTab = RallyeTabManager.TAB_OVERVIEW;
-//					tabManager.switchToTab(lastTab);
-//					Log.w(THIS, "switching back to tab: "+ lastTab);
-//					lastTab = null;
-//					onConnectionStateChange(model.getConnectionState());
-//				}
-//			}, 1000);
+			findViewById(R.id.content_frame).post(new Runnable() {
+				@Override
+				public void run() {
+					tabManager.switchToTab(RallyeTabManager.TAB_OVERVIEW);
+				}
+			});
 		} else if (requestCode == SubmitNewSolutionActivity.REQUEST_CODE) {
 			Log.i(THIS, "Task Submission");
 			if (resultCode == Activity.RESULT_OK) {
@@ -454,12 +468,17 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 	@Override
 	public void onNewCurrentServer(Server server) {
 		this.server = server;
-		this.hasServerChanged = true;
 
 		if (isLoggedIn()) {
 			logo.startTransition(500);
 		} else {
 			logo.reverseTransition(500);
+		}
+
+		if (running) {
+			tabManager.setServer(server);
+		} else {
+			this.hasServerChanged = true;
 		}
 	}
 

@@ -173,11 +173,15 @@ public class TaskManager implements ITaskManager {
 				taskIn.bindDouble(7, t.radius);
 				taskIn.bindLong(8, (t.multipleSubmits) ? 1 : 0);
 				taskIn.bindLong(9, t.submitType);
-				taskIn.bindString(10, t.maxPoints);
-				String add = Serialization.getJsonInstance().writeValueAsString(t.additionalResources);
-				if (add == null) {
+				if (t.maxPoints != null) {
+					taskIn.bindString(10, t.maxPoints);
+				} else {
+					taskIn.bindNull(10);
+				}
+				if (t.additionalResources == null) {
 					taskIn.bindNull(11);
 				} else {
+					String add = Serialization.getJsonInstance().writeValueAsString(t.additionalResources);
 					taskIn.bindString(11, add);
 				}
 //				if (submissions != null) {

@@ -128,7 +128,7 @@
 	<string name="password_incorrect_try_again">Password was incorrect, please try again</string>
 	<string name="password_retry">Enter password</string>
 	<string name="retry">Retry login</string>
-	<string name="confirm_force_refresh">Are you sure? This will delete all current data. The app will try to refresh the data, but until then it is not available...</string>
+	<string name="confirm_force_refresh">Are you sure? This will delete all current data. The app will try to refresh the data, but until then certain functions may not be available...</string>
 	<string name="troubleshooting">Troubleshooting</string>
 	<string name="force_refresh_mapconfig">Force refresh map configuration</string>
 	<string name="force_refresh_chatrooms">Force refresh the available chatrooms</string>
@@ -141,7 +141,11 @@
 	<string name="default_picture_download_size">Default picture size</string>
 	<string name="default_picture_download_size_summary">The default size of pictures in the gallery</string>
 	<string name="upload_failed">Upload failed</string>
-	<string name="original_file_uploads">Original file uploads</string>
+	<string name="original_file_uploads">Original picture uploads</string>
 	<string name="upload_overview">Upload Overview</string>
+	<string name="are_you_sure">Are you really sure?</string>
+	<string name="picture_no_x">Picture No %d</string>
+	<string name="unknown">Unknown</string>
+	<string name="submission">Submission</string>
 
 </resources>

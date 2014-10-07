@@ -232,7 +232,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	}
 
 	private void requestPicture() {
-		Intent intent = pictureManager.startPictureTakeOrSelect();
+		Intent intent = pictureManager.startPictureTakeOrSelect(PictureManager.getSourceHint(PictureManager.SOURCE_SUBMISSION, "Task "+ taskID));//TODO read taskDescription
 		startActivityForResult(intent, PictureManager.REQUEST_CODE);
 	}
 }

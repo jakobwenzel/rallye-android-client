@@ -358,6 +358,8 @@ public class Server extends AuthProvider {
 				setUserAuth(userAuth);
 				setUserName(loginInfo.name);
 				notifyLoginSuccessful();
+				acquireChatManager(this).forceRefreshChatrooms();
+				releaseChatManager(this);
 			}
 
 			@Override
@@ -390,7 +392,7 @@ public class Server extends AuthProvider {
 		mapper.writeValue(Storage.getServerConfigOutputStream(), this);
 	}
 
-	public void tryLogout() {
+	public boolean tryLogout() {
 		try {
 			getAuthCommunicator().logout(currentServer.groupID, new Callback<Response>() {
 				@Override
@@ -403,8 +405,10 @@ public class Server extends AuthProvider {
 					Log.e(THIS, "Could not logout old Server", e);
 				}
 			});
+			return true;
 		} catch (NoServerKnownException e) {
 			Log.e(THIS, "Could not logout old Server", e);
+			return false;
 		}
 	}
 
@@ -545,6 +549,15 @@ public class Server extends AuthProvider {
 			insert.put(Users.KEY_NAME, u.name);
 			insert.put(Users.FOREIGN_GROUP, u.groupID);
 			db.insert(Users.TABLE, null, insert);
+		}
+	}
+
+	public void logout() {
+		boolean hasServer = tryLogout();
+		if (hasServer) {
+			Storage.deleteServerConfig();
+			currentServer = null;
+			notifyCurrentServerChanged();
 		}
 	}
 }

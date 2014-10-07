@@ -28,7 +28,7 @@ import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 	
-	private static final int DATABASE_VERSION = 30;
+	private static final int DATABASE_VERSION = 31;
 	private static final String DATABASE_NAME = "de.stadtrallye.rallyesoft.db";
 
 	private int editedTables = 0;
@@ -165,14 +165,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		public static final String KEY_FILE = "file";
 		public static final String KEY_ADDED = "added";
 		public static final String KEY_STATE = "state";
+		public static final String KEY_SOURCE_HINT = "sourceHint";
 		public static final String CREATE =
 				"CREATE TABLE "+ TABLE +" ("+
 						KEY_ID +" INTEGER PRIMARY KEY, "+
 						KEY_HASH +" TEXT NULL, "+
 						KEY_FILE +" TEXT NOT NULL, "+
 						KEY_ADDED +" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, "+
-						KEY_STATE +" INTEGER NOT NULL)";
-		public static final String[] COLS = {KEY_ID, KEY_HASH, KEY_FILE, KEY_ADDED, KEY_STATE};
+						KEY_STATE +" INTEGER NOT NULL, "+
+						KEY_SOURCE_HINT +" TEXT NULL)";
+		public static final String[] COLS = {KEY_ID, KEY_HASH, KEY_FILE, KEY_ADDED, KEY_STATE, KEY_SOURCE_HINT};
 	}
 
     public DatabaseHelper(Context context) {
@@ -232,6 +234,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			drop(db, Chats.TABLE);
 			db.execSQL(Chats.CREATE);
 			editedTables = EDIT_CHATS;
+			drop(db, Pictures.TABLE);
+			db.execSQL(Pictures.CREATE);
+		} else if (oldVersion < 31) {
+			drop(db, Pictures.TABLE);
+			db.execSQL(Pictures.CREATE);
 		}
 	}
 
