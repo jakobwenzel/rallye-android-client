@@ -45,6 +45,8 @@ public interface ITaskManager {
 
 	//void refreshSubmissions();
 
+	ITask getTaskFromCursor(Cursor cursor);
+
 	void submitSolution(int taskID, int type, IPictureManager.IPicture picture, String text, Integer number) throws NoServerKnownException;
 
 	void addListener(ITasksListener l);

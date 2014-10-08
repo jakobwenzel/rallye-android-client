@@ -128,7 +128,7 @@ public class TasksPagerFragment extends Fragment implements ITaskManager.ITasksL
 
 		ITasksMapControl mapControl = (ITasksMapControl) mapFragment;
 
-		fragmentAdapter = new TaskPagerAdapter(fm, getActivity(), taskManager.getTasksCursor(), mapControl);
+		fragmentAdapter = new TaskPagerAdapter(fm, getActivity(), taskManager, mapControl);
 		pager.setAdapter(fragmentAdapter);
 		indicator.setViewPager(pager); // Needs an adapter
 

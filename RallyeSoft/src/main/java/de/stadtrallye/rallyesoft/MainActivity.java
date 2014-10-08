@@ -358,7 +358,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 					tabManager.switchToTab(RallyeTabManager.TAB_OVERVIEW);
 				}
 			});
-		} else if (requestCode == SubmitNewSolutionActivity.REQUEST_CODE) {
+		} else if ((requestCode&0xffff) == SubmitNewSolutionActivity.REQUEST_CODE) {
 			Log.i(THIS, "Task Submission");
 			if (resultCode == Activity.RESULT_OK) {
 				Log.i(THIS, "Submitted: "+ data.getExtras());

@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.fragments.TaskDetailsFragment;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.model.tasks.TaskManager;
 import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 
@@ -40,14 +41,16 @@ public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 
 //	private final Context context;
 	private final ITasksMapControl mapControl;
+	private final ITaskManager taskManager;
 	private Cursor cursor;
 	private final String ofStr; // Translation placeholder
 
 	private CursorConverters.TaskCursorIds c;
 
-	public TaskPagerAdapter(FragmentManager fm, Context context, Cursor cursor, ITasksMapControl mapControl) {
+	public TaskPagerAdapter(FragmentManager fm, Context context, ITaskManager taskManager, ITasksMapControl mapControl) {
 		super(fm);
-		this.cursor = cursor;
+		this.cursor = taskManager.getTasksCursor();
+		this.taskManager = taskManager;
 //		this.context = context;
 		this.mapControl = mapControl;
 
@@ -77,8 +80,10 @@ public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 	public void setPrimaryItem(ViewGroup container, int position, Object object) {
 		super.setPrimaryItem(container, position, object);
 
-		if (cursor != null)
-			mapControl.setTask(CursorConverters.getTask(position, cursor, c));
+		if (cursor != null) {
+			cursor.moveToPosition(position);
+			mapControl.setTask(taskManager.getTaskFromCursor(cursor));
+		}
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import de.rallye.model.structures.AdditionalResource;
+import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.Submission;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -52,6 +53,11 @@ public class Task implements ITask {
 		this.manager = manager;
 	}
 
+
+	@Override
+	public LatLng getLocation() {
+		return task.location;
+	}
 
 	@Override
 	public void addListener(ITaskListener listener) {
@@ -168,6 +174,16 @@ public class Task implements ITask {
 		} finally {
 			submissionsLock.readLock().unlock();
 		}
+	}
+
+	@Override
+	public boolean hasLocation() {
+		return task.hasLocation();
+	}
+
+	@Override
+	public double getRadius() {
+		return task.radius;
 	}
 
 	void addSubmission(Submission submission) {

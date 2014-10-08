@@ -211,11 +211,9 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.i(THIS, "Received ActivityResult: Req: " + requestCode + ", res: " + resultCode);
-//		picture = pictureManager.onActivityResult(requestCode, resultCode, data);
-//		picture = ImageLocation.imageResult(requestCode, resultCode, data, getApplicationContext(), true);
+		picture = pictureManager.onActivityResult(requestCode, resultCode, data);
 
 		if (picture != null) {
-
 			ImageLoader.getInstance().displayImage(picture.getUri(), this.imageView);
 			invalidateOptionsMenu();
 		}

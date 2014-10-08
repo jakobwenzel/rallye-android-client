@@ -176,7 +176,7 @@ public class AssistantServerFragment extends Fragment {
 		server = assistant.getServer();
 
 		if (server != null) {// Maybe save separately inside Server and only use getters here
-			String[] parts = server.getAddress().replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)$", "$1;$2;$3").split(";"); ///(\w+?)/?
+			String[] parts = server.getAddress().replaceAll("^(http|https)://([0-9A-Za-z_.-]+?):(\\d+?)/?$", "$1;$2;$3").split(";"); ///(\w+?)/?
 			protocol.setSelection(parts[0].equals("http")? 0 : 1);
 			port.setText(parts[2]);
 			edit_server.setText(parts[1]);

@@ -132,18 +132,39 @@ public class TaskManager implements ITaskManager {
 		}
 	}
 
+	/**
+	 * Read the task at the current position, or from cache
+	 * @param cursor
+	 * @return
+	 */
+	@Override
+	public ITask getTaskFromCursor(Cursor cursor) {
+		synchronized (tasksCache) {
+			int taskID = cursor.getInt(tIds.id);
+			Task task = tasksCache.get(taskID);
+			if (task == null) {
+				task = new Task(CursorConverters.getTask(cursor, tIds), this);
+				tasksCache.put(taskID, task);
+			}
+
+			return task;
+		}
+	}
+
 	private static final CursorConverters.TaskCursorIds tIds = new CursorConverters.TaskCursorIds();
 	static {
 		tIds.id = 0;
 		tIds.name = 1;
 		tIds.description = 2;
 		tIds.locationSpecific = 3;
-		tIds.radius = 4;
-		tIds.multiple = 5;
-		tIds.submitType = 6;
-		tIds.points = 7;
-		tIds.additionalResources = 8;
-		tIds.submits = 9;
+		tIds.longitude = 5;
+		tIds.latitude = 4;
+		tIds.radius = 6;
+		tIds.multiple = 7;
+		tIds.submitType = 8;
+		tIds.points = 9;
+		tIds.additionalResources = 10;
+		tIds.submits = 11;
 	}
 
 	private void updateDatabase(List<de.rallye.model.structures.Task> tasks) {
@@ -178,7 +199,7 @@ public class TaskManager implements ITaskManager {
 				} else {
 					taskIn.bindNull(10);
 				}
-				if (t.additionalResources == null) {
+				if (t.additionalResources == null || t.additionalResources.size() == 0) {
 					taskIn.bindNull(11);
 				} else {
 					String add = Serialization.getJsonInstance().writeValueAsString(t.additionalResources);

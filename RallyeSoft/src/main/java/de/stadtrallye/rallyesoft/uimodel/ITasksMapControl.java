@@ -19,7 +19,7 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
-import de.rallye.model.structures.Task;
+import de.stadtrallye.rallyesoft.model.tasks.ITask;
 
 /**
  * Interface to control the tasks-map
@@ -27,5 +27,5 @@ import de.rallye.model.structures.Task;
  */
 public interface ITasksMapControl {
 
-	void setTask(Task task);
+	void setTask(ITask task);
 }

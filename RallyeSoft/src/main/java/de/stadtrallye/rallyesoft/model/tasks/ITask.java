@@ -22,6 +22,7 @@ package de.stadtrallye.rallyesoft.model.tasks;
 import java.util.List;
 
 import de.rallye.model.structures.AdditionalResource;
+import de.rallye.model.structures.LatLng;
 import de.rallye.model.structures.Submission;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 
@@ -29,6 +30,8 @@ import de.stadtrallye.rallyesoft.model.IHandlerCallback;
  * Created by Ramon on 23.09.2014.
  */
 public interface ITask {
+
+	LatLng getLocation();
 
 	void addListener(ITaskListener listener);
 	void removeListener(ITaskListener listener);
@@ -49,6 +52,10 @@ public interface ITask {
 	 * @return null if not yet known
 	 */
 	List<Submission> getSubmissionsCached();
+
+	boolean hasLocation();
+
+	double getRadius();
 
 	interface ITaskListener extends IHandlerCallback {
 		void onSubmissionsChanged(List<Submission> submissions);

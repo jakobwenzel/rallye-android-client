@@ -53,6 +53,7 @@ import de.rallye.model.structures.Picture;
 import de.rallye.model.structures.PictureSize;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.UploadOverviewActivity;
+import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
@@ -217,13 +218,24 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 		}
 
 		private void notifyQueueChange() {
-			if (listener != null)
-				listener.onQueueChange();
+			if (listener != null) {
+				listener.getCallbackHandler().post(new Runnable() {
+					@Override
+					public void run() {
+						listener.onQueueChange();
+					}
+				});
+			}
 		}
 
 		private void notifyUploadStatusChange() {
 			if (listener != null)
-				listener.onUploadStatusChange();
+				listener.getCallbackHandler().post(new Runnable() {
+					@Override
+					public void run() {
+						listener.onQueueChange();
+					}
+				});
 		}
 
 		public UploadStatus getUploadStatus() {
@@ -231,7 +243,7 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 		}
 	}
 
-	public interface IUploadListener {
+	public interface IUploadListener extends IHandlerCallback {
 
 		void onUploadStatusChange();
 		void onQueueChange();
@@ -254,14 +266,23 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 
 		try {
 			Uri uri = Uri.parse(picture.getUri());
+			Log.d(THIS, "Source: "+picture.getUri());
 			initReport(picture, biteSize);
-			AssetFileDescriptor fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
-			final long picSize = fileDescriptor.getDeclaredLength();//TODO report as indeterminate progress if length unknown
-			fileInputStream = fileDescriptor.createInputStream();
+			long fileSize = -1;
+			try {
+				AssetFileDescriptor fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
+				fileSize = fileDescriptor.getDeclaredLength();//TODO report as indeterminate progress if length unknown
+				fileInputStream = fileDescriptor.createInputStream();
+			} catch (SecurityException e) {
+				Log.e(THIS, "No access rights... WTF", e);
+				return;
+			}
 
 			TypedOutput uploadStream;
 			RetroAuthCommunicator comm = Server.getCurrentServer().getAuthCommunicator();
 			Picture responsePicture;
+
+			final long picSize = fileSize;
 
 			reportUploadBegins(picSize, biteSize);
 
@@ -395,23 +416,36 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 		uploadStatus.biteCount = (int) (picSize / biteSize);
 		uploadStatus.indeterminate = false;
 		uploadStatus.biteProgress = 0;
+
+		if (uploadBinder != null) {
+			uploadBinder.notifyUploadStatusChange();
+		}
 	}
 
 	private void reportUploadIndeterminate(PictureManager.Picture picture) {
 		uploadStatus.indeterminate = true;
 		notes.notify(NOTE_TAG, R.id.uploader, uploadStatus.notification.setProgress(0, 0, true).build());
+		if (uploadBinder != null) {
+			uploadBinder.notifyUploadStatusChange();
+		}
 	}
 
 	private void reportUploadProgress(PictureManager.Picture picture, int i) {
 		uploadStatus.biteProgress = i;
 		uploadStatus.indeterminate = false;
 		notes.notify(NOTE_TAG, R.id.uploader, uploadStatus.notification.setProgress(uploadStatus.biteCount, uploadStatus.biteProgress, false).build());
+		if (uploadBinder != null) {
+			uploadBinder.notifyUploadStatusChange();
+		}
 	}
 
 	private void reportUploadComplete(PictureManager.Picture picture) {
 		uploadStatus.biteProgress = uploadStatus.biteCount;
 		uploadStatus.indeterminate = false;
 		notes.notify(NOTE_TAG, R.id.uploader, uploadStatus.notification.setProgress(0, 0, false).setContentTitle(getString(R.string.upload_complete)).build());
+		if (uploadBinder != null) {
+			uploadBinder.notifyUploadStatusChange();
+		}
 	}
 
 	@Override
@@ -463,6 +497,9 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 					picture.calculateHash();
 
 				upload(picture, previewUpload);
+				if (uploadBinder != null) {
+					uploadBinder.notifyQueueChange();
+				}
 			}
 
 			if (!queue.isEmpty()) {

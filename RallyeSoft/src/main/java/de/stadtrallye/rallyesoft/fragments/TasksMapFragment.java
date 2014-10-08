@@ -44,11 +44,11 @@ import java.util.List;
 import de.rallye.model.structures.Edge;
 import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
-import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
+import de.stadtrallye.rallyesoft.model.tasks.ITask;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.threading.Threading;
 import de.stadtrallye.rallyesoft.uimodel.ITasksMapControl;
@@ -181,39 +181,39 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		markers.clear();
 		gmap.clear();
 
-		Task t;
+		ITask t;
 		Cursor cursor = taskManager.getTasksCursor();
 		CursorConverters.TaskCursorIds c = CursorConverters.TaskCursorIds.read(cursor);
 
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
 		//for (int i = 0; i < cursor.getCount(); i++) {
-			t = CursorConverters.getTask(cursor, c);
+			t = taskManager.getTaskFromCursor(cursor);
 			cursor.moveToNext();
 			if (!t.hasLocation())
 				continue;
 
 			Marker m = plotTask(t);
 
-			markers.put(m, t.taskID);
+			markers.put(m, t.getTaskID());
 		}
 	}
 
 
-	private Marker plotTask(Task t) {
-		LatLng position = toGms(t.location);
+	private Marker plotTask(ITask t) {
+		LatLng position = toGms(t.getLocation());
 
 		Marker m = gmap.addMarker(new MarkerOptions()
 				.position(position)
-				.title(t.name)
-				.snippet(t.description));
+				.title(t.getName())
+				.snippet(t.getDescription()));
 
-		if (t.radius > 0) {
+		if (t.getRadius() > 0) {
 			gmap.addCircle(new CircleOptions()
 					.center(position)
 					.strokeWidth(1)
 					.fillColor(0x80FF80A0)
-					.radius(t.radius));
+					.radius(t.getRadius()));
 		}
 
 		return m;
@@ -256,7 +256,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 	}
 
 	@Override
-	public void setTask(Task task) {
+	public void setTask(ITask task) {
 		gmap.clear();
 
 		if (!task.hasLocation())
@@ -264,15 +264,15 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 
 		plotTask(task);
 
-		LatLng coords = toGms(task.location);
+		LatLng coords = toGms(task.getLocation());
 
 		final CameraUpdate cu;
 
-		if (task.radius > 0) {
+		if (task.getRadius() > 0) {
 			final double kmPerLat = 110.6 * 1000; // 1 Latitudinal Degree is about 110.6 km
 			final double kmLat = coords.latitude * kmPerLat;
-			final double radiusLat1 = (kmLat + task.radius) / kmPerLat; // calculate the roundabout coordinates of a point on the radius in latitudinal direction
-			final double radiusLat2 = (kmLat - task.radius) / kmPerLat; // now in the other direction
+			final double radiusLat1 = (kmLat + task.getRadius()) / kmPerLat; // calculate the roundabout coordinates of a point on the radius in latitudinal direction
+			final double radiusLat2 = (kmLat - task.getRadius()) / kmPerLat; // now in the other direction
 			LatLng rad1 = new LatLng(radiusLat1, coords.longitude); //NOTE: we only define a line from north to south as bounds, as long as the maps width is greater than the height this will work out
 			LatLng rad2 = new LatLng(radiusLat2, coords.longitude); //NOTE: longitudinal degrees vary greatly in distance depending on how close one is to the equator!
 

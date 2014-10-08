@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
@@ -43,6 +44,7 @@ import java.util.Queue;
 
 import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.services.UploadService;
+import de.stadtrallye.rallyesoft.threading.Threading;
 
 /**
  * Created by Ramon on 03.10.2014.
@@ -108,6 +110,11 @@ class UploadAdapter extends BaseAdapter implements UploadService.IUploadListener
 	private UploadService.UploadStatus uploadStatus;
 	private ArrayList<PictureManager.Picture> wifiUploads = new ArrayList<>();
 	private ArrayList<PictureManager.Picture> otherUploads = new ArrayList<>();
+
+	@Override
+	public Handler getCallbackHandler() {
+		return Threading.getUiExecutor();
+	}
 
 	private static class ViewMem {
 

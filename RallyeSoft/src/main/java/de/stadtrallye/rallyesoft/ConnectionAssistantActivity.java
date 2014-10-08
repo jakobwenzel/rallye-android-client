@@ -242,7 +242,12 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 			ObjectMapper mapper = Serialization.getJsonInstance();
 			l = mapper.readValue(serverLoginJSON, ServerLogin.class);
 
-			setServer(new Server(l.getAddress()));
+			String serverWithoutSlash = l.getAddress();
+			if (serverWithoutSlash.endsWith("/")) {
+				serverWithoutSlash = serverWithoutSlash.substring(0, serverWithoutSlash.length()-1);
+			}
+
+			setServer(new Server(serverWithoutSlash));
 			setGroup(l.getGroupID());
 			server.setGroupPassword(l.getGroupPassword());
 

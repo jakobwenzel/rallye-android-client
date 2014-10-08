@@ -22,7 +22,7 @@ package de.stadtrallye.rallyesoft.util.converters;
 import android.database.Cursor;
 import android.util.Log;
 
-import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
@@ -85,7 +85,7 @@ public class CursorConverters {
 				try {
 					res = Serialization.getJsonInstance().readValue(addRes, new TypeReference<List<AdditionalResource>>() {
 					});
-				} catch (JsonParseException e) {
+				} catch (JsonProcessingException e) {
 					Log.e("CursorConverters", "Could not read additional resources: "+ addRes, e);
 				}
 			}
