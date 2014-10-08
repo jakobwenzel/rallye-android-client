@@ -130,6 +130,12 @@ public class Server extends AuthProvider {
 			Log.e(THIS, "Failed to save Server", e);
 		}
 
+		//TODO move this to the constructors of Manager's and make it conditional on sth. like Server.getCurrentServer().isChatInitialized() //requires additional saving to config, so to much work for now
+		server.acquireChatManager(server).forceRefreshChatrooms();
+		server.releaseChatManager(server);
+		server.acquireTaskManager(server).forceRefresh();
+		server.releaseTaskManager(server);
+
 		notifyCurrentServerChanged();
 	}
 
@@ -358,8 +364,6 @@ public class Server extends AuthProvider {
 				setUserAuth(userAuth);
 				setUserName(loginInfo.name);
 				notifyLoginSuccessful();
-				acquireChatManager(this).forceRefreshChatrooms();
-				releaseChatManager(this);
 			}
 
 			@Override

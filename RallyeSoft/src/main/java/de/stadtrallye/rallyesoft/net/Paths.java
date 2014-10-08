@@ -51,6 +51,7 @@ public final class Paths {
 	public static final String MAP = "/games/map";
 	public static final String PIC_WITH_HASH = PICS + "/{" + PARAM_HASH + "}";
 	public static final String PICS_PREVIEW = PIC_WITH_HASH + "/preview";
+	public static final String REPORT_LOCTION = "games/rallye/location";
 
 
 	/**

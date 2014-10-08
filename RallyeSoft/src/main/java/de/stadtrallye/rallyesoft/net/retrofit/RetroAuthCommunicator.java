@@ -19,6 +19,8 @@
 
 package de.stadtrallye.rallyesoft.net.retrofit;
 
+import android.location.Location;
+
 import java.util.List;
 
 import de.rallye.model.structures.GroupUser;
@@ -29,6 +31,7 @@ import de.rallye.model.structures.PostChat;
 import de.rallye.model.structures.PostSubmission;
 import de.rallye.model.structures.Submission;
 import de.rallye.model.structures.Task;
+import de.rallye.model.structures.TaskSubmissions;
 import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.chat.Chatroom;
 import de.stadtrallye.rallyesoft.net.Paths;
@@ -74,7 +77,7 @@ public interface RetroAuthCommunicator {
 	void getSubmissionsForTask(@Path(Paths.PARAM_TASK_ID) int taskID, Callback<List<Submission>> callback);
 
 	@GET(Paths.TASKS_SUBMISSIONS_ALL)
-	void getAllSubmissionsForGroup(Callback<List<Submission>> callback);
+	void getAllSubmissionsForGroup(Callback<List<TaskSubmissions>> callback);
 
 	@PUT(Paths.CHATROOM_CHATS)
 	void postMessage(@Path(Paths.PARAM_CHATROOM_ID) int chatroomID, @Body PostChat message, Callback<ChatEntry> callback);
@@ -87,4 +90,7 @@ public interface RetroAuthCommunicator {
 
 	@PUT(Paths.PIC_WITH_HASH)
 	Picture uploadPicture(@Path(Paths.PARAM_HASH) String hash, @Body TypedOutput picture);
+
+	@PUT(Paths.REPORT_LOCTION)
+	Response sendCurrentLocation(Location location);
 }

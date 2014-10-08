@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.geolocation.LocationManager;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
@@ -69,6 +70,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	private int taskID;
 	private ITaskManager taskManager;
 	private PictureManager pictureManager;
+	private LocationManager locationManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -146,17 +148,24 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 					requestPicture();
 				}
 			});
+
+		locationManager = new LocationManager(this);
 	}
 
 	@Override
 	protected void onStart() {
 		super.onStart();
 
+		locationManager.connect();
+		locationManager.startBurstLocating();
+
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
+
+		locationManager.disconnect();
 	}
 
 	@Override
@@ -183,7 +192,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.send_menu:
-				Intent result = new Intent();
+				Intent result = new Intent();//TODO this intent is outdated and not used
 				if (picture != null)
 					result.putExtra(Std.PIC, picture.getHash());
 				String text = editText.getText().toString();
@@ -197,7 +206,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 				}
 				setResult(RESULT_OK, result);
 
-				taskManager.submitSolution(taskID, type, picture, text, intNumber);
+				taskManager.submitSolution(taskID, type, picture, text, intNumber, locationManager.getLastLocation());
 				finish();
 				return true;
 			case android.R.id.home: //Up button
@@ -227,6 +236,8 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 
 		Server.getCurrentServer().acquireTaskManager(this);
 		Storage.releaseStorage(this);
+
+		locationManager = null;
 	}
 
 	private void requestPicture() {

@@ -20,7 +20,10 @@
 package de.stadtrallye.rallyesoft.model.tasks;
 
 import android.database.Cursor;
+import android.location.Location;
 
+import de.rallye.model.structures.PushPrimarySubmissionConfig;
+import de.rallye.model.structures.PushSubmission;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
@@ -47,7 +50,7 @@ public interface ITaskManager {
 
 	ITask getTaskFromCursor(Cursor cursor);
 
-	void submitSolution(int taskID, int type, IPictureManager.IPicture picture, String text, Integer number) throws NoServerKnownException;
+	void submitSolution(int taskID, int type, IPictureManager.IPicture picture, String text, Integer number, Location lastLocation) throws NoServerKnownException;
 
 	void addListener(ITasksListener l);
 	void removeListener(ITasksListener l);
@@ -73,6 +76,10 @@ public interface ITaskManager {
 	Cursor getTasksCursor();
 
 	int getLocationSpecificTasksCount();
+
+	void pushSubmission(PushSubmission submission);
+
+	void pushActiveSubmission(PushPrimarySubmissionConfig primary);
 
 	/**
 	 * Callbacks

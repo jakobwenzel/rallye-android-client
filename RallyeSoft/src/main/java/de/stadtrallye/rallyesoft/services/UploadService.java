@@ -233,7 +233,7 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 				listener.getCallbackHandler().post(new Runnable() {
 					@Override
 					public void run() {
-						listener.onQueueChange();
+						listener.onUploadStatusChange();
 					}
 				});
 		}
@@ -270,6 +270,10 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 			initReport(picture, biteSize);
 			long fileSize = -1;
 			try {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+					// Check for the freshest data.
+					getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+				}
 				AssetFileDescriptor fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
 				fileSize = fileDescriptor.getDeclaredLength();//TODO report as indeterminate progress if length unknown
 				fileInputStream = fileDescriptor.createInputStream();

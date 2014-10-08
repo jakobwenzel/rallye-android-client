@@ -30,11 +30,15 @@ import java.io.IOException;
 
 import de.rallye.model.structures.PushChatEntry;
 import de.rallye.model.structures.PushEntity;
+import de.rallye.model.structures.PushPrimarySubmissionConfig;
+import de.rallye.model.structures.PushSubmission;
+import de.stadtrallye.rallyesoft.geolocation.LocationManager;
 import de.stadtrallye.rallyesoft.model.AndroidNotificationManager;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.chat.ChatEntry;
 import de.stadtrallye.rallyesoft.model.chat.IChatManager;
 import de.stadtrallye.rallyesoft.model.chat.IChatroom;
+import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import de.wirsch.gcm.GcmBaseIntentService;
 
@@ -44,12 +48,14 @@ public class GcmIntentService extends GcmBaseIntentService {
 
 	private IChatManager chatManager;
 	private AndroidNotificationManager notificationManager;
+	private ITaskManager taskManager;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
 		chatManager = Server.getCurrentServer().acquireChatManager(this);
+		taskManager = Server.getCurrentServer().acquireTaskManager(this);
 		notificationManager = AndroidNotificationManager.getInstance(getApplicationContext());
 	}
 
@@ -72,6 +78,22 @@ public class GcmIntentService extends GcmBaseIntentService {
 					chat = mapper.readValue(message.getString(PushEntity.PAYLOAD), new TypeReference<PushChatEntry<ChatEntry>>(){});
 					chatroom = chatManager.findChatroom(chat.roomID);
 					chatroom.editChat(chat.entry);
+					break;
+				case newSubmission:
+					PushSubmission submission = mapper.readValue(message.getString(PushEntity.PAYLOAD), PushSubmission.class);
+					taskManager.pushSubmission(submission);
+					break;
+				case setPrimarySubmission:
+					PushPrimarySubmissionConfig primary = mapper.readValue(message.getString(PushEntity.PAYLOAD), PushPrimarySubmissionConfig.class);
+					taskManager.pushActiveSubmission(primary);
+				case refreshTasks:
+					taskManager.forceRefresh();
+					break;
+				case refreshChatrooms:
+					chatManager.forceRefreshChatrooms();
+					break;
+				case pingLocation:
+					new LocationManager(this, true);
 					break;
 				default:
 			}
@@ -108,6 +130,7 @@ public class GcmIntentService extends GcmBaseIntentService {
 	@Override
 	public void onDestroy() {
 		Server.getCurrentServer().releaseChatManager(this);
+		Server.getCurrentServer().releaseTaskManager(this);
 
 		super.onDestroy();
 	}

@@ -19,9 +19,11 @@
 
 package de.stadtrallye.rallyesoft.model.tasks;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.location.Location;
 import android.os.Handler;
 import android.util.Log;
 import android.util.LruCache;
@@ -29,15 +31,16 @@ import android.util.LruCache;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.rallye.model.structures.PostSubmission;
+import de.rallye.model.structures.PushPrimarySubmissionConfig;
+import de.rallye.model.structures.PushSubmission;
 import de.rallye.model.structures.Submission;
+import de.rallye.model.structures.TaskSubmissions;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
-import de.stadtrallye.rallyesoft.storage.db.DatabaseHelper;
 import de.stadtrallye.rallyesoft.util.converters.CursorConverters;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import retrofit.Callback;
@@ -45,6 +48,8 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.EDIT_TASKS;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Submissions;
+import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.Tasks;
 import static de.stadtrallye.rallyesoft.storage.db.DatabaseHelper.strStr;
 
 /**
@@ -87,7 +92,8 @@ public class TaskManager implements ITaskManager {
 
 	@Override
 	public void forceRefresh() throws NoServerKnownException {
-		getDb().delete(DatabaseHelper.Tasks.TABLE, null, null);
+		getDb().delete(Tasks.TABLE, null, null);
+		getDb().delete(Submissions.TABLE, null, null);
 
 		update();
 	}
@@ -100,7 +106,7 @@ public class TaskManager implements ITaskManager {
 		comm.getTasks(new Callback<List<de.rallye.model.structures.Task>>() {
 			@Override
 			public void success(List<de.rallye.model.structures.Task> tasks, Response response) {
-				updateDatabase(tasks);
+				writeTasks(tasks);
 				notifyTaskUpdate();
 			}
 
@@ -110,6 +116,31 @@ public class TaskManager implements ITaskManager {
 				//TODO Server.getServer().commFailed(e);
 			}
 		});
+		comm.getAllSubmissionsForGroup(new Callback<List<TaskSubmissions>>() {
+			@Override
+			public void success(List<TaskSubmissions> taskSubmissions, Response response) {
+				writeSubmissions(taskSubmissions);
+			}
+
+			@Override
+			public void failure(RetrofitError e) {
+				Log.e(THIS, "Submissions Update failed", e);
+				//TODO Server.getServer().commFailed(e);
+			}
+		});
+	}
+
+	private void writeSubmissions(List<TaskSubmissions> taskSubmissions) {
+		ContentValues insert = new ContentValues();
+		SQLiteDatabase db = getDb();
+
+		for(TaskSubmissions taskSubmissions1 : taskSubmissions) {
+			int taskID = taskSubmissions1.taskID;
+			for (Submission submission : taskSubmissions1.submissions) {
+				fillInsert(submission, insert, taskID);
+				db.insertWithOnConflict(Submissions.TABLE, null, insert, SQLiteDatabase.CONFLICT_REPLACE);
+			}
+		}
 	}
 
 	@Override
@@ -117,12 +148,12 @@ public class TaskManager implements ITaskManager {
 		synchronized (tasksCache) {
 			de.stadtrallye.rallyesoft.model.tasks.Task task = tasksCache.get(taskID);
 			if (task == null) {
-				Cursor c = getDb().query(DatabaseHelper.Tasks.TABLE,
-						new String[]{DatabaseHelper.Tasks.KEY_ID + " AS _id", DatabaseHelper.Tasks.KEY_NAME, DatabaseHelper.Tasks.KEY_DESCRIPTION,
-								DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC, DatabaseHelper.Tasks.KEY_LAT, DatabaseHelper.Tasks.KEY_LON,
-								DatabaseHelper.Tasks.KEY_RADIUS, DatabaseHelper.Tasks.KEY_MULTIPLE, DatabaseHelper.Tasks.KEY_SUBMIT_TYPE,
-								DatabaseHelper.Tasks.KEY_POINTS, DatabaseHelper.Tasks.KEY_ADDITIONAL_RESOURCES, DatabaseHelper.Tasks.KEY_SUBMITS},
-						DatabaseHelper.Tasks.KEY_ID + "=" + taskID, null, null, null, DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC + " DESC");
+				Cursor c = getDb().query(Tasks.TABLE,
+						new String[]{Tasks.KEY_ID + " AS _id", Tasks.KEY_NAME, Tasks.KEY_DESCRIPTION,
+								Tasks.KEY_LOCATION_SPECIFIC, Tasks.KEY_LAT, Tasks.KEY_LON,
+								Tasks.KEY_RADIUS, Tasks.KEY_MULTIPLE, Tasks.KEY_SUBMIT_TYPE,
+								Tasks.KEY_POINTS, Tasks.KEY_ADDITIONAL_RESOURCES, Tasks.KEY_SUBMITS},
+						Tasks.KEY_ID + "=" + taskID, null, null, null, Tasks.KEY_LOCATION_SPECIFIC + " DESC");
 				c.moveToFirst();
 				task = new de.stadtrallye.rallyesoft.model.tasks.Task(CursorConverters.getTask(c, tIds), this);
 				tasksCache.put(taskID, task);
@@ -167,15 +198,15 @@ public class TaskManager implements ITaskManager {
 		tIds.submits = 11;
 	}
 
-	private void updateDatabase(List<de.rallye.model.structures.Task> tasks) {
+	private void writeTasks(List<de.rallye.model.structures.Task> tasks) {
 		SQLiteDatabase db = getDb();
 
 		db.beginTransaction();
 		try {
-			db.delete(DatabaseHelper.Tasks.TABLE, null, null);
+			db.delete(Tasks.TABLE, null, null);
 
-			SQLiteStatement taskIn = db.compileStatement("INSERT INTO "+ DatabaseHelper.Tasks.TABLE +
-					" ("+ strStr(DatabaseHelper.Tasks.COLS) +") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			SQLiteStatement taskIn = db.compileStatement("INSERT INTO "+ Tasks.TABLE +
+					" ("+ strStr(Tasks.COLS) +") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			//KEY_ID, KEY_NAME, KEY_DESCRIPTION, KEY_LOCATION_SPECIFIC, KEY_LAT, KEY_LON, KEY_RADIUS, KEY_MULTIPLE, KEY_SUBMIT_TYPE, KEY_POINTS, KEY_ADDITIONAL_RESOURCES, KEY_SUBMITS
 
 			for (de.rallye.model.structures.Task t: tasks) {
@@ -265,13 +296,15 @@ public class TaskManager implements ITaskManager {
 	}
 
 	@Override
-	public void submitSolution(final int taskID, int type, IPictureManager.IPicture picture, String text, Integer number) throws NoServerKnownException {
+	public void submitSolution(final int taskID, int type, IPictureManager.IPicture picture, String text, Integer number, Location location) throws NoServerKnownException {
 		checkServerKnown();
 
-		PostSubmission post = new PostSubmission(type, (picture != null)? picture.getHash() : null, number, text);
+		GeoPostSubmission post = new GeoPostSubmission(type, (picture != null)? picture.getHash() : null, number, text, location);
 		comm.postSubmission(taskID, post, new Callback<Submission>() {
 			@Override
 			public void success(Submission submission, Response response) {
+				writeSubmission(submission, taskID);
+
 				de.stadtrallye.rallyesoft.model.tasks.Task task = tasksCache.get(taskID);
 				if (task != null)
 					task.addSubmission(submission);
@@ -340,26 +373,66 @@ public class TaskManager implements ITaskManager {
 	}
 
 	private Cursor getTasksCursor(Boolean locationSpecific) {
-		String cond = (locationSpecific != null)? DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC+"="+ ((locationSpecific)? 1 : 0) : null;
+		String cond = (locationSpecific != null)? Tasks.KEY_LOCATION_SPECIFIC+"="+ ((locationSpecific)? 1 : 0) : null;
 
-		Cursor c = getDb().query(DatabaseHelper.Tasks.TABLE,
-				new String[]{DatabaseHelper.Tasks.KEY_ID + " AS _id", DatabaseHelper.Tasks.KEY_NAME, DatabaseHelper.Tasks.KEY_DESCRIPTION,
-						DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC, DatabaseHelper.Tasks.KEY_LAT, DatabaseHelper.Tasks.KEY_LON,
-						DatabaseHelper.Tasks.KEY_RADIUS, DatabaseHelper.Tasks.KEY_MULTIPLE, DatabaseHelper.Tasks.KEY_SUBMIT_TYPE,
-						DatabaseHelper.Tasks.KEY_POINTS, DatabaseHelper.Tasks.KEY_ADDITIONAL_RESOURCES, DatabaseHelper.Tasks.KEY_SUBMITS},
-				cond, null, null, null, DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC + " DESC");
+		Cursor c = getDb().query(Tasks.TABLE,
+				new String[]{Tasks.KEY_ID + " AS _id", Tasks.KEY_NAME, Tasks.KEY_DESCRIPTION,
+						Tasks.KEY_LOCATION_SPECIFIC, Tasks.KEY_LAT, Tasks.KEY_LON,
+						Tasks.KEY_RADIUS, Tasks.KEY_MULTIPLE, Tasks.KEY_SUBMIT_TYPE,
+						Tasks.KEY_POINTS, Tasks.KEY_ADDITIONAL_RESOURCES, Tasks.KEY_SUBMITS},
+				cond, null, null, null, Tasks.KEY_LOCATION_SPECIFIC + " DESC");
 		Log.i(THIS, "new Cursor: "+ c.getCount() +" rows");
 		return c;
 	}
 
 	@Override
 	public int getLocationSpecificTasksCount() {
-		Cursor c = getDb().query(DatabaseHelper.Tasks.TABLE, new String[]{"count(*)"}, DatabaseHelper.Tasks.KEY_LOCATION_SPECIFIC + "=" + 1, null, null, null, null);
+		Cursor c = getDb().query(Tasks.TABLE, new String[]{"count(*)"}, Tasks.KEY_LOCATION_SPECIFIC + "=" + 1, null, null, null, null);
 		c.moveToFirst();
 		int res = c.getInt(0);
 		c.close();
 
 		return res;
+	}
+
+	@Override
+	public void pushSubmission(PushSubmission push) {
+		Submission submission = push.submission;
+
+		writeSubmission(submission, push.taskID);
+
+		Task task = tasksCache.get(push.taskID);
+		if (task != null) {
+			task.addSubmission(submission);
+		}
+	}
+
+	private void writeSubmission(Submission submission, int taskID) {
+		ContentValues insert = new ContentValues();
+
+		fillInsert(submission, insert, taskID);
+
+		getDb().insertWithOnConflict(Submissions.TABLE, null, insert, SQLiteDatabase.CONFLICT_REPLACE);
+	}
+
+	private void fillInsert(Submission submission, ContentValues insert, int taskID) {
+		insert.put(Submissions.KEY_ID, submission.submissionID);
+		insert.put(Submissions.FOREIGN_TASK, taskID);
+		insert.put(Submissions.KEY_TYPE, submission.submitType);
+		insert.put(Submissions.KEY_PIC, submission.picSubmission);
+		insert.put(Submissions.KEY_INT, submission.intSubmission);
+		insert.put(Submissions.KEY_TEXT, submission.textSubmission);
+		insert.put(Submissions.KEY_TIMESTAMP, submission.timestamp);
+	}
+
+	@Override
+	public void pushActiveSubmission(PushPrimarySubmissionConfig primary) {
+//		getDb().update()//TODO
+
+		Task task = tasksCache.get(primary.taskID);
+		if (task != null) {
+			task.changePrimarySubmission(primary.primarySubmissionID);
+		}
 	}
 
 	public static int findTaskPositionInCursor(int taskID, Cursor cursor, CursorConverters.TaskCursorIds c) {
@@ -384,5 +457,19 @@ public class TaskManager implements ITaskManager {
 	private void checkServerKnown() throws NoServerKnownException {
 		if (comm == null)
 			throw new NoServerKnownException();
+	}
+
+	public List<Submission> readSubmissions(int taskID) {
+		Cursor c = getDb().query(Submissions.TABLE, new String[]{Submissions.KEY_ID, Submissions.KEY_TYPE, Submissions.KEY_PIC, Submissions.KEY_INT, Submissions.KEY_TEXT, Submissions.KEY_TIMESTAMP}, Submissions.FOREIGN_TASK +"=?", new String[]{Integer.toString(taskID)}, null, null, Submissions.KEY_TIMESTAMP+" DESC");
+
+		List<Submission> submissions = new ArrayList<>();
+		while (c.moveToNext()) {
+			Submission submission = new Submission(c.getInt(0), c.getInt(1), c.getString(2), c.getInt(3), c.getString(4), c.getLong(5));
+			submissions.add(submission);
+		}
+
+		c.close();
+
+		return submissions;
 	}
 }

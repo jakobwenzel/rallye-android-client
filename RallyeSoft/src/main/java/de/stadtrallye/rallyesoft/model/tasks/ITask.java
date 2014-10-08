@@ -53,9 +53,17 @@ public interface ITask {
 	 */
 	List<Submission> getSubmissionsCached();
 
+	/**
+	 * Get cached submissions, or read them from Database
+	 * @return always a list, can be empty
+	 */
+	List<Submission> getSubmissions();
+
 	boolean hasLocation();
 
 	double getRadius();
+
+	boolean setPrimarySubmission(Submission submission);
 
 	interface ITaskListener extends IHandlerCallback {
 		void onSubmissionsChanged(List<Submission> submissions);

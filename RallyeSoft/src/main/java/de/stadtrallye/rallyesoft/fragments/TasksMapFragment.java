@@ -46,6 +46,7 @@ import de.rallye.model.structures.MapConfig;
 import de.rallye.model.structures.Node;
 import de.stadtrallye.rallyesoft.R;
 import de.stadtrallye.rallyesoft.common.Std;
+import de.stadtrallye.rallyesoft.geolocation.LocationManager;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.map.IMapManager;
 import de.stadtrallye.rallyesoft.model.tasks.ITask;
@@ -78,6 +79,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 	private TabManager tabManager;
 	private boolean isLayouted;
 	private IMapManager mapManager;
+	private LocationManager locationManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -93,6 +95,7 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 		final Server server = Server.getCurrentServer();
 		taskManager = server.acquireTaskManager(this);
 		mapManager = server.acquireMapManager(this);
+
 	}
 
 	@Override
@@ -124,10 +127,15 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 	public void onStart() {
 		super.onStart();
 
+		locationManager = new LocationManager(getActivity());
+		locationManager.connect();
+		locationManager.startEnergySavingUpdates();
 
 		if (gmap == null) {
 			gmap = getMap();
 			gmap.setMyLocationEnabled(true);
+			gmap.setLocationSource(locationManager);
+			gmap.setOnMyLocationButtonClickListener(locationManager);
 			gmap.setBuildingsEnabled(true);
 //			gmap.setOnMarkerClickListener(this);
 //			gmap.setOnMapClickListener(this);
@@ -167,6 +175,8 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 
 		taskManager.removeListener(this);
 		mapManager.removeListener(this);
+
+		locationManager.disconnect();
 	}
 
 	@Override

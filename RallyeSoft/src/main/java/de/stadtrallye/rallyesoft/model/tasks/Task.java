@@ -41,10 +41,13 @@ public class Task implements ITask {
 
 	private static final String THIS = Task.class.getSimpleName();
 
+	public static final int PRIMARY_NONE = -2;
+
 	private final TaskManager manager;
 	private final de.rallye.model.structures.Task task;
 	private final List<ITaskListener> listeners = new ArrayList<>();
 	private List<Submission> submissions;
+	private int primarySubmission = -2;
 	private final ReadWriteLock submissionsLock = new ReentrantReadWriteLock();
 	private boolean refreshingSubs;
 
@@ -177,6 +180,24 @@ public class Task implements ITask {
 	}
 
 	@Override
+	public List<Submission> getSubmissions() {
+		submissionsLock.readLock().lock();
+		try {
+			if (submissions != null)
+				return submissions;
+		} finally {
+			submissionsLock.readLock().unlock();
+		}
+		submissionsLock.writeLock().lock();
+		try {
+			submissions = manager.readSubmissions(task.taskID);
+			return submissions;
+		} finally {
+			submissionsLock.writeLock().unlock();
+		}
+	}
+
+	@Override
 	public boolean hasLocation() {
 		return task.hasLocation();
 	}
@@ -193,9 +214,42 @@ public class Task implements ITask {
 				submissions = new ArrayList<>();
 			}
 			submissions.add(submission);
+			if (!task.multipleSubmits) {
+				primarySubmission = submission.submissionID;
+			}
 		} finally {
 			submissionsLock.writeLock().unlock();
 		}
+		notifySubmissionsChanged();
+	}
+
+	@Override
+	public boolean setPrimarySubmission(Submission submission) {
+		if (task.multipleSubmits)
+			return false;
+
+		submissionsLock.writeLock().lock();
+		try {
+			if (!submissions.contains(submission))
+				throw new IllegalStateException("Submission does not belong to this task");
+
+			primarySubmission = submission.submissionID;
+		} finally {
+			submissionsLock.writeLock().unlock();
+		}
+
+		notifySubmissionsChanged();
+		return true;
+	}
+
+	void changePrimarySubmission(int primarySubmissionID) {
+		submissionsLock.writeLock().lock();
+		try {
+			primarySubmission = primarySubmissionID;
+		} finally {
+			submissionsLock.writeLock().unlock();
+		}
+
 		notifySubmissionsChanged();
 	}
 }

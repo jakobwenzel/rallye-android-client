@@ -232,7 +232,12 @@ public class PictureManager implements IPictureManager {
 		//Attention: Our RequestCode will not be used for the result, if a jpeg is picked, data.getType will contain image/jpeg, if the picture was just taken with the camera it will be null
 		Intent pickIntent = new Intent();
 		pickIntent.setType("image/jpeg");
-		pickIntent.setAction((Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) ? Intent.ACTION_OPEN_DOCUMENT : Intent.ACTION_GET_CONTENT);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			pickIntent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+			pickIntent.addCategory(Intent.CATEGORY_OPENABLE);
+		} else {
+			pickIntent.setAction(Intent.ACTION_GET_CONTENT);
+		}
 
 		Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -331,6 +336,11 @@ public class PictureManager implements IPictureManager {
 			//It can either be returned with the intent parameter:
 			if (data != null) {
 				uri = data.getData();
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+					final int takeFlags = data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION;
+					// Check for the freshest data.
+					context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
+				}
 				pickedPicture(uri);
 			} else {//else we use the saved value
 				tookPicture();

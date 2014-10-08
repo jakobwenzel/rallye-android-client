@@ -361,7 +361,7 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 		} else if ((requestCode&0xffff) == SubmitNewSolutionActivity.REQUEST_CODE) {
 			Log.i(THIS, "Task Submission");
 			if (resultCode == Activity.RESULT_OK) {
-				Log.i(THIS, "Submitted: "+ data.getExtras());
+//				Log.i(THIS, "Submitted: "+ data.getExtras());
 			}
 		} else {
 			Log.i(THIS, "Received ActivityResult: Req: "+ requestCode +", res: "+ resultCode + ", intent: "+ data);

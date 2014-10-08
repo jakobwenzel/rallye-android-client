@@ -144,7 +144,7 @@ public class TaskDetailsFragment extends Fragment implements AdapterView.OnItemC
 
 		task.addListener(this);
 
-		List<Submission> submissions = task.getSubmissionsCached();
+		List<Submission> submissions = task.getSubmissions();
 		if (submissions != null) {
 			submissionAdapter.changeList(submissions);
 		} else {
