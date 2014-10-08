@@ -158,6 +158,13 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 		send.setOnClickListener(this);
 		list.setOnItemClickListener(this);
 		list.setOnScrollListener(this);
+		chosen_picture.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				pictureHandler.discardPicture();
+				loadImagePreview();
+			}
+		});
 
 		return v;
 	}
@@ -296,17 +303,18 @@ public class ChatroomFragment extends Fragment implements IChatroom.IChatroomLis
 	@Override
 	public void onClick(View v) {
 		Editable msg = text.getText();
-		PictureManager.Picture pic = null;//TODO get picture
+		IPictureManager.IPicture pic = pictureHandler.getPicture();
         if (pic != null || msg.length() > 0 ) {
 			chatroom.postChat(msg.toString(), pic);
+			pictureHandler.discardPicture();//TODO wait for postState result...
 		}
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.i(THIS, "Received onActivityResult callback in Fragment!!");
-		pictureManager.onActivityResult(requestCode, resultCode, data);//TODO android cannot find this fragment since it is not registered under its former id (yet / if any) |if it works remember picture
-	}
+//	@Override
+//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+//		Log.i(THIS, "Received onActivityResult callback in Fragment!!");
+//		pictureManager.onActivityResult(requestCode, resultCode, data);//TODO android cannot find this fragment since it is not registered under its former id (yet / if any) |if it works remember picture
+//	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {

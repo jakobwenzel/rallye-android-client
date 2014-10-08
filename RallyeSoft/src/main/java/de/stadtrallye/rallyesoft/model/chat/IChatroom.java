@@ -27,7 +27,7 @@ import de.rallye.model.structures.PostChat;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.IHandlerCallback;
 import de.stadtrallye.rallyesoft.model.pictures.IPictureGallery;
-import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.uimodel.INotificationManager;
 
 /**
@@ -99,7 +99,7 @@ public interface IChatroom {
 	 * @param picture reference to the picture, will be marked as confirmed
 	 * @return a unique id, with which to identify the status of the chat
 	 */
-	PostChat postChat(String msg, PictureManager.Picture picture) throws NoServerKnownException;
+	PostChat postChat(String msg, IPictureManager.IPicture picture) throws NoServerKnownException;
 
 	/**
 	 * Manually add a chat (e.g. Received via Push)

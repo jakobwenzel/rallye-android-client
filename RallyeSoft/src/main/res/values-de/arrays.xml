@@ -28,4 +28,9 @@
 		<item>Samstag</item>
 		<item>Sonntag</item>
 	</string-array>
+	<string-array name="pictureSizes">
+		<item>Klein</item>
+		<item>Standard</item>
+		<item>Original</item>
+	</string-array>
 </resources>

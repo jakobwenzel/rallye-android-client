@@ -40,23 +40,26 @@ import retrofit.client.Response;
  * Created by Ramon on 08.10.2014.
  */
 public class LocationManager implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationSource, GoogleMap.OnMyLocationButtonClickListener, LocationListener {
+	private final Mode mode;
+
+	public enum Mode {ENERGY_SAVING, BURST, PING}
+
 	private static final int CONNECTION_FAILURE_RESOLUTION_REQUEST = 7846;
 	private static final String THIS = LocationManager.class.getSimpleName();
 	private final LocationClient locationClient;
 	private final Context context;
-	private final boolean sendLocation;
 	private OnLocationChangedListener mapsListener;
 
 	public LocationManager(Context applicationContext) {
-		this(applicationContext, false);
+		this(applicationContext, Mode.ENERGY_SAVING);
 	}
 
-	public LocationManager(Context applicationContext, boolean sendLocation) {
+	public LocationManager(Context applicationContext, Mode mode) {
 		this.context = applicationContext;
 		locationClient = new LocationClient(applicationContext, this, this);
-		this.sendLocation = sendLocation;
+		this.mode = mode;
 
-		if (sendLocation) {
+		if (mode == Mode.PING) {
 			connect();
 		}
 	}
@@ -65,8 +68,12 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 	public void onConnected(Bundle bundle) {
 		Log.i(THIS, "Connected to Play Geo services");
 //		Toast.makeText(context, "connected to Play Geo Services", Toast.LENGTH_SHORT).show();
-		if (sendLocation) {
+		if (mode == Mode.PING) {
 			startPingLocating();
+		} else if (mode == Mode.ENERGY_SAVING) {
+			startEnergySavingUpdates();
+		} else if (mode == Mode.BURST) {
+			startBurstLocating();
 		}
 	}
 
@@ -77,7 +84,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		locationClient.requestLocationUpdates(request, this);
 	}
 
-	public void startEnergySavingUpdates() {
+	private void startEnergySavingUpdates() {
 		LocationRequest request = new LocationRequest();
 		request.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
 		request.setInterval(5000);
@@ -86,7 +93,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		locationClient.requestLocationUpdates(request, this);
 	}
 
-	public void startBurstLocating() {
+	private void startBurstLocating() {
 		LocationRequest request = new LocationRequest();
 		request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 		request.setFastestInterval(100);
@@ -95,7 +102,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		locationClient.requestLocationUpdates(request, this);
 	}
 
-	public void stopAllUpdates() {
+	private void stopAllUpdates() {
 		locationClient.removeLocationUpdates(this);
 	}
 
@@ -155,7 +162,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		return false;// false means map will follow location
 	}
 
-	public void startGoogleMapLocating() {
+	private void startGoogleMapLocating() {
 		LocationRequest request = new LocationRequest();
 		request.setExpirationDuration(10000);
 		request.setFastestInterval(500);
@@ -166,7 +173,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 
 	@Override
 	public void onLocationChanged(Location location) {
-		if (sendLocation) {
+		if (mode == Mode.PING) {
 			Response response = Server.getCurrentServer().getAuthCommunicator().sendCurrentLocation(location);
 
 			Log.i(THIS, "Sent location to server: "+ response);

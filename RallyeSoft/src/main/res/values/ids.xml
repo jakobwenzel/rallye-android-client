@@ -27,4 +27,5 @@
 	<item name="resize_menu" type="id"/>
 	<item name="submit_menu" type="id"/>
 	<item name="send_menu" type="id"/>
+	<item name="menu_retry" type="id" />
 </resources>

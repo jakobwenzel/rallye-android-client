@@ -42,8 +42,8 @@ import de.rallye.model.structures.PostChat;
 import de.stadtrallye.rallyesoft.exceptions.NoServerKnownException;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.pictures.IPictureGallery;
+import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.model.pictures.PictureGallery;
-import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.net.retrofit.RetroAuthCommunicator;
 import de.stadtrallye.rallyesoft.storage.IDbProvider;
 import de.stadtrallye.rallyesoft.storage.Storage;
@@ -188,10 +188,12 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 	}
 
 	@Override
-	public PostChat postChat(String msg, PictureManager.Picture picture) throws NoServerKnownException {
+	public PostChat postChat(String msg, IPictureManager.IPicture picture) throws NoServerKnownException {
 		checkServerKnown();
 
-		picture.confirm();
+		if (picture != null) {
+			picture.confirm();
+		}
 		PostChat post = queuePost(new PostChat(msg, (picture!=null)? picture.getHash() : null));
 
 		return post;
@@ -344,6 +346,9 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		comm.postMessage(chatroomID, post, new PostChatCallback(post));
 
 		Log.e(THIS, "Post failed: "+ post, e);
+		synchronized (postQueue) {
+			postQueue.remove(post);
+		}
 
 		notifyPostChange(post, PostState.Failure);
 	}
@@ -516,6 +521,11 @@ public class Chatroom extends de.rallye.model.structures.Chatroom implements ICh
 		getDb().insert(DatabaseHelper.Chats.TABLE, null, insert);
 
 		setLast(chat.timestamp, chat.chatID);
+
+		checkForNewUsers();
+		checkForNewGroups();
+
+		notifyChatsChanged();
 	}
 
 	@Override

@@ -93,7 +93,7 @@ public class GcmIntentService extends GcmBaseIntentService {
 					chatManager.forceRefreshChatrooms();
 					break;
 				case pingLocation:
-					new LocationManager(this, true);
+					new LocationManager(this, LocationManager.Mode.PING);
 					break;
 				default:
 			}

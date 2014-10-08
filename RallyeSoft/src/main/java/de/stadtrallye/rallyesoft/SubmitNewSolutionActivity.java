@@ -149,7 +149,7 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 				}
 			});
 
-		locationManager = new LocationManager(this);
+		locationManager = new LocationManager(this, LocationManager.Mode.BURST);
 	}
 
 	@Override
@@ -157,7 +157,6 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 		super.onStart();
 
 		locationManager.connect();
-		locationManager.startBurstLocating();
 
 	}
 

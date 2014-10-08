@@ -127,9 +127,8 @@ public class TasksMapFragment extends SupportMapFragment implements GoogleMap.On
 	public void onStart() {
 		super.onStart();
 
-		locationManager = new LocationManager(getActivity());
+		locationManager = new LocationManager(getActivity(), LocationManager.Mode.ENERGY_SAVING);
 		locationManager.connect();
-		locationManager.startEnergySavingUpdates();
 
 		if (gmap == null) {
 			gmap = getMap();

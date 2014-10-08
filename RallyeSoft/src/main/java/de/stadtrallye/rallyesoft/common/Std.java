@@ -87,4 +87,5 @@ public class Std {
 	public static final String LATE_INITIALIZATION = "late_initialization";
 	public static final String SIZE = "size";
 	public static final String POSITION = "position";
+	public static final String UPLOADER_RESET = "uploader_reset";
 }

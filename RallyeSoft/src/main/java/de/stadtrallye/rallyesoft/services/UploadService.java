@@ -270,7 +270,7 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 			initReport(picture, biteSize);
 			long fileSize = -1;
 			try {
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && picture.getUri().startsWith("content://")) {
 					// Check for the freshest data.
 					getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 				}

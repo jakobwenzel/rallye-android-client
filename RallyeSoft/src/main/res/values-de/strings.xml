@@ -142,5 +142,6 @@
 	<string name="upload_pictures_slow_summary">Erlauben von Uploads über langsame Verbindungen wie GPRS oder Edge</string>
 	<string name="upload_small_version">Upload von Vorabansichten</string>
 	<string name="upload_small_version_summary">Über Handynetz wird nur eine verkleinerte Version der bilder hochgeladen</string>
+	<string name="retry">Login erneut versuchen</string>
 
 </resources>

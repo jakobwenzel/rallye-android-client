@@ -28,6 +28,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -42,6 +44,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import java.util.ArrayList;
 import java.util.Queue;
 
+import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
 import de.stadtrallye.rallyesoft.services.UploadService;
 import de.stadtrallye.rallyesoft.threading.Threading;
@@ -98,6 +101,29 @@ public class UploadOverviewActivity extends FragmentActivity implements ServiceC
 	public void onServiceDisconnected(ComponentName name) {
 		uploadService = null;
 
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+
+		MenuItem retry = menu.add(Menu.NONE, R.id.menu_retry, Menu.NONE, R.string.retry);
+
+
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.menu_retry:
+				Intent intent = new Intent(this, UploadService.class);
+				intent.putExtra(Std.UPLOADER_RESET, true);
+				startService(intent);
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 }
 
