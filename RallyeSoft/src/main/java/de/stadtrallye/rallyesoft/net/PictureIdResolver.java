@@ -36,6 +36,9 @@ public class PictureIdResolver implements Serializable {
 	}
 
 	public String resolvePictureID(String hash, PictureSize size) {
+		if (size == PictureSize.Standard) {
+			size = null;
+		}
 		return base + Paths.getPic(hash, size);
 	}
 }

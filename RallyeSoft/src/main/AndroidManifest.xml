@@ -20,8 +20,8 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="de.stadtrallye.rallyesoft"
-	android:versionCode="20"
-	android:versionName="0.5">
+	android:versionCode="22"
+	android:versionName="0.5.1">
 
 	<uses-feature android:glEsVersion="0x00020000" android:required="true" />
 

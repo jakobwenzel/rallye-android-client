@@ -58,7 +58,7 @@
 	<string name="invalid_url">Ungültige Adresse</string>
 	<string name="invalid_server">Kein Server erreichbar</string>
 	<string name="invalid_login">Ungültiger Login</string>
-	<string name="finish">Beenden</string>
+	<string name="finish">Abschließen</string>
 	<string name="assistant_choose_server">Rallye-Server angeben</string>
 	<string name="test_server">Verbindung testen</string>
 	<string name="assistant_choose_name">Benutzername</string>
@@ -143,5 +143,6 @@
 	<string name="upload_small_version">Upload von Vorabansichten</string>
 	<string name="upload_small_version_summary">Über Handynetz wird nur eine verkleinerte Version der bilder hochgeladen</string>
 	<string name="retry">Login erneut versuchen</string>
+	<string name="no_valid_login">Kein gültiger Login erkannt</string>
 
 </resources>

@@ -91,6 +91,6 @@ public interface RetroAuthCommunicator {
 	@PUT(Paths.PIC_WITH_HASH)
 	Picture uploadPicture(@Path(Paths.PARAM_HASH) String hash, @Body TypedOutput picture);
 
-	@PUT(Paths.REPORT_LOCTION)
-	Response sendCurrentLocation(Location location);
+	@PUT(Paths.REPORT_LOCATION)
+	void sendCurrentLocation(@Body Location location, Callback<Response> callback);
 }

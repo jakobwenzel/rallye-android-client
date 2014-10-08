@@ -254,7 +254,7 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 			fastForward = true;
 		} catch (Exception e) {
 			Log.e(THIS, "Could not deserialize ServerLogin from JSON", e);
-			Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, getString(R.string.no_valid_login), Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -271,8 +271,8 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		if (requestCode == IntentIntegrator.REQUEST_CODE) {
 			IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 			if (scanResult == null) return;
-
-			readServerLoginJSON(scanResult.getContents());
+			if (resultCode == Activity.RESULT_OK && scanResult.getContents() != null)
+				readServerLoginJSON(scanResult.getContents());
 		}
 	}
 

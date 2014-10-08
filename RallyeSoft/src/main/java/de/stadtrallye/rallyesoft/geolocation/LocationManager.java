@@ -34,6 +34,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.LocationSource;
 
 import de.stadtrallye.rallyesoft.model.Server;
+import retrofit.Callback;
+import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 /**
@@ -142,7 +144,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 	}
 
 	public void disconnect() {
-//		locationClient.removeLocationUpdates(this);//TODO right now there are now updates to intents, when they are we cannot cancel here // is this neccessary?
+//		locationClient.removeLocationUpdates(this);//TODO right now there are now updates to intents, when they are we cannot cancel here // is this necessary?
 		locationClient.disconnect();
 	}
 
@@ -174,9 +176,17 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 	@Override
 	public void onLocationChanged(Location location) {
 		if (mode == Mode.PING) {
-			Response response = Server.getCurrentServer().getAuthCommunicator().sendCurrentLocation(location);
+			Server.getCurrentServer().getAuthCommunicator().sendCurrentLocation(location, new Callback<Response>() {
+				@Override
+				public void success(Response response, Response response2) {
+					Log.d(THIS, "Sent location");
+				}
 
-			Log.i(THIS, "Sent location to server: "+ response);
+				@Override
+				public void failure(RetrofitError error) {
+					Log.e(THIS, "could not send location", error);
+				}
+			});
 
 			disconnect();
 			return;

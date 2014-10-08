@@ -51,7 +51,7 @@ public final class Paths {
 	public static final String MAP = "/games/map";
 	public static final String PIC_WITH_HASH = PICS + "/{" + PARAM_HASH + "}";
 	public static final String PICS_PREVIEW = PIC_WITH_HASH + "/preview";
-	public static final String REPORT_LOCTION = "games/rallye/location";
+	public static final String REPORT_LOCATION = "/games/rallye/location";
 
 
 	/**
@@ -61,7 +61,11 @@ public final class Paths {
 	 * @return a RallyeServer compliant relative path (without the base URL)
 	 */
 	public static String getPic(String hash, PictureSize size) {
-		return PICS +"/"+ hash +"/"+ size.toShortString();
+		if (size == null) {
+			return PICS +"/"+ hash;
+		} else {
+			return PICS + "/" + hash + "/" + size.toShortString();
+		}
 	}
 
 	public static final String SNIPPET_AVATAR = "avatar";

@@ -147,5 +147,6 @@
 	<string name="picture_no_x">Picture No %d</string>
 	<string name="unknown">Unknown</string>
 	<string name="submission">Submission</string>
+	<string name="no_valid_login">No valid login found</string>
 
 </resources>
