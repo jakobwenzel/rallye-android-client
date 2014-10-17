@@ -17,7 +17,7 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.application'// cannot be loaded using plugins{} because it is already on the classpath
 
 repositories {
 	maven { url "http://dl.bintray.com/populov/maven" }// ViewPagerIndicator
@@ -39,12 +39,14 @@ dependencies {
 
 android {
 
-	compileSdkVersion 19
-	buildToolsVersion '20'
+	compileSdkVersion rootProject.ext.compileSdkVersion
+	buildToolsVersion rootProject.ext.buildToolsVersion
 
 	defaultConfig {
 		minSdkVersion 15
 		targetSdkVersion 19
+		//versionCode xx
+		//versionName "x.x"
 	}
 
 	packagingOptions {

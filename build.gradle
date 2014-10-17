@@ -30,3 +30,8 @@ buildscript {
 plugins {
   id 'com.github.ben-manes.versions' version '0.5'
 }
+
+ext {
+	compileSdkVersion  = 19
+	buildToolsVersion = '20.0.0'
+}
