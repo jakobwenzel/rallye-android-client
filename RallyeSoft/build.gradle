@@ -17,6 +17,14 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+
+
+
+
+
+
 apply plugin: 'com.android.application'// cannot be loaded using plugins{} because it is already on the classpath
 
 repositories {
