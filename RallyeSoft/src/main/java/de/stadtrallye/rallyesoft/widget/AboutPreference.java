@@ -40,6 +40,7 @@ public class AboutPreference extends DialogPreference {
 		setDialogIcon(R.drawable.ic_launcher);
 		setPositiveButtonText(android.R.string.ok);
 		setDialogLayoutResource(R.layout.about_fragment);
+
 	}
 
 	@Override

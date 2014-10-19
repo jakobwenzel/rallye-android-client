@@ -19,9 +19,15 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="RallyeTheme" parent="@android:style/Theme.Holo.Light.DarkActionBar">
+    <style name="RallyeTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="vpiTitlePageIndicatorStyle">@null</item>
+		<item name="android:dialogTheme">@style/RallyeDialogTheme</item>
+		<item name="android:alertDialogStyle">@style/Theme.AppCompat.Light.Dialog</item>
     </style>
+
+	<style name="RallyeDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+
+	</style>
 
 	<style name="DrawerStyle" parent="android:Widget.Holo.ListView">
 		<item name="android:background">@color/drawer_background</item>

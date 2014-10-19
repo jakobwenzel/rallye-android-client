@@ -132,7 +132,7 @@ public class PictureManager implements IPictureManager {
 		if (! mediaStorageDir.exists()){
 			if (! mediaStorageDir.mkdirs()){
 				Log.e(THIS, "failed to create directory");
-				throw new UnsupportedOperationException("Failed to create directory");
+//				throw new UnsupportedOperationException("Failed to create directory");
 			}
 		}
 

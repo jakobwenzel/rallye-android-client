@@ -19,7 +19,6 @@
 
 package de.stadtrallye.rallyesoft;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
@@ -32,8 +31,9 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,7 +61,7 @@ import de.stadtrallye.rallyesoft.util.converters.Serialization;
  * Activity that hosts an IConnectionAssistant and several Fragments containing the guided login
  * User inputs and server configurations are saved here, so they can be accessed from all pages of the assistant
  */
-public class ConnectionAssistantActivity extends FragmentActivity implements IConnectionAssistant, LoaderManager.LoaderCallbacks<Cursor> {
+public class ConnectionAssistantActivity extends ActionBarActivity implements IConnectionAssistant, LoaderManager.LoaderCallbacks<Cursor> {
 
 	public static final int REQUEST_CODE = 1336;
 	private static final String THIS = ConnectionAssistantActivity.class.getSimpleName();
@@ -79,12 +79,12 @@ public class ConnectionAssistantActivity extends FragmentActivity implements ICo
 		super.onCreate(savedInstanceState);
 
 		// Title and Content
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setTitle(R.string.connection_assistant);
 //		setContentView(R.layout.connection_assistant);
 
-		ActionBar ab = getActionBar();
+		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
 

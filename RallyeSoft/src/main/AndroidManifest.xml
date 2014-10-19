@@ -70,8 +70,7 @@
 		</activity>
 
 		<activity android:name=".ConnectionAssistantActivity"
-				  android:parentActivityName=".MainActivity"
-				  android:theme="@android:style/Theme.Holo.Light.DarkActionBar">
+				  android:parentActivityName=".MainActivity">
 			<meta-data
 					android:name="android.support.PARENT_ACTIVITY"
 					android:value="de.stadtrallye.rallyesoft.MainActivity" />
@@ -83,8 +82,7 @@
 		</activity>
 
 		<activity android:name=".SubmitNewSolutionActivity"
-				  android:parentActivityName=".MainActivity"
-				  android:theme="@android:style/Theme.Holo.Light.DarkActionBar">
+				  android:parentActivityName=".MainActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value="de.stadtrallye.rallyesoft.MainActivity" />
@@ -128,8 +126,7 @@
 		<activity
 			android:name=".PictureGalleryActivity"
 			android:label="@string/image_viewer"
-			android:parentActivityName=".MainActivity"
-			android:theme="@android:style/Theme.Holo">
+			android:parentActivityName=".MainActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value=".MainActivity" />

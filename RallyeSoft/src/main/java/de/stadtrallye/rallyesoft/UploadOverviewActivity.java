@@ -26,7 +26,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -52,7 +52,7 @@ import de.stadtrallye.rallyesoft.threading.Threading;
 /**
  * Created by Ramon on 03.10.2014.
  */
-public class UploadOverviewActivity extends FragmentActivity implements ServiceConnection {
+public class UploadOverviewActivity extends ActionBarActivity implements ServiceConnection {
 
 	private ListView lst_uploads;
 	private UploadService.UploadBinder uploadService;

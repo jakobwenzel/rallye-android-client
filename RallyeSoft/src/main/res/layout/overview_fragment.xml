@@ -19,10 +19,11 @@
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:clickable="true"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:clickable="true"
 	android:padding="8dp">
 
 
@@ -31,6 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="25sp"
+		android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/overview_welcome"
         />
 
@@ -45,6 +47,7 @@
 	<TextView
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
+			tools:text="server name"
 			android:id="@+id/server_name"
 			android:layout_marginTop="8dp"/>
 
@@ -58,6 +61,7 @@
 	<TextView
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
+			tools:text="This should contain a short description of the current server"
 			android:id="@+id/server_desc"
 			android:layout_marginTop="8dp"/>
 
@@ -71,6 +75,7 @@
 	<TextView
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
+			tools:text="server v 1.2.3.4"
 			android:id="@+id/server_ver"
 			android:layout_marginTop="8dp"/>
 
@@ -85,6 +90,7 @@
 		android:id="@+id/server_status"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
+		tools:text="Custom info from server"
 		android:layout_marginTop="8dp"/>
 
 </LinearLayout>

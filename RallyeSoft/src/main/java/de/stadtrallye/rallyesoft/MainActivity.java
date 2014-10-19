@@ -20,7 +20,6 @@
 package de.stadtrallye.rallyesoft;
 
 import android.annotation.TargetApi;
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -30,8 +29,8 @@ import android.content.res.Configuration;
 import android.graphics.drawable.TransitionDrawable;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,11 +61,11 @@ import de.wirsch.gcm.GcmHelper;
 
 import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
 
-public class MainActivity extends FragmentActivity implements IProgressUI, ITabActivity, IPictureHandler, IServer.ICurrentServerListener, SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends ActionBarActivity implements IProgressUI, ITabActivity, IPictureHandler, IServer.ICurrentServerListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
 
-	private ActionBar actionBar;
+	private android.support.v7.app.ActionBar actionBar;
 
 	private boolean progressCircle = false;
 
@@ -89,14 +88,15 @@ public class MainActivity extends FragmentActivity implements IProgressUI, ITabA
 //		android.support.v4.app.FragmentManager.enableDebugLogging(true);
 
 		// Layout, Title, ProgressCircle etc.
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setTitle(R.string.app_name);
 		setContentView(R.layout.main);
 
 		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-		actionBar = getActionBar();
+
+		actionBar = getSupportActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 		actionBar.setDisplayShowTitleEnabled(true);
 		logo = (TransitionDrawable) getResources().getDrawable(R.drawable.transition_logo);

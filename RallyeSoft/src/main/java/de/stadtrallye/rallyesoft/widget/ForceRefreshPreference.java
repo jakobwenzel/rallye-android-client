@@ -55,9 +55,15 @@ public class ForceRefreshPreference extends DialogPreference {
 
 		Storage.aquireStorage(context.getApplicationContext(), this);
 		currentServer = Server.getCurrentServer();
-		chatManager = currentServer.acquireChatManager(this);
-		taskManager = currentServer.acquireTaskManager(this);
-		mapManager = currentServer.acquireMapManager(this);
+		if (currentServer != null) {
+			chatManager = currentServer.acquireChatManager(this);
+			taskManager = currentServer.acquireTaskManager(this);
+			mapManager = currentServer.acquireMapManager(this);
+		} else {
+			chatManager = null;
+			taskManager = null;
+			mapManager = null;
+		}
 
 		setDialogTitle(getTitleRes());
 		setDialogMessage(R.string.confirm_force_refresh);

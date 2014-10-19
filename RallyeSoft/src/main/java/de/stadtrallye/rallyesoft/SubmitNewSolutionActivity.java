@@ -19,10 +19,10 @@
 
 package de.stadtrallye.rallyesoft;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -48,7 +48,7 @@ import de.stadtrallye.rallyesoft.storage.Storage;
 /**
  * Created by Ramon on 04.10.13.
  */
-public class SubmitNewSolutionActivity extends FragmentActivity {
+public class SubmitNewSolutionActivity extends ActionBarActivity {
 
 	public static final int REQUEST_CODE = 7;
 	public static final int PICTURE_REQUEST_SOURCE = -100;
@@ -77,14 +77,14 @@ public class SubmitNewSolutionActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 
 		// Layout, Title, ProgressCircle etc.
-		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setTitle(R.string.submit_new_solution);
 		setContentView(R.layout.submit_new_solution);
 
 //		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-		ActionBar ab = getActionBar();
+		ActionBar ab = getSupportActionBar();
 		ab.setDisplayHomeAsUpEnabled(true);
 		ab.setDisplayShowTitleEnabled(true);
 

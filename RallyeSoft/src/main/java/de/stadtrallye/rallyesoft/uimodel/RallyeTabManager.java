@@ -22,9 +22,9 @@ package de.stadtrallye.rallyesoft.uimodel;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,14 +69,14 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 	public static final int[] menu = {TAB_OVERVIEW, TAB_CHAT, /*TAB_NEXT_MOVE,*/ TAB_TASKS/*, TAB_MAP*/};
 
-	private final FragmentActivity activity;
+	private final ActionBarActivity activity;
 	private Server server;
 	private final ActionBarDrawerToggle drawerToggle;
 	private final DrawerLayout drawerLayout;
 	private final ListView dashboard;
 	private final MenuAdapter dashAdapter;
 
-	public RallyeTabManager(FragmentActivity activity, Server server, DrawerLayout drawerLayout) {
+	public RallyeTabManager(ActionBarActivity activity, Server server, DrawerLayout drawerLayout) {
 		super(activity, activity.getSupportFragmentManager(), R.id.content_frame);
 
 		setDefaultTab(TAB_OVERVIEW);
@@ -85,17 +85,17 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		this.server = server;
 		this.drawerLayout = drawerLayout;
 
-		drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, R.drawable.ic_drawer_light, R.string.menu_drawer_open, R.string.menu_drawer_close) {
+		drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, R.string.menu_drawer_open, R.string.menu_drawer_close) {
 
 			/** Called when a drawer has settled in a completely closed state. */
 			public void onDrawerClosed(View view) {
-				RallyeTabManager.this.activity.getActionBar().setTitle(activeTab.titleId);
+				RallyeTabManager.this.activity.getSupportActionBar().setTitle(activeTab.titleId);
 				RallyeTabManager.this.activity.invalidateOptionsMenu();
 			}
 
 			/** Called when a drawer has settled in a completely open state. */
 			public void onDrawerOpened(View drawerView) {
-				RallyeTabManager.this.activity.getActionBar().setTitle(R.string.dash_menu);
+				RallyeTabManager.this.activity.getSupportActionBar().setTitle(R.string.dash_menu);
 				RallyeTabManager.this.activity.invalidateOptionsMenu();
 //				dashboard.inv
 			}

@@ -22,12 +22,15 @@ package de.stadtrallye.rallyesoft;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.view.Window;
 
 
 public class SettingsActivity extends PreferenceActivity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		requestWindowFeature(Window.FEATURE_ACTION_BAR);
+
 		super.onCreate(savedInstanceState);
 
 		PreferenceManager.setDefaultValues(getBaseContext(), R.xml.preferences, false);

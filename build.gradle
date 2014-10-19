@@ -40,6 +40,6 @@ plugins {
 }
 
 ext {
-	compileSdkVersion  = 19
+	compileSdkVersion  = 21
 	buildToolsVersion = '20.0.0'
 }
