@@ -76,11 +76,11 @@ android {
 	buildTypes {
 		debugSigned {
 			debuggable true
-			jniDebugBuild true
+			jniDebuggable true
 			signingConfig signingConfigs.release
 		}
 		release {
-			runProguard false
+			minifyEnabled false
 			proguardFile getDefaultProguardFile('proguard-android.txt')
 			proguardFile 'proguard.txt'
 			signingConfig signingConfigs.release
