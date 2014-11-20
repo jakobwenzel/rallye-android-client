@@ -31,7 +31,7 @@ buildscript {
 		mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:0.14.2"
+        classpath "com.android.tools.build:gradle:0.14.4"
     }
 }
 
@@ -41,5 +41,5 @@ plugins {
 
 ext {
 	compileSdkVersion  = 21
-	buildToolsVersion = '21.0.1'
+	buildToolsVersion = '21.1.1'
 }
