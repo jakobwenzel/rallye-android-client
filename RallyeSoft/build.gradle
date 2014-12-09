@@ -32,6 +32,8 @@ repositories {
 	mavenCentral()
 }
 
+def gmsVersion = '6.5.87'
+
 dependencies {
 	compile project(':common:RallyeStructures')
 	compile 'com.squareup.retrofit:retrofit:1.8.+'
@@ -43,7 +45,8 @@ dependencies {
 	compile 'com.android.support:support-v4:21.0.2'
 	compile 'com.android.support:appcompat-v7:21.0.2'
 	//compile 'com.android.support:support-v13:21.0.2'
-	compile 'com.google.android.gms:play-services:6.1.+'
+	compile "com.google.android.gms:play-services-maps:$gmsVersion"
+	compile "com.google.android.gms:play-services-location:$gmsVersion"
 }
 
 android {
@@ -81,8 +84,7 @@ android {
 		}
 		release {
 			minifyEnabled false
-			proguardFile getDefaultProguardFile('proguard-android.txt')
-			proguardFile 'proguard.txt'
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.txt'
 			signingConfig signingConfigs.release
 		}
 		debug {

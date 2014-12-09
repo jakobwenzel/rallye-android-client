@@ -26,10 +26,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient;
-import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.LocationSource;
 
@@ -41,14 +41,14 @@ import retrofit.client.Response;
 /**
  * Created by Ramon on 08.10.2014.
  */
-public class LocationManager implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener, LocationSource, GoogleMap.OnMyLocationButtonClickListener, LocationListener {
+public class LocationManager implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationSource, GoogleMap.OnMyLocationButtonClickListener, LocationListener {
 	private final Mode mode;
 
 	public enum Mode {ENERGY_SAVING, BURST, PING}
 
 	private static final int CONNECTION_FAILURE_RESOLUTION_REQUEST = 7846;
 	private static final String THIS = LocationManager.class.getSimpleName();
-	private final LocationClient locationClient;
+	private GoogleApiClient gms;
 	private final Context context;
 	private OnLocationChangedListener mapsListener;
 
@@ -58,7 +58,11 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 
 	public LocationManager(Context applicationContext, Mode mode) {
 		this.context = applicationContext;
-		locationClient = new LocationClient(applicationContext, this, this);
+		GoogleApiClient gms = new GoogleApiClient.Builder(applicationContext)
+				.addConnectionCallbacks(this)
+				.addOnConnectionFailedListener(this)
+				.addApi(LocationServices.API).build();
+
 		this.mode = mode;
 
 		if (mode == Mode.PING) {
@@ -83,7 +87,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		LocationRequest request = new LocationRequest();
 		request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 		request.setNumUpdates(1);
-		locationClient.requestLocationUpdates(request, this);
+		LocationServices.FusedLocationApi.requestLocationUpdates(gms, request, this);
 	}
 
 	private void startEnergySavingUpdates() {
@@ -92,7 +96,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		request.setInterval(5000);
 		request.setFastestInterval(500);
 		request.setSmallestDisplacement(2);
-		locationClient.requestLocationUpdates(request, this);
+		LocationServices.FusedLocationApi.requestLocationUpdates(gms, request, this);
 	}
 
 	private void startBurstLocating() {
@@ -101,15 +105,15 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		request.setFastestInterval(100);
 		request.setInterval(500);
 		request.setExpirationDuration(2000);
-		locationClient.requestLocationUpdates(request, this);
+		LocationServices.FusedLocationApi.requestLocationUpdates(gms, request, this);
 	}
 
 	private void stopAllUpdates() {
-		locationClient.removeLocationUpdates(this);
+		LocationServices.FusedLocationApi.removeLocationUpdates(gms, this);
 	}
 
 	@Override
-	public void onDisconnected() {
+	public void onConnectionSuspended(int cause) {
 		Log.i(THIS, "Disconnected from Play Geo Services");
 //		Toast.makeText(context, "Disconnected to Play Geo Services", Toast.LENGTH_SHORT).show();
 	}
@@ -140,12 +144,12 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 	}
 
 	public void connect() {
-		locationClient.connect();
+		gms.connect();
 	}
 
 	public void disconnect() {
 //		locationClient.removeLocationUpdates(this);//TODO right now there are now updates to intents, when they are we cannot cancel here // is this necessary?
-		locationClient.disconnect();
+		gms.disconnect();
 	}
 
 	@Override
@@ -170,7 +174,7 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 		request.setFastestInterval(500);
 		request.setInterval(1000);
 		request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-		locationClient.requestLocationUpdates(request, this);
+		LocationServices.FusedLocationApi.requestLocationUpdates(gms, request, this);
 	}
 
 	@Override
@@ -198,6 +202,6 @@ public class LocationManager implements GooglePlayServicesClient.ConnectionCallb
 	}
 
 	public Location getLastLocation() {
-		return locationClient.getLastLocation();
+		return LocationServices.FusedLocationApi.getLastLocation(gms);
 	}
 }
