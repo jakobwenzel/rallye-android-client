@@ -17,11 +17,12 @@
   ~ along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
 	<item android:id="@+id/image_level_large"
-		android:showAsAction="collapseActionView"
+		app:showAsAction="collapseActionView"
 		android:title="@string/image_level_large" />
 	<item android:id="@+id/image_level_small"
-		android:showAsAction="collapseActionView"
+		app:showAsAction="collapseActionView"
 		android:title="@string/image_level_small" />
 </menu>

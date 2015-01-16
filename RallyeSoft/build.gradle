@@ -36,15 +36,15 @@ def gmsVersion = '6.5.87'
 
 dependencies {
 	compile project(':common:RallyeStructures')
-	compile 'com.squareup.retrofit:retrofit:1.8.+'
+	compile 'com.squareup.retrofit:retrofit:1.9.+'
 //	compile 'com.squareup.retrofit:converter-jackson:1.6.+'// 1 class, reimplemented by us for better performance and compliance with Smile
-	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.4.+'
+	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.5.+'
 	compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
 	compile 'com.viewpagerindicator:library:2.4.1@aar'
 //	compile 'com.astuetz:pagerslidingtabstrip:1.0.1@aar'
-	compile 'com.android.support:support-v4:21.0.2'
-	compile 'com.android.support:appcompat-v7:21.0.2'
-	//compile 'com.android.support:support-v13:21.0.2'
+	compile 'com.android.support:support-v4:21.0.3'
+	compile 'com.android.support:appcompat-v7:21.0.3'
+	//compile 'com.android.support:support-v13:21.0.3'
 	compile "com.google.android.gms:play-services-maps:$gmsVersion"
 	compile "com.google.android.gms:play-services-location:$gmsVersion"
 }

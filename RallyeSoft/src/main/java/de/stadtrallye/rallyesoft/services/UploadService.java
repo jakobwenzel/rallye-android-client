@@ -19,6 +19,7 @@
 
 package de.stadtrallye.rallyesoft.services;
 
+import android.annotation.TargetApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -272,7 +273,7 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 			try {
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && picture.getUri().startsWith("content://")) {
 					// Check for the freshest data.
-					getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+					persistUriPermissionApi19(uri);
 				}
 				AssetFileDescriptor fileDescriptor = getContentResolver().openAssetFileDescriptor(uri, "r");
 				fileSize = fileDescriptor.getDeclaredLength();//TODO report as indeterminate progress if length unknown
@@ -400,6 +401,11 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 		reportUploadFailure(picture);
 	}
 
+	@TargetApi(19)
+	private void persistUriPermissionApi19(Uri uri) {
+		getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+	}
+
 	private void reportUploadFailure(PictureManager.Picture picture) {
 		notes.notify(NOTE_TAG, R.id.uploader, uploadStatus.notification.setProgress(0, 0, false).setContentTitle(getString(R.string.upload_failed)).build());
 	}
@@ -457,13 +463,22 @@ public class UploadService extends Service implements SharedPreferences.OnShared
 		super.onDestroy();
 
 		if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-			looper.quitSafely();
+			quitLooperApi18(looper);
 		} else {
-			looper.quit();
+			quitLooperApi1(looper);
 		}
 
 		pref.unregisterOnSharedPreferenceChangeListener(this);
 		Storage.releaseStorage(this);
+	}
+
+	private void quitLooperApi1(Looper looper) {
+		looper.quit();
+	}
+
+	@TargetApi(18)
+	private void quitLooperApi18(Looper looper) {
+		looper.quitSafely();
 	}
 
 	@Override

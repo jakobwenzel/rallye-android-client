@@ -19,6 +19,7 @@
 
 package de.stadtrallye.rallyesoft.model.pictures;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -337,9 +338,7 @@ public class PictureManager implements IPictureManager {
 			if (data != null) {
 				uri = data.getData();
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-					final int takeFlags = data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION;
-					// Check for the freshest data.
-					context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
+					takePersistableUriPermissionApi19(data, uri);
 				}
 				pickedPicture(uri);
 			} else {//else we use the saved value
@@ -351,6 +350,13 @@ public class PictureManager implements IPictureManager {
 			Log.v(THIS, "Negative result code");
 			return null;
 		}
+	}
+
+	@TargetApi(19)
+	private void takePersistableUriPermissionApi19(Intent data, Uri uri) {
+		final int takeFlags = data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION;
+		// Check for the freshest data.
+		context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
 	}
 
 
