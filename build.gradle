@@ -31,15 +31,15 @@ buildscript {
 		mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:1.0.1"
+        classpath "com.android.tools.build:gradle:1.1.0"
     }
 }
 
 plugins {
-  id 'com.github.ben-manes.versions' version '0.7'
+  id 'com.github.ben-manes.versions' version '0.8'
 }
 
 ext {
 	compileSdkVersion  = 21
-	buildToolsVersion = '21.1.1'
+	buildToolsVersion = '21.1.2'
 }
