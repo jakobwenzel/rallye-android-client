@@ -354,9 +354,7 @@ public class PictureManager implements IPictureManager {
 
 	@TargetApi(19)
 	private void takePersistableUriPermissionApi19(Intent data, Uri uri) {
-		final int takeFlags = data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION;
-		// Check for the freshest data.
-		context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
+		context.getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 	}
 
 

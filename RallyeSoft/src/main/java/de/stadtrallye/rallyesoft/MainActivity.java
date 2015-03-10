@@ -186,7 +186,7 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 
-		setProgressBarIndeterminateVisibility(false);
+		setSupportProgressBarIndeterminateVisibility(false);
 		tabManager.onPostCreate();
 	}
 
@@ -435,7 +435,7 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 	@Override
 	public void activateProgressAnimation() {
 		progressCircle = true;
-		setProgressBarIndeterminateVisibility(true);
+		setSupportProgressBarIndeterminateVisibility(true);
 	}
 
 	/**
@@ -445,7 +445,7 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 	public void deactivateProgressAnimation() {
 		if (progressCircle) {
 			progressCircle = false;
-			setProgressBarIndeterminateVisibility(false);
+			setSupportProgressBarIndeterminateVisibility(false);
 		}
 	}
 

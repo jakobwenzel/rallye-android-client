@@ -362,7 +362,7 @@ public class ConnectionAssistantActivity extends ActionBarActivity implements IC
 	 */
 	@Override
 	public void activateProgressAnimation() {
-		setProgressBarIndeterminateVisibility(true);
+		setSupportProgressBarIndeterminateVisibility(true);
 	}
 
 	/**
@@ -370,7 +370,7 @@ public class ConnectionAssistantActivity extends ActionBarActivity implements IC
 	 */
 	@Override
 	public void deactivateProgressAnimation() {
-		setProgressBarIndeterminateVisibility(false);
+		setSupportProgressBarIndeterminateVisibility(false);
 	}
 
 }

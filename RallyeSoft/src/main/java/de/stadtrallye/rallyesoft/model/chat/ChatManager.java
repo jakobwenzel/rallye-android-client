@@ -196,6 +196,8 @@ public class ChatManager implements IChatManager {
 			out.add(room);
 		}
 
+		c.close();
+
 		dbProvider.structureChangeHandled(EDIT_CHATS);
 
 		Log.i(THIS, "Read " + out.size() + " Chatrooms");
