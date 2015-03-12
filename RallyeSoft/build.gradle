@@ -42,9 +42,9 @@ dependencies {
 	compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
 	compile 'com.viewpagerindicator:library:2.4.1@aar'
 //	compile 'com.astuetz:pagerslidingtabstrip:1.0.1@aar'
-	compile 'com.android.support:support-v4:21.0.3'
-	compile 'com.android.support:appcompat-v7:21.0.3'
-	//compile 'com.android.support:support-v13:21.0.3'
+	compile 'com.android.support:support-v4:22.0.0'
+	compile 'com.android.support:appcompat-v7:22.0.0'
+	//compile 'com.android.support:support-v13:22.0.0'
 	compile "com.google.android.gms:play-services-maps:$gmsVersion"
 	compile "com.google.android.gms:play-services-location:$gmsVersion"
 }
