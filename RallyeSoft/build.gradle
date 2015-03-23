@@ -32,89 +32,75 @@ repositories {
 	mavenCentral()
 }
 
-def gmsVersion = '6.5.87'
+def gmsVersion = '7.0.0'
 
 dependencies {
 	compile project(':common:RallyeStructures')
 	compile 'com.squareup.retrofit:retrofit:1.9.+'
-//	compile 'com.squareup.retrofit:converter-jackson:1.6.+'// 1 class, reimplemented by us for better performance and compliance with Smile
+	//	compile 'com.squareup.retrofit:converter-jackson:1.6.+'// 1 class, reimplemented by us for better performance and compliance with Smile
 	compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.5.+'
 	compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.+'
 	compile 'com.viewpagerindicator:library:2.4.1@aar'
-//	compile 'com.astuetz:pagerslidingtabstrip:1.0.1@aar'
+	//	compile 'com.astuetz:pagerslidingtabstrip:1.0.1@aar'
 	compile 'com.android.support:support-v4:22.0.0'
 	compile 'com.android.support:appcompat-v7:22.0.0'
 	//compile 'com.android.support:support-v13:22.0.0'
 	compile "com.google.android.gms:play-services-maps:$gmsVersion"
 	compile "com.google.android.gms:play-services-location:$gmsVersion"
+	compile "com.google.android.gms:play-services-gcm:$gmsVersion"
 }
 
 android {
-
 	compileSdkVersion rootProject.ext.compileSdkVersion
 	buildToolsVersion rootProject.ext.buildToolsVersion
-
 	defaultConfig {
-		minSdkVersion 15
+		minSdkVersion 16
 		targetSdkVersion 22
+		resConfigs "en", "de"
 		//versionCode xx
 		//versionName "x.x"
 	}
-
 	packagingOptions {
 		exclude 'META-INF/ASL2.0'
 		exclude 'META-INF/LICENSE'
 		exclude 'META-INF/NOTICE'
 		exclude 'META-INF/services/com.fasterxml.jackson.core.JsonFactory'
 	}
-
 	/*lintOptions {
 		abortOnError false
 	}*/
-
-	signingConfigs {
-		release
+	if (file("$rootProject.projectDir/local/signing.gradle").exists()) {
+		apply from: "$rootProject.projectDir/local/signing.gradle"
+	} else {
+		signingConfigs {
+			release
+		}
 	}
-
 	buildTypes {
 		debugSigned {
+//			shrinkResources true
 			debuggable true
-			jniDebuggable true
+			jniDebuggable false
 			signingConfig signingConfigs.release
 		}
 		release {
-			minifyEnabled false
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard.txt'
+			minifyEnabled true
+			shrinkResources true
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard.txt'
 			signingConfig signingConfigs.release
 		}
 		debug {
+//			shrinkResources true
 			//signingConfig signingConfigs.release
 		}
 	}
-
 	compileOptions {
 		sourceCompatibility JavaVersion.VERSION_1_7
 		targetCompatibility JavaVersion.VERSION_1_7
 	}
-
-	def Properties props = new Properties()
-	def propFile = new File('signing.properties')
-	if (propFile.canRead()) {
-		props.load(new FileInputStream(propFile))
-		if (props != null && props.containsKey('STORE_FILE') && props.containsKey('STORE_PASSWORD') &&
-				props.containsKey('KEY_ALIAS') && props.containsKey('KEY_PASSWORD')) {
-			android.signingConfigs.release.storeFile = file(props['STORE_FILE'])
-			android.signingConfigs.release.storePassword = props['STORE_PASSWORD']
-			android.signingConfigs.release.keyAlias = props['KEY_ALIAS']
-			android.signingConfigs.release.keyPassword = props['KEY_PASSWORD']
-		} else {
-			println 'signing.properties found but some entries are missing'
-			android.buildTypes.release.signingConfig = null
-		}
-	} else {
-		println 'signing.properties not found'
-		android.buildTypes.release.signingConfig = null
-	}
 	dexOptions {
+		incremental false
+	}
+	productFlavors {
 	}
 }

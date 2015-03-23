@@ -36,12 +36,12 @@ import android.widget.LinearLayout;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
+import de.rallye.model.structures.Task;
 import de.stadtrallye.rallyesoft.common.Std;
 import de.stadtrallye.rallyesoft.geolocation.LocationManager;
 import de.stadtrallye.rallyesoft.model.Server;
 import de.stadtrallye.rallyesoft.model.pictures.IPictureManager;
 import de.stadtrallye.rallyesoft.model.pictures.PictureManager;
-import de.stadtrallye.rallyesoft.model.structures.Task;
 import de.stadtrallye.rallyesoft.model.tasks.ITaskManager;
 import de.stadtrallye.rallyesoft.storage.Storage;
 

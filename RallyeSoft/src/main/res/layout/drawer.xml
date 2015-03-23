@@ -19,11 +19,11 @@
   -->
 
 <ListView xmlns:android="http://schemas.android.com/apk/res/android"
-	style="@style/DrawerStyle"
 	android:id="@+id/left_drawer"
-	android:layout_width="200dp"
+	android:layout_width="300dp"
 	android:layout_height="match_parent"
 	android:layout_gravity="start"
 	android:choiceMode="singleChoice"
-	android:paddingLeft="8dp"
-	android:paddingRight="8dp"/>
+    android:fitsSystemWindows="true"
+    android:layout_marginTop="-25dp"
+    android:background="@android:color/white"/>

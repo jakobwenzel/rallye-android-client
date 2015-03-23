@@ -124,6 +124,8 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 		}
 
 		dashboard = (ListView) activity.findViewById(R.id.left_drawer);
+		View header = View.inflate(activity, R.layout.drawer_header, null);
+		dashboard.addHeaderView(header);
 		dashAdapter = new MenuAdapter(activity, nav);
 		dashboard.setAdapter(dashAdapter);
 		dashboard.setOnItemClickListener(this);

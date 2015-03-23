@@ -31,11 +31,11 @@ import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.Window;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -88,19 +88,22 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 //		android.support.v4.app.FragmentManager.enableDebugLogging(true);
 
 		// Layout, Title, ProgressCircle etc.
-		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		setTitle(R.string.app_name);
 		setContentView(R.layout.main);
 
 		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawerLayout.setStatusBarBackgroundColor(getResources().getColor(R.color.material_blue_600));
 
+		setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+//		supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
 		actionBar = getSupportActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 		actionBar.setDisplayShowTitleEnabled(true);
 		logo = (TransitionDrawable) getResources().getDrawable(R.drawable.transition_logo);
-		actionBar.setIcon(logo);
+		actionBar.setHomeAsUpIndicator(logo);
 
 		// Check if Google Play Services is working
 		int errorCode;

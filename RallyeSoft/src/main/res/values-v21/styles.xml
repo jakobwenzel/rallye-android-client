@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!--
-  ~ Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+  ~ Copyright (c) 2015 Jakob Wenzel, Ramon Wirsch.
   ~
   ~ This file is part of RallyeSoft.
   ~
@@ -19,14 +18,15 @@
   ~ along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@android:id/text1"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:textAppearance="?android:attr/textAppearanceMedium"
-    android:gravity="center_vertical"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:minHeight="50dp"
-    tools:text="Test Eintrag" />
+<resources>
+
+	<style name="RallyeTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">@color/material_deep_teal_500</item>
+        <item name="colorPrimary">@color/material_blue_500</item>
+        <item name="colorPrimaryDark">@color/material_blue_700</item>
+        <item name="colorAccent">@color/material_cyan_A400</item>
+	</style>
+
+</resources>
