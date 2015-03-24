@@ -26,4 +26,8 @@
 			<enum name="tasks" value="3" />
 		</attr>
 	</declare-styleable>
+
+	<declare-styleable name="ScrimInsetsView">
+		<attr name="insetForeground" format="reference|color" />
+	</declare-styleable>
 </resources>

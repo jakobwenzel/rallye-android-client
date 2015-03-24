@@ -19,11 +19,12 @@
 
 package de.stadtrallye.rallyesoft.uimodel;
 
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -51,7 +52,7 @@ public abstract class TabManager {
 	protected Tab<?> activeTab = null;
 	protected Integer parentTab = null;
 
-	protected final Map<Integer, Tab<?>> tabs = new HashMap<Integer, Tab<?>>();
+	protected final Map<Integer, Tab<?>> tabs = new HashMap<>();
 	private int defaultTab = 0;
 
 	public TabManager(Context context, FragmentManager fragmentManager, int replaceId) {
@@ -65,7 +66,7 @@ public abstract class TabManager {
 	 * @param tabActivity the parent Activity who must initialize the TabManager
 	 * @return the current TabManager
 	 */
-	public static TabManager getTabManager(FragmentActivity tabActivity) {
+	public static TabManager getTabManager(Activity tabActivity) {
 		try {
 			return ((ITabActivity) tabActivity).getTabManager();
 		} catch (ClassCastException e) {
@@ -261,7 +262,7 @@ public abstract class TabManager {
 
 	private FragmentTransaction startTransaction(Tab<?> tab) throws Exception {
 		if (!checkCondition(tab))
-			throw new Exception();
+			throw new IllegalStateException("Conditions do not allow showing tab "+ tab +", should not be clickable");
 
 		FragmentTransaction ft = fragmentManager.beginTransaction();
 

@@ -60,7 +60,7 @@
 		android:allowBackup="true"
 		android:icon="@drawable/ic_launcher"
 		android:label="@string/app_name"
-		android:theme="@style/RallyeTheme"
+		android:theme="@style/AppTheme"
 		android:supportsRtl="true">
 
 		<activity android:name=".MainActivity">
@@ -70,11 +70,13 @@
 			</intent-filter>
 		</activity>
 
-		<activity android:name=".ConnectionAssistantActivity"
-				  android:parentActivityName=".MainActivity">
+		<activity
+			android:name=".ConnectionAssistantActivity"
+			android:theme="@style/BaseTheme.NativeActionBar"
+			android:parentActivityName=".MainActivity">
 			<meta-data
-					android:name="android.support.PARENT_ACTIVITY"
-					android:value="de.stadtrallye.rallyesoft.MainActivity" />
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value="de.stadtrallye.rallyesoft.MainActivity" />
 			<intent-filter>
 				<action android:name="android.nfc.action.NDEF_DISCOVERED"/>
 				<category android:name="android.intent.category.DEFAULT"/>
@@ -82,8 +84,10 @@
 			</intent-filter>
 		</activity>
 
-		<activity android:name=".SubmitNewSolutionActivity"
-				  android:parentActivityName=".MainActivity">
+		<activity
+			android:name=".SubmitNewSolutionActivity"
+			android:theme="@style/BaseTheme.NativeActionBar"
+			android:parentActivityName=".MainActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value="de.stadtrallye.rallyesoft.MainActivity" />
@@ -126,6 +130,7 @@
 
 		<activity
 			android:name=".PictureGalleryActivity"
+			android:theme="@style/BaseTheme.NativeActionBar"
 			android:label="@string/image_viewer"
 			android:parentActivityName=".MainActivity">
 			<meta-data
@@ -135,15 +140,18 @@
 
 		<activity android:name=".SettingsActivity"
 			android:label="@string/settings"
+			android:theme="@style/BaseTheme.NativeActionBar"
 			android:parentActivityName=".MainActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value=".MainActivity" />
 		</activity>
 
-		<activity android:name=".UploadOverviewActivity"
-				  android:label="@string/upload_overview"
-				  android:parentActivityName=".MainActivity">
+		<activity
+			android:name=".UploadOverviewActivity"
+			android:label="@string/upload_overview"
+			android:theme="@style/BaseTheme.NativeActionBar"
+			android:parentActivityName=".MainActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value=".MainActivity" />

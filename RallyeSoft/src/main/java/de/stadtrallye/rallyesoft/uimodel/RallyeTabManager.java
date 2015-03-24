@@ -73,6 +73,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	private Server server;
 	private final ActionBarDrawerToggle drawerToggle;
 	private final DrawerLayout drawerLayout;
+	private final View drawer_left;
 	private final ListView dashboard;
 	private final MenuAdapter dashAdapter;
 
@@ -89,14 +90,14 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 
 			/** Called when a drawer has settled in a completely closed state. */
 			public void onDrawerClosed(View view) {
-				RallyeTabManager.this.activity.getSupportActionBar().setTitle(activeTab.titleId);
-				RallyeTabManager.this.activity.invalidateOptionsMenu();
+//				RallyeTabManager.this.activity.getSupportActionBar().setTitle(activeTab.titleId);
+//				RallyeTabManager.this.activity.supportInvalidateOptionsMenu();
 			}
 
 			/** Called when a drawer has settled in a completely open state. */
 			public void onDrawerOpened(View drawerView) {
-				RallyeTabManager.this.activity.getSupportActionBar().setTitle(R.string.dash_menu);
-				RallyeTabManager.this.activity.invalidateOptionsMenu();
+//				RallyeTabManager.this.activity.getSupportActionBar().setTitle(R.string.dash_menu);
+//				RallyeTabManager.this.activity.supportInvalidateOptionsMenu();
 //				dashboard.inv
 			}
 		};
@@ -123,7 +124,8 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 			nav.add(activity.getString(tabs.get(i).titleId));
 		}
 
-		dashboard = (ListView) activity.findViewById(R.id.left_drawer);
+		drawer_left = activity.findViewById(R.id.left_drawer);
+		dashboard = (ListView) activity.findViewById(R.id.dashboard);
 		View header = View.inflate(activity, R.layout.drawer_header, null);
 		dashboard.addHeaderView(header);
 		dashAdapter = new MenuAdapter(activity, nav);
@@ -139,7 +141,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		switchToTab(menu[position]);
-		drawerLayout.closeDrawer(dashboard);
+		drawerLayout.closeDrawer(drawer_left);
 	}
 
 	@Override
@@ -198,7 +200,7 @@ public class RallyeTabManager extends TabManager implements AdapterView.OnItemCl
 	}
 
 	public boolean isMenuOpen() {
-		return drawerLayout.isDrawerOpen(dashboard);
+		return drawerLayout.isDrawerOpen(drawer_left);
 	}
 
 //	private View getSelectedView(int pos) {

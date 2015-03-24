@@ -26,4 +26,5 @@
 	android:choiceMode="singleChoice"
     android:fitsSystemWindows="true"
     android:layout_marginTop="-25dp"
-    android:background="@android:color/white"/>
+    android:background="@android:color/white"
+    android:elevation="8dp"/>

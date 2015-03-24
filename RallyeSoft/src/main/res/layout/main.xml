@@ -25,22 +25,23 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	tools:context=".MainActivity"
-	android:fitsSystemWindows="true"
-	android:elevation="8dp">
+	android:fitsSystemWindows="true">
 
 	<LinearLayout
 		android:orientation="vertical"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:fitsSystemWindows="false">
+		android:fitsSystemWindows="true">
 
 		<android.support.v7.widget.Toolbar
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:elevation="4dp"
+			android:background="?attr/colorPrimary"
 			android:minHeight="?attr/actionBarSize"
-			android:background="?attr/colorPrimary"/>
+			app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+			app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
 		<FrameLayout
 				android:id="@+id/content_frame"
@@ -50,19 +51,22 @@
 		</FrameLayout>
 	</LinearLayout>
 
-	<include
-		layout="@layout/drawer" />
+	<de.stadtrallye.rallyesoft.util.ScrimInsetsFrameLayout
+		android:id="@+id/left_drawer"
+		android:layout_width="300dp"
+		android:layout_height="match_parent"
+		android:elevation="8dp"
+		android:layout_gravity="start"
+		android:fitsSystemWindows="true"
+		app:insetForeground="#66000000">
 
-	<!--<ListView
-			android:id="@+id/right_drawer"
-			android:layout_width="200dp"
+		<ListView
+			android:id="@+id/dashboard"
+			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:layout_gravity="end"
 			android:choiceMode="singleChoice"
-			android:divider="@android:color/black"
-			android:dividerHeight="1dp"
-			android:background="@drawable/abs__ab_solid_dark_holo"
-			android:paddingLeft="8dp"
-			android:paddingRight="8dp"/>-->
+			android:background="@android:color/white"/>
+
+	</de.stadtrallye.rallyesoft.util.ScrimInsetsFrameLayout>
 
 </android.support.v4.widget.DrawerLayout>

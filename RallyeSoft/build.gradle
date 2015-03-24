@@ -55,7 +55,7 @@ android {
 	buildToolsVersion rootProject.ext.buildToolsVersion
 	defaultConfig {
 		minSdkVersion 16
-		targetSdkVersion 22
+		targetSdkVersion 21
 		resConfigs "en", "de"
 		//versionCode xx
 		//versionName "x.x"

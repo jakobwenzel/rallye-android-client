@@ -28,5 +28,6 @@
     <color name="material_blue_500">#2196F3</color>
     <color name="material_blue_700">#1976D2</color>
     <color name="material_blue_600">#1E88E5</color>
+	<color name="material_teal_500">#009688</color>
     <color name="material_cyan_A400">#00E5FF</color>
 </resources>

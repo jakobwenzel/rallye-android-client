@@ -59,8 +59,6 @@ import de.stadtrallye.rallyesoft.uimodel.TabManager;
 import de.stadtrallye.rallyesoft.util.converters.Serialization;
 import de.wirsch.gcm.GcmHelper;
 
-import static de.stadtrallye.rallyesoft.uimodel.Util.getDefaultMapOptions;
-
 public class MainActivity extends ActionBarActivity implements IProgressUI, ITabActivity, IPictureHandler, IServer.ICurrentServerListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
 	private static final String THIS = MainActivity.class.getSimpleName();
@@ -93,7 +91,7 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 		setContentView(R.layout.main);
 
 		DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-		drawerLayout.setStatusBarBackgroundColor(getResources().getColor(R.color.material_blue_600));
+		drawerLayout.setStatusBarBackgroundColor(getResources().getColor(R.color.material_blue_700));
 
 		setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
@@ -102,8 +100,8 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 		actionBar = getSupportActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 		actionBar.setDisplayShowTitleEnabled(true);
-		logo = (TransitionDrawable) getResources().getDrawable(R.drawable.transition_logo);
-		actionBar.setHomeAsUpIndicator(logo);
+//		logo = (TransitionDrawable) getResources().getDrawable(R.drawable.transition_logo);
+//		actionBar.setHomeAsUpIndicator(logo);
 
 		// Check if Google Play Services is working
 		int errorCode;
@@ -130,7 +128,7 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 		// Manages all fragments that will be displayed as Tabs in this activity
 		tabManager = new RallyeTabManager(this, server, drawerLayout);
 
-		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(null));// this map is currently not used anyway, so for the time being we always do lateInitialization
+//		tabManager.setArguments(RallyeTabManager.TAB_MAP, getDefaultMapOptions(null));// this map is currently not used anyway, so for the time being we always do lateInitialization
 		// Recover Last State
 		tabManager.restoreState(savedInstanceState);
 
@@ -201,10 +199,10 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 			updateServerState();
 		}
 
-		if (isLoggedIn())
-			logo.startTransition(0);
-		else
-			logo.resetTransition();
+//		if (isLoggedIn())
+//			logo.startTransition(0);
+//		else
+//			logo.resetTransition();
 
 		tabManager.showTab();
 
@@ -472,11 +470,11 @@ public class MainActivity extends ActionBarActivity implements IProgressUI, ITab
 	public void onNewCurrentServer(Server server) {
 		this.server = server;
 
-		if (isLoggedIn()) {
-			logo.startTransition(500);
-		} else {
-			logo.reverseTransition(500);
-		}
+//		if (isLoggedIn()) {
+//			logo.startTransition(500);
+//		} else {
+//			logo.reverseTransition(500);
+//		}
 
 		if (running) {
 			tabManager.setServer(server);
