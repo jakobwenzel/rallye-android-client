@@ -38,7 +38,7 @@ public class WelcomeFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.welcome, container, false);
+		View v = inflater.inflate(R.layout.fragment_welcome, container, false);
 
 		Button b = (Button) v.findViewById(R.id.connect);
 		b.setOnClickListener(new View.OnClickListener() {

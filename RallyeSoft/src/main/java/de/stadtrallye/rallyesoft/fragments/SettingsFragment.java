@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Jakob Wenzel, Ramon Wirsch.
+ * Copyright (c) 2015 Jakob Wenzel, Ramon Wirsch.
  *
  * This file is part of RallyeSoft.
  *
@@ -17,18 +17,22 @@
  * along with RallyeSoft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.stadtrallye.rallyesoft;
+package de.stadtrallye.rallyesoft.fragments;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.preference.PreferenceFragment;
 
+import de.stadtrallye.rallyesoft.R;
 
-public class SettingsActivity extends ActionBarActivity {
+/**
+ * Created by Ramon on 24.03.2015.
+ */
+public class SettingsFragment extends PreferenceFragment {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.activity_settings);
+		addPreferencesFromResource(R.xml.preferences);
 	}
 }

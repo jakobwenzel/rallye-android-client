@@ -44,9 +44,10 @@
 			app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
 		<FrameLayout
-				android:id="@+id/content_frame"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent">
+			android:id="@+id/content_frame"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			tools:layout="@layout/fragment_welcome">
 
 		</FrameLayout>
 	</LinearLayout>
@@ -55,17 +56,17 @@
 		android:id="@+id/left_drawer"
 		android:layout_width="300dp"
 		android:layout_height="match_parent"
-		android:elevation="8dp"
 		android:layout_gravity="start"
 		android:fitsSystemWindows="true"
+		android:background="@android:color/white"
+		android:elevation="8dp"
 		app:insetForeground="#66000000">
 
 		<ListView
 			android:id="@+id/dashboard"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:choiceMode="singleChoice"
-			android:background="@android:color/white"/>
+			android:choiceMode="singleChoice" />
 
 	</de.stadtrallye.rallyesoft.util.ScrimInsetsFrameLayout>
 
