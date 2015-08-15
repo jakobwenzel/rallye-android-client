@@ -36,7 +36,7 @@ def gmsVersion = '7.5.0'
 def asVersion = '22.2.1'
 
 ext {
-	jacksonVersion = '2.6.0'
+	jacksonVersion = '2.6.1'
 }
 
 dependencies {
